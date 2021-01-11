@@ -1,0 +1,10 @@
+numpy
+pandas
+napari[all]
+btrack
+natsort
+skimage
+scipy
+opencv-python-headless
+tifffile
+matplotlib

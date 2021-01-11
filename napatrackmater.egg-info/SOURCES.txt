@@ -1,0 +1,7 @@
+README.md
+setup.py
+napatrackmater.egg-info/PKG-INFO
+napatrackmater.egg-info/SOURCES.txt
+napatrackmater.egg-info/dependency_links.txt
+napatrackmater.egg-info/requires.txt
+napatrackmater.egg-info/top_level.txt
