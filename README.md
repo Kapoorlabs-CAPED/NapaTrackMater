@@ -28,7 +28,7 @@ conda install napatrackmater
 
 ## License
 
-Under MIT license. See [LICENSE](LICENSE).
+Under BSD license. See [LICENSE](LICENSE).
 
 ## Authors
 
