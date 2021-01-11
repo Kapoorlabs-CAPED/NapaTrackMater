@@ -6,7 +6,7 @@ matrix:
     - language: python
       os: linux
       env:
-        - PYTHON_VERSION="3.8"
+        - PYTHON_VERSION="3.9"
     - language: python
       os: linux
       env:
@@ -22,7 +22,7 @@ install:
   - conda config --add channels conda-forge
   - conda update -q conda
   - conda info -a
-  - conda create -n NapariTrack python=$PYTHON_VERSION
+  - conda create -n NapariTrack -c conda-forge python=$PYTHON_VERSION
   - conda activate NapariTrack
 
   
