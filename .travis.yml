@@ -3,8 +3,19 @@ python:
   - PYTHON_VERSION="3.8"
   - PYTHON_VERSION="3.9"
 install:
+  - sudo apt-get update
+  - wget https://repo.continuum.io/archive/Anaconda3-5.3.1-Linux-x86_64.sh -O anaconda.sh
+  - bash anaconda.sh -b -p $HOME/anaconda
+  - echo ". $HOME/anaconda/etc/profile.d/conda.sh" >> $HOME/.bashrc
+  - source $HOME/.bashrc
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda config --add channels conda-forge
+  - conda update -q conda
+  - conda info -a
   - conda create -n NapariTrack python=$PYTHON_VERSION
   - conda activate NapariTrack
+
   
 script:
   - conda activate NapariTrack
