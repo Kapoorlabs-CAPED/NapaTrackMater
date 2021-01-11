@@ -13,9 +13,9 @@ matrix:
         - PYTHON_VERSION="3.9"
 install:
   - sudo apt-get update
-  - wget https://repo.continuum.io/archive/Anaconda3-5.3.1-Linux-x86_64.sh -O anaconda.sh
-  - bash anaconda.sh -b -p $HOME/anaconda
-  - echo ". $HOME/anaconda/etc/profile.d/conda.sh" >> $HOME/.bashrc
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - echo ". $HOME/miniconda/etc/profile.d/conda.sh" >> $HOME/.bashrc
   - source $HOME/.bashrc
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
