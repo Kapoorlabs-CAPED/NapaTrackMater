@@ -1,7 +1,18 @@
 README.md
 setup.py
+napatrackmater/Trackmate.py
+napatrackmater/__init__ .py
+napatrackmater/version.py
 napatrackmater.egg-info/PKG-INFO
 napatrackmater.egg-info/SOURCES.txt
 napatrackmater.egg-info/dependency_links.txt
 napatrackmater.egg-info/requires.txt
 napatrackmater.egg-info/top_level.txt
+napatrackmater/napari_animation/__init__.py
+napatrackmater/napari_animation/animation.py
+napatrackmater/napari_animation/easing.py
+napatrackmater/napari_animation/utils.py
+napatrackmater/napari_animation/_qt/__init__.py
+napatrackmater/napari_animation/_qt/animation_widget.py
+napatrackmater/napari_animation/_qt/frame_widget.py
+napatrackmater/napari_animation/_qt/keyframeslist_widget.py

@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: napatrackmater
-Version: 1.0.0
+Version: 1.2.1
 Summary: Import Trackmate XML files for Track Visualization and analysis in Napari.
 Home-page: https://github.com/kapoorlab/NapaTrackMater/
 Author: Varun Kapoor
