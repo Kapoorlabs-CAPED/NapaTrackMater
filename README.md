@@ -9,7 +9,7 @@ Import [Trackmate](https://imagej.net/TrackMate) XML files for visualization in 
 
 ## Usage
 
-Check the [notebook](Notebooks/TrackVisualization.ipynb).
+Check the [notebook](TrackVisualization.ipynb).
 
 ## Requirements
 
