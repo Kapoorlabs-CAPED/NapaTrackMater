@@ -17,7 +17,7 @@ Description: # NapaTrackMater
         
         ## Usage
         
-        Check the [notebook](Notebooks/TrackVisualization.ipynb).
+        Check the [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/TrackMateVisualization.ipynb).
         
         ## Requirements
         
@@ -27,16 +27,11 @@ Description: # NapaTrackMater
         
         `pip install napatrackmater`
         
-        Or you can use Anaconda and `conda-forge` :
         
-        ```
-        conda config --add channels conda-forge
-        conda install napatrackmater
-        ```
         
         ## License
         
-        Under MIT license. See [LICENSE](LICENSE).
+        Under BSD license. See [LICENSE](LICENSE).
         
         ## Authors
         
@@ -48,5 +43,5 @@ Classifier: Natural Language :: English
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Classifier: Programming Language :: Python
-Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
 Description-Content-Type: text/markdown
