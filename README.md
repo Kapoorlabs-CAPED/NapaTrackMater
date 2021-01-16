@@ -19,12 +19,7 @@ Check the [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/Track
 
 `pip install napatrackmater`
 
-Or you can use Anaconda and `conda-forge` :
 
-```
-conda config --add channels conda-forge
-conda install napatrackmater
-```
 
 ## License
 
