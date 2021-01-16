@@ -23,7 +23,7 @@ Check the [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/Track
 
 ## License
 
-Under BSD license. See [LICENSE](LICENSE).
+Under MIT license. See [LICENSE](LICENSE).
 
 ## Authors
 
