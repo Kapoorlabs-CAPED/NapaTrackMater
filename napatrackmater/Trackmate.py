@@ -467,8 +467,11 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
         RegionID = {}
         VolumeID = {}
         locationID = {}    
-        
 
+        Tloc = []
+        Zloc = []
+        Yloc = []
+        Xloc = []
         
         for trackid, DictTrackobjects, DictSpeedobjects, Trackobjects, Trackletobjects, SortedTracklets, tstart in Tracks:
             
@@ -477,17 +480,13 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
              VolumeID[trackid] = [trackid]
              locationID[trackid] = [trackid]
              StartID[trackid] = [trackid]
-             ID.append(trackid)
              TrackletRegionID = {}
              TrackletVolumeID = {}
              TrackletlocationID = {}
              
              StartID[trackid].append(tstart)
              
-             Tloc = []
-             Zloc = []
-             Yloc = []
-             Xloc = []
+
              Speedloc = []
              DistanceBoundary = []
              ProbabilityInside = []
@@ -520,6 +519,7 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
                                            
                                           
                                            speed = (float(VelocitySpotobject))
+                                           ID.append(trackid)
                                            Tloc.append(t)
                                            Zloc.append(z)
                                            Yloc.append(y)
@@ -607,7 +607,7 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
         df = pd.DataFrame(list(zip(ID,Tloc,Zloc,Yloc,Xloc)), index = None, 
                                               columns =['ID', 't', 'z', 'y', 'x'])
 
-        df.to_csv(savedir + '/' + 'TrackMate' +  Name +  '.csv')  
+        df.to_csv(savedir + '/' + 'TrackMate' +  Name +  '.csv', index = False)  
         df
 
         return RegionID, VolumeID, locationID, Tracks, ID, StartID
