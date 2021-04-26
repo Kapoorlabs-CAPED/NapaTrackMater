@@ -30,6 +30,9 @@ Boxname = 'TrackBox'
 pd.options.display.float_format = '${:,.2f}'.format
 
 
+ParentDistances = {}
+ChildrenDistances = {}
+
 AllStartParent = []
 AllEndParent = []
 AllID = []
@@ -94,129 +97,135 @@ Convert an integer image into boundary points for 2,3 and 4D data
 """
 
 
-def BoundaryPoints(Mask, XYcalibration, Zcalibration):
+def BoundaryPoints(mask, xycalibration, zcalibration):
     
-    ndim = len(Mask.shape)
+    ndim = len(mask.shape)
     
-    TimedMask = {}
+    timed_mask = {}
     #YX shaped object
     if ndim == 2:
-        Mask = label(Mask)
-        Label = []
-        VolumeLabel = [] 
+        mask = label(mask)
+        labels = []
+        volumelabel = [] 
         tree = []
-        properties = measure.regionprops(Mask, Mask)
+        properties = measure.regionprops(mask, mask)
         for prop in properties:
             
-            LabelImage = prop.image
+            labelimage = prop.image
             regionlabel = prop.label
-            sizeY = abs(prop.bbox[0] - prop.bbox[2]) * XYcalibration
-            sizeX = abs(prop.bbox[1] - prop.bbox[3]) * XYcalibration
-            Boundary = find_boundaries(LabelImage)
-            Indices = np.where(Boundary > 0)
-            Indices = np.transpose(np.asarray(Indices))
-            RealIndices = Indices.copy()
-            for j in range(0, len(RealIndices)):
+            sizey = abs(prop.bbox[0] - prop.bbox[2]) * xycalibration
+            sizex = abs(prop.bbox[1] - prop.bbox[3]) * xycalibration
+            volume = sizey * sizex
+            radius = math.sqrt(volume/math.pi)
+            boundary = find_boundaries(labelimage)
+            indices = np.where(boundary > 0)
+            indices = np.transpose(np.asarray(indices))
+            real_indices = indices.copy()
+            for j in range(0, len(real_indices)):
                     
-                    RealIndices[j][0] = RealIndices[j][0] * XYcalibration
-                    RealIndices[j][1] = RealIndices[j][1] * XYcalibration
+                    real_indices[j][0] = real_indices[j][0] * xycalibration
+                    real_indices[j][1] = real_indices[j][1] * xycalibration
                     
                 
-            tree.append(spatial.cKDTree(RealIndices))
+            tree.append(spatial.cKDTree(real_indices))
             
-            if regionlabel not in Label:
-                Label.append(regionlabel)
-                VolumeLabel.append(math.sqrt(sizeX * sizeX + sizeY * sizeY)/4) 
+            if regionlabel not in labels:
+                labels.append(regionlabel)
+                volumelabel.append(radius) 
         #This object contains list of all the points for all the labels in the Mask image with the label id and volume of each label    
-        TimedMask[str(0)] = [tree, Indices, Label, VolumeLabel]
+        timed_mask[str(0)] = [tree, indices, labels, volumelabel]
         
         
     #TYX shaped object    
     if ndim == 3:
         
-        Boundary = np.zeros([Mask.shape[0], Mask.shape[1], Mask.shape[2]])
-        for i in range(0, Mask.shape[0]):
+        Boundary = np.zeros([mask.shape[0], mask.shape[1], mask.shape[2]])
+        for i in range(0, mask.shape[0]):
             
-            Mask[i,:] = label(Mask[i,:])
-            properties = measure.regionprops(Mask[i,:], Mask[i,:])
-            Label = []
-            VolumeLabel = [] 
+            mask[i,:] = label(mask[i,:])
+            properties = measure.regionprops(mask[i,:], mask[i,:])
+            labels = []
+            volumelabel = [] 
             tree = []
             for prop in properties:
                 
-                LabelImage = prop.image
+                labelimage = prop.image
                 regionlabel = prop.label
-                sizeY = abs(prop.bbox[0] - prop.bbox[2])* XYcalibration
-                sizeX = abs(prop.bbox[1] - prop.bbox[3])* XYcalibration
-                Boundary[i,:LabelImage.shape[0],:LabelImage.shape[1]] = find_boundaries(LabelImage)
-                Indices = np.where(Boundary[i,:,:] > 0) 
-                Indices = np.transpose(np.asarray(Indices))
-                RealIndices = Indices.copy()
-                for j in range(0, len(RealIndices)):
+                sizey = abs(prop.bbox[0] - prop.bbox[2]) * xycalibration
+                sizex = abs(prop.bbox[1] - prop.bbox[3]) * xycalibration
+                volume = sizey * sizex
+                radius = math.sqrt(volume/math.pi)
+                boundary = find_boundaries(labelimage)
+                indices = np.where(boundary > 0)
+                indices = np.transpose(np.asarray(indices))
+                real_indices = indices.copy()
+                for j in range(0, len(real_indices)):
                     
-                    RealIndices[j][0] = RealIndices[j][0] * XYcalibration
-                    RealIndices[j][1] = RealIndices[j][1] * XYcalibration
+                    real_indices[j][0] = real_indices[j][0] * xycalibration
+                    real_indices[j][1] = real_indices[j][1] * xycalibration
                     
                 
-                tree.append(spatial.cKDTree(RealIndices))
-                if regionlabel not in Label:
-                    Label.append(regionlabel)
-                    VolumeLabel.append(math.sqrt(sizeX * sizeX + sizeY * sizeY)/4) 
+                tree.append(spatial.cKDTree(real_indices))
+                if regionlabel not in labels:
+                        labels.append(regionlabel)
+                        volumelabel.append(radius)
                 
-            TimedMask[str(i)] = [tree, Indices, Label, VolumeLabel]
+            timed_mask[str(i)] = [tree, indices, labels, volumelabel]
             
             
     #TZYX shaped object        
     if ndim == 4:
 
-        Boundary = np.zeros([Mask.shape[0], Mask.shape[1], Mask.shape[2], Mask.shape[3]])
+        Boundary = np.zeros([mask.shape[0], mask.shape[1], mask.shape[2], mask.shape[3]])
         
         #Loop over time
-        for i in range(0, Mask.shape[0]):
+        for i in range(0, mask.shape[0]):
             
-            Mask[i,:] = label(Mask[i,:])
-            properties = measure.regionprops(Mask[i,:], Mask[i,:])
-            Label = []
-            VolumeLabel = []
+            mask[i,:] = label(mask[i,:])
+            properties = measure.regionprops(mask[i,:], mask[i,:])
+            labels = []
+            volumelabel = []
             tree = []
             for prop in properties:
                 
-                LabelImage = prop.image
+                labelimage = prop.image
                 regionlabel = prop.label
-                sizeZ = abs(prop.bbox[0] - prop.bbox[3])* Zcalibration
-                sizeY = abs(prop.bbox[1] - prop.bbox[4])* XYcalibration
-                sizeX = abs(prop.bbox[2] - prop.bbox[5])* XYcalibration
+                sizez = abs(prop.bbox[0] - prop.bbox[3])* zcalibration
+                sizey = abs(prop.bbox[1] - prop.bbox[4])* xycalibration
+                sizex = abs(prop.bbox[2] - prop.bbox[5])* xycalibration
+                volume = sizex * sizey * sizez 
+                radius = math.pow(3 * volume / ( 4 * math.pi), 1.0/3.0)
                 #Loop over Z
                 if regionlabel > 1: 
                     for j in range(int(prop.bbox[0]),int(prop.bbox[3])):
                
-                          Boundary[i,j,:LabelImage.shape[1],:LabelImage.shape[2]] = find_boundaries(LabelImage[j,:,:])
+                          Boundary[i,j,:labelimage.shape[1],:labelimage.shape[2]] = find_boundaries(labelimage[j,:,:])
                 else:
                     for j in range(int(prop.bbox[0]),int(prop.bbox[3])):
                
-                          Boundary[i,j,:,:] = find_boundaries(Mask[i,j,:,:])
+                          Boundary[i,j,:,:] = find_boundaries(mask[i,j,:,:])
                 
-                Indices = np.where(Boundary[i,:] > 0)
+                indices = np.where(Boundary[i,:] > 0)
                 
-                Indices = np.transpose(np.asarray(Indices))
-                RealIndices = Indices.copy()
-                for j in range(0, len(RealIndices)):
+                indices = np.transpose(np.asarray(indices))
+                real_indices = indices.copy()
+                for j in range(0, len(real_indices)):
                     
-                    RealIndices[j][0] = RealIndices[j][0] * Zcalibration
-                    RealIndices[j][1] = RealIndices[j][1] * XYcalibration
-                    RealIndices[j][2] = RealIndices[j][2] * XYcalibration
+                    real_indices[j][0] = real_indices[j][0] * zcalibration
+                    real_indices[j][1] = real_indices[j][1] * xycalibration
+                    real_indices[j][2] = real_indices[j][2] * xycalibration
                     
                 
-                tree.append(spatial.cKDTree(RealIndices))
-                if regionlabel not in Label:
-                    Label.append(regionlabel)
-                    VolumeLabel.append(math.sqrt(sizeX * sizeX + sizeY * sizeY)/4) 
+                tree.append(spatial.cKDTree(real_indices))
+                if regionlabel not in labels:
+                    labels.append(regionlabel)
+                    volumelabel.append(radius) 
                 
             
             
-            TimedMask[str(i)] = [tree, Indices, Label, VolumeLabel]    
+            timed_mask[str(i)] = [tree, indices, labels, volumelabel]    
 
-    return TimedMask
+    return timed_mask
     
 
 
