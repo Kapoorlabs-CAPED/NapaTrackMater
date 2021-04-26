@@ -97,7 +97,7 @@ Convert an integer image into boundary points for 2,3 and 4D data
 """
 
 
-def boundary_points(mask, xycalibration, zcalibration):
+def boundary_points(mask, xcalibration, ycalibration, zcalibration):
     
     ndim = len(mask.shape)
     
@@ -113,8 +113,8 @@ def boundary_points(mask, xycalibration, zcalibration):
             
             labelimage = prop.image
             regionlabel = prop.label
-            sizey = abs(prop.bbox[0] - prop.bbox[2]) * xycalibration
-            sizex = abs(prop.bbox[1] - prop.bbox[3]) * xycalibration
+            sizey = abs(prop.bbox[0] - prop.bbox[2]) * xcalibration
+            sizex = abs(prop.bbox[1] - prop.bbox[3]) * ycalibration
             volume = sizey * sizex
             radius = math.sqrt(volume/math.pi)
             boundary = find_boundaries(labelimage)
@@ -123,8 +123,8 @@ def boundary_points(mask, xycalibration, zcalibration):
             real_indices = indices.copy()
             for j in range(0, len(real_indices)):
                     
-                    real_indices[j][0] = real_indices[j][0] * xycalibration
-                    real_indices[j][1] = real_indices[j][1] * xycalibration
+                    real_indices[j][0] = real_indices[j][0] * xcalibration
+                    real_indices[j][1] = real_indices[j][1] * ycalibration
                     
                 
             tree.append(spatial.cKDTree(real_indices))
@@ -151,8 +151,8 @@ def boundary_points(mask, xycalibration, zcalibration):
                 
                 labelimage = prop.image
                 regionlabel = prop.label
-                sizey = abs(prop.bbox[0] - prop.bbox[2]) * xycalibration
-                sizex = abs(prop.bbox[1] - prop.bbox[3]) * xycalibration
+                sizey = abs(prop.bbox[0] - prop.bbox[2]) * ycalibration
+                sizex = abs(prop.bbox[1] - prop.bbox[3]) * xcalibration
                 volume = sizey * sizex
                 radius = math.sqrt(volume/math.pi)
                 boundary = find_boundaries(labelimage)
@@ -161,8 +161,8 @@ def boundary_points(mask, xycalibration, zcalibration):
                 real_indices = indices.copy()
                 for j in range(0, len(real_indices)):
                     
-                    real_indices[j][0] = real_indices[j][0] * xycalibration
-                    real_indices[j][1] = real_indices[j][1] * xycalibration
+                    real_indices[j][0] = real_indices[j][0] * ycalibration
+                    real_indices[j][1] = real_indices[j][1] * xcalibration
                     
                 
                 tree.append(spatial.cKDTree(real_indices))
@@ -191,8 +191,8 @@ def boundary_points(mask, xycalibration, zcalibration):
                 labelimage = prop.image
                 regionlabel = prop.label
                 sizez = abs(prop.bbox[0] - prop.bbox[3])* zcalibration
-                sizey = abs(prop.bbox[1] - prop.bbox[4])* xycalibration
-                sizex = abs(prop.bbox[2] - prop.bbox[5])* xycalibration
+                sizey = abs(prop.bbox[1] - prop.bbox[4])* ycalibration
+                sizex = abs(prop.bbox[2] - prop.bbox[5])* xcalibration
                 volume = sizex * sizey * sizez 
                 radius = math.pow(3 * volume / ( 4 * math.pi), 1.0/3.0)
                 #Loop over Z
@@ -212,8 +212,8 @@ def boundary_points(mask, xycalibration, zcalibration):
                 for j in range(0, len(real_indices)):
                     
                     real_indices[j][0] = real_indices[j][0] * zcalibration
-                    real_indices[j][1] = real_indices[j][1] * xycalibration
-                    real_indices[j][2] = real_indices[j][2] * xycalibration
+                    real_indices[j][1] = real_indices[j][1] * ycalibration
+                    real_indices[j][2] = real_indices[j][2] * xcalibration
                     
                 
                 tree.append(spatial.cKDTree(real_indices))
@@ -286,9 +286,9 @@ def analyze_non_dividing_tracklets(root_leaf, spot_object_source_target):
                              tracklet.append(Root)
                              #For non dividing trajectories iterate from Root to the only Leaf
                              while(Root != Leaf):
-                                        for source_id, target_id, edge_time in spot_object_source_target:
+                                        for source_id,target_id, edge_time, directional_rate_change, speed in spot_object_source_target:
                                                 if Root == source_id:
-                                                      tracklet.append(source_id)
+                                                      tracklet.append([source_id, directional_rate_change, speed])
                                                       Root = target_id
                                                       if Root==Leaf:
                                                           break
@@ -315,7 +315,7 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
                             RootCopy = Root
                             visited.append(Root)
                             while(RootCopy not in split_points and RootCopy not in root_leaf[1:]):
-                                for source_id, target_id, edge_time in spot_object_source_target:
+                                for source_id,target_id, edge_time, directional_rate_change, speed in spot_object_source_target:
                                         # Search for the target id corresponding to leaf                        
                                         if RootCopy == source_id:
                                               
@@ -326,7 +326,7 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
                                               if RootCopy in visited:
                                                 break
                                               visited.append(target_id)
-                                              tracklet.append(target_id)
+                                              tracklet.append([source_id, directional_rate_change, speed])
                                               
                             dividing_tracklets.append([trackletid, tracklet])
                             
@@ -337,7 +337,7 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
                                 tracklet = []
                                 tracklet.append(leaf)
                                 while(leaf not in split_points and leaf != Root):
-                                    for source_id, target_id, edge_time in spot_object_source_target:
+                                    for source_id,target_id, edge_time, directional_rate_change, speed in spot_object_source_target:
                                         # Search for the target id corresponding to leaf                        
                                         if leaf == target_id:
                                               # Include the split points here
@@ -348,8 +348,8 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
                                                   break
                                               if leaf in visited:
                                                 break
-                                              tracklet.append(source_id)
                                               visited.append(source_id)
+                                              tracklet.append([source_id, directional_rate_change, speed])
                                 dividing_tracklets.append([trackletid, tracklet]) 
                                 trackletid = trackletid + 1
                             
@@ -362,14 +362,14 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
                                 Othersplit_points = split_points.copy()
                                 Othersplit_points.pop(i)
                                 while(Start is not Root):
-                                    for source_id, target_id, edge_time in spot_object_source_target:
+                                    for source_id,target_id, edge_time, directional_rate_change, speed in spot_object_source_target:
                                         
                                         if Start == target_id:
                                             
                                             Start = source_id
                                             if Start in visited:
                                                 break
-                                            tracklet.append(source_id)
+                                            tracklet.append([source_id, directional_rate_change, speed])
                                             visited.append(source_id)
                                             if Start in Othersplit_points:
                                                 break
@@ -380,9 +380,51 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
                             sorted_dividing_tracklets = tracklet_sorter(dividing_tracklets, spot_object_source_target)    
                             
                             return sorted_dividing_tracklets    
-                                
+                        
+                        
+def tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask):
+    
+    
+                            location_prop_dist = {}
+                            for idxs in tracklet_ids:
+                                location_prop_dist[idxs] = [idxs]
+                                current_location_prop_dist = []
+                                tracklets = dict_ordered_tracklets[idxs]
+                                for cell_source_id, directional_rate_change, speed in tracklets:
+                                    
+                                      frame,z,y,x = Uniqueobjects[int(cell_source_id)]
+                                      total_intensity, mean_intensity, real_time, cellradius =  Uniqueproperties[int(cell_source_id)]
+                                      
+                                      if Mask is not None:
+                                                                
+                                                                testlocation = (z,y,x)
+                                                                tree, indices, masklabel, masklabelvolume = TimedMask[str(int(frame))]
+                                                               
+                                                                region_label = Mask[int(frame), int(z), int(y) , int(x)] 
+                                                                
+                                                                for k in range(0, len(masklabel)):
+                                                                    currentlabel = masklabel[k]
+                                                                    currentvolume = masklabelvolume[k]
+                                                                    currenttree = tree[k]
+                                                                    #Get the location and distance to the nearest boundary point
+                                                                    distance, location = currenttree.query(testlocation)
+                                                                    distance = max(0,distance  - cellradius)
+                                                                    if currentlabel == region_label and region_label > 0:
+                                                                            prob_inside = max(0,(distance - cellradius) / currentvolume)
+                                                                    else:
+                                                                        
+                                                                            prob_inside = 0 
+                                      else:
+                                                                distance = 0
+                                                                prob_inside = 0
+                                                                
+                                      current_location_prop_dist.append([real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside])      
+                        
+                                location_prop_dist[idxs].append(current_location_prop_dist)
+                            
+                            return location_prop_dist    
 
-def import_TM_XML(xml_path, Segimage, xycalibration = 1, zcalibration = 1, tcalibration = 1, image = None, Mask = None, mintracklength = 2):
+def import_TM_XML(xml_path, Segimage, image = None, Mask = None, mintracklength = 2):
     
         Name = os.path.basename(os.path.splitext(xml_path)[0])
         savedir = os.path.dirname(xml_path)
@@ -392,6 +434,8 @@ def import_TM_XML(xml_path, Segimage, xycalibration = 1, zcalibration = 1, tcali
         
         #Extract the tracks from xml
         tracks = root.find('Model').find('AllTracks')
+        settings = root.find('Settings').find('ImageData')
+        
         #Extract the cell objects from xml
         Spotobjects = root.find('Model').find('AllSpots') 
         
@@ -399,7 +443,9 @@ def import_TM_XML(xml_path, Segimage, xycalibration = 1, zcalibration = 1, tcali
         Uniqueobjects = {}
         Uniqueproperties = {}
         
-        
+        xcalibration = settings.get('pixelwidth')
+        ycalibration = settings.get('pixelheight')
+        zcalibration = settings.get('voxeldepth')
         if Mask is not None:
             if len(Mask.shape) < len(Segimage.shape):
                 # T Z Y X
@@ -411,21 +457,18 @@ def import_TM_XML(xml_path, Segimage, xycalibration = 1, zcalibration = 1, tcali
             else:
                 UpdateMask = Mask
             Mask = UpdateMask.astype('uint16')
-            TimedMask = boundary_points(Mask, xycalibration, zcalibration)
+            TimedMask = boundary_points(Mask, xcalibration, ycalibration, zcalibration)
         
         for frame in Spotobjects.findall('SpotsInFrame'):
             
             for Spotobject in frame.findall('Spot'):
                 #Create object with unique cell ID
                 cell_id = int(Spotobject.get("ID"))
-                Uniqueobjects[cell_id] = [cell_id]
-                Uniqueproperties[cell_id] = [cell_id]
                 #Get the TZYX location of the cells in that frame
-                Uniqueobjects[cell_id].append([Spotobject.get('FRAME'),Spotobject.get('POSITION_Z'), Spotobject.get('POSITION_Y'), Spotobject.get('POSITION_X') ])
+                Uniqueobjects[cell_id] = [Spotobject.get('FRAME'),Spotobject.get('POSITION_Z'), Spotobject.get('POSITION_Y'), Spotobject.get('POSITION_X') ]
                 #Get other properties associated with the Spotobject
-                Uniqueproperties[cell_id].append([Spotobject.get('TOTAL_INTENSITY_CH1')
-                                                ,Spotobject.get('MEAN_INTENSITY_CH1'), Spotobject.get('POSITION_T'), Spotobject.get('RADIUS')]) 
-                ""
+                Uniqueproperties[cell_id] = [Spotobject.get('TOTAL_INTENSITY_CH1')
+                                                ,Spotobject.get('MEAN_INTENSITY_CH1'), Spotobject.get('POSITION_T'), Spotobject.get('RADIUS')]
                 
         dividing_tracks = []
         non_dividing_tracks = []
@@ -439,12 +482,12 @@ def import_TM_XML(xml_path, Segimage, xycalibration = 1, zcalibration = 1, tcali
                    
                    source_id = edge.get('SPOT_SOURCE_ID')
                    target_id = edge.get('SPOT_TARGET_ID')
-                   sourcetime = edge.get('EDGE_TIME')
+                   edge_time = edge.get('EDGE_TIME')
                    directional_rate_change = edge.get('DIRECTIONAL_CHANGE_RATE')
                    speed = edge.get('SPEED')
                    
                    
-                   spot_object_source_target.append([source_id,target_id, sourcetime, directional_rate_change, speed])
+                   spot_object_source_target.append([source_id,target_id, edge_time, directional_rate_change, speed])
                 
                 #Sort the tracks by edge time  
                 spot_object_source_target = sorted(spot_object_source_target, key = sortTracks , reverse = False)
@@ -466,34 +509,37 @@ def import_TM_XML(xml_path, Segimage, xycalibration = 1, zcalibration = 1, tcali
                 tstart = 0    
                 for source_id, target_id, edge_time in spot_object_source_target:
                      if root_leaf[0] == source_id:    
-                             Source = Uniqueobjects[int(source_id)][1]
+                             Source = Uniqueobjects[int(source_id)]
                              tstart = int(float(Source[0]))
                              break
                     
                 
                 if DividingTrajectory == True:
                     
-                            sorted_dividing_tracklets = analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_target)
+                            tracklet_ids, dict_ordered_tracklets = analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_target)
+                                                
+                            location_prop_dist = tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask)
+                            
+                            
+                            dict_dividing_trackobjects, dict_dividing_speedobjects, dividing_trackobjects, dividing_tracklet_objects = TrackobjectCreator(sorted_dividing_tracklets, Uniqueobjects, xycalibration, zcalibration, tcalibration)
+
+                            dividing_tracks.append([track_id,dict_dividing_trackobjects, dict_dividing_speedobjects, dividing_trackobjects, dividing_tracklet_objects, sorted_dividing_tracklets, tstart])
+
+                            dividing_tracks = sorted(dividing_tracks, key = sortID, reverse = False)
                             
                 if DividingTrajectory == False:
                     
-                            sorted_non_dividing_tracklets = analyze_non_dividing_tracklets(root_leaf, spot_object_source_target)             
+                            tracklet_ids, dict_ordered_tracklets = analyze_non_dividing_tracklets(root_leaf, spot_object_source_target)    
+                            
+                            location_prop_dist = tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask)
                              
-                
-                # Create object trackID, T, Z, Y, X, speed, generationID, trackletID
-                #For each tracklet create Track and Speed objects
-                dict_non_dividing_trackobjects, dict_non_dividing_speedobjects, non_dividing_trackobjects, non_dividing_tracklet_objects = TrackobjectCreator(sorted_non_dividing_tracklets, Uniqueobjects, xycalibration, zcalibration, tcalibration)
-               
-                dict_dividing_trackobjects, dict_dividing_speedobjects, dividing_trackobjects, dividing_tracklet_objects = TrackobjectCreator(sorted_dividing_tracklets, Uniqueobjects, xycalibration, zcalibration, tcalibration)
+                            dict_non_dividing_trackobjects, dict_non_dividing_speedobjects, non_dividing_trackobjects, non_dividing_tracklet_objects = TrackobjectCreator(sorted_non_dividing_tracklets, Uniqueobjects, xycalibration, zcalibration, tcalibration)
 
+                            non_dividing_tracks.append([track_id,dict_non_dividing_trackobjects, dict_non_dividing_speedobjects, non_dividing_trackobjects, non_dividing_tracklet_objects, sorted_non_dividing_tracklets, tstart])
 
-                dividing_tracks.append([track_id,dict_dividing_trackobjects, dict_dividing_speedobjects, dividing_trackobjects, dividing_tracklet_objects, sorted_dividing_tracklets, tstart])
-                non_dividing_tracks.append([track_id,dict_non_dividing_trackobjects, dict_non_dividing_speedobjects, non_dividing_trackobjects, non_dividing_tracklet_objects, sorted_non_dividing_tracklets, tstart])
-
-                
-        #Sort tracks by their ID
-        dividing_tracks = sorted(dividing_tracks, key = sortID, reverse = False)
-        non_dividing_tracks = sorted(non_dividing_tracks, key = sortID, reverse = False)       
+                            non_dividing_tracks = sorted(non_dividing_tracks, key = sortID, reverse = False)   
+                            
+                            
         # Write all tracks to csv file as ID, T, Z, Y, X
         ID = []
         start_id = {}
@@ -529,7 +575,7 @@ def import_TM_XML(xml_path, Segimage, xycalibration = 1, zcalibration = 1, tcali
              SlocX = []
              Vloc = []
              Iloc = []
-             for j in tqdm(range(0, len(tracklet_objects))):
+             for j in tqdm(range(0, len(dividing_tracklet_objects))):
                          
                                     Spottrackletid = tracklet_objects[j]
                                     tracklet_region_id[Spottrackletid] = [Spottrackletid]
@@ -539,8 +585,8 @@ def import_TM_XML(xml_path, Segimage, xycalibration = 1, zcalibration = 1, tcali
                                     TrackletRegion = []
                                     TrackletVolume = []
                                     
-                                    DictSpotobject = DictTrackobjects[Spottrackletid][1]
-                                    DictVelocitySpotobject = DictSpeedobjects[Spottrackletid][1]
+                                    DictSpotobject = dict_track_objects[Spottrackletid][1]
+                                    DictVelocitySpotobject = dict_speed_objects[Spottrackletid][1]
                                     
                                     for i in range(0, len(DictSpotobject)): 
                                            
@@ -647,19 +693,19 @@ def import_TM_XML(xml_path, Segimage, xycalibration = 1, zcalibration = 1, tcali
         return RegionID, VolumeID, locationID, Tracks, ID, start_id
     
  
-def TrackobjectCreator(OrderedTracklets, Uniqueobjects, xycalibration, zcalibration, tcalibration):
+def TrackobjectCreator(ordered_tracklets, Uniqueobjects, xycalibration, zcalibration, tcalibration):
 
-                DictTrackobjects = {}
-                DictSpeedobjects = {} 
+                dict_track_objects = {}
+                dict_speed_objects = {} 
                 tracklet_objects = []
-                for k in range(0, len(OrderedTracklets)):
+                for k in range(0, len(ordered_tracklets)):
                     
-                        trackletid, tracklet = OrderedTracklets[k]
+                        trackletid, tracklet = ordered_tracklets[k]
                         tracklet_objects.append(trackletid)
                         Trackobjects = []
                         Speedobjects = []
-                        DictTrackobjects[trackletid] = [trackletid]
-                        DictSpeedobjects[trackletid] = [trackletid]
+                        dict_track_objects[trackletid] = [trackletid]
+                        dict_speed_objects[trackletid] = [trackletid]
                         for i in range(0, len(tracklet)):
                             source_id, timeID = tracklet[i]
                             if i < len(tracklet) - 1:
@@ -673,32 +719,37 @@ def TrackobjectCreator(OrderedTracklets, Uniqueobjects, xycalibration, zcalibrat
                             if Target not in Trackobjects:
                                Trackobjects.append(Target)
                             Speedobjects.append(speed)
-                        DictTrackobjects[trackletid].append(Trackobjects)    
-                        DictSpeedobjects[trackletid].append(Speedobjects)    
-                return DictTrackobjects, DictSpeedobjects, Trackobjects, tracklet_objects
+                        dict_track_objects[trackletid].append(Trackobjects)    
+                        dict_speed_objects[trackletid].append(Speedobjects)    
+                return dict_track_objects, dict_speed_objects, Trackobjects, tracklet_objects
             
             
 def tracklet_sorter(Tracklets, spot_object_source_target):
 
     
-     OrderedTracklets = []  
-     
+     ordered_tracklets = []  
+     tracklet_ids = []
+     dict_ordered_tracklets = {}
      for trackletid , tracklet in Tracklets:
-         TimeTracklet = []
-         Visited = []
+         tracklet_ids.append(trackletid)
+         time_tracklet = []
+         visited = []
+         dict_ordered_tracklets[trackletid] = [trackletid]
          for cellsource_id in tracklet:
              
-              for source_id, target_id,  edge_time in spot_object_source_target:
+              for source_id,target_id, edge_time, directional_rate_change, speed  in spot_object_source_target:
                   
                   if cellsource_id == source_id or cellsource_id == target_id:
-                                if cellsource_id not in Visited:          
-                                   TimeTracklet.append([cellsource_id, edge_time])
-                                   Visited.append(cellsource_id)
-         otracklet = sorted(TimeTracklet, key = sortTracklet, reverse = False)
+                                if cellsource_id not in visited:          
+                                   time_tracklet.append([ [cellsource_id, directional_rate_change, speed], edge_time])
+                                   visited.append(cellsource_id)
+                                   
+         otracklet = sorted(time_tracklet, key = sortTracklet, reverse = False)
+         dict_ordered_tracklets[trackletid].append(otracklet)
          if len(otracklet) > 0:
-            OrderedTracklets.append([trackletid,otracklet])
+            ordered_tracklets.append([trackletid,otracklet])
      
-     return OrderedTracklets
+     return tracklet_ids, dict_ordered_tracklets
 
     
 def Multiplicity(spot_object_source_target):
