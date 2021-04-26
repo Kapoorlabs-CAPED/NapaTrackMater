@@ -382,7 +382,7 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
                             return sorted_dividing_tracklets    
                         
                         
-def tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask):
+def tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask, tstart):
     
     
                             location_prop_dist = {}
@@ -418,7 +418,7 @@ def tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uni
                                                                 distance = 0
                                                                 prob_inside = 0
                                                                 
-                                      current_location_prop_dist.append([real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside])      
+                                      current_location_prop_dist.append([real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside, tstart])      
                         
                                 location_prop_dist[idxs].append(current_location_prop_dist)
                             
@@ -472,9 +472,11 @@ def import_TM_XML(xml_path, Segimage, image = None, Mask = None, mintracklength 
                 
         dividing_tracks = []
         non_dividing_tracks = []
+        all_track_properties = {}
         for track in tracks.findall('Track'):
 
             track_id = int(track.get("TRACK_ID"))
+            all_track_properties[track_id] = [track_id]
             spot_object_source_target = []
             if track_id in filtered_track_ids:
                 print('Creating Tracklets of TrackID', track_id)
@@ -518,179 +520,20 @@ def import_TM_XML(xml_path, Segimage, image = None, Mask = None, mintracklength 
                     
                             tracklet_ids, dict_ordered_tracklets = analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_target)
                                                 
-                            location_prop_dist = tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask)
+                            # for each tracklet get real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside
+                            location_prop_dist = tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask, tstart)
                             
-                            
-                            dict_dividing_trackobjects, dict_dividing_speedobjects, dividing_trackobjects, dividing_tracklet_objects = TrackobjectCreator(sorted_dividing_tracklets, Uniqueobjects, xycalibration, zcalibration, tcalibration)
-
-                            dividing_tracks.append([track_id,dict_dividing_trackobjects, dict_dividing_speedobjects, dividing_trackobjects, dividing_tracklet_objects, sorted_dividing_tracklets, tstart])
-
-                            dividing_tracks = sorted(dividing_tracks, key = sortID, reverse = False)
+                            all_track_properties[track_id].append(location_prop_dist)
                             
                 if DividingTrajectory == False:
                     
                             tracklet_ids, dict_ordered_tracklets = analyze_non_dividing_tracklets(root_leaf, spot_object_source_target)    
                             
-                            location_prop_dist = tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask)
+                            location_prop_dist = tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask, tstart)
                              
-                            dict_non_dividing_trackobjects, dict_non_dividing_speedobjects, non_dividing_trackobjects, non_dividing_tracklet_objects = TrackobjectCreator(sorted_non_dividing_tracklets, Uniqueobjects, xycalibration, zcalibration, tcalibration)
-
-                            non_dividing_tracks.append([track_id,dict_non_dividing_trackobjects, dict_non_dividing_speedobjects, non_dividing_trackobjects, non_dividing_tracklet_objects, sorted_non_dividing_tracklets, tstart])
-
-                            non_dividing_tracks = sorted(non_dividing_tracks, key = sortID, reverse = False)   
+                            all_track_properties[track_id].append(location_prop_dist)
                             
-                            
-        # Write all tracks to csv file as ID, T, Z, Y, X
-        ID = []
-        start_id = {}
-        
-        RegionID = {}
-        VolumeID = {}
-        locationID = {}    
-
-        Tloc = []
-        Zloc = []
-        Yloc = []
-        Xloc = []
-        
-        for trackid, dict_dividing_trackobjects, dict_dividing_speedobjects, dividing_trackobjects, dividing_tracklet_objects, sorted_dividing_tracklets, tstart in dividing_tracks:
-            
-             print('Computing Tracklets for TrackID:', trackid)  
-             RegionID[trackid] = [trackid]
-             VolumeID[trackid] = [trackid]
-             locationID[trackid] = [trackid]
-             start_id[trackid] = [trackid]
-             tracklet_region_id = {}
-             tracklet_volume_id = {}
-             tracklet_location_id = {}
-             
-             start_id[trackid].append(tstart)
-             
-
-             Speedloc = []
-             DistanceBoundary = []
-             ProbabilityInside = []
-             SlocZ = []
-             SlocY = []
-             SlocX = []
-             Vloc = []
-             Iloc = []
-             for j in tqdm(range(0, len(dividing_tracklet_objects))):
-                         
-                                    Spottrackletid = tracklet_objects[j]
-                                    tracklet_region_id[Spottrackletid] = [Spottrackletid]
-                                    tracklet_volume_id[Spottrackletid] = [Spottrackletid]
-                                    tracklet_location_id[Spottrackletid] = [Spottrackletid]
-                                    TrackletLocation = []
-                                    TrackletRegion = []
-                                    TrackletVolume = []
-                                    
-                                    DictSpotobject = dict_track_objects[Spottrackletid][1]
-                                    DictVelocitySpotobject = dict_speed_objects[Spottrackletid][1]
-                                    
-                                    for i in range(0, len(DictSpotobject)): 
-                                           
-                                           Spotobject = DictSpotobject[i]
-                                           VelocitySpotobject = DictVelocitySpotobject[i]
-                                           t = int(float(Spotobject[0]))
-                                           z = int(float(Spotobject[1]))
-                                           y = int(float(Spotobject[2]))
-                                           x = int(float(Spotobject[3]))
-                                           
-                                          
-                                           speed = (float(VelocitySpotobject))
-                                           ID.append(trackid)
-                                           Tloc.append(t)
-                                           Zloc.append(z)
-                                           Yloc.append(y)
-                                           Xloc.append(x)
-                                           Speedloc.append(speed)
-                                           if t < Segimage.shape[0]:
-                                                   CurrentSegimage = Segimage[t,:]
-                                                   if image is not None:
-                                                           Currentimage = image[t,:]
-                                                           properties = measure.regionprops(CurrentSegimage, Currentimage)
-                                                   if image is None:
-                                                           properties = measure.regionprops(CurrentSegimage, CurrentSegimage)
-                                                           
-                                                   TwoDCoordinates = [(prop.centroid[1] , prop.centroid[2]) for prop in properties]
-                                                   TwoDtree = spatial.cKDTree(TwoDCoordinates)
-                                                   TwoDLocation = (y ,x)
-                                                   closestpoint = TwoDtree.query(TwoDLocation)
-                                                   for prop in properties:
-                                                       
-                                                       
-                                                       if int(prop.centroid[1]) == int(TwoDCoordinates[closestpoint[1]][0]) and int(prop.centroid[2]) == int(TwoDCoordinates[closestpoint[1]][1]):
-                                                           
-                                                           
-                                                            sizeZ = abs(prop.bbox[0] - prop.bbox[3]) * zcalibration
-                                                            sizeY = abs(prop.bbox[1] - prop.bbox[4]) * xycalibration
-                                                            sizeX = abs(prop.bbox[2] - prop.bbox[5]) * xycalibration
-                                                            Area = prop.area
-                                                            intensity = np.sum(prop.image)
-                                                            Vloc.append(Area)
-                                                            SlocZ.append(sizeZ)
-                                                            SlocY.append(sizeY)
-                                                            SlocX.append(sizeX)
-                                                            Iloc.append(intensity)
-                                                            TrackletRegion.append([1,sizeZ, sizeY,sizeX])
-                                                            
-                                                            
-                                                            
-                                                            # Compute distance to the boundary
-                                                            if Mask is not None:
-                                                                
-                                                                testlocation = (z * zcalibration ,y * xycalibration ,x * xycalibration)
-                                                                tree, indices, masklabel, masklabelvolume = TimedMask[str(int(t))]
-                                                                
-                                                                
-                                                                cellradius = math.sqrt( sizeX * sizeX + sizeY * sizeY)/4
-                                                               
-                                                                Regionlabel = Mask[int(t), int(z), int(y) , int(x)] 
-                                                                for k in range(0, len(masklabel)):
-                                                                    currentlabel = masklabel[k]
-                                                                    currentvolume = masklabelvolume[k]
-                                                                    currenttree = tree[k]
-                                                                    #Get the location and distance to the nearest boundary point
-                                                                    distance, location = currenttree.query(testlocation)
-                                                                    distance = max(0,distance  - cellradius)
-                                                                    if currentlabel == Regionlabel and Regionlabel > 0:
-                                                                            probabilityInside = max(0,(distance) / currentvolume)
-                                                                    else:
-                                                                        
-                                                                            probabilityInside = 0 
-                                                            else:
-                                                                distance = 0
-                                                                probabilityInside = 0
-                                                            
-                                                            DistanceBoundary.append(distance)
-                                                            ProbabilityInside.append(probabilityInside)
-                                                            TrackletVolume.append([Area, intensity, speed, distance , probabilityInside])
-                                                            TrackletLocation.append([t, z, y, x])
-                           
-                                           tracklet_location_id[Spottrackletid].append(TrackletLocation)
-                                           tracklet_volume_id[Spottrackletid].append(TrackletVolume)
-                                           tracklet_region_id[Spottrackletid].append(TrackletRegion)
-                           
-             locationID[trackid].append(tracklet_location_id)
-             RegionID[trackid].append(tracklet_region_id)
-             VolumeID[trackid].append(tracklet_volume_id)
-                 
-        df = pd.DataFrame(list(zip(ID,Tloc,Zloc,Yloc,Xloc, DistanceBoundary, ProbabilityInside, SlocZ, SlocY, SlocX, Vloc, Iloc, Speedloc)), index = None, 
-                                              columns =['ID', 't', 'z', 'y', 'x', 'distBoundary', 'probInside', 'sizeZ', 'sizeY', 'sizeX', 'volume', 'intensity', 'speed'])
-
-        df.to_csv(savedir + '/' + 'Extra' + Name +  '.csv')  
-        df     
-        
-        # create the final data array: track_id, T, Z, Y, X
-        
-        df = pd.DataFrame(list(zip(ID,Tloc,Zloc,Yloc,Xloc)), index = None, 
-                                              columns =['ID', 't', 'z', 'y', 'x'])
-
-        df.to_csv(savedir + '/' + 'TrackMate' +  Name +  '.csv', index = False)  
-        df
-
-        return RegionID, VolumeID, locationID, Tracks, ID, start_id
+        return all_track_properties
     
  
 def TrackobjectCreator(ordered_tracklets, Uniqueobjects, xycalibration, zcalibration, tcalibration):
