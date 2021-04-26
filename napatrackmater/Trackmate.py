@@ -39,7 +39,7 @@ AllID = []
 AllStartChildren = []
 AllEndChildren = []
 
-def Velocity(Source, Target, XYcalibration, Zcalibration, Tcalibration):
+def Velocity(Source, Target, xycalibration, zcalibration, tcalibration):
     
     
     ts,zs,ys,xs = Source
@@ -48,9 +48,9 @@ def Velocity(Source, Target, XYcalibration, Zcalibration, Tcalibration):
     
   
     
-    Velocity = (float(zs)* Zcalibration - float(zt)* Zcalibration) * (float(zs)* Zcalibration - float(zt)* Zcalibration) + (float(ys)* XYcalibration - float(yt)* XYcalibration) * (float(ys)* XYcalibration - float(yt)* XYcalibration) + (float(xs)* XYcalibration - float(xt)* XYcalibration) * (float(xs)* XYcalibration - float(xt)* XYcalibration)
+    Velocity = (float(zs)* zcalibration - float(zt)* zcalibration) * (float(zs)* zcalibration - float(zt)* zcalibration) + (float(ys)* xycalibration - float(yt)* xycalibration) * (float(ys)* xycalibration - float(yt)* xycalibration) + (float(xs)* xycalibration - float(xt)* xycalibration) * (float(xs)* xycalibration - float(xt)* xycalibration)
     
-    return math.sqrt(Velocity)/ max((float(tt)* Tcalibration-float(ts)* Tcalibration),1)
+    return math.sqrt(Velocity)/ max((float(tt)* tcalibration-float(ts)* tcalibration),1)
     
 
 
@@ -97,7 +97,7 @@ Convert an integer image into boundary points for 2,3 and 4D data
 """
 
 
-def BoundaryPoints(mask, xycalibration, zcalibration):
+def boundary_points(mask, xycalibration, zcalibration):
     
     ndim = len(mask.shape)
     
@@ -236,45 +236,45 @@ def BoundaryPoints(mask, xycalibration, zcalibration):
 '''
 In this method we purge the short tracklets to exclude them for further tracking process
 '''
-def PurgeTracklets(RootLeaf, SplitPoints, SpotobjectSourceTarget, DividingTrajectory, mintracklength = 2):
+def PurgeTracklets(root_leaf, split_points, spot_object_source_target, DividingTrajectory, mintracklength = 2):
     
-    #RootLeaf object contains root in the begining and leafes after that, we remove the split point ID and leaf ID the corresponds to short tracklets
+    #root_leaf object contains root in the begining and leafes after that, we remove the split point ID and leaf ID the corresponds to short tracklets
 
-    CuratedRootLeaf = []
-    CuratedSplitPoints = SplitPoints.copy()
-    Root = RootLeaf[0]
-    CuratedRootLeaf = RootLeaf.copy()
+    Curatedroot_leaf = []
+    Curatedsplit_points = split_points.copy()
+    Root = root_leaf[0]
+    Curatedroot_leaf = root_leaf.copy()
     if DividingTrajectory == True:
         Visited = []
-        for i in range(1, len(RootLeaf)):
-                                Leaf = RootLeaf[i]
+        for i in range(1, len(root_leaf)):
+                                Leaf = root_leaf[i]
                                 tracklength = 0
-                                while(Leaf not in SplitPoints and Leaf != Root):
-                                    for sourceID, targetID, EdgeTime in SpotobjectSourceTarget:
+                                while(Leaf not in split_points and Leaf != Root):
+                                    for source_id, target_id, edge_time in spot_object_source_target:
                                         # Search for the target id corresponding to leaf                        
-                                        if Leaf == targetID:
+                                        if Leaf == target_id:
                                               # Include the split points here
                                               #Once we find the leaf we move a step back to its source to find its source
-                                              Leaf = sourceID
+                                              Leaf = source_id
                                               tracklength = tracklength + 1
                                               RootSplitPoint = Leaf
-                                              if Leaf in SplitPoints:
+                                              if Leaf in split_points:
                                                   break
                                               if Leaf in Visited:
                                                 break
-                                              Visited.append(sourceID)
+                                              Visited.append(source_id)
                                 if tracklength < mintracklength:  
                                     try:
-                                       CuratedSplitPoints.remove(RootSplitPoint)
-                                       CuratedRootLeaf.remove(Leaf)
+                                       Curatedsplit_points.remove(RootSplitPoint)
+                                       Curatedroot_leaf.remove(Leaf)
                                     except:
                                         pass
                                     
                              
-    return CuratedSplitPoints, CuratedRootLeaf                                          
+    return Curatedsplit_points, Curatedroot_leaf                                          
 
 
-def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, Tcalibration = 1, image = None, Mask = None, mintracklength = 2):
+def import_TM_XML(xml_path, Segimage, xycalibration = 1, zcalibration = 1, tcalibration = 1, image = None, Mask = None, mintracklength = 2):
     
         Name = os.path.basename(os.path.splitext(xml_path)[0])
         savedir = os.path.dirname(xml_path)
@@ -303,7 +303,7 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
             else:
                 UpdateMask = Mask
             Mask = UpdateMask.astype('uint16')
-            TimedMask = BoundaryPoints(Mask, XYcalibration, Zcalibration)
+            TimedMask = boundary_points(Mask, xycalibration, zcalibration)
         
         for frame in Spotobjects.findall('SpotsInFrame'):
             
@@ -323,25 +323,25 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
         for track in tracks.findall('Track'):
 
             track_id = int(track.get("TRACK_ID"))
-            SpotobjectSourceTarget = []
+            spot_object_source_target = []
             if track_id in filtered_track_ids:
                 print('Creating Tracklets of TrackID', track_id)
                 for edge in track.findall('Edge'):
                    
-                   sourceID = edge.get('SPOT_SOURCE_ID')
-                   targetID = edge.get('SPOT_TARGET_ID')
+                   source_id = edge.get('SPOT_SOURCE_ID')
+                   target_id = edge.get('SPOT_TARGET_ID')
                    sourceTime = edge.get('EDGE_TIME')
                   
-                   SpotobjectSourceTarget.append([sourceID,targetID, sourceTime])
+                   spot_object_source_target.append([source_id,target_id, sourceTime])
                 
                 #Sort the tracks by edge time  
-                SpotobjectSourceTarget = sorted(SpotobjectSourceTarget, key = sortTracks , reverse = False)
+                spot_object_source_target = sorted(spot_object_source_target, key = sortTracks , reverse = False)
                 
                 # Get all the IDs, uniquesource, targets attached, leaf, root, splitpoint IDs
-                Sources, MultiTargets, RootLeaf, SplitPoints = Multiplicity(SpotobjectSourceTarget)
+                sources, multi_targets, root_leaf, split_points = Multiplicity(spot_object_source_target)
                 
-                if len(SplitPoints) > 0:
-                    SplitPoints = SplitPoints[::-1]
+                if len(split_points) > 0:
+                    split_points = split_points[::-1]
                     DividingTrajectory = True
                     
                 else:
@@ -349,12 +349,12 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
                     DividingTrajectory = False
                     
                 # Remove dqngling tracklets    
-                SplitPoints, RootLeaf = PurgeTracklets(RootLeaf, SplitPoints, SpotobjectSourceTarget, DividingTrajectory, mintracklength = mintracklength)     
+                split_points, root_leaf = PurgeTracklets(root_leaf, split_points, spot_object_source_target, DividingTrajectory, mintracklength = mintracklength)     
                     
                 tstart = 0    
-                for sourceID, targetID, EdgeTime in SpotobjectSourceTarget:
-                     if RootLeaf[0] == sourceID:    
-                             Source = Uniqueobjects[int(sourceID)][1]
+                for source_id, target_id, edge_time in spot_object_source_target:
+                     if root_leaf[0] == source_id:    
+                             Source = Uniqueobjects[int(source_id)][1]
                              tstart = int(float(Source[0]))
                              break
                     
@@ -362,7 +362,7 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
                 if DividingTrajectory == True:
                             print("Dividing Trajectory")
                             #Make tracklets
-                            Root = RootLeaf[0]
+                            Root = root_leaf[0]
                             
                             Visited = []
                             #For the root we need to go forward
@@ -371,64 +371,64 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
                             trackletid = 0
                             RootCopy = Root
                             Visited.append(Root)
-                            while(RootCopy not in SplitPoints and RootCopy not in RootLeaf[1:]):
-                                for sourceID, targetID, EdgeTime in SpotobjectSourceTarget:
+                            while(RootCopy not in split_points and RootCopy not in root_leaf[1:]):
+                                for source_id, target_id, edge_time in spot_object_source_target:
                                         # Search for the target id corresponding to leaf                        
-                                        if RootCopy == sourceID:
+                                        if RootCopy == source_id:
                                               
                                               #Once we find the leaf we move a step fwd to its target to find its target
-                                              RootCopy = targetID
-                                              if RootCopy in SplitPoints:
+                                              RootCopy = target_id
+                                              if RootCopy in split_points:
                                                   break
                                               if RootCopy in Visited:
                                                 break
-                                              Visited.append(targetID)
-                                              tracklet.append(targetID)
+                                              Visited.append(target_id)
+                                              tracklet.append(target_id)
                                               
                             Tracklets.append([trackletid, tracklet])
                             
                             trackletid = 1       
-                            for i in range(1, len(RootLeaf)):
-                                Leaf = RootLeaf[i]
+                            for i in range(1, len(root_leaf)):
+                                Leaf = root_leaf[i]
                                 #For leaf we need to go backward
                                 tracklet = []
                                 tracklet.append(Leaf)
-                                while(Leaf not in SplitPoints and Leaf != Root):
-                                    for sourceID, targetID, EdgeTime in SpotobjectSourceTarget:
+                                while(Leaf not in split_points and Leaf != Root):
+                                    for source_id, target_id, edge_time in spot_object_source_target:
                                         # Search for the target id corresponding to leaf                        
-                                        if Leaf == targetID:
+                                        if Leaf == target_id:
                                               # Include the split points here
                                               
                                               #Once we find the leaf we move a step back to its source to find its source
-                                              Leaf = sourceID
-                                              if Leaf in SplitPoints:
+                                              Leaf = source_id
+                                              if Leaf in split_points:
                                                   break
                                               if Leaf in Visited:
                                                 break
-                                              tracklet.append(sourceID)
-                                              Visited.append(sourceID)
+                                              tracklet.append(source_id)
+                                              Visited.append(source_id)
                                 Tracklets.append([trackletid, tracklet]) 
                                 trackletid = trackletid + 1
                             
                             
                             # Exclude the split point near root    
-                            for i in range(0, len(SplitPoints) -1):
-                                Start = SplitPoints[i]
+                            for i in range(0, len(split_points) -1):
+                                Start = split_points[i]
                                 tracklet = []
                                 tracklet.append(Start)
-                                OtherSplitPoints = SplitPoints.copy()
-                                OtherSplitPoints.pop(i)
+                                Othersplit_points = split_points.copy()
+                                Othersplit_points.pop(i)
                                 while(Start is not Root):
-                                    for sourceID, targetID, EdgeTime in SpotobjectSourceTarget:
+                                    for source_id, target_id, edge_time in spot_object_source_target:
                                         
-                                        if Start == targetID:
+                                        if Start == target_id:
                                             
-                                            Start = sourceID
+                                            Start = source_id
                                             if Start in Visited:
                                                 break
-                                            tracklet.append(sourceID)
-                                            Visited.append(sourceID)
-                                            if Start in OtherSplitPoints:
+                                            tracklet.append(source_id)
+                                            Visited.append(source_id)
+                                            if Start in Othersplit_points:
                                                 break
                                             
                                 Tracklets.append([trackletid, tracklet]) 
@@ -437,18 +437,18 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
                             
                 if DividingTrajectory == False:
                         print('Not Dividing Trajectory')
-                        if len(RootLeaf) > 0:
-                             Root = RootLeaf[0]
-                             Leaf = RootLeaf[-1]
+                        if len(root_leaf) > 0:
+                             Root = root_leaf[0]
+                             Leaf = root_leaf[-1]
                              tracklet = []
                              trackletid = 0
                              tracklet.append(Root)
                              #For non dividing trajectories iterate from Root to the only Leaf
                              while(Root != Leaf):
-                                        for sourceID, targetID, EdgeTime in SpotobjectSourceTarget:
-                                                if Root == sourceID:
-                                                      tracklet.append(sourceID)
-                                                      Root = targetID
+                                        for source_id, target_id, edge_time in spot_object_source_target:
+                                                if Root == source_id:
+                                                      tracklet.append(source_id)
+                                                      Root = target_id
                                                       if Root==Leaf:
                                                           break
                                                 else:
@@ -457,13 +457,13 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
                              
                 # Sort the Tracklets in time
                 
-                SortedTracklets = TrackletSorter(Tracklets, SpotobjectSourceTarget)
+                SortedTracklets = tracklet_sorter(Tracklets, spot_object_source_target)
                 # Create object trackID, T, Z, Y, X, speed, generationID, trackletID
                 
                 
                 #For each tracklet create Track and Speed objects
-                DictTrackobjects, DictSpeedobjects, Trackobjects, Trackletobjects = TrackobjectCreator(SortedTracklets, Uniqueobjects, XYcalibration, Zcalibration, Tcalibration)
-                Tracks.append([track_id,DictTrackobjects, DictSpeedobjects, Trackobjects, Trackletobjects, SortedTracklets, tstart])
+                DictTrackobjects, DictSpeedobjects, Trackobjects, tracklet_objects = TrackobjectCreator(SortedTracklets, Uniqueobjects, xycalibration, zcalibration, tcalibration)
+                Tracks.append([track_id,DictTrackobjects, DictSpeedobjects, Trackobjects, tracklet_objects, SortedTracklets, tstart])
                 
                 
         #Sort tracks by their ID
@@ -471,7 +471,7 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
                
         # Write all tracks to csv file as ID, T, Z, Y, X
         ID = []
-        StartID = {}
+        start_id = {}
         
         RegionID = {}
         VolumeID = {}
@@ -482,18 +482,18 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
         Yloc = []
         Xloc = []
         
-        for trackid, DictTrackobjects, DictSpeedobjects, Trackobjects, Trackletobjects, SortedTracklets, tstart in Tracks:
+        for trackid, DictTrackobjects, DictSpeedobjects, Trackobjects, tracklet_objects, SortedTracklets, tstart in Tracks:
             
              print('Computing Tracklets for TrackID:', trackid)  
              RegionID[trackid] = [trackid]
              VolumeID[trackid] = [trackid]
              locationID[trackid] = [trackid]
-             StartID[trackid] = [trackid]
-             TrackletRegionID = {}
-             TrackletVolumeID = {}
-             TrackletlocationID = {}
+             start_id[trackid] = [trackid]
+             tracklet_region_id = {}
+             tracklet_volume_id = {}
+             tracklet_location_id = {}
              
-             StartID[trackid].append(tstart)
+             start_id[trackid].append(tstart)
              
 
              Speedloc = []
@@ -504,12 +504,12 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
              SlocX = []
              Vloc = []
              Iloc = []
-             for j in tqdm(range(0, len(Trackletobjects))):
+             for j in tqdm(range(0, len(tracklet_objects))):
                          
-                                    Spottrackletid = Trackletobjects[j]
-                                    TrackletRegionID[Spottrackletid] = [Spottrackletid]
-                                    TrackletVolumeID[Spottrackletid] = [Spottrackletid]
-                                    TrackletlocationID[Spottrackletid] = [Spottrackletid]
+                                    Spottrackletid = tracklet_objects[j]
+                                    tracklet_region_id[Spottrackletid] = [Spottrackletid]
+                                    tracklet_volume_id[Spottrackletid] = [Spottrackletid]
+                                    tracklet_location_id[Spottrackletid] = [Spottrackletid]
                                     TrackletLocation = []
                                     TrackletRegion = []
                                     TrackletVolume = []
@@ -552,9 +552,9 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
                                                        if int(prop.centroid[1]) == int(TwoDCoordinates[closestpoint[1]][0]) and int(prop.centroid[2]) == int(TwoDCoordinates[closestpoint[1]][1]):
                                                            
                                                            
-                                                            sizeZ = abs(prop.bbox[0] - prop.bbox[3]) * Zcalibration
-                                                            sizeY = abs(prop.bbox[1] - prop.bbox[4]) * XYcalibration
-                                                            sizeX = abs(prop.bbox[2] - prop.bbox[5]) * XYcalibration
+                                                            sizeZ = abs(prop.bbox[0] - prop.bbox[3]) * zcalibration
+                                                            sizeY = abs(prop.bbox[1] - prop.bbox[4]) * xycalibration
+                                                            sizeX = abs(prop.bbox[2] - prop.bbox[5]) * xycalibration
                                                             Area = prop.area
                                                             intensity = np.sum(prop.image)
                                                             Vloc.append(Area)
@@ -569,7 +569,7 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
                                                             # Compute distance to the boundary
                                                             if Mask is not None:
                                                                 
-                                                                testlocation = (z * Zcalibration ,y * XYcalibration ,x * XYcalibration)
+                                                                testlocation = (z * zcalibration ,y * xycalibration ,x * xycalibration)
                                                                 tree, indices, masklabel, masklabelvolume = TimedMask[str(int(t))]
                                                                 
                                                                 
@@ -597,13 +597,13 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
                                                             TrackletVolume.append([Area, intensity, speed, distance , probabilityInside])
                                                             TrackletLocation.append([t, z, y, x])
                            
-                                           TrackletlocationID[Spottrackletid].append(TrackletLocation)
-                                           TrackletVolumeID[Spottrackletid].append(TrackletVolume)
-                                           TrackletRegionID[Spottrackletid].append(TrackletRegion)
+                                           tracklet_location_id[Spottrackletid].append(TrackletLocation)
+                                           tracklet_volume_id[Spottrackletid].append(TrackletVolume)
+                                           tracklet_region_id[Spottrackletid].append(TrackletRegion)
                            
-             locationID[trackid].append(TrackletlocationID)
-             RegionID[trackid].append(TrackletRegionID)
-             VolumeID[trackid].append(TrackletVolumeID)
+             locationID[trackid].append(tracklet_location_id)
+             RegionID[trackid].append(tracklet_region_id)
+             VolumeID[trackid].append(tracklet_volume_id)
                  
         df = pd.DataFrame(list(zip(ID,Tloc,Zloc,Yloc,Xloc, DistanceBoundary, ProbabilityInside, SlocZ, SlocY, SlocX, Vloc, Iloc, Speedloc)), index = None, 
                                               columns =['ID', 't', 'z', 'y', 'x', 'distBoundary', 'probInside', 'sizeZ', 'sizeY', 'sizeX', 'volume', 'intensity', 'speed'])
@@ -619,41 +619,41 @@ def ImportTrackmateXML(xml_path, Segimage, XYcalibration = 1, Zcalibration = 1, 
         df.to_csv(savedir + '/' + 'TrackMate' +  Name +  '.csv', index = False)  
         df
 
-        return RegionID, VolumeID, locationID, Tracks, ID, StartID
+        return RegionID, VolumeID, locationID, Tracks, ID, start_id
     
  
-def TrackobjectCreator(OrderedTracklets, Uniqueobjects, XYcalibration, Zcalibration, Tcalibration):
+def TrackobjectCreator(OrderedTracklets, Uniqueobjects, xycalibration, zcalibration, tcalibration):
 
                 DictTrackobjects = {}
                 DictSpeedobjects = {} 
-                Trackletobjects = []
+                tracklet_objects = []
                 for k in range(0, len(OrderedTracklets)):
                     
                         trackletid, tracklet = OrderedTracklets[k]
-                        Trackletobjects.append(trackletid)
+                        tracklet_objects.append(trackletid)
                         Trackobjects = []
                         Speedobjects = []
                         DictTrackobjects[trackletid] = [trackletid]
                         DictSpeedobjects[trackletid] = [trackletid]
                         for i in range(0, len(tracklet)):
-                            sourceID, timeID = tracklet[i]
+                            source_id, timeID = tracklet[i]
                             if i < len(tracklet) - 1:
-                              targetID, targettimeID = tracklet[i+1]
+                              target_id, targettimeID = tracklet[i+1]
                             else:
-                              targetID = sourceID
+                              target_id = source_id
                             #All tracks
-                            Source = Uniqueobjects[int(sourceID)][1]
-                            Target = Uniqueobjects[int(targetID)][1]
-                            speed = Velocity(Source, Target, XYcalibration, Zcalibration, Tcalibration)
+                            Source = Uniqueobjects[int(source_id)][1]
+                            Target = Uniqueobjects[int(target_id)][1]
+                            speed = Velocity(Source, Target, xycalibration, zcalibration, tcalibration)
                             if Target not in Trackobjects:
                                Trackobjects.append(Target)
                             Speedobjects.append(speed)
                         DictTrackobjects[trackletid].append(Trackobjects)    
                         DictSpeedobjects[trackletid].append(Speedobjects)    
-                return DictTrackobjects, DictSpeedobjects, Trackobjects, Trackletobjects
+                return DictTrackobjects, DictSpeedobjects, Trackobjects, tracklet_objects
             
             
-def TrackletSorter(Tracklets, SpotobjectSourceTarget):
+def tracklet_sorter(Tracklets, spot_object_source_target):
 
     
      OrderedTracklets = []  
@@ -661,14 +661,14 @@ def TrackletSorter(Tracklets, SpotobjectSourceTarget):
      for trackletid , tracklet in Tracklets:
          TimeTracklet = []
          Visited = []
-         for cellsourceid in tracklet:
+         for cellsource_id in tracklet:
              
-              for sourceID, targetID,  EdgeTime in SpotobjectSourceTarget:
+              for source_id, target_id,  edge_time in spot_object_source_target:
                   
-                  if cellsourceid == sourceID or cellsourceid == targetID:
-                                if cellsourceid not in Visited:          
-                                   TimeTracklet.append([cellsourceid, EdgeTime])
-                                   Visited.append(cellsourceid)
+                  if cellsource_id == source_id or cellsource_id == target_id:
+                                if cellsource_id not in Visited:          
+                                   TimeTracklet.append([cellsource_id, edge_time])
+                                   Visited.append(cellsource_id)
          otracklet = sorted(TimeTracklet, key = sortTracklet, reverse = False)
          if len(otracklet) > 0:
             OrderedTracklets.append([trackletid,otracklet])
@@ -676,55 +676,55 @@ def TrackletSorter(Tracklets, SpotobjectSourceTarget):
      return OrderedTracklets
 
     
-def Multiplicity(SpotobjectSourceTarget):
+def Multiplicity(spot_object_source_target):
 
-     Sources = []    
+     sources = []    
      
-     MultiTargets = {}
+     multi_targets = {}
 
-     RootLeaf = []
+     root_leaf = []
      
-     SplitPoints = []
+     split_points = []
      
-     for sourceID, targetID, EdgeTime in SpotobjectSourceTarget:
+     for source_id, target_id, edge_time in spot_object_source_target:
                     
                              
-                             if sourceID not in Sources:
+                             if source_id not in sources:
                                   #List all the sources including the dividing ones only once
-                                  Sources.append(sourceID)
+                                  sources.append(source_id)
      
      #The source list contains only unique sources, now we look for targets connected to it + Root and leaf nodes                           
      
      
-     for i in range(0, len(Sources)):
+     for i in range(0, len(sources)):
          
-           ID = Sources[i]
+           ID = sources[i]
            Targets = []
-           for sourceID, targetID, EdgeTime in SpotobjectSourceTarget:
+           for source_id, target_id, edge_time in spot_object_source_target:
                
                
                
-               if ID == sourceID:
+               if ID == source_id:
                    
-                   Targets.append(targetID)
-                   MultiTargets[str(sourceID)] = Targets
+                   Targets.append(target_id)
+                   multi_targets[str(source_id)] = Targets
      #Append the leaf first              
-     RootLeaf.append(Sources[0])
-     for sourceID, targetID, EdgeTime in SpotobjectSourceTarget:
+     root_leaf.append(sources[0])
+     for source_id, target_id, edge_time in spot_object_source_target:
          
-         TestTargets = MultiTargets[str(sourceID)]
+         TestTargets = multi_targets[str(source_id)]
          
-         if len(TestTargets) > 1 and sourceID not in SplitPoints:
+         if len(TestTargets) > 1 and source_id not in split_points:
              
-             SplitPoints.append(sourceID)
+             split_points.append(source_id)
          
-         if targetID not in Sources:
+         if target_id not in sources:
              
-             RootLeaf.append(targetID)
+             root_leaf.append(target_id)
      
              
         
-     return Sources, MultiTargets, RootLeaf, SplitPoints
+     return sources, multi_targets, root_leaf, split_points
 
          
 
@@ -735,7 +735,7 @@ def Multiplicity(SpotobjectSourceTarget):
 class TrackViewer(object):
     
     
-    def __init__(self, originalviewer, Raw, Seg, Mask, locationID, RegionID, VolumeID,  scale, ID, startID, canvas, ax, figure, savedir, saveplot, Tcalibration):
+    def __init__(self, originalviewer, Raw, Seg, Mask, locationID, RegionID, VolumeID,  scale, ID, start_id, canvas, ax, figure, savedir, saveplot, tcalibration):
         
         
         self.trackviewer = originalviewer
@@ -747,8 +747,8 @@ class TrackViewer(object):
         self.VolumeID = VolumeID
         self.scale = scale
         self.ID = ID
-        self.startID = startID
-        self.Tcalibration = Tcalibration
+        self.start_id = start_id
+        self.tcalibration = tcalibration
         self.saveplot = saveplot
         self.savedir = savedir
         self.layername = 'Trackpoints'
@@ -831,7 +831,7 @@ class TrackViewer(object):
                                         IDLocations.append([t,z,y,x])
                                         IDRegions.append([sizeT, sizeZ, sizeY, sizeX])
                                         
-                                        self.AllT.append(t * self.Tcalibration)
+                                        self.AllT.append(t * self.tcalibration)
                                         self.AllArea.append(area)
                                         self.AllIntensity.append(intensity)
                                         self.AllSpeed.append(speed)
@@ -911,7 +911,7 @@ class TrackViewer(object):
                                      self.trackviewer.layers.remove(layer)
         
                 
-                        tstart = self.startID[int(float(self.ID))][1]
+                        tstart = self.start_id[int(float(self.ID))][1]
                         self.trackviewer.dims.set_point(0, tstart)
                         self.trackviewer.status = str(self.ID)
                         for i in range(0, len(self.LocationTracklets)):
@@ -930,7 +930,7 @@ class TrackViewer(object):
             
 
                 
-def TrackMateLiveTracks(Raw, Seg, Mask, savedir, scale, locationID, RegionID, VolumeID, ID, StartID, Tcalibration):
+def TrackMateLiveTracks(Raw, Seg, Mask, savedir, scale, locationID, RegionID, VolumeID, ID, start_id, tcalibration):
 
     if Mask is not None and len(Mask.shape) < len(Seg.shape):
         # T Z Y X
@@ -974,11 +974,11 @@ def TrackMateLiveTracks(Raw, Seg, Mask, savedir, scale, locationID, RegionID, Vo
             viewer.window.add_dock_widget(multiplot_widget, name = "TrackStats", area = 'right')
             multiplot_widget.figure.tight_layout()
             trackbox.currentIndexChanged.connect(lambda trackid = trackbox : TrackViewer(viewer, Raw, Seg, Mask, locationID, RegionID,
-                                                                                         VolumeID, scale, trackbox.currentText(), StartID,multiplot_widget, ax, figure, savedir, saveplot = False, Tcalibration = Tcalibration))
+                                                                                         VolumeID, scale, trackbox.currentText(), start_id,multiplot_widget, ax, figure, savedir, saveplot = False, tcalibration = tcalibration))
             
             if saveplot:
                 tracksavebutton.clicked.connect(lambda trackid = tracksavebutton : TrackViewer(viewer, Raw, Seg, Mask, locationID, RegionID,
-                                                                                         VolumeID, scale, trackbox.currentText(), StartID,multiplot_widget, ax, figure, savedir, True, Tcalibration))
+                                                                                         VolumeID, scale, trackbox.currentText(), start_id,multiplot_widget, ax, figure, savedir, True, tcalibration))
                 
             viewer.window.add_dock_widget(trackbox, name = "TrackID", area = 'left')
             viewer.window.add_dock_widget(tracksavebutton, name = "Save TrackID", area = 'left')
