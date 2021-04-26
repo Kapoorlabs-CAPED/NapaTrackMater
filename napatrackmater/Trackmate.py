@@ -274,6 +274,114 @@ def PurgeTracklets(root_leaf, split_points, spot_object_source_target, DividingT
     return Curatedsplit_points, Curatedroot_leaf                                          
 
 
+
+def analyze_non_dividing_tracklets(root_leaf, spot_object_source_target):
+    
+      non_dividing_tracklets = []
+      if len(root_leaf) > 0:
+                             Root = root_leaf[0]
+                             Leaf = root_leaf[-1]
+                             tracklet = []
+                             trackletid = 0
+                             tracklet.append(Root)
+                             #For non dividing trajectories iterate from Root to the only Leaf
+                             while(Root != Leaf):
+                                        for source_id, target_id, edge_time in spot_object_source_target:
+                                                if Root == source_id:
+                                                      tracklet.append(source_id)
+                                                      Root = target_id
+                                                      if Root==Leaf:
+                                                          break
+                                                else:
+                                                    break
+                             non_dividing_tracklets.append([trackletid, tracklet]) 
+                             sorted_non_dividing_tracklets = tracklet_sorter(non_dividing_tracklets, spot_object_source_target)
+                             
+      return sorted_non_dividing_tracklets                       
+
+def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_target):
+    
+    
+                            dividing_tracklets = []
+                            print("Analyzing Dividing Trajectory")
+                            #Make tracklets
+                            Root = root_leaf[0]
+                            
+                            Visited = []
+                            #For the root we need to go forward
+                            tracklet = []
+                            tracklet.append(Root)
+                            trackletid = 0
+                            RootCopy = Root
+                            Visited.append(Root)
+                            while(RootCopy not in split_points and RootCopy not in root_leaf[1:]):
+                                for source_id, target_id, edge_time in spot_object_source_target:
+                                        # Search for the target id corresponding to leaf                        
+                                        if RootCopy == source_id:
+                                              
+                                              #Once we find the leaf we move a step fwd to its target to find its target
+                                              RootCopy = target_id
+                                              if RootCopy in split_points:
+                                                  break
+                                              if RootCopy in Visited:
+                                                break
+                                              Visited.append(target_id)
+                                              tracklet.append(target_id)
+                                              
+                            dividing_tracklets.append([trackletid, tracklet])
+                            
+                            trackletid = 1       
+                            for i in range(1, len(root_leaf)):
+                                Leaf = root_leaf[i]
+                                #For leaf we need to go backward
+                                tracklet = []
+                                tracklet.append(Leaf)
+                                while(Leaf not in split_points and Leaf != Root):
+                                    for source_id, target_id, edge_time in spot_object_source_target:
+                                        # Search for the target id corresponding to leaf                        
+                                        if Leaf == target_id:
+                                              # Include the split points here
+                                              
+                                              #Once we find the leaf we move a step back to its source to find its source
+                                              Leaf = source_id
+                                              if Leaf in split_points:
+                                                  break
+                                              if Leaf in Visited:
+                                                break
+                                              tracklet.append(source_id)
+                                              Visited.append(source_id)
+                                dividing_tracklets.append([trackletid, tracklet]) 
+                                trackletid = trackletid + 1
+                            
+                            
+                            # Exclude the split point near root    
+                            for i in range(0, len(split_points) -1):
+                                Start = split_points[i]
+                                tracklet = []
+                                tracklet.append(Start)
+                                Othersplit_points = split_points.copy()
+                                Othersplit_points.pop(i)
+                                while(Start is not Root):
+                                    for source_id, target_id, edge_time in spot_object_source_target:
+                                        
+                                        if Start == target_id:
+                                            
+                                            Start = source_id
+                                            if Start in Visited:
+                                                break
+                                            tracklet.append(source_id)
+                                            Visited.append(source_id)
+                                            if Start in Othersplit_points:
+                                                break
+                                            
+                                dividing_tracklets.append([trackletid, tracklet]) 
+                                trackletid = trackletid + 1
+                            
+                            sorted_dividing_tracklets = tracklet_sorter(dividing_tracklets, spot_object_source_target)    
+                            
+                            return sorted_dividing_tracklets    
+                                
+
 def import_TM_XML(xml_path, Segimage, xycalibration = 1, zcalibration = 1, tcalibration = 1, image = None, Mask = None, mintracklength = 2):
     
         Name = os.path.basename(os.path.splitext(xml_path)[0])
@@ -319,7 +427,8 @@ def import_TM_XML(xml_path, Segimage, xycalibration = 1, zcalibration = 1, tcali
                                                 ,Spotobject.get('ESTIMATED_DIAMETER'), Spotobject.get('ESTIMATED_DIAMETER'), Spotobject.get('ESTIMATED_DIAMETER')]) 
                 
                 
-        Tracks = []
+        dividing_tracks = []
+        non_dividing_tracks = []
         for track in tracks.findall('Track'):
 
             track_id = int(track.get("TRACK_ID"))
@@ -340,12 +449,12 @@ def import_TM_XML(xml_path, Segimage, xycalibration = 1, zcalibration = 1, tcali
                 # Get all the IDs, uniquesource, targets attached, leaf, root, splitpoint IDs
                 sources, multi_targets, root_leaf, split_points = Multiplicity(spot_object_source_target)
                 
+                
+                # Determine if a track has divisions or none
                 if len(split_points) > 0:
                     split_points = split_points[::-1]
                     DividingTrajectory = True
-                    
                 else:
-                    
                     DividingTrajectory = False
                     
                 # Remove dqngling tracklets    
@@ -358,117 +467,30 @@ def import_TM_XML(xml_path, Segimage, xycalibration = 1, zcalibration = 1, tcali
                              tstart = int(float(Source[0]))
                              break
                     
-                Tracklets = []        
+                
                 if DividingTrajectory == True:
-                            print("Dividing Trajectory")
-                            #Make tracklets
-                            Root = root_leaf[0]
-                            
-                            Visited = []
-                            #For the root we need to go forward
-                            tracklet = []
-                            tracklet.append(Root)
-                            trackletid = 0
-                            RootCopy = Root
-                            Visited.append(Root)
-                            while(RootCopy not in split_points and RootCopy not in root_leaf[1:]):
-                                for source_id, target_id, edge_time in spot_object_source_target:
-                                        # Search for the target id corresponding to leaf                        
-                                        if RootCopy == source_id:
-                                              
-                                              #Once we find the leaf we move a step fwd to its target to find its target
-                                              RootCopy = target_id
-                                              if RootCopy in split_points:
-                                                  break
-                                              if RootCopy in Visited:
-                                                break
-                                              Visited.append(target_id)
-                                              tracklet.append(target_id)
-                                              
-                            Tracklets.append([trackletid, tracklet])
-                            
-                            trackletid = 1       
-                            for i in range(1, len(root_leaf)):
-                                Leaf = root_leaf[i]
-                                #For leaf we need to go backward
-                                tracklet = []
-                                tracklet.append(Leaf)
-                                while(Leaf not in split_points and Leaf != Root):
-                                    for source_id, target_id, edge_time in spot_object_source_target:
-                                        # Search for the target id corresponding to leaf                        
-                                        if Leaf == target_id:
-                                              # Include the split points here
-                                              
-                                              #Once we find the leaf we move a step back to its source to find its source
-                                              Leaf = source_id
-                                              if Leaf in split_points:
-                                                  break
-                                              if Leaf in Visited:
-                                                break
-                                              tracklet.append(source_id)
-                                              Visited.append(source_id)
-                                Tracklets.append([trackletid, tracklet]) 
-                                trackletid = trackletid + 1
-                            
-                            
-                            # Exclude the split point near root    
-                            for i in range(0, len(split_points) -1):
-                                Start = split_points[i]
-                                tracklet = []
-                                tracklet.append(Start)
-                                Othersplit_points = split_points.copy()
-                                Othersplit_points.pop(i)
-                                while(Start is not Root):
-                                    for source_id, target_id, edge_time in spot_object_source_target:
-                                        
-                                        if Start == target_id:
-                                            
-                                            Start = source_id
-                                            if Start in Visited:
-                                                break
-                                            tracklet.append(source_id)
-                                            Visited.append(source_id)
-                                            if Start in Othersplit_points:
-                                                break
-                                            
-                                Tracklets.append([trackletid, tracklet]) 
-                                trackletid = trackletid + 1
-                              
+                    
+                            sorted_dividing_tracklets = analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_target)
                             
                 if DividingTrajectory == False:
-                        print('Not Dividing Trajectory')
-                        if len(root_leaf) > 0:
-                             Root = root_leaf[0]
-                             Leaf = root_leaf[-1]
-                             tracklet = []
-                             trackletid = 0
-                             tracklet.append(Root)
-                             #For non dividing trajectories iterate from Root to the only Leaf
-                             while(Root != Leaf):
-                                        for source_id, target_id, edge_time in spot_object_source_target:
-                                                if Root == source_id:
-                                                      tracklet.append(source_id)
-                                                      Root = target_id
-                                                      if Root==Leaf:
-                                                          break
-                                                else:
-                                                    break
-                             Tracklets.append([trackletid, tracklet])               
+                    
+                            sorted_non_dividing_tracklets = analyze_non_dividing_tracklets(root_leaf, spot_object_source_target)             
                              
-                # Sort the Tracklets in time
                 
-                SortedTracklets = tracklet_sorter(Tracklets, spot_object_source_target)
                 # Create object trackID, T, Z, Y, X, speed, generationID, trackletID
-                
-                
                 #For each tracklet create Track and Speed objects
-                DictTrackobjects, DictSpeedobjects, Trackobjects, tracklet_objects = TrackobjectCreator(SortedTracklets, Uniqueobjects, xycalibration, zcalibration, tcalibration)
-                Tracks.append([track_id,DictTrackobjects, DictSpeedobjects, Trackobjects, tracklet_objects, SortedTracklets, tstart])
-                
+                dict_non_dividing_trackobjects, dict_non_dividing_speedobjects, non_dividing_trackobjects, non_dividing_tracklet_objects = TrackobjectCreator(sorted_non_dividing_tracklets, Uniqueobjects, xycalibration, zcalibration, tcalibration)
+               
+                dict_dividing_trackobjects, dict_dividing_speedobjects, dividing_trackobjects, dividing_tracklet_objects = TrackobjectCreator(sorted_dividing_tracklets, Uniqueobjects, xycalibration, zcalibration, tcalibration)
+
+
+                dividing_tracks.append([track_id,dict_dividing_trackobjects, dict_dividing_speedobjects, dividing_trackobjects, dividing_tracklet_objects, sorted_dividing_tracklets, tstart])
+                non_dividing_tracks.append([track_id,dict_non_dividing_trackobjects, dict_non_dividing_speedobjects, non_dividing_trackobjects, non_dividing_tracklet_objects, sorted_non_dividing_tracklets, tstart])
+
                 
         #Sort tracks by their ID
-        Tracks = sorted(Tracks, key = sortID, reverse = False)
-               
+        dividing_tracks = sorted(dividing_tracks, key = sortID, reverse = False)
+        non_dividing_tracks = sorted(non_dividing_tracks, key = sortID, reverse = False)       
         # Write all tracks to csv file as ID, T, Z, Y, X
         ID = []
         start_id = {}
@@ -482,7 +504,7 @@ def import_TM_XML(xml_path, Segimage, xycalibration = 1, zcalibration = 1, tcali
         Yloc = []
         Xloc = []
         
-        for trackid, DictTrackobjects, DictSpeedobjects, Trackobjects, tracklet_objects, SortedTracklets, tstart in Tracks:
+        for trackid, dict_dividing_trackobjects, dict_dividing_speedobjects, dividing_trackobjects, dividing_tracklet_objects, sorted_dividing_tracklets, tstart in dividing_tracks:
             
              print('Computing Tracklets for TrackID:', trackid)  
              RegionID[trackid] = [trackid]
