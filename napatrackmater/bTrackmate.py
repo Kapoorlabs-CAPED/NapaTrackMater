@@ -655,6 +655,7 @@ class AllTrackViewer(object):
                        
                       T = self.Seg.shape[0]
                       animation_widget = AnimationWidget(self.trackviewer, self.savedir, T)
+                      print(self.savedir)
                       self.trackviewer.window.add_dock_widget(animation_widget, area='right')
                       self.trackviewer.update_console({'animation': animation_widget.animation})
     

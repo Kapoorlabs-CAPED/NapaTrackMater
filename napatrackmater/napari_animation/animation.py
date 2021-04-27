@@ -79,8 +79,8 @@ class Animation:
         """
         new_state = {
              
-            'camera': self.viewer.camera.asdict(),
-            'dims': self.viewer.dims.asdict(),
+            'camera': self.viewer.camera.dict(),
+            'dims': self.viewer.dims.dict(),
         }
         # Log transform zoom for linear interpolation
         new_state['camera']['zoom'] = np.log10(new_state['camera']['zoom'])
@@ -176,5 +176,5 @@ class Animation:
                 frame = frame.astype(np.uint8)
             writer.append_data(frame)
             
-
+        
         writer.close()
