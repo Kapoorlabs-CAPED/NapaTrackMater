@@ -3,7 +3,7 @@ from qtpy.QtWidgets import QWidget, QLabel, QVBoxLayout, QLineEdit, QPushButton
 from ..animation import Animation
 from ..easing import Easing
 from .frame_widget import FrameWidget
-
+import napari
 
 class AnimationWidget(QWidget):
     """Widget for interatviely making animations using the napari viewer.
@@ -20,7 +20,7 @@ class AnimationWidget(QWidget):
     frame : int
         Currently shown key frame.
     """
-    def __init__(self, viewer: 'napari.viewer.Viewer', savedir : None, trackid:0, T:0, parent=None):
+    def __init__(self, viewer: 'napari.viewer.Viewer', savedir : None, T:0, parent=None):
         super().__init__(parent=parent)
 
         self._layout = QVBoxLayout()
@@ -38,7 +38,7 @@ class AnimationWidget(QWidget):
         self._layout.addStretch(1)
 
         self.pathText = QLineEdit(parent=self)
-        self.pathText.setText(savedir + 'Track' + str(trackid) +'.mp4')
+        self.pathText.setText(savedir + 'Track'  +'.mp4')
         self._layout.addWidget(self.pathText)
 
         self.saveButton = QPushButton('Save Animation', parent=self)
@@ -46,7 +46,7 @@ class AnimationWidget(QWidget):
         self._layout.addWidget(self.saveButton)
 
         # Create animation
-        self.animation = Animation(viewer,savedir,trackid, T)
+        self.animation = Animation(viewer,savedir, T)
 
         # establish key bindings
         self._add_callbacks()

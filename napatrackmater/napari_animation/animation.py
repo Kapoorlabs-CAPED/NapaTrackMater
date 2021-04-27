@@ -49,12 +49,12 @@ class Animation:
             If provided use this value for frame rather than current frame number.
         """
         self.key_frames = []
-        for frame in range(0, (self.T)):
+        for frame in tqdm(range(0, (self.T))):
             self.frame = frame
             new_state = {'viewer': self._get_viewer_state(), 'steps': steps, 'ease': ease}
             self.key_frames.insert(self.frame + 1, new_state)
             self.viewer.dims.set_point(0, self.frame)
-
+            print(self.frame) 
    
     
     def set_to_keyframe(self, frame):
