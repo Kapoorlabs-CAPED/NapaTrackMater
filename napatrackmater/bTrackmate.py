@@ -39,6 +39,90 @@ AllID = []
 AllStartChildren = []
 AllEndChildren = []
 
+def CreateTrackCheckpoint(Image, Label, Mask, Name, savedir):
+    
+    
+    assert Image.shape == Label.shape
+    
+    TimeList = []
+    
+    XList = []
+    YList = []
+    ZList = []
+    LabelList = []
+    PerimeterList = []
+    VolumeList = []
+    IntensityList = []
+    ExtentXList = []
+    ExtentYList = []
+    ExtentZList = []
+    
+    print('Image has shape:', Image.shape)
+    print('Image Dimensions:', len(Image.shape))
+    #Add Z to make TZYX image
+    if len(Image.shape) <=3:
+        
+          Image4D = np.zeros([Image.shape[0], 2, Image.shape[1], Image.shape[2]])
+          Label4D = np.zeros([Image.shape[0], 2, Image.shape[1], Image.shape[2]])
+          
+          for i in range(0,Image4D.shape[1]):
+              
+              Image4D[:,i,:] = Image
+              Label4D[:,i,:] = Label
+
+          Image = Image4D
+          Label = Label4D
+    if Mask is not None:      
+            if len(Mask.shape) < len(Image.shape):
+                # T Z Y X
+                UpdateMask = np.zeros([Label.shape[0], Label.shape[1], Label.shape[2], Label.shape[3]])
+                for i in range(0, UpdateMask.shape[0]):
+                    for j in range(0, UpdateMask.shape[1]):
+                        
+                        UpdateMask[i,j,:,:] = Mask[i,:,:]
+            else:
+                UpdateMask = Mask
+    for i in tqdm(range(0, Image.shape[0])):
+        
+        CurrentSegimage = Label[i,:].astype('uint16')
+        Currentimage = Image[i,:]
+        if Mask is not None:
+            CurrentSegimage[UpdateMask[i,:] == 0] = 0
+        properties = measure.regionprops(CurrentSegimage, Currentimage)
+        for prop in properties:
+            
+            
+            Z = prop.centroid[0]
+            Y = prop.centroid[1]
+            X = prop.centroid[2]
+            regionlabel = prop.label
+            intensity = np.sum(prop.image)
+            sizeZ = abs(prop.bbox[0] - prop.bbox[3])
+            sizeY = abs(prop.bbox[1] - prop.bbox[4])
+            sizeX = abs(prop.bbox[2] - prop.bbox[5])
+            volume = sizeZ * sizeX * sizeY
+            radius = math.pow(3 * volume / ( 4 * math.pi), 1.0/3.0)
+            perimeter = 2 * math.pi * radius
+            TimeList.append(i)
+            XList.append(int(X))
+            YList.append(int(Y))
+            ZList.append(int(Z))
+            LabelList.append(regionlabel)
+            VolumeList.append(volume)
+            PerimeterList.append(perimeter)
+            IntensityList.append(intensity)
+            ExtentZList.append(sizeZ)
+            ExtentXList.append(sizeX)
+            ExtentYList.append(sizeY)
+            
+            
+    df = pd.DataFrame(list(zip(TimeList,XList,YList,ZList,LabelList, PerimeterList, VolumeList, IntensityList,ExtentXList , ExtentYList, ExtentZList)), index = None, 
+                                              columns =['T', 'X', 'Y', 'Z', 'Label', 'Perimeter', 'Volume', 'Intensity', 'ExtentX', 'ExtentY', 'ExtentZ'])
+
+    df.to_csv(savedir + '/' + 'FijibTMcheckpoint' + Name +  '.csv', index = False)       
+    
+    
+
 def Velocity(Source, Target, xycalibration, zcalibration, tcalibration):
     
     
