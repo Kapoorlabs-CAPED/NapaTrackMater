@@ -24,11 +24,10 @@ class Animation:
     frame : int
         Currently shown key frame.
     """
-    def __init__(self, viewer, savedir, trackid, T):
+    def __init__(self, viewer, savedir, T):
         self.viewer = viewer
         self.savedir = savedir
         self.T = T
-        self.trackid = trackid
         self.key_frames = []
         self.frame = -1
 

@@ -26,6 +26,7 @@ from PyQt5.QtCore import pyqtSlot
 from scipy import spatial 
 import pandas as pd
 from .napari_animation import AnimationWidget
+import codecs
 Boxname = 'TrackBox'
 pd.options.display.float_format = '${:,.2f}'.format
 
@@ -38,6 +39,10 @@ AllEndParent = []
 AllID = []
 AllStartChildren = []
 AllEndChildren = []
+
+
+def prob_sigmoid(x):
+  return 1 - math.exp(-x)
 
 def CreateTrackCheckpoint(Image, Label, Mask, Name, savedir):
     
@@ -190,7 +195,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
     if ndim == 2:
         mask = label(mask)
         labels = []
-        volumelabel = [] 
+        size = [] 
         tree = []
         properties = measure.regionprops(mask, mask)
         for prop in properties:
@@ -215,9 +220,9 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             
             if regionlabel not in labels:
                 labels.append(regionlabel)
-                volumelabel.append(radius) 
+                size.append(radius) 
         #This object contains list of all the points for all the labels in the Mask image with the label id and volume of each label    
-        timed_mask[str(0)] = [tree, indices, labels, volumelabel]
+        timed_mask[str(0)] = [tree, indices, labels, size]
         
         
     #TYX shaped object    
@@ -229,7 +234,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             mask[i,:] = label(mask[i,:])
             properties = measure.regionprops(mask[i,:], mask[i,:])
             labels = []
-            volumelabel = [] 
+            size = [] 
             tree = []
             for prop in properties:
                 
@@ -252,9 +257,9 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
                 tree.append(spatial.cKDTree(real_indices))
                 if regionlabel not in labels:
                         labels.append(regionlabel)
-                        volumelabel.append(radius)
+                        size.append(radius)
                 
-            timed_mask[str(i)] = [tree, indices, labels, volumelabel]
+            timed_mask[str(i)] = [tree, indices, labels, size]
             
             
     #TZYX shaped object        
@@ -268,7 +273,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             mask[i,:] = label(mask[i,:])
             properties = measure.regionprops(mask[i,:], mask[i,:])
             labels = []
-            volumelabel = []
+            size = []
             tree = []
             for prop in properties:
                 
@@ -303,11 +308,11 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
                 tree.append(spatial.cKDTree(real_indices))
                 if regionlabel not in labels:
                     labels.append(regionlabel)
-                    volumelabel.append(radius) 
+                    size.append(radius) 
                 
             
             
-            timed_mask[str(i)] = [tree, indices, labels, volumelabel]    
+            timed_mask[str(i)] = [tree, indices, labels, size]    
 
     return timed_mask
     
@@ -317,45 +322,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
 
 
 
-'''
-In this method we purge the short tracklets to exclude them for further tracking process
-'''
-def PurgeTracklets(root_leaf, split_points, spot_object_source_target, DividingTrajectory, mintracklength = 2):
-    
-    #root_leaf object contains root in the begining and leafes after that, we remove the split point ID and leaf ID the corresponds to short tracklets
-
-    Curatedroot_leaf = []
-    Curatedsplit_points = split_points.copy()
-    Root = root_leaf[0]
-    Curatedroot_leaf = root_leaf.copy()
-    if DividingTrajectory == True:
-        Visited = []
-        for i in range(1, len(root_leaf)):
-                                leaf = root_leaf[i]
-                                tracklength = 0
-                                while(leaf not in split_points and leaf != Root):
-                                    for source_id, target_id, edge_time in spot_object_source_target:
-                                        # Search for the target id corresponding to leaf                        
-                                        if leaf == target_id:
-                                              # Include the split points here
-                                              #Once we find the leaf we move a step back to its source to find its source
-                                              Leaf = source_id
-                                              tracklength = tracklength + 1
-                                              RootSplitPoint = Leaf
-                                              if Leaf in split_points:
-                                                  break
-                                              if Leaf in Visited:
-                                                break
-                                              Visited.append(source_id)
-                                if tracklength < mintracklength:  
-                                    try:
-                                       Curatedsplit_points.remove(RootSplitPoint)
-                                       Curatedroot_leaf.remove(Leaf)
-                                    except:
-                                        pass
-                                    
-                             
-    return Curatedsplit_points, Curatedroot_leaf                                          
+                                         
 
 
 
@@ -387,7 +354,6 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
     
     
                             dividing_tracklets = []
-                            print("Analyzing Dividing Trajectory")
                             #Make tracklets
                             Root = root_leaf[0]
                             
@@ -466,7 +432,7 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
                             return sorted_dividing_tracklets    
                         
                         
-def tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask, tstart):
+def tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask, tstart, DividingTrajectory):
     
     
                             location_prop_dist = {}
@@ -474,14 +440,16 @@ def tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uni
                                 location_prop_dist[idxs] = [idxs]
                                 current_location_prop_dist = []
                                 tracklets = dict_ordered_tracklets[idxs]
-                                for cell_source_id, directional_rate_change, speed in tracklets:
-                                    
+                                tracklets = tracklets[1]
+                                for  tracklet, edge_time  in tracklets:
+                                      cell_source_id, directional_rate_change, speed = tracklet
                                       frame,z,y,x = Uniqueobjects[int(cell_source_id)]
                                       total_intensity, mean_intensity, real_time, cellradius =  Uniqueproperties[int(cell_source_id)]
                                       
                                       if Mask is not None:
                                                                 
                                                                 testlocation = (z,y,x)
+                                                                
                                                                 tree, indices, masklabel, masklabelvolume = TimedMask[str(int(frame))]
                                                                
                                                                 region_label = Mask[int(frame), int(z), int(y) , int(x)] 
@@ -494,7 +462,7 @@ def tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uni
                                                                     distance, location = currenttree.query(testlocation)
                                                                     distance = max(0,distance  - cellradius)
                                                                     if currentlabel == region_label and region_label > 0:
-                                                                            prob_inside = max(0,(distance - cellradius) / currentvolume)
+                                                                            prob_inside = prob_sigmoid(distance - cellradius) 
                                                                     else:
                                                                         
                                                                             prob_inside = 0 
@@ -502,17 +470,17 @@ def tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uni
                                                                 distance = 0
                                                                 prob_inside = 0
                                                                 
-                                      current_location_prop_dist.append([real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside, tstart])      
+                                      current_location_prop_dist.append([frame,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside, tstart, DividingTrajectory])      
                         
                                 location_prop_dist[idxs].append(current_location_prop_dist)
                             
                             return location_prop_dist    
 
-def import_TM_XML(xml_path, Segimage, image = None, Mask = None, mintracklength = 2):
+def import_TM_XML(xml_path, Segimage, image = None, Mask = None):
     
         Name = os.path.basename(os.path.splitext(xml_path)[0])
         savedir = os.path.dirname(xml_path)
-        root = et.fromstring(open(xml_path).read())
+        root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
           
         filtered_track_ids = [int(track.get('TRACK_ID')) for track in root.find('Model').find('FilteredTracks').findall('TrackID')]
         
@@ -527,9 +495,9 @@ def import_TM_XML(xml_path, Segimage, image = None, Mask = None, mintracklength 
         Uniqueobjects = {}
         Uniqueproperties = {}
         
-        xcalibration = settings.get('pixelwidth')
-        ycalibration = settings.get('pixelheight')
-        zcalibration = settings.get('voxeldepth')
+        xcalibration = float(settings.get('pixelwidth'))
+        ycalibration = float(settings.get('pixelheight'))
+        zcalibration = float(settings.get('voxeldepth'))
         if Mask is not None:
             if len(Mask.shape) < len(Segimage.shape):
                 # T Z Y X
@@ -540,8 +508,10 @@ def import_TM_XML(xml_path, Segimage, image = None, Mask = None, mintracklength 
                         UpdateMask[i,j,:,:] = Mask[i,:,:]
             else:
                 UpdateMask = Mask
-            Mask = UpdateMask.astype('uint16')
+                Mask = UpdateMask.astype('uint16')
             TimedMask = boundary_points(Mask, xcalibration, ycalibration, zcalibration)
+        else:
+            TimedMask = None
         
         for frame in Spotobjects.findall('SpotsInFrame'):
             
@@ -554,8 +524,6 @@ def import_TM_XML(xml_path, Segimage, image = None, Mask = None, mintracklength 
                 Uniqueproperties[cell_id] = [Spotobject.get('TOTAL_INTENSITY_CH1')
                                                 ,Spotobject.get('MEAN_INTENSITY_CH1'), Spotobject.get('POSITION_T'), Spotobject.get('RADIUS')]
                 
-        dividing_tracks = []
-        non_dividing_tracks = []
         all_track_properties = {}
         for track in tracks.findall('Track'):
 
@@ -570,6 +538,7 @@ def import_TM_XML(xml_path, Segimage, image = None, Mask = None, mintracklength 
                    target_id = edge.get('SPOT_TARGET_ID')
                    edge_time = edge.get('EDGE_TIME')
                    directional_rate_change = edge.get('DIRECTIONAL_CHANGE_RATE')
+                   
                    speed = edge.get('SPEED')
                    
                    
@@ -588,12 +557,10 @@ def import_TM_XML(xml_path, Segimage, image = None, Mask = None, mintracklength 
                     DividingTrajectory = True
                 else:
                     DividingTrajectory = False
-                    
+                print("Is a Dividing track:", DividingTrajectory)    
                 # Remove dangling tracklets, done in BTrackmate also    
-                split_points, root_leaf = PurgeTracklets(root_leaf, split_points, spot_object_source_target, DividingTrajectory, mintracklength = mintracklength)     
-                    
                 tstart = 0    
-                for source_id, target_id, edge_time in spot_object_source_target:
+                for source_id,target_id, edge_time, directional_rate_change, speed in spot_object_source_target:
                      if root_leaf[0] == source_id:    
                              Source = Uniqueobjects[int(source_id)]
                              tstart = int(float(Source[0]))
@@ -605,7 +572,7 @@ def import_TM_XML(xml_path, Segimage, image = None, Mask = None, mintracklength 
                             tracklet_ids, dict_ordered_tracklets = analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_target)
                                                 
                             # for each tracklet get real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside
-                            location_prop_dist = tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask, tstart)
+                            location_prop_dist = tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask, tstart, DividingTrajectory)
                             
                             all_track_properties[track_id].append(location_prop_dist)
                             
@@ -613,42 +580,14 @@ def import_TM_XML(xml_path, Segimage, image = None, Mask = None, mintracklength 
                     
                             tracklet_ids, dict_ordered_tracklets = analyze_non_dividing_tracklets(root_leaf, spot_object_source_target)    
                             
-                            location_prop_dist = tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask, tstart)
+                            location_prop_dist = tracklet_properties(tracklet_ids, dict_ordered_tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask, tstart, DividingTrajectory)
                              
                             all_track_properties[track_id].append(location_prop_dist)
                             
         return all_track_properties
     
  
-def TrackobjectCreator(ordered_tracklets, Uniqueobjects, xycalibration, zcalibration, tcalibration):
 
-                dict_track_objects = {}
-                dict_speed_objects = {} 
-                tracklet_objects = []
-                for k in range(0, len(ordered_tracklets)):
-                    
-                        trackletid, tracklet = ordered_tracklets[k]
-                        tracklet_objects.append(trackletid)
-                        Trackobjects = []
-                        Speedobjects = []
-                        dict_track_objects[trackletid] = [trackletid]
-                        dict_speed_objects[trackletid] = [trackletid]
-                        for i in range(0, len(tracklet)):
-                            source_id, timeID = tracklet[i]
-                            if i < len(tracklet) - 1:
-                              target_id, targettimeID = tracklet[i+1]
-                            else:
-                              target_id = source_id
-                            #All tracks
-                            Source = Uniqueobjects[int(source_id)][1]
-                            Target = Uniqueobjects[int(target_id)][1]
-                            speed = Velocity(Source, Target, xycalibration, zcalibration, tcalibration)
-                            if Target not in Trackobjects:
-                               Trackobjects.append(Target)
-                            Speedobjects.append(speed)
-                        dict_track_objects[trackletid].append(Trackobjects)    
-                        dict_speed_objects[trackletid].append(Speedobjects)    
-                return dict_track_objects, dict_speed_objects, Trackobjects, tracklet_objects
             
             
 def tracklet_sorter(Tracklets, spot_object_source_target):
@@ -673,9 +612,7 @@ def tracklet_sorter(Tracklets, spot_object_source_target):
                                    
          otracklet = sorted(time_tracklet, key = sortTracklet, reverse = False)
          dict_ordered_tracklets[trackletid].append(otracklet)
-         if len(otracklet) > 0:
-            ordered_tracklets.append([trackletid,otracklet])
-     
+        
      return tracklet_ids, dict_ordered_tracklets
 
     
@@ -711,9 +648,42 @@ def Multiplicity(spot_object_source_target):
 
          
 
+   
+class AllTrackViewer(object):
+
+      def __init__(self, originalviewer, Raw, Seg, Mask, all_track_properties, DividingTrajectory):
+          
+          self.trackviewer = originalviewer
+          self.Raw = Raw
+          self.Seg = Seg
+          self.Mask = Mask
+          self.all_track_properties = all_track_properties
+          self.DividingTrajectory = DividingTrajectory
+          self.tracklines = 'Tracks'
+          TrackLayerTracklets = []
+          for (trackid, location_prop_dist) in self.all_track_properties.items():
+               for i in range(1, len(location_prop_dist)):   
+                     for (trackletid, tracklet) in location_prop_dist[i].items():
+                   
+                            Locationtracklet = tracklet
+                           
+                            for i in range(1, len(Locationtracklet)):
+                                   t,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside, tstart, DividingTrajectory = Locationtracklet[i][0]
+                                   if DividingTrajectory == self.DividingTrajectory:
+                                       TrackLayerTracklets.append([trackid, t, z, y, x])
+                                   
+                                   
+          for i in range(0, len(TrackLayerTracklets)):
+                            self.trackviewer.add_tracks(np.asarray(TrackLayerTracklets[i]))
+                            
+                            
+          self.trackviewer.theme = 'light'
+          self.trackviewer.dims.ndisplay = 3    
            
- 
-           
+          T = self.Seg.shape[0]
+          animation_widget = AnimationWidget(self.trackviewer, self.savedir, T)
+          self.trackviewer.window.add_dock_widget(animation_widget, area='right')
+          self.trackviewer.update_console({'animation': animation_widget.animation})
     
 class TrackViewer(object):
     
@@ -913,7 +883,7 @@ class TrackViewer(object):
             
 
                 
-def TrackMateLiveTracks(Raw, Seg, Mask, savedir, scale, locationID, RegionID, VolumeID, ID, start_id, tcalibration):
+def TrackMateLiveTracks(Raw, Seg, Mask,  all_track_properties, DividingTrajectory):
 
     if Mask is not None and len(Mask.shape) < len(Seg.shape):
         # T Z Y X
@@ -922,49 +892,29 @@ def TrackMateLiveTracks(Raw, Seg, Mask, savedir, scale, locationID, RegionID, Vo
             for j in range(0, UpdateMask.shape[1]):
                 
                 UpdateMask[i,j,:,:] = Mask[i,:,:]
-    else:
-        UpdateMask = Mask
+                Boundary = GetBorderMask(UpdateMask.copy())
+
     
-    Boundary = GetBorderMask(UpdateMask.copy())
+    
     
     with napari.gui_qt():
             if Raw is not None:
                           
-                          viewer = napari.view_image(Raw, scale = scale, name='Image')
-                          Labels = viewer.add_labels(Seg, scale = scale, name = 'SegImage')
+                          viewer = napari.view_image(Raw, name='Image')
+                          viewer.add_labels(Seg, name = 'SegImage')
             else:
-                          viewer = napari.view_image(Seg, scale = scale, name='SegImage')
+                          viewer = napari.view_image(Seg, name='SegImage')
                           
             if Mask is not None:
                 
-                          LabelsMask = viewer.add_labels(Boundary, scale = scale, name='Mask')
+                          viewer.add_labels(Boundary, name='Mask')
             
-            trackbox = QComboBox()
-            trackbox.addItem(Boxname)
+          
             
-            tracksavebutton = QPushButton('Save Track')
-            saveplot = tracksavebutton.clicked.connect(on_click)
+            AllTrackViewer(viewer, Raw, Seg, Mask, all_track_properties, DividingTrajectory)
+           
             
-        
-            for i in range(0, len(ID)):
-                trackbox.addItem(str(ID[i]))
-            try:
-               figure = plt.figure(figsize = (5, 5))    
-               multiplot_widget = FigureCanvas(figure)
-               ax = multiplot_widget.figure.subplots(2,3)
-            except:
-                pass
-            viewer.window.add_dock_widget(multiplot_widget, name = "TrackStats", area = 'right')
-            multiplot_widget.figure.tight_layout()
-            trackbox.currentIndexChanged.connect(lambda trackid = trackbox : TrackViewer(viewer, Raw, Seg, Mask, locationID, RegionID,
-                                                                                         VolumeID, scale, trackbox.currentText(), start_id,multiplot_widget, ax, figure, savedir, saveplot = False, tcalibration = tcalibration))
-            
-            if saveplot:
-                tracksavebutton.clicked.connect(lambda trackid = tracksavebutton : TrackViewer(viewer, Raw, Seg, Mask, locationID, RegionID,
-                                                                                         VolumeID, scale, trackbox.currentText(), start_id,multiplot_widget, ax, figure, savedir, True, tcalibration))
                 
-            viewer.window.add_dock_widget(trackbox, name = "TrackID", area = 'left')
-            viewer.window.add_dock_widget(tracksavebutton, name = "Save TrackID", area = 'left')
   
     
 def DistancePlotter():
