@@ -29,7 +29,7 @@ from .napari_animation import AnimationWidget
 import codecs
 Boxname = 'TrackBox'
 pd.options.display.float_format = '${:,.2f}'.format
-
+savedir = None
 
 ParentDistances = {}
 ChildrenDistances = {}
@@ -654,6 +654,7 @@ class AllTrackViewer(object):
       def __init__(self, originalviewer, Raw, Seg, Mask, all_track_properties, DividingTrajectory):
           
           self.trackviewer = originalviewer
+          self.savedir = savedir
           self.Raw = Raw
           self.Seg = Seg
           self.Mask = Mask
@@ -670,11 +671,10 @@ class AllTrackViewer(object):
                             for i in range(1, len(Locationtracklet)):
                                    t,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside, tstart, DividingTrajectory = Locationtracklet[i][0]
                                    if DividingTrajectory == self.DividingTrajectory:
-                                       TrackLayerTracklets.append([trackid, t, z, y, x])
+                                       TrackLayerTracklets.append([int(str(trackid) + str(trackletid)), int(t), float(z), float(y), float(x)])
                                    
-                                   
-          for i in range(0, len(TrackLayerTracklets)):
-                            self.trackviewer.add_tracks(np.asarray(TrackLayerTracklets[i]))
+          print(TrackLayerTracklets)                          
+          self.trackviewer.add_tracks(np.asarray(TrackLayerTracklets))
                             
                             
           self.trackviewer.theme = 'light'
