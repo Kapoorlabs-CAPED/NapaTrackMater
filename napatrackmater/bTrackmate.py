@@ -655,7 +655,8 @@ class AllTrackViewer(object):
           
           
       def plot(self):
-                        print(self.ID, self.saveplot)
+          
+                        print(self.saveplot, self.savedir, '1')      
                         for i in range(self.ax.shape[0]):
                              for j in range(self.ax.shape[1]):
                                                self.ax[i,j].cla()
@@ -692,10 +693,11 @@ class AllTrackViewer(object):
                         TrackLayerTracklets = {}
                         for i in range(0, len(self.all_track_properties)):
                                                trackid, alltracklets = self.all_track_properties[i]
+                                               print(self.saveplot, '2', self.ID, trackid)   
                                                if self.ID == trackid:
                                                            TrackLayerTracklets[trackid] = [trackid]
                                                            for (trackletid, tracklets) in alltracklets.items():
-                            
+                                                                                 print(self.saveplot, '3')   
                                                                                  self.AllT = []
                                                                                  self.AllArea = []
                                                                                  self.AllIntensity = []
@@ -730,21 +732,10 @@ class AllTrackViewer(object):
                                                                                                         AllStartChildren.append(self.AllDistance[0])
                                                                                                         AllEndChildren.append(self.AllDistance[-1])
                                                                                                    
+                                                                                 print(self.saveplot, '4')   
                                                                                 
-                                                                                 self.ax[0,0].plot(self.AllT, self.AllSize)
-                                                                                
-                                                                                 self.ax[1,0].plot(self.AllT, self.AllDistance)
-                                                                                 #self.ax[0,1].plot(self.AllT, self.AllProbability)
-                                                                                 self.ax[1,1].plot(self.AllT, self.AllSpeed)
-                                                                                 #self.ax[0,2].plot(self.AllT, self.AllIntensity)
-                                                                                 
-                                                                                 self.ax[0,1].plot(AllStartParent, AllEndParent, 'og')
-                                                                                 self.ax[0,1].plot(AllStartChildren, AllEndChildren, 'or')
-                                                                                 self.figure.canvas.draw()      
-                                                                                 self.figure.canvas.flush_events()
-                                                                                 self.LocationTracklets.append(TrackLayerTracklets)
-                                                                                 if self.saveplot:
-                                                                                                 
+                                                                                 if self.saveplot == True:
+                                                                                              print('saving')   
                                                                                               self.SaveFig()
                                                                                               df = pd.DataFrame(list(zip(self.AllT,self.AllSize,self.AllDistance,self.AllProbability,self.AllSpeed,self.AllIntensity)),  
                                                                                                               columns =['Time', 'Cell Size', 'Distance to Border', 'Inner Cell Probability', 'Cell Speed', 'Cell Intensity'])
@@ -760,6 +751,19 @@ class AllTrackViewer(object):
                                                                                                               columns =['StartDistance', 'EndDistance'])
                                                                                               df.to_csv(self.savedir + '/' + 'ChildrenFate'  +  '.csv',index = False)  
                                                                                               df
+                                                                                 print(self.saveplot, '5')               
+                                                                                 self.ax[0,0].plot(self.AllT, self.AllSize)
+                                                                                
+                                                                                 self.ax[1,0].plot(self.AllT, self.AllDistance)
+                                                                                 #self.ax[0,1].plot(self.AllT, self.AllProbability)
+                                                                                 self.ax[1,1].plot(self.AllT, self.AllSpeed)
+                                                                                 #self.ax[0,2].plot(self.AllT, self.AllIntensity)
+                                                                                 
+                                                                                 self.ax[0,1].plot(AllStartParent, AllEndParent, 'og')
+                                                                                 self.ax[0,1].plot(AllStartChildren, AllEndChildren, 'or')
+                                                                                 self.figure.canvas.draw()      
+                                                                                 self.figure.canvas.flush_events()
+                                                                                 
                                                            else:                      
                                                                break;                
                         self.figure.canvas.draw()      
@@ -812,8 +816,7 @@ class AllTrackViewer(object):
             
       def SaveFig(self):
         
-         if self.saveplot:
-             self.figure.savefig(self.savedir + '/' + 'Track' +  str(self.ID) +  '.png', transparent = True )
+           self.figure.savefig(self.savedir + '/' + 'Track' +  str(self.ID) +  '.png', transparent = True )
            
            
             
@@ -824,72 +827,69 @@ class AllTrackViewer(object):
                 
 def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties, DividingTrajectory):
 
-   Seg = Seg.astype('uint16')
-   if Mask is not None:
-       Mask = Mask.astype('uint16')
-   if Mask is not None and len(Mask.shape) < len(Seg.shape):
-        # T Z Y X
-        UpdateMask = np.zeros_like(Seg)
-        for i in range(0, UpdateMask.shape[0]):
-            for j in range(0, UpdateMask.shape[1]):
+    
+  
+               Seg = Seg.astype('uint16')
+               if Mask is not None:
+                   Mask = Mask.astype('uint16')
+               if Mask is not None and len(Mask.shape) < len(Seg.shape):
+                    # T Z Y X
+                    UpdateMask = np.zeros_like(Seg)
+                    for i in range(0, UpdateMask.shape[0]):
+                        for j in range(0, UpdateMask.shape[1]):
+                            
+                            UpdateMask[i,j,:,:] = Mask[i,:,:]
+                            Boundary = GetBorderMask(UpdateMask.copy())
+               
+             
                 
-                UpdateMask[i,j,:,:] = Mask[i,:,:]
-                Boundary = GetBorderMask(UpdateMask.copy())
-   
- 
-    
-    
-   if Raw is not None:
-                           
-                           viewer = napari.view_image(Raw, name='Image')
-                           viewer.add_labels(Seg, name = 'SegImage')
-   else:
-                           viewer = napari.view_image(Seg, name='SegImage')
-                           
-   if Mask is not None:
-                           Boundary = GetBorderMask(Mask.copy())
-                           Boundary = Boundary.astype('uint16')
-                           viewer.add_labels(Boundary, name='Mask')
-   napari.run()         
-          
-   ID = []
-   for i in range(0, len(all_track_properties)):
-                         trackid, alltracklets = all_track_properties[i]
-                         ID.append(trackid)
-   trackbox = QComboBox()
-   trackbox.addItem(Boxname)
-            
-   tracksavebutton = QPushButton('Save Track')
-   saveplot = tracksavebutton.clicked.connect(on_click)
-   for i in range(0, len(ID)):
-            trackbox.addItem(str(ID[i]))
-   trackbox.addItem('all')         
-
-   figure = plt.figure(figsize = (2, 2))    
-   multiplot_widget = FigureCanvas(figure)
-   ax = multiplot_widget.figure.subplots(2,2)
-   width = 400
-   dock_widget = viewer.window.add_dock_widget(multiplot_widget, name = "TrackStats", area = 'right')
-   multiplot_widget.figure.tight_layout()
-   viewer.window._qt_window.resizeDocks([dock_widget], [width], Qt.Horizontal)
-     
-
-   
-   T = Seg.shape[0]
-   animation_widget = AnimationWidget(viewer, savedir, T)
-   viewer.window.add_dock_widget(animation_widget, area='right')
-   viewer.update_console({'animation': animation_widget.animation})
+                
+               if Raw is not None:
+                                       
+                                       viewer = napari.view_image(Raw, name='Image')
+                                       viewer.add_labels(Seg, name = 'SegImage')
+               else:
+                                       viewer = napari.view_image(Seg, name='SegImage')
+                                       
+               if Mask is not None:
+                                       Boundary = GetBorderMask(Mask.copy())
+                                       Boundary = Boundary.astype('uint16')
+                                       viewer.add_labels(Boundary, name='Mask')
+               napari.run()         
                       
-   
-   AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, None,multiplot_widget, ax, figure,  DividingTrajectory, False)         
-   trackbox.currentIndexChanged.connect(lambda trackid = trackbox : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, False))
-   print(saveplot)        
-   if saveplot:
-       
-           trackbox.currentIndexChanged.connect(lambda trackid = tracksavebutton : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, True))
-      
-   viewer.window.add_dock_widget(trackbox, name = "TrackID", area = 'left')
-   viewer.window.add_dock_widget(tracksavebutton, name = "Save TrackID", area = 'left')             
+               ID = []
+               for i in range(0, len(all_track_properties)):
+                                     trackid, alltracklets = all_track_properties[i]
+                                     ID.append(trackid)
+               trackbox = QComboBox()
+               trackbox.addItem(Boxname)
+                        
+               tracksavebutton = QPushButton('Save Track')
+               for i in range(0, len(ID)):
+                        trackbox.addItem(str(ID[i]))
+               trackbox.addItem('all')         
+            
+               figure = plt.figure(figsize = (3, 3))    
+               multiplot_widget = FigureCanvas(figure)
+               ax = multiplot_widget.figure.subplots(2,2)
+               width = 400
+               dock_widget = viewer.window.add_dock_widget(multiplot_widget, name = "TrackStats", area = 'right')
+               multiplot_widget.figure.tight_layout()
+               viewer.window._qt_window.resizeDocks([dock_widget], [width], Qt.Horizontal)
+                 
+            
+               
+               T = Seg.shape[0]
+               animation_widget = AnimationWidget(viewer, savedir, T)
+               viewer.window.add_dock_widget(animation_widget, area='right')
+               viewer.update_console({'animation': animation_widget.animation})
+                                  
+               AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, None,multiplot_widget, ax, figure,  DividingTrajectory, False)         
+               trackbox.currentIndexChanged.connect(lambda trackid = trackbox : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, False))
+               tracksavebutton.clicked.connect(lambda trackid = tracksavebutton : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, True))
+                  
+               viewer.window.add_dock_widget(trackbox, name = "TrackID", area = 'left')
+               viewer.window.add_dock_widget(tracksavebutton, name = "Save TrackID", area = 'left')             
   
     
 def DistancePlotter():
@@ -910,7 +910,6 @@ def DistancePlotter():
          plt.show()
   
 def on_click():
-         print("saving plot")
          return True         
             
 def sortTracks(List):
