@@ -457,7 +457,7 @@ def tracklet_properties( alltracklets, Uniqueobjects, Uniqueproperties, Mask, Ti
                                                                         
                                                                         tree, indices, masklabel, masklabelvolume = TimedMask[str(int(frame))]
                                                                        
-                                                                        region_label = Mask[int(float(frame/calibration[3])), int(float(z/calibration[2])), int(float(y/calibration[1])) , int(float(x/calibration[0]))] 
+                                                                        region_label = Mask[int(float(frame)/calibration[3]), int(float(z)/calibration[2]), int(float(y)/calibration[1]) , int(float(x)/calibration[0])] 
                                                                         
                                                                         for k in range(0, len(masklabel)):
                                                                             currentlabel = masklabel[k]
@@ -691,8 +691,15 @@ class AllTrackViewer(object):
                         for i in range(0, len(self.all_track_properties)):
                                                trackid, alltracklets = self.all_track_properties[i]
                                                if self.ID == trackid:
+                                                           AllStartParent[trackid] = [trackid]
+                                                           AllEndParent[trackid] = [trackid]
+                                                           
                                                            TrackLayerTracklets[trackid] = [trackid]
                                                            for (trackletid, tracklets) in alltracklets.items():
+                                                                                 
+                                                                                 AllStartChildren[int(str(trackid) + str(trackletid))] = [int(str(trackid) + str(trackletid))]
+                                                                                 AllEndChildren[int(str(trackid) + str(trackletid))] = [int(str(trackid) + str(trackletid))]
+                                                                                 
                                                                                  self.AllT = []
                                                                                  self.AllArea = []
                                                                                  self.AllIntensity = []
@@ -720,12 +727,12 @@ class AllTrackViewer(object):
                                                                                                     if str(self.ID) + str(trackletid) not in AllID:
                                                                                                          AllID.append(str(self.ID) + str(trackletid))
                                                                                                     if trackletid == 0: 
-                                                                                                      AllStartParent.append(self.AllDistance[0])
-                                                                                                      AllEndParent.append(self.AllDistance[-1])
+                                                                                                      AllStartParent[trackid].append(self.AllDistance[0])
+                                                                                                      AllEndParent[trackid].append(self.AllDistance[-1])
                                                                                                       
                                                                                                     else:
-                                                                                                        AllStartChildren.append(self.AllDistance[0])
-                                                                                                        AllEndChildren.append(self.AllDistance[-1])
+                                                                                                        AllStartChildren[int(str(trackid) + str(trackletid))].append(self.AllDistance[0])
+                                                                                                        AllEndChildren[int(str(trackid) + str(trackletid))].append(self.AllDistance[-1])
                                                                                                    
                                                                                 
                                                                                  if self.saveplot == True:
@@ -734,16 +741,33 @@ class AllTrackViewer(object):
                                                                                                               columns =['Time', 'Cell Size', 'Distance to Border', 'Inner Cell Probability', 'Cell Speed', 'Cell Intensity'])
                                                                                               df.to_csv(self.savedir + '/' + 'Track' +  str(self.ID) + 'tracklet' + str(trackletid) +  '.csv',index = False)  
                                                                                               df
-                                                                                            
-                                                                                              df = pd.DataFrame(list(zip(AllStartParent,AllEndParent)),  
-                                                                                                              columns =['StartDistance', 'EndDistance'])
-                                                                                              df.to_csv(self.savedir + '/'  + 'ParentFate'  +  '.csv',index = False)  
-                                                                                              df
-                                                                                            
-                                                                                              df = pd.DataFrame(list(zip(AllStartChildren,AllEndChildren)),  
-                                                                                                              columns =['StartDistance', 'EndDistance'])
-                                                                                              df.to_csv(self.savedir + '/' + 'ChildrenFate'  +  '.csv',index = False)  
-                                                                                              df
+                                                                                              for (tid, dist) in AllStartParent:
+                                                                                                  
+                                                                                                  df = pd.DataFrame(list(zip(tid,dist)),  
+                                                                                                                  columns =['Trackid', 'StartDistance'])
+                                                                                                  df.to_csv(self.savedir + '/'  + 'ParentFateStart'  +  '.csv',index = False)  
+                                                                                                  df
+                                                                                                  
+                                                                                              for (tid, dist) in AllEndParent:
+                                                                                                  
+                                                                                                  df = pd.DataFrame(list(zip(tid,dist)),  
+                                                                                                                  columns =['Trackid', 'EndDistance'])
+                                                                                                  df.to_csv(self.savedir + '/'  + 'ParentFateEnd'  +  '.csv',index = False)  
+                                                                                                  df
+                                                                                              for (tid, dist) in AllStartChildren:
+                                                                                                  
+                                                                                                  df = pd.DataFrame(list(zip(tid,dist)),  
+                                                                                                                  columns =['Trackid + Trackletid', 'StartDistance'])
+                                                                                                  df.to_csv(self.savedir + '/'  + 'ChildrenFateStart'  +  '.csv',index = False)  
+                                                                                                  df 
+                                                                                                  
+                                                                                              for (tid, dist) in AllEndChildren:
+                                                                                                  
+                                                                                                  df = pd.DataFrame(list(zip(tid,dist)),  
+                                                                                                                  columns =['Trackid + Trackletid', 'EndDistance'])
+                                                                                                  df.to_csv(self.savedir + '/'  + 'ChildrenFateEnd'  +  '.csv',index = False)  
+                                                                                                  df     
+                                                                                       
                                                                                  self.ax[0,0].plot(self.AllT, self.AllSize)
                                                                                 
                                                                                  self.ax[1,0].plot(self.AllT, self.AllDistance)
@@ -751,8 +775,8 @@ class AllTrackViewer(object):
                                                                                  self.ax[1,1].plot(self.AllT, self.AllSpeed)
                                                                                  #self.ax[0,2].plot(self.AllT, self.AllIntensity)
                                                                                  
-                                                                                 self.ax[0,1].plot(AllStartParent, AllEndParent, 'og')
-                                                                                 self.ax[0,1].plot(AllStartChildren, AllEndChildren, 'or')
+                                                                                 self.ax[0,1].plot(AllStartParent[trackid], AllEndParent[trackid], 'og')
+                                                                                 self.ax[0,1].plot(AllStartChildren[trackletid], AllEndChildren[trackletid], 'or')
                                                                                  self.figure.canvas.draw()      
                                                                                  self.figure.canvas.flush_events()
                                                                                  
