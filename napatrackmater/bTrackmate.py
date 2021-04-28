@@ -656,7 +656,6 @@ class AllTrackViewer(object):
           
       def plot(self):
           
-                        print(self.saveplot, self.savedir, '1')      
                         for i in range(self.ax.shape[0]):
                              for j in range(self.ax.shape[1]):
                                                self.ax[i,j].cla()
@@ -693,11 +692,9 @@ class AllTrackViewer(object):
                         TrackLayerTracklets = {}
                         for i in range(0, len(self.all_track_properties)):
                                                trackid, alltracklets = self.all_track_properties[i]
-                                               print(self.saveplot, '2', self.ID, trackid)   
                                                if self.ID == trackid:
                                                            TrackLayerTracklets[trackid] = [trackid]
                                                            for (trackletid, tracklets) in alltracklets.items():
-                                                                                 print(self.saveplot, '3')   
                                                                                  self.AllT = []
                                                                                  self.AllArea = []
                                                                                  self.AllIntensity = []
@@ -732,10 +729,8 @@ class AllTrackViewer(object):
                                                                                                         AllStartChildren.append(self.AllDistance[0])
                                                                                                         AllEndChildren.append(self.AllDistance[-1])
                                                                                                    
-                                                                                 print(self.saveplot, '4')   
                                                                                 
                                                                                  if self.saveplot == True:
-                                                                                              print('saving')   
                                                                                               self.SaveFig()
                                                                                               df = pd.DataFrame(list(zip(self.AllT,self.AllSize,self.AllDistance,self.AllProbability,self.AllSpeed,self.AllIntensity)),  
                                                                                                               columns =['Time', 'Cell Size', 'Distance to Border', 'Inner Cell Probability', 'Cell Speed', 'Cell Intensity'])
@@ -751,7 +746,6 @@ class AllTrackViewer(object):
                                                                                                               columns =['StartDistance', 'EndDistance'])
                                                                                               df.to_csv(self.savedir + '/' + 'ChildrenFate'  +  '.csv',index = False)  
                                                                                               df
-                                                                                 print(self.saveplot, '5')               
                                                                                  self.ax[0,0].plot(self.AllT, self.AllSize)
                                                                                 
                                                                                  self.ax[1,0].plot(self.AllT, self.AllDistance)
