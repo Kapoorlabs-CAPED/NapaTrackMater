@@ -434,7 +434,7 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
                             return dividing_tracklets    
                         
                         
-def tracklet_properties( alltracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask, DividingTrajectory):
+def tracklet_properties( alltracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask,calibration, DividingTrajectory):
     
     
                             location_prop_dist = {}
@@ -457,7 +457,7 @@ def tracklet_properties( alltracklets, Uniqueobjects, Uniqueproperties, Mask, Ti
                                                                         
                                                                         tree, indices, masklabel, masklabelvolume = TimedMask[str(int(frame))]
                                                                        
-                                                                        region_label = Mask[int(frame), int(z), int(y) , int(x)] 
+                                                                        region_label = Mask[int(float(frame/calibration[3])), int(float(z/calibration[2])), int(float(y/calibration[1])) , int(float(x/calibration[0]))] 
                                                                         
                                                                         for k in range(0, len(masklabel)):
                                                                             currentlabel = masklabel[k]
@@ -483,8 +483,6 @@ def tracklet_properties( alltracklets, Uniqueobjects, Uniqueproperties, Mask, Ti
 
 def import_TM_XML(xml_path, Segimage, image = None, Mask = None):
     
-        Name = os.path.basename(os.path.splitext(xml_path)[0])
-        savedir = os.path.dirname(xml_path)
         root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
           
         filtered_track_ids = [int(track.get('TRACK_ID')) for track in root.find('Model').find('FilteredTracks').findall('TrackID')]
@@ -577,7 +575,7 @@ def import_TM_XML(xml_path, Segimage, image = None, Mask = None):
                              tracklets = analyze_non_dividing_tracklets(root_leaf, spot_object_source_target)    
                 
                 # for each tracklet get real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside
-                location_prop_dist = tracklet_properties(tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask, DividingTrajectory)
+                location_prop_dist = tracklet_properties(tracklets, Uniqueobjects, Uniqueproperties, Mask, TimedMask, [xcalibration, ycalibration, zcalibration, tcalibration], DividingTrajectory)
                 
                 all_track_properties.append([track_id, location_prop_dist])
     
