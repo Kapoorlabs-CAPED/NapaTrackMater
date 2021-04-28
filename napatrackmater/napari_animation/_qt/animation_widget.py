@@ -54,12 +54,12 @@ class AnimationWidget(QWidget):
     def _add_callbacks(self):
         """Bind keys"""
 
-        self.animation.viewer.bind_key("Alt-f", self._capture_keyframe_callback)
-        self.animation.viewer.bind_key("Alt-r", self._replace_keyframe_callback)
-        self.animation.viewer.bind_key("Alt-d", self._delete_keyframe_callback)
+        self.animation.viewer.bind_key("Alt-f", self._capture_keyframe_callback,overwrite = True)
+        self.animation.viewer.bind_key("Alt-r", self._replace_keyframe_callback,overwrite = True)
+        self.animation.viewer.bind_key("Alt-d", self._delete_keyframe_callback,overwrite = True)
 
-        self.animation.viewer.bind_key("Alt-a", self._key_adv_frame)
-        self.animation.viewer.bind_key("Alt-b", self._key_back_frame)
+        self.animation.viewer.bind_key("Alt-a", self._key_adv_frame,overwrite = True)
+        self.animation.viewer.bind_key("Alt-b", self._key_back_frame,overwrite = True)
 
     def _release_callbacks(self):
         """Release keys"""
