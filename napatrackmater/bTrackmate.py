@@ -820,6 +820,8 @@ class AllTrackViewer(object):
                 
 def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties, DividingTrajectory):
 
+   Seg = Seg.astype('uint16')
+   Mask = Mask.astype('uint16')
    if Mask is not None and len(Mask.shape) < len(Seg.shape):
         # T Z Y X
         UpdateMask = np.zeros_like(Seg)
@@ -828,7 +830,7 @@ def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties,
                 
                 UpdateMask[i,j,:,:] = Mask[i,:,:]
                 Boundary = GetBorderMask(UpdateMask.copy())
-
+   
    with napari.gui_qt(): 
     
     
@@ -841,6 +843,7 @@ def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties,
                                   
            if Mask is not None:
                                   Boundary = GetBorderMask(Mask.copy())
+                                  Boundary = Boundary.astype('uint16')
                                   viewer.add_labels(Boundary, name='Mask')
             
           
