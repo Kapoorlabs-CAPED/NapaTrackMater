@@ -858,11 +858,11 @@ def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties,
    viewer.window.add_dock_widget(multiplot_widget, name = "TrackStats", area = 'right')
    multiplot_widget.figure.tight_layout()
    AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, None,multiplot_widget, ax, figure,  DividingTrajectory, False)         
-   trackbox.currentIndexChanged.connect(lambda trackid = trackbox : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, False))
+   trackbox.currentIndexChanged.connect(lambda trackid = trackbox : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, False), overwrite = True)
            
    if saveplot:
        
-           trackbox.currentIndexChanged.connect(lambda trackid = trackbox : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, False))
+           trackbox.currentIndexChanged.connect(lambda trackid = trackbox : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, False), overwrite = True)
       
    viewer.window.add_dock_widget(trackbox, name = "TrackID", area = 'left')
    viewer.window.add_dock_widget(tracksavebutton, name = "Save TrackID", area = 'left')             
