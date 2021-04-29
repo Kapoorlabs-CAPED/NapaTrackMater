@@ -24,6 +24,8 @@ from btrack.dataio import import_CSV
 from skimage.segmentation import find_boundaries
 from PyQt5.QtCore import pyqtSlot
 from scipy import spatial 
+from scipy.fftpack import fft, ifft, fftshift
+from scipy.fftpack import fftfreq
 import pandas as pd
 from pathlib import Path
 from .napari_animation import AnimationWidget
@@ -528,7 +530,7 @@ def import_TM_XML(xml_path, Segimage, image = None, Mask = None):
           
             spot_object_source_target = []
             if track_id in filtered_track_ids:
-                print('Creating Tracklets of TrackID', track_id)
+                print('TrackID', track_id)
                 for edge in track.findall('Edge'):
                    
                    source_id = edge.get('SPOT_SOURCE_ID')
@@ -613,7 +615,7 @@ def Multiplicity(spot_object_source_target):
    
 class AllTrackViewer(object):
 
-      def __init__(self, originalviewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, ID, canvas, ax, figure,  DividingTrajectory, saveplot = False, axall = None, window_size = 3):
+      def __init__(self, originalviewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, ID, canvas, ax, figure,  DividingTrajectory, saveplot = False, window_size = 3, mode = 'fate'):
           
           self.trackviewer = originalviewer
           self.savedir = savedir
@@ -622,13 +624,12 @@ class AllTrackViewer(object):
           self.Seg = Seg
           self.Mask = Mask
           self.calibration = calibration
-          self.axall = axall
+          self.mode = mode
           if ID == 'all':
               self.ID = ID
-              self.axall = None
           elif ID is not None:
             self.ID = int(ID)
-          else:
+          else:  
             self.ID = ID  
           self.saveplot = saveplot
           self.canvas = canvas
@@ -644,32 +645,28 @@ class AllTrackViewer(object):
                                  
                                  if self.tracklines in layer.name or layer.name in self.tracklines:
                                      self.trackviewer.layers.remove(layer)
-          self.draw()                           
-          self.plot()
-         
+          self.draw()    
+          if self.mode == 'fate':                         
+              self.plot()
+          if self.mode == 'intensity':
+              self.plotintensity()
           
           
       def plot(self):
           
                         for i in range(self.ax.shape[0]):
                                                self.ax[i].cla()
-                        if self.axall == None:                     
+                                           
                         
-                                self.ax[0].set_title("distance_to_boundary")
-                                self.ax[0].set_xlabel("minutes")
-                                self.ax[0].set_ylabel("um")
-                                
-                                
-                                self.ax[1].set_title("cell_fate")
-                                self.ax[1].set_xlabel("start_distance")
-                                self.ax[1].set_ylabel("end_distance")
-                        else:
-                            
-                            self.axall.cla()
-
-                            self.ax.set_title("total_cell_fate")
-                            self.set_xlabel("start_distance")
-                            self.set_ylabel("end_distance")
+                        self.ax[0].set_title("distance_to_boundary")
+                        self.ax[0].set_xlabel("minutes")
+                        self.ax[0].set_ylabel("um")
+                        
+                        
+                        self.ax[1].set_title("cell_fate")
+                        self.ax[1].set_xlabel("start_distance")
+                        self.ax[1].set_ylabel("end_distance")
+                       
                         #Execute the function    
                         
                         
@@ -678,7 +675,7 @@ class AllTrackViewer(object):
                         TrackLayerTracklets = {}
                         for i in range(0, len(self.all_track_properties)):
                                                trackid, alltracklets = self.all_track_properties[i]
-                                               if self.ID == trackid or self.axall is not None:
+                                               if self.ID == trackid or self.ID == 'all':
                                                            AllStartParent[trackid] = [trackid]
                                                            AllEndParent[trackid] = [trackid]
                                                            
@@ -725,6 +722,7 @@ class AllTrackViewer(object):
                                                                                  self.AllDistance = MovingAverage(self.AllDistance, window_size = self.window_size)
                                                                                  self.AllSize = MovingAverage(self.AllSize, window_size = self.window_size)
                                                                                  self.AllProbability = MovingAverage(self.AllProbability, window_size = self.window_size)
+                                                                                 self.AllT = MovingAverage(self.AllT, window_size = self.window_size)
                                                                                  if self.saveplot == True:
                                                                                               self.SaveFig()
                                                                                               df = pd.DataFrame(list(zip(self.AllT,self.AllSize,self.AllDistance,self.AllProbability,self.AllSpeed)),  
@@ -789,23 +787,99 @@ class AllTrackViewer(object):
                                                                                  childrenends = AllEndChildren[int(str(trackid) + str(trackletid))]
                                                                                  parentstarts = AllStartParent[trackid]
                                                                                  parentends = AllEndParent[trackid]
-                                                                                 if self.axall == None:
-                                                                                    self.ax[0].plot(self.AllT, self.AllDistance)
-                                                                                    self.ax[1].plot(parentstarts[1:], parentends[1:], 'og')
-                                                                                    self.ax[1].plot(childrenstarts[1:], childrenends[1:], 'or')
-                                                                                 if self.axall:
-                                                                                       self.axall.plot(parentstarts[1:], parentends[1:], 'og')
-                                                                                       self.axall.plot(childrenstarts[1:], childrenends[1:], 'or')
+                                                                                 self.ax[0].plot(self.AllT, self.AllDistance)
+                                                                                 self.ax[1].plot(parentstarts[1:], parentends[1:], 'og')
+                                                                                 self.ax[1].plot(childrenstarts[1:], childrenends[1:], 'or')
                                                                                      
                                                                                  self.figure.canvas.draw()      
                                                                                  self.figure.canvas.flush_events()
                                                                                  
-                                                           else:                      
-                                                               break;                
+                                                                          
                         self.figure.canvas.draw()      
                         self.figure.canvas.flush_events()
             
+      def plotintensity(self):
+          
+                        for i in range(self.ax.shape[0]):
+                                               self.ax[i].cla()
+                                      
+                        
+                        self.ax[0].set_title("intensity")
+                        self.ax[0].set_xlabel("minutes")
+                        self.ax[0].set_ylabel("arb_units")
+                        
+                        
+                        self.ax[1].set_title("fourier_transform")
+                        self.ax[1].set_xlabel("frequency")
+                        self.ax[1].set_ylabel("arb_units")
+                       
+
+                        #Execute the function    
+                        
+                        
+                        
+                        IDLocations = []
+                        TrackLayerTracklets = {}
+                        for i in range(0, len(self.all_track_properties)):
+                                               trackid, alltracklets = self.all_track_properties[i]
+                                               if self.ID == trackid or self.ID == 'all':
+                                                           
+                                                           TrackLayerTracklets[trackid] = [trackid]
+                                                           for (trackletid, tracklets) in alltracklets.items():
+                                                                                 
+                                                                                 
+                                                                                 self.AllT = []
+                                                                                 self.AllArea = []
+                                                                                 self.AllIntensity = []
+                                                                                 self.AllSpeed = []
+                                                                                 self.AllSize = []
+                                                                                 
+                                                                                 TrackLayerTracklets = []
+                                                                       
+                                                                       
+                                                                                 Locationtracklets = tracklets[1]
+                                                                                 if len(Locationtracklets) > 0:
+                                                                                    Locationtracklets = sorted(Locationtracklets, key = sortFirst, reverse = False )
+                                                                                   
+                                                                                    for tracklet in Locationtracklets:
+                                                                                                    t,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside, speed, DividingTrajectory = tracklet
+                                                                                                    TrackLayerTracklets.append([trackletid, t, z, y, x])
+                                                                                                    IDLocations.append([t,z,y,x])
+                                                                                                    self.AllT.append(int(float(t * self.calibration[3])))
+                                                                                                    self.AllSpeed.append("{:.1f}".format(float(speed)))
+                                                                                                    self.AllIntensity.append("{:.1f}".format(float(total_intensity)))
+                                                                                                    self.AllSize.append("{:.1f}".format(float(cellradius)))
+                                                                                                    if str(self.ID) + str(trackletid) not in AllID:
+                                                                                                         AllID.append(str(self.ID) + str(trackletid))
+                                                                                    
+                                                                                   
+                                                                                 self.AllSpeed = MovingAverage(self.AllSpeed, window_size = self.window_size)
+                                                                                 self.AllIntensity = MovingAverage(self.AllIntensity, window_size = self.window_size)
+                                                                                 self.AllSize = MovingAverage(self.AllSize, window_size = self.window_size)
+                                                                                 self.AllT = MovingAverage(self.AllT, window_size = self.window_size)
+                                                                                 
+                                                                                 self.fft, self.frequ = FourierTransform(self.AllIntensity, self.calibration[3])
+                                                                                 if self.saveplot == True:
+                                                                                              self.SaveFig()
+                                                                                              df = pd.DataFrame(list(zip(self.AllT,self.frequ,self.fft)),  
+                                                                                                              columns =['Time', 'Frequency','FFT'])
+                                                                                              df.to_csv(self.savedir + '/' + 'Track' +  str(self.ID) + 'tracklet' + str(trackletid) +  '.csv',index = False)  
+                                                                                              df
+                                                                                              
+                                                                                           
+                                                                                                  
+                                                                                 self.ax[0].plot(self.AllT, self.AllIntensity)
+                                                                                 self.ax[1].plot(self.frequ, self.fft)
+                                                                            
+                                                                                     
+                                                                                 self.figure.canvas.draw()      
+                                                                                 self.figure.canvas.flush_events()
+                                                                                 
+                                                                           
+                        self.figure.canvas.draw()      
+                        self.figure.canvas.flush_events()
             
+      
       def draw(self):
                       TrackLayerTracklets = {}
                       self.trackviewer.status = str(self.ID)
@@ -857,21 +931,27 @@ class AllTrackViewer(object):
            
             
                     
-    
-            
+def FourierTransform(numbers, tcalibration):
+
+       pointsample = len(numbers)
+       xf = fftfreq(pointsample, tcalibration)
+       fftstrip = fft(numbers)
+       ffttotal = np.abs(fftstrip)
+       
+       return ffttotal[:int(pointsample)//2], xf[0:int(pointsample)//2]
+             
 def MovingAverage(numbers, window_size = 3):
     
+    without_nans = np.zeros_like(numbers)
     numbers_series = pd.Series(numbers)
     windows = numbers_series.rolling(window_size)
     moving_averages = windows.mean()
     
     moving_averages_list = moving_averages.tolist()
     without_nans = moving_averages_list[window_size - 1:]
-    without_nans[len(without_nans):len(numbers)] = without_nans[-1]
-    
     return without_nans
                 
-def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties, DividingTrajectory):
+def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties, DividingTrajectory, mode = 'fate'):
 
     
   
@@ -918,7 +998,6 @@ def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties,
                figure = plt.figure(figsize = (4, 4))    
                multiplot_widget = FigureCanvas(figure)
                ax = multiplot_widget.figure.subplots(1,2)
-               axall =  multiplot_widget.figure.subplots(1,1)
                width = 400
                dock_widget = viewer.window.add_dock_widget(multiplot_widget, name = "TrackStats", area = 'right')
                multiplot_widget.figure.tight_layout()
@@ -931,9 +1010,9 @@ def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties,
                viewer.window.add_dock_widget(animation_widget, area='right')
                viewer.update_console({'animation': animation_widget.animation})
                                   
-               AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, None,multiplot_widget, ax, figure,  DividingTrajectory, False, axall = axall)         
-               trackbox.currentIndexChanged.connect(lambda trackid = trackbox : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, False, axall = axall))
-               tracksavebutton.clicked.connect(lambda trackid = tracksavebutton : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, True, axall = axall))
+               AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, None,multiplot_widget, ax, figure,  DividingTrajectory, False, mode = mode)         
+               trackbox.currentIndexChanged.connect(lambda trackid = trackbox : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, False, mode = mode))
+               tracksavebutton.clicked.connect(lambda trackid = tracksavebutton : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, True, mode = mode))
                   
                viewer.window.add_dock_widget(trackbox, name = "TrackID", area = 'left')
                viewer.window.add_dock_widget(tracksavebutton, name = "Save TrackID", area = 'left')  
