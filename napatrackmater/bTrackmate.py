@@ -710,6 +710,7 @@ class AllTrackViewer(object):
                                                                                                     self.AllSize.append("{:.1f}".format(float(cellradius)))
                                                                                                     if str(self.ID) + str(trackletid) not in AllID:
                                                                                                          AllID.append(str(self.ID) + str(trackletid))
+                                                                                                    print(trackletid, total_intensity, distance)      
                                                                                     if trackletid == 0: 
                                                                                       AllStartParent[trackid].append(self.AllDistance[0])
                                                                                       AllEndParent[trackid].append(self.AllDistance[-1])
@@ -814,7 +815,7 @@ class AllTrackViewer(object):
                         self.ax[1].set_ylabel("arb_units")
                        
 
-                        #Execute the function    
+                         #Execute the function    
                         
                         
                         
@@ -823,59 +824,62 @@ class AllTrackViewer(object):
                         for i in range(0, len(self.all_track_properties)):
                                                trackid, alltracklets = self.all_track_properties[i]
                                                if self.ID == trackid or self.ID == 'all':
+                                                           AllStartParent[trackid] = [trackid]
+                                                           AllEndParent[trackid] = [trackid]
                                                            
                                                            TrackLayerTracklets[trackid] = [trackid]
                                                            for (trackletid, tracklets) in alltracklets.items():
                                                                                  
                                                                                  
                                                                                  self.AllT = []
-                                                                                 self.AllArea = []
                                                                                  self.AllIntensity = []
-                                                                                 self.AllSpeed = []
-                                                                                 self.AllSize = []
-                                                                                 
                                                                                  TrackLayerTracklets = []
                                                                        
-                                                                       
+                                                                                 max_int = 1
                                                                                  Locationtracklets = tracklets[1]
                                                                                  if len(Locationtracklets) > 0:
                                                                                     Locationtracklets = sorted(Locationtracklets, key = sortFirst, reverse = False )
                                                                                    
                                                                                     for tracklet in Locationtracklets:
                                                                                                     t,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside, speed, DividingTrajectory = tracklet
+                                                                                                    if float(total_intensity) > max_int:
+                                                                                                         max_int = float(total_intensity)
                                                                                                     TrackLayerTracklets.append([trackletid, t, z, y, x])
                                                                                                     IDLocations.append([t,z,y,x])
                                                                                                     self.AllT.append(int(float(t * self.calibration[3])))
-                                                                                                    self.AllSpeed.append("{:.1f}".format(float(speed)))
+                                                                                                    
                                                                                                     self.AllIntensity.append("{:.1f}".format(float(total_intensity)))
-                                                                                                    self.AllSize.append("{:.1f}".format(float(cellradius)))
                                                                                                     if str(self.ID) + str(trackletid) not in AllID:
                                                                                                          AllID.append(str(self.ID) + str(trackletid))
-                                                                                    
                                                                                    
-                                                                                 self.AllSpeed = MovingAverage(self.AllSpeed, window_size = self.window_size)
                                                                                  self.AllIntensity = MovingAverage(self.AllIntensity, window_size = self.window_size)
-                                                                                 self.AllSize = MovingAverage(self.AllSize, window_size = self.window_size)
+                                                                                 for i in range(0, len(self.AllIntensity)):
+                                                                                    self.AllIntensity[i] = self.AllIntensity[i] / (max_int)
                                                                                  self.AllT = MovingAverage(self.AllT, window_size = self.window_size)
+                                                                                 pointsample = len(self.AllIntensity)
+                                                                                 if pointsample > 0:
+                                                                                         xf = fftfreq(pointsample, self.calibration[3])
+                                                                                         fftstrip = fft(self.AllIntensity)
+                                                                                         ffttotal = np.abs(fftstrip) 
+                                                                                         xf = xf[0:len(xf)//2]
+                                                                                         ffttotal = ffttotal[0:len(ffttotal)//2]
+                                                                                         if self.saveplot == True:
+                                                                                                      self.SaveFig()
+                                                                                                      df = pd.DataFrame(list(zip(self.AllT,self.frequ,self.fft)),  
+                                                                                                                      columns =['Time', 'Frequency', 'FFT'])
+                                                                                                      df.to_csv(self.savedir + '/' + 'Track_Frequency' +  str(self.ID) + 'tracklet' + str(trackletid) +  '.csv',index = False)  
+                                                                                                      df
+                                                                                                      
+                                                                                                 
+                                                                                                          
+                                                                                        
+                                                                                         self.ax[0].plot(self.AllT, self.AllIntensity)
+                                                                                         self.ax[1].plot(xf, ffttotal)
+                                                                                             
+                                                                                         self.figure.canvas.draw()      
+                                                                                         self.figure.canvas.flush_events()
                                                                                  
-                                                                                 self.fft, self.frequ = FourierTransform(self.AllIntensity, self.calibration[3])
-                                                                                 if self.saveplot == True:
-                                                                                              self.SaveFig()
-                                                                                              df = pd.DataFrame(list(zip(self.AllT,self.frequ,self.fft)),  
-                                                                                                              columns =['Time', 'Frequency','FFT'])
-                                                                                              df.to_csv(self.savedir + '/' + 'Track' +  str(self.ID) + 'tracklet' + str(trackletid) +  '.csv',index = False)  
-                                                                                              df
-                                                                                              
-                                                                                           
-                                                                                                  
-                                                                                 self.ax[0].plot(self.AllT, self.AllIntensity)
-                                                                                 self.ax[1].plot(self.frequ, self.fft)
-                                                                            
-                                                                                     
-                                                                                 self.figure.canvas.draw()      
-                                                                                 self.figure.canvas.flush_events()
-                                                                                 
-                                                                           
+                                                                          
                         self.figure.canvas.draw()      
                         self.figure.canvas.flush_events()
             
@@ -938,7 +942,7 @@ def FourierTransform(numbers, tcalibration):
        fftstrip = fft(numbers)
        ffttotal = np.abs(fftstrip)
        
-       return ffttotal[:int(pointsample)//2], xf[0:int(pointsample)//2]
+       return ffttotal, xf
              
 def MovingAverage(numbers, window_size = 3):
     
