@@ -35,11 +35,11 @@ savedir = None
 ParentDistances = {}
 ChildrenDistances = {}
 
-AllStartParent = []
-AllEndParent = []
+AllStartParent = {}
+AllEndParent = {}
 AllID = []
-AllStartChildren = []
-AllEndChildren = []
+AllStartChildren = {}
+AllEndChildren = {}
 
 
 def prob_sigmoid(x):
@@ -230,7 +230,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
     if ndim == 3:
         
         Boundary = np.zeros([mask.shape[0], mask.shape[1], mask.shape[2]])
-        for i in range(0, mask.shape[0]):
+        for i in tqdm(range(0, mask.shape[0])):
             
             mask[i,:] = label(mask[i,:])
             properties = measure.regionprops(mask[i,:], mask[i,:])
@@ -269,7 +269,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
         Boundary = np.zeros([mask.shape[0], mask.shape[1], mask.shape[2], mask.shape[3]])
         
         #Loop over time
-        for i in range(0, mask.shape[0]):
+        for i in tqdm(range(0, mask.shape[0])):
             
             mask[i,:] = label(mask[i,:])
             properties = measure.regionprops(mask[i,:], mask[i,:])
@@ -286,14 +286,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
                 volume = sizex * sizey * sizez 
                 radius = math.pow(3 * volume / ( 4 * math.pi), 1.0/3.0)
                 #Loop over Z
-                if regionlabel > 1: 
-                    for j in range(int(prop.bbox[0]),int(prop.bbox[3])):
-               
-                          Boundary[i,j,:labelimage.shape[1],:labelimage.shape[2]] = find_boundaries(labelimage[j,:,:])
-                else:
-                    for j in range(int(prop.bbox[0]),int(prop.bbox[3])):
-               
-                          Boundary[i,j,:,:] = find_boundaries(mask[i,j,:,:])
+                Boundary[i,:] = find_boundaries(mask[i,:])
                 
                 indices = np.where(Boundary[i,:] > 0)
                 
@@ -720,63 +713,91 @@ class AllTrackViewer(object):
                                                                                                     IDLocations.append([t,z,y,x])
                                                                                                     self.AllT.append(int(float(t * self.calibration[3])))
                                                                                                     self.AllSpeed.append("{:.1f}".format(float(speed)))
-                                                                                                    self.AllIntensity.append("{:.1f}".format(float(mean_intensity)))
                                                                                                     self.AllProbability.append("{:.2f}".format(float(prob_inside)))
                                                                                                     self.AllDistance.append("{:.1f}".format(float(distance)))
                                                                                                     self.AllSize.append("{:.1f}".format(float(cellradius)))
                                                                                                     if str(self.ID) + str(trackletid) not in AllID:
                                                                                                          AllID.append(str(self.ID) + str(trackletid))
-                                                                                                    if trackletid == 0: 
-                                                                                                      AllStartParent[trackid].append(self.AllDistance[0])
-                                                                                                      AllEndParent[trackid].append(self.AllDistance[-1])
-                                                                                                      
-                                                                                                    else:
-                                                                                                        AllStartChildren[int(str(trackid) + str(trackletid))].append(self.AllDistance[0])
-                                                                                                        AllEndChildren[int(str(trackid) + str(trackletid))].append(self.AllDistance[-1])
-                                                                                                   
+                                                                                    if trackletid == 0: 
+                                                                                      AllStartParent[trackid].append(self.AllDistance[0])
+                                                                                      AllEndParent[trackid].append(self.AllDistance[-1])
+                                                                                      
+                                                                                    else:
+                                                                                        AllStartChildren[int(str(trackid) + str(trackletid))].append(self.AllDistance[0])
+                                                                                        AllEndChildren[int(str(trackid) + str(trackletid))].append(self.AllDistance[-1])
+                                                                                   
                                                                                 
                                                                                  if self.saveplot == True:
                                                                                               self.SaveFig()
-                                                                                              df = pd.DataFrame(list(zip(self.AllT,self.AllSize,self.AllDistance,self.AllProbability,self.AllSpeed,self.AllIntensity)),  
-                                                                                                              columns =['Time', 'Cell Size', 'Distance to Border', 'Inner Cell Probability', 'Cell Speed', 'Cell Intensity'])
+                                                                                              df = pd.DataFrame(list(zip(self.AllT,self.AllSize,self.AllDistance,self.AllProbability,self.AllSpeed)),  
+                                                                                                              columns =['Time', 'Cell Size', 'Distance to Border', 'Inner Cell Probability', 'Cell Speed'])
                                                                                               df.to_csv(self.savedir + '/' + 'Track' +  str(self.ID) + 'tracklet' + str(trackletid) +  '.csv',index = False)  
                                                                                               df
-                                                                                              for (tid, dist) in AllStartParent:
+                                                                                              
+                                                                                              faketid = []
+                                                                                              fakedist = []
+                                                                                              for (tid, dist) in AllStartParent.items():
                                                                                                   
-                                                                                                  df = pd.DataFrame(list(zip(tid,dist)),  
-                                                                                                                  columns =['Trackid', 'StartDistance'])
-                                                                                                  df.to_csv(self.savedir + '/'  + 'ParentFateStart'  +  '.csv',index = False)  
-                                                                                                  df
+                                                                                                   if len(dist) > 1:
+                                                                                                          faketid.append(tid)
+                                                                                                          fakedist.append(dist[1])
+                                                                                                 
+                                                                                              df = pd.DataFrame(list(zip(faketid,fakedist)),  
+                                                                                                            columns =['Trackid', 'StartDistance'])
+                                                                                              df.to_csv(self.savedir + '/'  + 'ParentFateStart'  +  '.csv',index = False)  
+                                                                                              df
                                                                                                   
-                                                                                              for (tid, dist) in AllEndParent:
+                                                                                              faketid = []
+                                                                                              fakedist = []
+                                                                                              for (tid, dist) in AllEndParent.items():
                                                                                                   
-                                                                                                  df = pd.DataFrame(list(zip(tid,dist)),  
-                                                                                                                  columns =['Trackid', 'EndDistance'])
-                                                                                                  df.to_csv(self.savedir + '/'  + 'ParentFateEnd'  +  '.csv',index = False)  
-                                                                                                  df
-                                                                                              for (tid, dist) in AllStartChildren:
+                                                                                                  if len(dist) > 1:       
+                                                                                                     faketid.append(tid)
+                                                                                                     fakedist.append(dist[1])
+                                                                                                 
+                                                                                              df = pd.DataFrame(list(zip(faketid,fakedist)),  
+                                                                                                                columns =['Trackid', 'endDistance'])
+                                                                                              df.to_csv(self.savedir + '/'  + 'ParentFateEnd'  +  '.csv',index = False)  
+                                                                                              df
                                                                                                   
-                                                                                                  df = pd.DataFrame(list(zip(tid,dist)),  
-                                                                                                                  columns =['Trackid + Trackletid', 'StartDistance'])
-                                                                                                  df.to_csv(self.savedir + '/'  + 'ChildrenFateStart'  +  '.csv',index = False)  
-                                                                                                  df 
                                                                                                   
-                                                                                              for (tid, dist) in AllEndChildren:
+                                                                                              faketid = []
+                                                                                              fakedist = []    
+                                                                                              
+                                                                                              for (tid, dist) in AllStartChildren.items():
+                                                                                                  if len(dist) > 1:
+                                                                                                          faketid.append(tid)
+                                                                                                          fakedist.append(dist[1])
+                                                                                                 
+                                                                                              df = pd.DataFrame(list(zip(faketid,fakedist)),  
+                                                                                                                columns =['Trackid + Trackletid', 'StartDistance'])
+                                                                                              df.to_csv(self.savedir + '/'  + 'ChildrenFateStart'  +  '.csv',index = False)  
+                                                                                              df 
                                                                                                   
-                                                                                                  df = pd.DataFrame(list(zip(tid,dist)),  
-                                                                                                                  columns =['Trackid + Trackletid', 'EndDistance'])
-                                                                                                  df.to_csv(self.savedir + '/'  + 'ChildrenFateEnd'  +  '.csv',index = False)  
-                                                                                                  df     
-                                                                                       
+                                                                                              faketid = []
+                                                                                              fakedist = []  
+                                                                                              
+                                                                                              for (tid, dist) in AllEndChildren.items():
+                                                                                                  if len(dist) > 1:
+                                                                                                      faketid.append(tid)
+                                                                                                      fakedist.append(dist[1])
+                                                                                                 
+                                                                                              df = pd.DataFrame(list(zip(faketid,fakedist)),  
+                                                                                                                columns =['Trackid + Trackletid', 'EndDistance'])
+                                                                                              df.to_csv(self.savedir + '/'  + 'ChildrenFateEnd'  +  '.csv',index = False)  
+                                                                                              df
+                                                                                                  
+                                                                                 childrenstarts = AllStartChildren[int(str(trackid) + str(trackletid))]
+                                                                                 childrenends = AllEndChildren[int(str(trackid) + str(trackletid))]
+                                                                                 parentstarts = AllStartParent[trackid]
+                                                                                 parentends = AllEndParent[trackid]
                                                                                  self.ax[0,0].plot(self.AllT, self.AllSize)
                                                                                 
                                                                                  self.ax[1,0].plot(self.AllT, self.AllDistance)
-                                                                                 #self.ax[0,1].plot(self.AllT, self.AllProbability)
                                                                                  self.ax[1,1].plot(self.AllT, self.AllSpeed)
-                                                                                 #self.ax[0,2].plot(self.AllT, self.AllIntensity)
                                                                                  
-                                                                                 self.ax[0,1].plot(AllStartParent[trackid], AllEndParent[trackid], 'og')
-                                                                                 self.ax[0,1].plot(AllStartChildren[int(str(trackid) + str(trackletid))], AllEndChildren[int(str(trackid) + str(trackletid))], 'or')
+                                                                                 self.ax[0,1].plot(parentstarts[1:], parentends[1:], 'og')
+                                                                                 self.ax[0,1].plot(childrenstarts[1:], childrenends[1:], 'or')
                                                                                  self.figure.canvas.draw()      
                                                                                  self.figure.canvas.flush_events()
                                                                                  
@@ -871,7 +892,7 @@ def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties,
                                        Boundary = GetBorderMask(Mask.copy())
                                        Boundary = Boundary.astype('uint16')
                                        viewer.add_labels(Boundary, name='Mask')
-               napari.run()         
+                       
                       
                ID = []
                for i in range(0, len(all_track_properties)):
@@ -905,7 +926,8 @@ def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties,
                tracksavebutton.clicked.connect(lambda trackid = tracksavebutton : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, True))
                   
                viewer.window.add_dock_widget(trackbox, name = "TrackID", area = 'left')
-               viewer.window.add_dock_widget(tracksavebutton, name = "Save TrackID", area = 'left')             
+               viewer.window.add_dock_widget(tracksavebutton, name = "Save TrackID", area = 'left')  
+               napari.run() 
   
     
 def DistancePlotter():
