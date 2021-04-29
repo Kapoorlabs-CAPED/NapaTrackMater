@@ -624,7 +624,9 @@ class AllTrackViewer(object):
           self.Seg = Seg
           self.Mask = Mask
           self.calibration = calibration
-          if ID is not None or ID is not 'all':
+          if ID == 'all':
+              self.ID = ID
+          elif ID is not None:
             self.ID = int(ID)
           else:
             self.ID = ID  
@@ -648,16 +650,16 @@ class AllTrackViewer(object):
       def plot(self):
           
                         for i in range(self.ax.shape[0]):
-                             for j in range(self.ax.shape[1]):
-                                               self.ax[i,j].cla()
+                             #for j in range(self.ax.shape[1]):
+                                               self.ax[i].cla()
                 
                         #self.ax[0,0].set_title("cell_size")
                         #self.ax[0,0].set_xlabel("minutes")
                         #self.ax[0,0].set_ylabel("um")
                         
-                        self.ax[0,0].set_title("distance_to_boundary")
-                        self.ax[0,0].set_xlabel("minutes")
-                        self.ax[0,0].set_ylabel("um")
+                        self.ax[0].set_title("distance_to_boundary")
+                        self.ax[0].set_xlabel("minutes")
+                        self.ax[0].set_ylabel("um")
                         
                         #self.ax[0,1].set_title("probability_inner_cell")
                         #self.ax[0,1].set_xlabel("minutes")
@@ -671,9 +673,9 @@ class AllTrackViewer(object):
                         #self.ax[0,2].set_xlabel("minutes")
                         #self.ax[0,2].set_ylabel("arb. units")
                         
-                        self.ax[0,1].set_title("cell_fate")
-                        self.ax[0,1].set_xlabel("start_distance")
-                        self.ax[0,1].set_ylabel("end_distance")
+                        self.ax[1].set_title("cell_fate")
+                        self.ax[1].set_xlabel("start_distance")
+                        self.ax[1].set_ylabel("end_distance")
                         
                         #Execute the function    
                         
@@ -793,11 +795,11 @@ class AllTrackViewer(object):
                                                                                  parentends = AllEndParent[trackid]
                                                                                  #self.ax[0,0].plot(self.AllT, self.AllSize)
                                                                                 
-                                                                                 self.ax[0,0].plot(self.AllT, self.AllDistance)
+                                                                                 self.ax[0].plot(self.AllT, self.AllDistance)
                                                                                  #self.ax[1,1].plot(self.AllT, self.AllSpeed)
                                                                                  
-                                                                                 self.ax[0,1].plot(parentstarts[1:], parentends[1:], 'og')
-                                                                                 self.ax[0,1].plot(childrenstarts[1:], childrenends[1:], 'or')
+                                                                                 self.ax[1].plot(parentstarts[1:], parentends[1:], 'og')
+                                                                                 self.ax[1].plot(childrenstarts[1:], childrenends[1:], 'or')
                                                                                  self.figure.canvas.draw()      
                                                                                  self.figure.canvas.flush_events()
                                                                                  
@@ -906,9 +908,9 @@ def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties,
                         trackbox.addItem(str(ID[i]))
                trackbox.addItem('all')         
             
-               figure = plt.figure(figsize = (8, 8))    
+               figure = plt.figure(figsize = (4, 4))    
                multiplot_widget = FigureCanvas(figure)
-               ax = multiplot_widget.figure.subplots(1,1)
+               ax = multiplot_widget.figure.subplots(1,2)
                width = 400
                dock_widget = viewer.window.add_dock_widget(multiplot_widget, name = "TrackStats", area = 'right')
                multiplot_widget.figure.tight_layout()
