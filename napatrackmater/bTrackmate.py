@@ -776,7 +776,7 @@ class AllTrackViewer(object):
                                                                                  #self.ax[0,2].plot(self.AllT, self.AllIntensity)
                                                                                  
                                                                                  self.ax[0,1].plot(AllStartParent[trackid], AllEndParent[trackid], 'og')
-                                                                                 self.ax[0,1].plot(AllStartChildren[trackletid], AllEndChildren[trackletid], 'or')
+                                                                                 self.ax[0,1].plot(AllStartChildren[int(str(trackid) + str(trackletid))], AllEndChildren[int(str(trackid) + str(trackletid))], 'or')
                                                                                  self.figure.canvas.draw()      
                                                                                  self.figure.canvas.flush_events()
                                                                                  
