@@ -554,13 +554,11 @@ def import_TM_XML(xml_path, Segimage, image = None, Mask = None):
                 else:
                     DividingTrajectory = False
                 print("Is a Dividing track:", DividingTrajectory)    
-               
                     
                 
                 if DividingTrajectory == True:
                     
-                            tracklets = analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_target)
-                                                
+                             tracklets = analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_target)
                             
                             
                 if DividingTrajectory == False:
@@ -615,7 +613,7 @@ def Multiplicity(spot_object_source_target):
    
 class AllTrackViewer(object):
 
-      def __init__(self, originalviewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, ID, canvas, ax, figure,  DividingTrajectory, saveplot = False):
+      def __init__(self, originalviewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, ID, canvas, ax, figure,  DividingTrajectory, saveplot = False, axall = None, window_size = 3):
           
           self.trackviewer = originalviewer
           self.savedir = savedir
@@ -624,8 +622,10 @@ class AllTrackViewer(object):
           self.Seg = Seg
           self.Mask = Mask
           self.calibration = calibration
+          self.axall = axall
           if ID == 'all':
               self.ID = ID
+              self.axall = None
           elif ID is not None:
             self.ID = int(ID)
           else:
@@ -633,10 +633,12 @@ class AllTrackViewer(object):
           self.saveplot = saveplot
           self.canvas = canvas
           self.ax = ax
+          self.window_size = window_size
           self.figure = figure
           self.all_track_properties = all_track_properties
           self.DividingTrajectory = DividingTrajectory
           self.tracklines = 'Tracks'
+          
           for layer in list(self.trackviewer.layers):
                            
                                  
@@ -650,33 +652,24 @@ class AllTrackViewer(object):
       def plot(self):
           
                         for i in range(self.ax.shape[0]):
-                             #for j in range(self.ax.shape[1]):
                                                self.ax[i].cla()
-                
-                        #self.ax[0,0].set_title("cell_size")
-                        #self.ax[0,0].set_xlabel("minutes")
-                        #self.ax[0,0].set_ylabel("um")
+                        if self.axall == None:                     
                         
-                        self.ax[0].set_title("distance_to_boundary")
-                        self.ax[0].set_xlabel("minutes")
-                        self.ax[0].set_ylabel("um")
-                        
-                        #self.ax[0,1].set_title("probability_inner_cell")
-                        #self.ax[0,1].set_xlabel("minutes")
-                        #self.ax[0,1].set_ylabel("probability")
-                        
-                        #self.ax[1,1].set_title("cell_velocity")
-                        #self.ax[1,1].set_xlabel("minutes")
-                        #self.ax[1,1].set_ylabel("um")
-                        
-                        #self.ax[0,2].set_title("cell_intensity")
-                        #self.ax[0,2].set_xlabel("minutes")
-                        #self.ax[0,2].set_ylabel("arb. units")
-                        
-                        self.ax[1].set_title("cell_fate")
-                        self.ax[1].set_xlabel("start_distance")
-                        self.ax[1].set_ylabel("end_distance")
-                        
+                                self.ax[0].set_title("distance_to_boundary")
+                                self.ax[0].set_xlabel("minutes")
+                                self.ax[0].set_ylabel("um")
+                                
+                                
+                                self.ax[1].set_title("cell_fate")
+                                self.ax[1].set_xlabel("start_distance")
+                                self.ax[1].set_ylabel("end_distance")
+                        else:
+                            
+                            self.axall.cla()
+
+                            self.ax.set_title("total_cell_fate")
+                            self.set_xlabel("start_distance")
+                            self.set_ylabel("end_distance")
                         #Execute the function    
                         
                         
@@ -685,7 +678,7 @@ class AllTrackViewer(object):
                         TrackLayerTracklets = {}
                         for i in range(0, len(self.all_track_properties)):
                                                trackid, alltracklets = self.all_track_properties[i]
-                                               if self.ID == trackid:
+                                               if self.ID == trackid or self.axall is not None:
                                                            AllStartParent[trackid] = [trackid]
                                                            AllEndParent[trackid] = [trackid]
                                                            
@@ -728,7 +721,10 @@ class AllTrackViewer(object):
                                                                                         AllStartChildren[int(str(trackid) + str(trackletid))].append(self.AllDistance[0])
                                                                                         AllEndChildren[int(str(trackid) + str(trackletid))].append(self.AllDistance[-1])
                                                                                    
-                                                                                
+                                                                                 self.AllSpeed = MovingAverage(self.AllSpeed, window_size = self.window_size)
+                                                                                 self.AllDistance = MovingAverage(self.AllDistance, window_size = self.window_size)
+                                                                                 self.AllSize = MovingAverage(self.AllSize, window_size = self.window_size)
+                                                                                 self.AllProbability = MovingAverage(self.AllProbability, window_size = self.window_size)
                                                                                  if self.saveplot == True:
                                                                                               self.SaveFig()
                                                                                               df = pd.DataFrame(list(zip(self.AllT,self.AllSize,self.AllDistance,self.AllProbability,self.AllSpeed)),  
@@ -793,13 +789,14 @@ class AllTrackViewer(object):
                                                                                  childrenends = AllEndChildren[int(str(trackid) + str(trackletid))]
                                                                                  parentstarts = AllStartParent[trackid]
                                                                                  parentends = AllEndParent[trackid]
-                                                                                 #self.ax[0,0].plot(self.AllT, self.AllSize)
-                                                                                
-                                                                                 self.ax[0].plot(self.AllT, self.AllDistance)
-                                                                                 #self.ax[1,1].plot(self.AllT, self.AllSpeed)
-                                                                                 
-                                                                                 self.ax[1].plot(parentstarts[1:], parentends[1:], 'og')
-                                                                                 self.ax[1].plot(childrenstarts[1:], childrenends[1:], 'or')
+                                                                                 if self.axall == None:
+                                                                                    self.ax[0].plot(self.AllT, self.AllDistance)
+                                                                                    self.ax[1].plot(parentstarts[1:], parentends[1:], 'og')
+                                                                                    self.ax[1].plot(childrenstarts[1:], childrenends[1:], 'or')
+                                                                                 if self.axall:
+                                                                                       self.axall.plot(parentstarts[1:], parentends[1:], 'og')
+                                                                                       self.axall.plot(childrenstarts[1:], childrenends[1:], 'or')
+                                                                                     
                                                                                  self.figure.canvas.draw()      
                                                                                  self.figure.canvas.flush_events()
                                                                                  
@@ -862,7 +859,17 @@ class AllTrackViewer(object):
                     
     
             
-
+def MovingAverage(numbers, window_size = 3):
+    
+    numbers_series = pd.Series(numbers)
+    windows = numbers_series.rolling(window_size)
+    moving_averages = windows.mean()
+    
+    moving_averages_list = moving_averages.tolist()
+    without_nans = moving_averages_list[window_size - 1:]
+    without_nans[len(without_nans):len(numbers)] = without_nans[-1]
+    
+    return without_nans
                 
 def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties, DividingTrajectory):
 
@@ -911,6 +918,7 @@ def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties,
                figure = plt.figure(figsize = (4, 4))    
                multiplot_widget = FigureCanvas(figure)
                ax = multiplot_widget.figure.subplots(1,2)
+               axall =  multiplot_widget.figure.subplots(1,1)
                width = 400
                dock_widget = viewer.window.add_dock_widget(multiplot_widget, name = "TrackStats", area = 'right')
                multiplot_widget.figure.tight_layout()
@@ -923,9 +931,9 @@ def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties,
                viewer.window.add_dock_widget(animation_widget, area='right')
                viewer.update_console({'animation': animation_widget.animation})
                                   
-               AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, None,multiplot_widget, ax, figure,  DividingTrajectory, False)         
-               trackbox.currentIndexChanged.connect(lambda trackid = trackbox : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, False))
-               tracksavebutton.clicked.connect(lambda trackid = tracksavebutton : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, True))
+               AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, None,multiplot_widget, ax, figure,  DividingTrajectory, False, axall = axall)         
+               trackbox.currentIndexChanged.connect(lambda trackid = trackbox : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, False, axall = axall))
+               tracksavebutton.clicked.connect(lambda trackid = tracksavebutton : AllTrackViewer(viewer, Raw, Seg, Mask, savedir, calibration, all_track_properties, trackbox.currentText(),multiplot_widget, ax, figure,  DividingTrajectory, True, axall = axall))
                   
                viewer.window.add_dock_widget(trackbox, name = "TrackID", area = 'left')
                viewer.window.add_dock_widget(tracksavebutton, name = "Save TrackID", area = 'left')  
