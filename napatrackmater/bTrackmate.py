@@ -458,9 +458,9 @@ def tracklet_properties( alltracklets, Uniqueobjects, Uniqueproperties, Mask, Ti
                                                                             currenttree = tree[k]
                                                                             #Get the location and distance to the nearest boundary point
                                                                             distance, location = currenttree.query(testlocation)
-                                                                            distance = max(0,distance  - cellradius)
+                                                                            distance = max(0,distance  - float(cellradius))
                                                                             if currentlabel == region_label and region_label > 0:
-                                                                                    prob_inside = prob_sigmoid(distance - cellradius) 
+                                                                                    prob_inside = prob_sigmoid(distance - float(cellradius)) 
                                                                             else:
                                                                                 
                                                                                     prob_inside = 0 
@@ -624,7 +624,7 @@ class AllTrackViewer(object):
           self.Seg = Seg
           self.Mask = Mask
           self.calibration = calibration
-          if ID is not None:
+          if ID is not None or ID is not 'all':
             self.ID = int(ID)
           else:
             self.ID = ID  
@@ -651,21 +651,21 @@ class AllTrackViewer(object):
                              for j in range(self.ax.shape[1]):
                                                self.ax[i,j].cla()
                 
-                        self.ax[0,0].set_title("cell_size")
+                        #self.ax[0,0].set_title("cell_size")
+                        #self.ax[0,0].set_xlabel("minutes")
+                        #self.ax[0,0].set_ylabel("um")
+                        
+                        self.ax[0,0].set_title("distance_to_boundary")
                         self.ax[0,0].set_xlabel("minutes")
                         self.ax[0,0].set_ylabel("um")
-                        
-                        self.ax[1,0].set_title("distance_to_boundary")
-                        self.ax[1,0].set_xlabel("minutes")
-                        self.ax[1,0].set_ylabel("um")
                         
                         #self.ax[0,1].set_title("probability_inner_cell")
                         #self.ax[0,1].set_xlabel("minutes")
                         #self.ax[0,1].set_ylabel("probability")
                         
-                        self.ax[1,1].set_title("cell_velocity")
-                        self.ax[1,1].set_xlabel("minutes")
-                        self.ax[1,1].set_ylabel("um")
+                        #self.ax[1,1].set_title("cell_velocity")
+                        #self.ax[1,1].set_xlabel("minutes")
+                        #self.ax[1,1].set_ylabel("um")
                         
                         #self.ax[0,2].set_title("cell_intensity")
                         #self.ax[0,2].set_xlabel("minutes")
@@ -791,10 +791,10 @@ class AllTrackViewer(object):
                                                                                  childrenends = AllEndChildren[int(str(trackid) + str(trackletid))]
                                                                                  parentstarts = AllStartParent[trackid]
                                                                                  parentends = AllEndParent[trackid]
-                                                                                 self.ax[0,0].plot(self.AllT, self.AllSize)
+                                                                                 #self.ax[0,0].plot(self.AllT, self.AllSize)
                                                                                 
-                                                                                 self.ax[1,0].plot(self.AllT, self.AllDistance)
-                                                                                 self.ax[1,1].plot(self.AllT, self.AllSpeed)
+                                                                                 self.ax[0,0].plot(self.AllT, self.AllDistance)
+                                                                                 #self.ax[1,1].plot(self.AllT, self.AllSpeed)
                                                                                  
                                                                                  self.ax[0,1].plot(parentstarts[1:], parentends[1:], 'og')
                                                                                  self.ax[0,1].plot(childrenstarts[1:], childrenends[1:], 'or')
@@ -906,9 +906,9 @@ def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties,
                         trackbox.addItem(str(ID[i]))
                trackbox.addItem('all')         
             
-               figure = plt.figure(figsize = (3, 3))    
+               figure = plt.figure(figsize = (8, 8))    
                multiplot_widget = FigureCanvas(figure)
-               ax = multiplot_widget.figure.subplots(2,2)
+               ax = multiplot_widget.figure.subplots(1,1)
                width = 400
                dock_widget = viewer.window.add_dock_widget(multiplot_widget, name = "TrackStats", area = 'right')
                multiplot_widget.figure.tight_layout()
