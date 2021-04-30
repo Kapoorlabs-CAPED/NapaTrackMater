@@ -30,19 +30,26 @@ import pandas as pd
 from pathlib import Path
 from .napari_animation import AnimationWidget
 import codecs
+from multiprocessing import Pool
+from multiprocessing import freeze_support
+import multiprocessing
+from functools import partial
+'''Define function to run mutiple processors and pool the results together'''
+def run_multiprocessing(func, i, n_processors):
+    with Pool(processes=n_processors) as pool:
+        return pool.map(func, i)
 Boxname = 'TrackBox'
 pd.options.display.float_format = '${:,.2f}'.format
 savedir = None
 
 ParentDistances = {}
 ChildrenDistances = {}
-
+timed_mask = {}
 AllStartParent = {}
 AllEndParent = {}
 AllID = []
 AllStartChildren = {}
 AllEndChildren = {}
-
 
 def prob_sigmoid(x):
   return 1 - math.exp(-x)
@@ -131,19 +138,6 @@ def CreateTrackCheckpoint(Image, Label, Mask, Name, savedir):
     
     
 
-def Velocity(Source, Target, xycalibration, zcalibration, tcalibration):
-    
-    
-    ts,zs,ys,xs = Source
-    
-    tt,zt,yt,xt = Target
-    
-  
-    
-    Velocity = (float(zs)* zcalibration - float(zt)* zcalibration) * (float(zs)* zcalibration - float(zt)* zcalibration) + (float(ys)* xycalibration - float(yt)* xycalibration) * (float(ys)* xycalibration - float(yt)* xycalibration) + (float(xs)* xycalibration - float(xt)* xycalibration) * (float(xs)* xycalibration - float(xt)* xycalibration)
-    
-    return math.sqrt(Velocity)/ max((float(tt)* tcalibration-float(ts)* tcalibration),1)
-    
 
 
 def GetBorderMask(Mask):
@@ -193,7 +187,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
     
     ndim = len(mask.shape)
     
-    timed_mask = {}
+   
     #YX shaped object
     if ndim == 2:
         mask = label(mask)
@@ -270,50 +264,64 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
 
         Boundary = np.zeros([mask.shape[0], mask.shape[1], mask.shape[2], mask.shape[3]])
         
-        #Loop over time
-        for i in tqdm(range(0, mask.shape[0])):
+        
+        
+        
+        x_ls = range(0,mask.shape[0])
+        
+        #Serial loop
+        #for i in tqdm(x_ls):
             
-            mask[i,:] = label(mask[i,:])
-            properties = measure.regionprops(mask[i,:], mask[i,:])
-            labels = []
-            size = []
-            tree = []
-            for prop in properties:
-                
-                labelimage = prop.image
-                regionlabel = prop.label
-                sizez = abs(prop.bbox[0] - prop.bbox[3])* zcalibration
-                sizey = abs(prop.bbox[1] - prop.bbox[4])* ycalibration
-                sizex = abs(prop.bbox[2] - prop.bbox[5])* xcalibration
-                volume = sizex * sizey * sizez 
-                radius = math.pow(3 * volume / ( 4 * math.pi), 1.0/3.0)
-                #Loop over Z
-                Boundary[i,:] = find_boundaries(mask[i,:])
-                
-                indices = np.where(Boundary[i,:] > 0)
-                
-                indices = np.transpose(np.asarray(indices))
-                real_indices = indices.copy()
-                for j in range(0, len(real_indices)):
-                    
-                    real_indices[j][0] = real_indices[j][0] * zcalibration
-                    real_indices[j][1] = real_indices[j][1] * ycalibration
-                    real_indices[j][2] = real_indices[j][2] * xcalibration
-                    
-                
-                tree.append(spatial.cKDTree(real_indices))
-                if regionlabel not in labels:
-                    labels.append(regionlabel)
-                    size.append(radius) 
-                
+            #parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i) 
             
-            
-            timed_mask[str(i)] = [tree, indices, labels, size]    
+        #Parallel loop    
+        [parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i) for i in tqdm(x_ls)]   
+      
+        
+       
 
     return timed_mask
     
 
+def parallel_map( mask, xcalibration, ycalibration, zcalibration, Boundary, i):
+    
+                    mask[i,:] = label(mask[i,:])
+                    properties = measure.regionprops(mask[i,:], mask[i,:])
+                    labels = []
+                    size = []
+                    tree = []
+                    for prop in properties:
+                        
+                        regionlabel = prop.label
+                        sizez = abs(prop.bbox[0] - prop.bbox[3])* zcalibration
+                        sizey = abs(prop.bbox[1] - prop.bbox[4])* ycalibration
+                        sizex = abs(prop.bbox[2] - prop.bbox[5])* xcalibration
+                        volume = sizex * sizey * sizez 
+                        radius = math.pow(3 * volume / ( 4 * math.pi), 1.0/3.0)
+                       
+                        Boundary[i,:] = find_boundaries(mask[i,:])
+                        
+                        indices = np.where(Boundary[i,:] > 0)
+                        
+                        indices = np.transpose(np.asarray(indices))
+                        real_indices = indices.copy()
+                        for j in range(0, len(real_indices)):
+                            
+                            real_indices[j][0] = real_indices[j][0] * zcalibration
+                            real_indices[j][1] = real_indices[j][1] * ycalibration
+                            real_indices[j][2] = real_indices[j][2] * xcalibration
+                            
+                        
+                        tree.append(spatial.cKDTree(real_indices))
+                        if regionlabel not in labels:
+                            labels.append(regionlabel)
+                            size.append(radius) 
+                        
+                    
+                    timed_mask[str(i)] = [tree, indices, labels, size]
 
+    
+    
 
 def analyze_non_dividing_tracklets(root_leaf, spot_object_source_target):
     
@@ -497,6 +505,8 @@ def import_TM_XML(xml_path, Segimage, image = None, Mask = None):
         ycalibration = float(settings.get('pixelheight'))
         zcalibration = float(settings.get('voxeldepth'))
         tcalibration = int(float(settings.get('timeinterval')))
+        
+        
         if Mask is not None:
             if len(Mask.shape) < len(Segimage.shape):
                 # T Z Y X
@@ -508,6 +518,7 @@ def import_TM_XML(xml_path, Segimage, image = None, Mask = None):
             else:
                 UpdateMask = Mask
                 Mask = UpdateMask.astype('uint16')
+           
             TimedMask = boundary_points(Mask, xcalibration, ycalibration, zcalibration)
         else:
             TimedMask = None
