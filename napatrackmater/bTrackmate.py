@@ -1010,7 +1010,7 @@ def TrackMateLiveTracks(Raw, Seg, Mask,savedir,calibration,all_track_properties,
             
                
                T = Seg.shape[0]
-               animation_widget = AnimationWidget(viewer, savedir, T)
+               animation_widget = AnimationWidget(viewer, savedir, 0, T)
                viewer.window.add_dock_widget(animation_widget, area='right')
                viewer.update_console({'animation': animation_widget.animation})
                                   
