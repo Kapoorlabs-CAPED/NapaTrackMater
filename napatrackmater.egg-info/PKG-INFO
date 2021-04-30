@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: napatrackmater
-Version: 1.2.1
+Version: 2.0
 Summary: Import Trackmate XML files for Track Visualization and analysis in Napari.
 Home-page: https://github.com/kapoorlab/NapaTrackMater/
 Author: Varun Kapoor
@@ -10,7 +10,7 @@ Description: # NapaTrackMater
         Napari Visualization tool for traditional TrackMate XML files for 3D + time tracks
         
         
-        [![Build Status](https://travis-ci.com/kapoorlab/napatrackmater.svg?branch=master)](https://travis-ci.com/kapoorlab/napatrackmater)
+        [![Build Status](https://travis-ci.com/kapoorlab/napatrackmater.svg?branch=master)](https://travis-ci.com/github/kapoorlab/napatrackmater)
         [![PyPI version](https://img.shields.io/pypi/v/napatrackmater.svg?maxAge=2591000)](https://pypi.org/project/napatrackmater/)
         
         Import [Trackmate](https://imagej.net/TrackMate) XML files for visualization in Napari using [Tracks Layer](https://napari.org/tutorials/fundamentals/tracks.html) .
@@ -31,7 +31,7 @@ Description: # NapaTrackMater
         
         ## License
         
-        Under BSD license. See [LICENSE](LICENSE).
+        Under MIT license. See [LICENSE](LICENSE).
         
         ## Authors
         

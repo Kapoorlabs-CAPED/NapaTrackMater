@@ -1,6 +1,6 @@
 numpy
 pandas
-napari==0.4.3
+napari
 pyqt5
 btrack
 natsort

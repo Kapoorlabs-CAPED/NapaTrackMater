@@ -24,11 +24,11 @@ class Animation:
     frame : int
         Currently shown key frame.
     """
-    def __init__(self, viewer, savedir, trackid, T):
+    def __init__(self, viewer, savedir, start, end):
         self.viewer = viewer
         self.savedir = savedir
-        self.T = T
-        self.trackid = trackid
+        self.start = start
+        self.end = end
         self.key_frames = []
         self.frame = -1
 
@@ -50,12 +50,12 @@ class Animation:
             If provided use this value for frame rather than current frame number.
         """
         self.key_frames = []
-        for frame in range(0, (self.T)):
+        for frame in tqdm(range(int(self.start), int(self.end))):
             self.frame = frame
+            print(self.frame)
             new_state = {'viewer': self._get_viewer_state(), 'steps': steps, 'ease': ease}
             self.key_frames.insert(self.frame + 1, new_state)
             self.viewer.dims.set_point(0, self.frame)
-
    
     
     def set_to_keyframe(self, frame):
@@ -80,8 +80,8 @@ class Animation:
         """
         new_state = {
              
-            'camera': self.viewer.camera.asdict(),
-            'dims': self.viewer.dims.asdict(),
+            'camera': self.viewer.camera.dict(),
+            'dims': self.viewer.dims.dict(),
         }
         # Log transform zoom for linear interpolation
         new_state['camera']['zoom'] = np.log10(new_state['camera']['zoom'])
@@ -177,5 +177,5 @@ class Animation:
                 frame = frame.astype(np.uint8)
             writer.append_data(frame)
             
-
+        
         writer.close()

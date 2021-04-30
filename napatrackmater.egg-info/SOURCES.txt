@@ -1,7 +1,8 @@
+LICENSE
 README.md
 setup.py
-napatrackmater/Trackmate.py
 napatrackmater/__init__ .py
+napatrackmater/bTrackmate.py
 napatrackmater/version.py
 napatrackmater.egg-info/PKG-INFO
 napatrackmater.egg-info/SOURCES.txt

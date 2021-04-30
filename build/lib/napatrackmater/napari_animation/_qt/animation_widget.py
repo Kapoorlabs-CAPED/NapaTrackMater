@@ -3,7 +3,7 @@ from qtpy.QtWidgets import QWidget, QLabel, QVBoxLayout, QLineEdit, QPushButton
 from ..animation import Animation
 from ..easing import Easing
 from .frame_widget import FrameWidget
-
+import napari
 
 class AnimationWidget(QWidget):
     """Widget for interatviely making animations using the napari viewer.
@@ -20,7 +20,7 @@ class AnimationWidget(QWidget):
     frame : int
         Currently shown key frame.
     """
-    def __init__(self, viewer: 'napari.viewer.Viewer', savedir : None, trackid:0, T:0, parent=None):
+    def __init__(self, viewer: 'napari.viewer.Viewer', savedir : None, start:0, end:10, parent=None):
         super().__init__(parent=parent)
 
         self._layout = QVBoxLayout()
@@ -31,22 +31,28 @@ class AnimationWidget(QWidget):
         self.frameWidget = FrameWidget(parent=self)
         self._layout.addWidget(self.frameWidget)
 
-        self.captureButton = QPushButton('Capture Frame', parent=self)
-        self.captureButton.clicked.connect(self._capture_keyframe_callback)
-        self._layout.addWidget(self.captureButton)
+        #self.captureButton = QPushButton('Capture Frame', parent=self)
+        #self.captureButton.clicked.connect(self._capture_keyframe_callback)
+        #self._layout.addWidget(self.captureButton)
 
         self._layout.addStretch(1)
 
         self.pathText = QLineEdit(parent=self)
-        self.pathText.setText(savedir + 'Track' + str(trackid) +'.mp4')
+        self.pathText.setText(savedir + 'Track'  +'.mp4')
         self._layout.addWidget(self.pathText)
 
         self.saveButton = QPushButton('Save Animation', parent=self)
         self.saveButton.clicked.connect(self._save_callback)
         self._layout.addWidget(self.saveButton)
-
+          
+        self.frameWidget.endframeSpinBox.setRange(0, end)
+        
+        self.frameWidget.endframeSpinBox.setValue(end)
+        self.frameWidget.startframeSpinBox.setValue(start)
         # Create animation
-        self.animation = Animation(viewer,savedir,trackid, T)
+        start = int(self.frameWidget.startframeSpinBox.value())
+        end = int(self.frameWidget.endframeSpinBox.value())
+        self.animation = Animation(viewer,savedir, start, end)
 
         # establish key bindings
         self._add_callbacks()
@@ -54,12 +60,12 @@ class AnimationWidget(QWidget):
     def _add_callbacks(self):
         """Bind keys"""
 
-        self.animation.viewer.bind_key("Alt-f", self._capture_keyframe_callback)
-        self.animation.viewer.bind_key("Alt-r", self._replace_keyframe_callback)
-        self.animation.viewer.bind_key("Alt-d", self._delete_keyframe_callback)
+        self.animation.viewer.bind_key("Alt-f", self._capture_keyframe_callback,overwrite = True)
+        self.animation.viewer.bind_key("Alt-r", self._replace_keyframe_callback,overwrite = True)
+        self.animation.viewer.bind_key("Alt-d", self._delete_keyframe_callback,overwrite = True)
 
-        self.animation.viewer.bind_key("Alt-a", self._key_adv_frame)
-        self.animation.viewer.bind_key("Alt-b", self._key_back_frame)
+        self.animation.viewer.bind_key("Alt-a", self._key_adv_frame,overwrite = True)
+        self.animation.viewer.bind_key("Alt-b", self._key_back_frame,overwrite = True)
 
     def _release_callbacks(self):
         """Release keys"""
@@ -80,7 +86,7 @@ class AnimationWidget(QWidget):
         return easing_func
 
     def _set_current_frame(self):
-        return self.frameWidget.frameSpinBox.setValue(self.animation.frame)
+        return self.frameWidget.startframeSpinBox.setValue(self.animation.frame)
 
     def _capture_keyframe_callback(self, event=None):
         """Record current key-frame"""
@@ -116,8 +122,13 @@ class AnimationWidget(QWidget):
         self._set_current_frame()
 
     def _save_callback(self, event=None):
+        
+        """Record current key-frame"""
+        self.animation.capture_keyframe(steps=self._get_interpolation_steps(),
+                                        ease=self._get_easing_function())
+        
+        
         path = self.pathText.text()
-        print('Saving animation to', path)
         self.animation.animate(path)
 
     def close(self):
