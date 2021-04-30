@@ -44,13 +44,12 @@ savedir = None
 
 ParentDistances = {}
 ChildrenDistances = {}
-
+timed_mask = {}
 AllStartParent = {}
 AllEndParent = {}
 AllID = []
 AllStartChildren = {}
 AllEndChildren = {}
-
 
 def prob_sigmoid(x):
   return 1 - math.exp(-x)
@@ -188,7 +187,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
     
     ndim = len(mask.shape)
     
-    timed_mask = {}
+   
     #YX shaped object
     if ndim == 2:
         mask = label(mask)
@@ -267,21 +266,25 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
         
         
         
-        n_processors = multiprocessing.cpu_count()    
-        pool = multiprocessing.Pool(processes=n_processors)
-        parallel_map_partial = partial(parallel_map, mask, xcalibration, ycalibration, zcalibration, Boundary)       
+        
         x_ls = range(0,mask.shape[0])
-        with Pool(n_processors) as pool:
-                tree, indices, labels, size, i  =  pool.map(parallel_map_partial, x_ls)
-                timed_mask[str(i)] = [tree, indices, labels, size]
+        
+        #Serial loop
+        #for i in tqdm(x_ls):
+            
+            #parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i) 
+            
+        #Parallel loop    
+        [parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i) for i in tqdm(x_ls)]   
+      
+        
        
 
     return timed_mask
     
 
-def parallel_map(i, mask, xcalibration, ycalibration, zcalibration, Boundary):
+def parallel_map( mask, xcalibration, ycalibration, zcalibration, Boundary, i):
     
-            
                     mask[i,:] = label(mask[i,:])
                     properties = measure.regionprops(mask[i,:], mask[i,:])
                     labels = []
@@ -289,14 +292,13 @@ def parallel_map(i, mask, xcalibration, ycalibration, zcalibration, Boundary):
                     tree = []
                     for prop in properties:
                         
-                        labelimage = prop.image
                         regionlabel = prop.label
                         sizez = abs(prop.bbox[0] - prop.bbox[3])* zcalibration
                         sizey = abs(prop.bbox[1] - prop.bbox[4])* ycalibration
                         sizex = abs(prop.bbox[2] - prop.bbox[5])* xcalibration
                         volume = sizex * sizey * sizez 
                         radius = math.pow(3 * volume / ( 4 * math.pi), 1.0/3.0)
-                        #Loop over Z
+                       
                         Boundary[i,:] = find_boundaries(mask[i,:])
                         
                         indices = np.where(Boundary[i,:] > 0)
@@ -316,9 +318,8 @@ def parallel_map(i, mask, xcalibration, ycalibration, zcalibration, Boundary):
                             size.append(radius) 
                         
                     
-                    
+                    timed_mask[str(i)] = [tree, indices, labels, size]
 
-                    return tree, indices, labels, size, i
     
     
 
