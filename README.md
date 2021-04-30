@@ -9,7 +9,7 @@ Import [Trackmate](https://imagej.net/TrackMate) XML files for visualization in 
 
 ## Usage
 
-Check the [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/TrackMateVisualization.ipynb).
+Check the [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/CellFateDetermination.ipynb).
 
 ## Requirements
 
