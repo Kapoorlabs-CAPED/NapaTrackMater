@@ -68,7 +68,7 @@ install:
   - conda update -q conda
   - conda info -a
   - conda create -n naparienv -c conda-forge python=$PYTHON_VERSION
-  - conda activate embryoseg
+  - conda activate naparienv
 
   
 script:
