@@ -6,17 +6,17 @@ matrix:
     - language: python
       os: linux
       env:
-        - PYTHON_VERSION="3.9"
+        - PYTHON_VERSION="3.7"
     - language: python
       os: linux
       env:
-        - PYTHON_VERSION="3.9"
+        - PYTHON_VERSION="3.7"
 
 steps:
       - uses: actions/setup-python@v2
         name: Install Python
         with:
-          python-version: 3.9
+          python-version: 3.7
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel
@@ -67,12 +67,10 @@ install:
   - conda config --add channels conda-forge
   - conda update -q conda
   - conda info -a
-  - conda create -n NapariTrack -c conda-forge python=$PYTHON_VERSION
-  - conda activate NapariTrack
+  - conda create -n naparienv -c conda-forge python=$PYTHON_VERSION
+  - conda activate embryoseg
 
   
 script:
-  - conda activate NapariTrack
+  - conda activate naparienv
   - python setup.py install
-  
-
