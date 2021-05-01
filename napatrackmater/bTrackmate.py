@@ -1,37 +1,34 @@
-import xml.etree.cElementTree as et
+import codecs
+import csv
+import math
+import multiprocessing
 import os
+import xml.etree.cElementTree as et
+from functools import partial
+from multiprocessing import Pool, freeze_support
+from pathlib import Path
+
+from PyQt5.QtCore import pyqtSlot
+from tqdm import tqdm
+
+import matplotlib.pyplot as plt
+import napari
 import numpy as np
 import pandas as pd
-import csv
-from skimage import measure
-import napari
-from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QSlider, QComboBox, QPushButton
-from tqdm import tqdm
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import \
+    FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-import math
-import matplotlib.pyplot as plt
-
-
-from skimage.measure import label
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QComboBox, QPushButton, QSlider
+from scipy import spatial
+from scipy.fftpack import fft, fftfreq, fftshift, ifft
+from skimage import measure
 from skimage.filters import sobel
-
+from skimage.measure import label
+from skimage.segmentation import find_boundaries
 from tifffile import imread, imwrite
 
-from skimage.segmentation import find_boundaries
-from PyQt5.QtCore import pyqtSlot
-from scipy import spatial
-from scipy.fftpack import fft, ifft, fftshift
-from scipy.fftpack import fftfreq
-import pandas as pd
-from pathlib import Path
 from .napari_animation import AnimationWidget
-import codecs
-from multiprocessing import Pool
-from multiprocessing import freeze_support
-import multiprocessing
-from functools import partial
 
 '''Define function to run mutiple processors and pool the results together'''
 

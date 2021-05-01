@@ -6,9 +6,9 @@ https://raw.githubusercontent.com/warrenm/AHEasing/master/AHEasing/easing.c
 Copyright (c) 2011, Auerhaus Development, LLC
 http://sam.zoy.org/wtfpl/COPYING for more details.
 """
-from functools import partial
-from math import sqrt, pow, sin, cos, pi
 from enum import Enum
+from functools import partial
+from math import cos, pi, pow, sin, sqrt
 
 tau = pi * 2
 
