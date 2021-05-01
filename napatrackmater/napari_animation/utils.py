@@ -39,10 +39,15 @@ def interpolate_state(initial_state, final_state, fraction):
     elif isinstance(initial_state, int) and isinstance(final_state, int):
         return _interpolate_int(initial_state, final_state, fraction)
 
-    elif isinstance(initial_state, (list, tuple)) and isinstance(final_state, (list, tuple)):
-        return tuple(interpolate_state(v0, v1, fraction) for v0, v1 in zip(initial_state, final_state))
+    elif isinstance(initial_state, (list, tuple)) and isinstance(
+        final_state, (list, tuple)
+    ):
+        return tuple(
+            interpolate_state(v0, v1, fraction)
+            for v0, v1 in zip(initial_state, final_state)
+        )
 
-    else:  
+    else:
         return _interpolate_bool(initial_state, final_state, fraction)
 
 

@@ -1,11 +1,14 @@
-import imageio
-import skimage.transform
-import skimage.io
-import numpy as np
 from copy import deepcopy
+from dataclasses import asdict, is_dataclass
 from pathlib import Path
+
 from tqdm import tqdm
-from dataclasses import is_dataclass, asdict
+
+import imageio
+import numpy as np
+import skimage.io
+import skimage.transform
+
 from .utils import interpolate_state
 
 
@@ -24,6 +27,7 @@ class Animation:
     frame : int
         Currently shown key frame.
     """
+
     def __init__(self, viewer, savedir, start, end):
         self.viewer = viewer
         self.savedir = savedir
@@ -34,7 +38,7 @@ class Animation:
 
     def capture_keyframe(self, steps=1, ease=None, insert=True, frame=None):
         """Record current key-frame
-        
+
         Parameters
         ----------
         steps : int
@@ -53,11 +57,14 @@ class Animation:
         for frame in tqdm(range(int(self.start), int(self.end))):
             self.frame = frame
             print(self.frame)
-            new_state = {'viewer': self._get_viewer_state(), 'steps': steps, 'ease': ease}
+            new_state = {
+                'viewer': self._get_viewer_state(),
+                'steps': steps,
+                'ease': ease,
+            }
             self.key_frames.insert(self.frame + 1, new_state)
             self.viewer.dims.set_point(0, self.frame)
-   
-    
+
     def set_to_keyframe(self, frame):
         """Set the viewer to a given key-frame
 
@@ -79,7 +86,6 @@ class Animation:
             Description of viewer state.
         """
         new_state = {
-             
             'camera': self.viewer.camera.dict(),
             'dims': self.viewer.dims.dict(),
         }
@@ -104,7 +110,9 @@ class Animation:
 
     def _state_generator(self):
         if len(self.key_frames) < 2:
-            raise ValueError(f'Must have at least 2 key frames, recieved {len(self.key_frames)}')
+            raise ValueError(
+                f'Must have at least 2 key frames, recieved {len(self.key_frames)}'
+            )
         for frame in range(len(self.key_frames) - 1):
             initial_state = self.key_frames[frame]["viewer"]
             final_state = self.key_frames[frame + 1]["viewer"]
@@ -121,7 +129,7 @@ class Animation:
         total = np.sum([f["steps"] for f in self.key_frames[1:]])
         for i, state in tqdm(enumerate(self._state_generator())):
             self._set_viewer_state(state)
-            frame = self.viewer.screenshot(canvas_only=canvas_only)            
+            frame = self.viewer.screenshot(canvas_only=canvas_only)
             yield frame
 
     def animate(
@@ -165,8 +173,6 @@ class Animation:
 
         # try to create an ffmpeg writer. If not installed default to folder creation
         writer = imageio.get_writer(path, fps=fps, format=format)
-       
-        
 
         # save frames
         for ind, frame in enumerate(frame_gen):
@@ -176,6 +182,5 @@ class Animation:
                 )
                 frame = frame.astype(np.uint8)
             writer.append_data(frame)
-            
-        
+
         writer.close()

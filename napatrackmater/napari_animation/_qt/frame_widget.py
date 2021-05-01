@@ -5,8 +5,8 @@ from ..easing import Easing
 
 
 class FrameWidget(QWidget):
-    """Widget for interatviely making animations using the napari viewer.
-    """
+    """Widget for interatviely making animations using the napari viewer."""
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
 
@@ -16,15 +16,13 @@ class FrameWidget(QWidget):
 
         self.startframeSpinBox = QSpinBox()
         self.startframeSpinBox.setValue(0)
-        
+
         self.endframeSpinBox = QSpinBox()
         self.endframeSpinBox.setValue(10)
 
         self.easeComboBox = QComboBox()
         self.easeComboBox.addItems([e.name.lower() for e in Easing])
-        index = self.easeComboBox.findText(
-            'linear', Qt.MatchFixedString
-        )
+        index = self.easeComboBox.findText('linear', Qt.MatchFixedString)
         self.easeComboBox.setCurrentIndex(index)
 
         self._layout.addRow('Steps', self.stepsSpinBox)
