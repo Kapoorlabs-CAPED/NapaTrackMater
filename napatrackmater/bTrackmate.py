@@ -719,14 +719,13 @@ class AllTrackViewer(object):
                                                                                                     self.AllSize.append("{:.1f}".format(float(cellradius)))
                                                                                                     if str(self.ID) + str(trackletid) not in AllID:
                                                                                                          AllID.append(str(self.ID) + str(trackletid))
-                                                                                                    print(trackletid, total_intensity, distance)      
                                                                                     if trackletid == 0: 
-                                                                                      AllStartParent[trackid].append(self.AllDistance[0])
-                                                                                      AllEndParent[trackid].append(self.AllDistance[-1])
+                                                                                      AllStartParent[trackid].append(float(self.AllDistance[0]))
+                                                                                      AllEndParent[trackid].append(float(self.AllDistance[-1]))
                                                                                       
                                                                                     else:
-                                                                                        AllStartChildren[int(str(trackid) + str(trackletid))].append(self.AllDistance[0])
-                                                                                        AllEndChildren[int(str(trackid) + str(trackletid))].append(self.AllDistance[-1])
+                                                                                        AllStartChildren[int(str(trackid) + str(trackletid))].append(float(self.AllDistance[0]))
+                                                                                        AllEndChildren[int(str(trackid) + str(trackletid))].append(float(self.AllDistance[-1]))
                                                                                    
                                                                                  self.AllSpeed = MovingAverage(self.AllSpeed, window_size = self.window_size)
                                                                                  self.AllDistance = MovingAverage(self.AllDistance, window_size = self.window_size)
