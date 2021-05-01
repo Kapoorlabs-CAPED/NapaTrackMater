@@ -1,0 +1,23 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+numpy = "*"
+pandas = "*"
+napari = "*"
+pyqt5 = "*"
+natsort = "*"
+scikit-image = "*"
+scipy = "*"
+tifffile = "*"
+matplotlib = "*"
+ffmpeg-python = "*"
+imageio-ffmpeg = "*"
+tqdm = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
