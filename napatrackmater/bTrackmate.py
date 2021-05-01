@@ -831,7 +831,7 @@ class AllTrackViewer(object):
                         TrackLayerTracklets = {}
                         for i in range(0, len(self.all_track_properties)):
                                                trackid, alltracklets = self.all_track_properties[i]
-                                               if self.ID == trackid or self.ID == 'all':
+                                               if self.ID == trackid:
                                                            AllStartParent[trackid] = [trackid]
                                                            AllEndParent[trackid] = [trackid]
                                                            
