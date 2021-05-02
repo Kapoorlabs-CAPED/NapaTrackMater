@@ -1,5 +1,6 @@
 # NapaTrackMater
 Napari Visualization tool for Trackmate > 6.0 and bTrackmate XML files for 3D + time tracks
+This repository is the bridge between the Fiji and Napari world for exporting and viewing the track XML files using [Napari track layer](https://napari.org/tutorials/fundamentals/tracks.html)
 
 ## Installation
 This package can be installed by 
@@ -34,10 +35,9 @@ Both the programs save the same XML file containing the information about your t
 ![Track Scheme](https://github.com/kapoorlab/NapaTrackMater/blob/main/Images/trackscheme.png)
 
 
-In this scheme there are some cells that divide multiple times and some don't, we can view these tracks by using the 
-[tracks layer of Napari](https://napari.org/tutorials/fundamentals/tracks.html)
+In this scheme there are some cells that divide multiple times and some don't, we can view these tracks by using the tracks layer of Napari.
 
-using this repository.
+
 In Napari tracks layer view we break the dividing trajectory into components that are called tracklets. These tracklets represent the trajectory of individual child cell or the root cell. 
 
 
