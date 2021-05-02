@@ -6,7 +6,7 @@ with open('README.md') as f:
 
 
 setup(name="napatrackmater",
-      version='2.0.1',
+      version='2.1.1',
       author='Varun Kapoor,Claudia Carabana Garcia',
       author_email='randomaccessiblekapoor@gmail.com',
       url='https://github.com/kapoorlab/NapaTrackMater/',
@@ -14,7 +14,7 @@ setup(name="napatrackmater",
       long_description=long_description,
       long_description_content_type='text/markdown',
       install_requires=["numpy", "pandas", "napari","pyqt5", "natsort", "scikit-image", "scipy", "tifffile", "matplotlib", "ffmpeg-python", "imageio_ffmpeg"],
-      packages= setuptools.find_packages(),
+      packages= ['napatrackmater','napatrackmater/napari_animation','napatrackmater/napari_animation/_qt' ],
       classifiers=['Development Status :: 3 - Alpha',
                    'Natural Language :: English',
                    'License :: OSI Approved :: MIT License',

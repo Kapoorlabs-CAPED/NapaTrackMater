@@ -2,11 +2,9 @@ numpy
 pandas
 napari
 pyqt5
-btrack
 natsort
 scikit-image
 scipy
-opencv-python-headless
 tifffile
 matplotlib
 ffmpeg-python

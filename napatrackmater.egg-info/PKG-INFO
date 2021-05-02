@@ -1,9 +1,9 @@
 Metadata-Version: 2.1
 Name: napatrackmater
-Version: 2.0
+Version: 2.1.1
 Summary: Import Trackmate XML files for Track Visualization and analysis in Napari.
 Home-page: https://github.com/kapoorlab/NapaTrackMater/
-Author: Varun Kapoor
+Author: Varun Kapoor,Claudia Carabana Garcia
 Author-email: randomaccessiblekapoor@gmail.com
 License: UNKNOWN
 Description: # NapaTrackMater
@@ -17,7 +17,7 @@ Description: # NapaTrackMater
         
         ## Usage
         
-        Check the [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/TrackMateVisualization.ipynb).
+        Check the [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/CellFateDetermination.ipynb).
         
         ## Requirements
         
@@ -36,6 +36,7 @@ Description: # NapaTrackMater
         ## Authors
         
         - Varun Kapoor <randomaccessiblekapoor@gmail.com>
+        - Claudia Carabana Garcia
         
 Platform: UNKNOWN
 Classifier: Development Status :: 3 - Alpha
@@ -43,5 +44,5 @@ Classifier: Natural Language :: English
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Classifier: Programming Language :: Python
-Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.7
 Description-Content-Type: text/markdown
