@@ -30,14 +30,23 @@ Import [Trackmate](https://imagej.net/TrackMate) XML files for visualization in 
 To use this repository you need to have an XML file coming either from the Fiji plugin Trackmate version>6.0 or from bTrackmate version>2.0.
 Both the programs save the same XML file containing the information about your tracking session. This XML file can be used to re-generate trackscheme along with the tracks they came from, for example a typical trackscheme with tracks overlay in Fiji:
 
+
 ![Track Scheme](https://github.com/kapoorlab/NapaTrackMater/blob/main/Images/trackscheme.png)
 
-In this scheme there are some cells that divide multiple times and some don't, we can view these tracks by using the tracks layer of Napari using this repository.
+
+In this scheme there are some cells that divide multiple times and some don't, we can view these tracks by using the 
+![tracks layer of Napari](https://napari.org/tutorials/fundamentals/tracks.html)
+
+using this repository.
 In Napari tracks layer view we break the dividing trajectory into components that are called tracklets. These tracklets represent the trajectory of individual child cell or the root cell. 
+
+
 More than just viewing the tracks we can extract the following special functions from them:
+
 
 1) If the cells move inside a tissue we can calculate the distance of the cells in a track from the tissue boundary for the root tracks and the following children tracklets, this gives a cell fate determination plot which shows the starting and the ending distance of each tracklet.
 Check the [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/examples/CellFateDetermination.ipynb).
+
 
 2) If the cells had an intensity oscillation we can compute the frequency of such oscillation for each tracklet of the track by Fourier transforming the intensity over time.
 Check the [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/examples/FrequencyOscillations.ipynb).
