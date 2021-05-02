@@ -52,6 +52,9 @@ Check the [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/examp
 2) If the cells had an intensity oscillation we can compute the frequency of such oscillation for each tracklet of the track by Fourier transforming the intensity over time.
 Check the [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/examples/FrequencyOscillations.ipynb).
 
+## Example
+We provide an [example dataset](https://github.com/kapoorlab/NapaTrackMater/tree/main/examples/data) of C. elegans, click on the link provided in the txt file to obtain the tif files of the Raw, Segmentation and the Mask image. Create a local enviornment to run the example by downloading the tif files and putting them in the save directory along with the csv and xml files. We create this csv file using the Raw and Segmentation image using this [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/examples/BTrackMateLocalization.ipynb) then we did the tracking via bTrackmate using the csv file to obtain the xml file in the save directory. To view the intensity oscillations we do not use a mask of the tissue surrounding the cells and obtain the intensity oscillation of all cells.
+
 ## Requirements
 
 - Python 3.9 and above.
