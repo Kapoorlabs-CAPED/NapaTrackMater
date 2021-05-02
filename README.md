@@ -1,5 +1,7 @@
 # NapaTrackMater
-Napari Visualization tool for Trackmate > 6.0 and bTrackmate XML files for 3D + time tracks
+Napari Visualization tool for Trackmate > 6.0 and bTrackmate XML files for 3D + time tracks.
+
+
 This repository is the bridge between the Fiji and Napari world for exporting and viewing the track XML files using [Napari track layer](https://napari.org/tutorials/fundamentals/tracks.html)
 
 ## Installation
