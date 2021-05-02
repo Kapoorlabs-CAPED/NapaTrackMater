@@ -27,6 +27,10 @@ Import [Trackmate](https://imagej.net/TrackMate) XML files for visualization in 
 
 ## Usage
 
+To use this repository you need to have an XML file coming either from the Fiji plugin Trackmate version>6.0 or from bTrackmate version>2.0.
+Both the programs save the same XML file containing the information about your tracking session. This XML file can be used to re-generate trackscheme along with the tracks they came from, for example a typical trackscheme with tracks overlay in Fiji:
+![Track Scheme](https://github.com/kapoorlab/NapaTrackMater/blob/main/Images/trackscheme.png)
+
 Check the [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/CellFateDetermination.ipynb).
 
 ## Requirements
