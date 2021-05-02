@@ -45,7 +45,7 @@ In Napari tracks layer view we break the dividing trajectory into components tha
 More than just viewing the tracks we can extract the following special functions from them:
 
 
-1) If the cells move inside a tissue we can calculate the distance of the cells in a track from the tissue boundary for the root tracks and the following children tracklets, this gives a cell fate determination plot which shows the starting and the ending distance of each tracklet.
+1) If the cells move inside a tissue we can calculate the distance of the cells in a track from the tissue boundary for the root track and the following children tracklets, this gives a cell fate determination plot which shows the starting and the ending distance of each tracklet.
 Check the [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/examples/CellFateDetermination.ipynb).
 
 
