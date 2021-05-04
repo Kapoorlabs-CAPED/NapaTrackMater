@@ -59,7 +59,7 @@ To view the intensity oscillations of the cells, click on this [notebook](https:
 
 To view the cell fate click on this [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/examples/CellFateDetermination.ipynb)
 Again we divide the notebook into analysis of dividing and non-dividing tracjectories. In the plots we now show the distance of the cells in the track to the boundary and plot the starting end end distance of the parent (in green) and the daughter cells (in red).
-![Track Scheme](https://github.com/kapoorlab/NapaTrackMater/blob/main/Images/CellFate.png)
+![Track Scheme](https://github.com/kapoorlab/NapaTrackMater/blob/main/Images/Cell_loc_raw.png)
 
 ## Requirements
 
