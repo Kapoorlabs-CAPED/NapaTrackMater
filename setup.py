@@ -7,7 +7,7 @@ with open('README.md') as f:
 
 setup(
     name="napatrackmater",
-    version='2.0.1',
+    version='2.2.2',
     author='Varun Kapoor,Claudia Carabana Garcia',
     author_email='randomaccessiblekapoor@gmail.com',
     url='https://github.com/kapoorlab/NapaTrackMater/',

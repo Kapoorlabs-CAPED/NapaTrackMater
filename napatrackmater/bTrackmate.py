@@ -861,16 +861,18 @@ class AllTrackViewer(object):
                                     if str(self.ID) + str(trackletid) not in AllID:
                                         AllID.append(str(self.ID) + str(trackletid))
                                 if trackletid == 0:
-                                    AllStartParent[trackid].append(float(self.AllDistance[0]))
-                                    AllEndParent[trackid].append(float(self.AllDistance[-1]))
+                                    if len(self.AllDistance) > 1:
+                                            AllStartParent[trackid].append(float(self.AllDistance[0]))
+                                            AllEndParent[trackid].append(float(self.AllDistance[-1]))
         
                                 else:
-                                    AllStartChildren[
-                                        int(str(trackid) + str(trackletid))
-                                    ].append(float(self.AllDistance[0]))
-                                    AllEndChildren[int(str(trackid) + str(trackletid))].append(
-                                        float(self.AllDistance[-1])
-                                    )
+                                    if len(self.AllDistance) > 1:
+                                            AllStartChildren[
+                                                int(str(trackid) + str(trackletid))
+                                            ].append(float(self.AllDistance[0]))
+                                            AllEndChildren[int(str(trackid) + str(trackletid))].append(
+                                                float(self.AllDistance[-1])
+                                            )
         
                             self.AllSpeed = MovingAverage(
                                 self.AllSpeed, window_size=self.window_size
