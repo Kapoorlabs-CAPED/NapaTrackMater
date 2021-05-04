@@ -39,13 +39,13 @@ Both the programs save the same XML file containing the information about your t
 In this scheme there are some cells that divide multiple times and some don't, we can view these tracks by using the tracks layer of Napari.
 
 
-In Napari tracks layer view we break the dividing trajectory into components that are called tracklets. These tracklets represent the trajectory of individual child cell or the root cell. 
+In Napari tracks layer view we break the dividing trajectory into components that are called tracklets. These tracklets represent the trajectory of individual daughter cell or the root cell. 
 
 
 More than just viewing the tracks we can extract the following special functions from them:
 
 
-1) If the cells move inside a tissue we can calculate the distance of the cells in a track from the tissue boundary for the root track and the following children tracklets, this gives a cell fate determination plot which shows the starting and the ending distance of each tracklet.
+1) If the cells move inside a tissue we can calculate the distance of the cells in a track from the tissue boundary for the root track and the following tracklets after a division event, this gives a cell localization plot which shows the starting and the ending distance of each tracklet.
 Check the [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/examples/CellFateDetermination.ipynb).
 
 
@@ -58,7 +58,7 @@ We provide an [example dataset](https://github.com/kapoorlab/NapaTrackMater/tree
 To view the intensity oscillations of the cells, click on this [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/examples/FrequencyOscillations.ipynb). We seperate the visualization and analysis of dividing and non-dividing trajectories, in the cell of dividing trajectories you will see the Napari tracks layer with their ID for all the dividing tracks only along with the image, segmentation and mask layers. To view the tracks you can use the time slider to see the tracks alongside the cells. To hide some of the tracks or image layers you can use the visibility toggle on the left widget of Napari. In the left down there is a trackbox widget which contains the track ids. Using this dropdown menu you can choose your trackid and display the intensity over time of all the tracklets of this track and Fourier transform of each tracklet showing the period of oscillation of each tracklet of the track. The next cell does the same for non-dividing tracks.
 
 To view the cell fate click on this [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/examples/CellFateDetermination.ipynb)
-Again we divide the notebook into analysis of dividing and non-dividing tracjectories. In the plots we now show the distance of the cells in the track to the boundary and plot the starting end end distance of the parent (in green) and the children cells (in red).
+Again we divide the notebook into analysis of dividing and non-dividing tracjectories. In the plots we now show the distance of the cells in the track to the boundary and plot the starting end end distance of the parent (in green) and the daughter cells (in red).
 ![Track Scheme](https://github.com/kapoorlab/NapaTrackMater/blob/main/Images/CellFate.png)
 
 ## Requirements
