@@ -290,10 +290,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
         
         results = [da.delayed(parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i) for i in tqdm(x_ls))]
         da.compute(results) 
-        #[
-            #parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i)
-            #for i in tqdm(x_ls)
-        #]
+        
 
     return timed_mask, Boundary
 
@@ -586,9 +583,12 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
                 for j in range(0, UpdateMask.shape[1]):
 
                     UpdateMask[i, j, :, :] = Mask[i, :, :]
+                    
         else:
             UpdateMask = Mask
-            Mask = UpdateMask.astype('uint16')
+            
+            
+        Mask = UpdateMask.astype('uint16')
 
         TimedMask, Boundary = boundary_points(Mask, xcalibration, ycalibration, zcalibration)
     else:
@@ -1145,7 +1145,6 @@ class AllTrackViewer(object):
                     Locationtracklets, key=sortFirst, reverse=False
                 )
                 for tracklet in Locationtracklets:
-                    # print(tracklet)
                     (
                         t,
                         z,
@@ -1167,7 +1166,7 @@ class AllTrackViewer(object):
                         list_tracklets.append(
                             [
                                 int(str(trackletid)),
-                                int(t),
+                                int(t) / self.calibration[3],
                                 float(z) / self.calibration[2],
                                 float(y) / self.calibration[1],
                                 float(x) / self.calibration[0],
@@ -1177,7 +1176,7 @@ class AllTrackViewer(object):
                         list_tracklets.append(
                             [
                                 int(str(trackletid)),
-                                int(t),
+                                int(t) / self.calibration[3],
                                 float(z) / self.calibration[2],
                                 float(y) / self.calibration[1],
                                 float(x) / self.calibration[0],
