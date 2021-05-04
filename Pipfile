@@ -16,10 +16,10 @@ matplotlib = "*"
 ffmpeg-python = "*"
 imageio-ffmpeg = "*"
 tqdm = "*"
-jupyter = "*"
 joblib = "*"
 
 [dev-packages]
+jupyterlab = "*"
 
 [requires]
 python_version = "3.9"

@@ -38,6 +38,9 @@ git clone https://github.com/kapoorlab/NapaTrackMater/
 cd NapaTrackMater
 pipenv sync
 
+# make the current package available
+pipenv run python setup.py develop
+
 # you can run the example notebooks by starting the jupyter notebook inside the virtual env
 pipenv run jupyter notebook
 ```
