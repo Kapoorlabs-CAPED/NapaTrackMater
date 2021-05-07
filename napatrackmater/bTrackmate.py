@@ -310,8 +310,8 @@ def parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i):
         sizex = abs(prop.bbox[2] - prop.bbox[5]) * xcalibration
         volume = sizex * sizey * sizez
         radius = math.pow(3 * volume / (4 * math.pi), 1.0 / 3.0)
-
-        Boundary[i, :] = find_boundaries(mask[i, :])
+        for j in range(mask.shape[1]):
+           Boundary[i,j, :, :] = find_boundaries(mask[i, j, :, :])
 
         indices = np.where(Boundary[i, :] > 0)
 
@@ -623,7 +623,6 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
 
         spot_object_source_target = []
         if track_id in filtered_track_ids:
-            print('TrackID', track_id)
             for edge in track.findall('Edge'):
 
                 source_id = edge.get('SPOT_SOURCE_ID')
@@ -650,7 +649,6 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
                 DividingTrajectory = True
             else:
                 DividingTrajectory = False
-            print("Is a Dividing track:", DividingTrajectory)
           
             if DividingTrajectory == True:
                 DividingTrackIds.append(track_id)
@@ -795,7 +793,7 @@ class AllTrackViewer(object):
         self.ax[0].set_xlabel("minutes")
         self.ax[0].set_ylabel("um")
 
-        self.ax[1].set_title("cell_fate")
+        self.ax[1].set_title("cell_tissue_localization")
         self.ax[1].set_xlabel("start_distance")
         self.ax[1].set_ylabel("end_distance")
 
@@ -1064,7 +1062,7 @@ class AllTrackViewer(object):
                                     self.AllT.append(int(float(t * self.calibration[3])))
         
                                     self.AllIntensity.append(
-                                        "{:.1f}".format(float(total_intensity))
+                                        "{:.1f}".format((float(total_intensity)))
                                     )
                                     if str(self.ID) + str(trackletid) not in AllID:
                                         AllID.append(str(self.ID) + str(trackletid))
@@ -1102,6 +1100,7 @@ class AllTrackViewer(object):
         
                                 self.ax[0].plot(self.AllT, self.AllIntensity)
                                 self.ax[1].plot(xf, ffttotal)
+                                self.ax[1].set_yscale('log')        
         
                                 self.figure.canvas.draw()
                                 self.figure.canvas.flush_events()
@@ -1252,14 +1251,12 @@ def TrackMateLiveTracks(
         ID = DividingTrackIds
     else:
         ID = NonDividingTrackIds
-    print(ID)    
     trackbox = QComboBox()
     trackbox.addItem(Boxname)
 
     tracksavebutton = QPushButton('Save Track')
     for i in range(0, len(ID)):
-        
-        trackbox.addItem(str(ID[i]))
+            trackbox.addItem(str(ID[i]))
     trackbox.addItem('all')
 
     figure = plt.figure(figsize=(4, 4))

@@ -2,10 +2,4 @@ C.elegans developing embryo
 
 Waterston Lab, University of Washington, Seattle, WA, USA
 
-Mouse Luminal cells
 
-Fre Lab, Institut Curie, Paris, France
-
-Download example tif, csv and xml files of tracks from this link:
-
-https://drive.google.com/drive/folders/1m327qOsjQr8rrQTP1ApfX-dcL0GLbdIN?usp=sharing
