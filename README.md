@@ -78,12 +78,19 @@ To try the provided notebooks we provide an example dataset of C. elegans from t
 
 Now you can try either of the two notebooks provided: 
 
-Notebook 1 ) To view the intensity oscillations of the cells, click on this [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/examples/FrequencyOscillations.ipynb). We seperate the visualization and analysis of dividing and non-dividing trajectories, in the cell of dividing trajectories you will see the Napari tracks layer with their ID for all the dividing tracks only along with the image, segmentation and mask layers. To view the tracks you can use the time slider to see the tracks alongside the cells. To hide some of the tracks or image layers you can use the visibility toggle on the left widget of Napari. In the left down there is a trackbox widget which contains the track ids. Using this dropdown menu you can choose your trackid and display the intensity over time of all the tracklets of this track and Fourier transform of each tracklet showing the period of oscillation of each tracklet of the track. The next cell does the same for non-dividing tracks.
+Notebook 1 ) To view the intensity oscillations of the cells, click on this [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/examples/FrequencyOscillations.ipynb). We seperate the visualization and analysis of dividing and non-dividing trajectories, in the cell of dividing trajectories you will see the Napari tracks layer with their ID for all the dividing tracks only along with the image, segmentation and mask layers. To view the tracks you can use the time slider to see the tracks alongside the cells. To hide some of the tracks or image layers you can use the visibility toggle on the left widget of Napari. In the left down there is a trackbox widget which contains the track ids. Using this dropdown menu you can choose your trackid and display the intensity over time of all the tracklets of this track and Fourier transform (in logscale) of each tracklet showing the period of oscillation of each tracklet of the track.
+
+![FFT Non Dividing Track](https://github.com/kapoorlab/NapaTrackMater/blob/main/Images/FFTNonDividing.png)
+![FFT Dividing Track](https://github.com/kapoorlab/NapaTrackMater/blob/main/Images/FFTDividing.png)
+
+Example of publication where such oscillations in intensity were found: Collaboration: [Ines Lahmann, Varun Kapoor, Stephan  ]
 
 Notebook 2) To view the cell localization in a track with respect to the tissue boundary click on this [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/examples/CellFateDetermination.ipynb)
 Again we divide the notebook into analysis of dividing and non-dividing tracjectories. In the plots we now show the distance of the cells in the track to the boundary and plot the starting end end distance of the parent (in green) and the daughter cells (in red).
-![Track Scheme](https://github.com/kapoorlab/NapaTrackMater/blob/main/Images/Cell_loc_raw.png)
 
+![Distance Non Dividing Track](https://github.com/kapoorlab/NapaTrackMater/blob/main/Images/DistanceNonDividing.png)
+![Distance Dividing Track](https://github.com/kapoorlab/NapaTrackMater/blob/main/Images/DistanceDividing1.png)
+![Distance Dividing Track](https://github.com/kapoorlab/NapaTrackMater/blob/main/Images/DistanceDividing2.png)
 ## Requirements
 
 - Python 3.9 and above.
