@@ -83,7 +83,7 @@ Notebook 1 ) To view the intensity oscillations of the cells, click on this [not
 ![FFT Non Dividing Track](https://github.com/kapoorlab/NapaTrackMater/blob/main/Images/FFTNonDividing.png)
 ![FFT Dividing Track](https://github.com/kapoorlab/NapaTrackMater/blob/main/Images/FFTDividing.png)
 
-Example of publication where such oscillations in intensity were found: Collaboration: [Ines Lahmann, Varun Kapoor, Stephan  ]
+Example of publication where such oscillations in intensity were found: Collaboration: [Ines Lahmann, Varun Kapoor, Stephan](https://europepmc.org/article/med/30862660)
 
 Notebook 2) To view the cell localization in a track with respect to the tissue boundary click on this [notebook](https://github.com/kapoorlab/NapaTrackMater/blob/main/examples/CellFateDetermination.ipynb)
 Again we divide the notebook into analysis of dividing and non-dividing tracjectories. In the plots we now show the distance of the cells in the track to the boundary and plot the starting end end distance of the parent (in green) and the daughter cells (in red).
