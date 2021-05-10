@@ -111,7 +111,7 @@ class Animation:
     def _state_generator(self):
         if len(self.key_frames) < 2:
             raise ValueError(
-                f'Must have at least 2 key frames, recieved {len(self.key_frames)}'
+                f'Must have at least 2 key frames, received {len(self.key_frames)}'
             )
         for frame in range(len(self.key_frames) - 1):
             initial_state = self.key_frames[frame]["viewer"]

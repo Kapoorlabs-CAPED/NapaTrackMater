@@ -30,7 +30,7 @@ from tifffile import imread, imwrite
 from joblib import Parallel, delayed
 from .napari_animation import AnimationWidget
 import dask as da
-'''Define function to run mutiple processors and pool the results together'''
+'''Define function to run multiple processors and pool the results together'''
 
 
 
