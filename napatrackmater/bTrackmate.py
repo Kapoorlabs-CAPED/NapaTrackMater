@@ -30,6 +30,9 @@ from tifffile import imread, imwrite
 from joblib import Parallel, delayed
 from .napari_animation import AnimationWidget
 import dask as da
+from dask.array.image import imread as daskread
+
+
 '''Define function to run multiple processors and pool the results together'''
 
 
@@ -55,8 +58,17 @@ def prob_sigmoid(x):
     return 1 - math.exp(-x)
 
 
-def CreateTrackCheckpoint(Image, Label, Mask, Name, savedir):
+def CreateTrackCheckpoint(ImageName, LabelName, MaskName, Name, savedir):
 
+    
+
+    Label = imread(LabelName)
+    
+    Image = imread(ImageName)
+    
+    if MaskName is not None:
+            Mask = imread(MaskName)
+    
     assert Image.shape == Label.shape
 
     TimeList = []
@@ -74,19 +86,7 @@ def CreateTrackCheckpoint(Image, Label, Mask, Name, savedir):
 
     print('Image has shape:', Image.shape)
     print('Image Dimensions:', len(Image.shape))
-    # Add Z to make TZYX image
-    if len(Image.shape) <= 3:
-
-        Image4D = np.zeros([Image.shape[0], 2, Image.shape[1], Image.shape[2]])
-        Label4D = np.zeros([Image.shape[0], 2, Image.shape[1], Image.shape[2]])
-
-        for i in range(0, Image4D.shape[1]):
-
-            Image4D[:, i, :] = Image
-            Label4D[:, i, :] = Label
-
-        Image = Image4D
-        Label = Label4D
+    
     if Mask is not None:
         if len(Mask.shape) < len(Image.shape):
             # T Z Y X
@@ -97,14 +97,13 @@ def CreateTrackCheckpoint(Image, Label, Mask, Name, savedir):
                 for j in range(0, UpdateMask.shape[1]):
 
                     UpdateMask[i, j, :, :] = Mask[i, :, :]
-        else:
-            UpdateMask = Mask
+            Mask = UpdateMask
     for i in tqdm(range(0, Image.shape[0])):
 
         CurrentSegimage = Label[i, :].astype('uint16')
         Currentimage = Image[i, :]
         if Mask is not None:
-            CurrentSegimage[UpdateMask[i, :] == 0] = 0
+            CurrentSegimage[Mask[i, :] == 0] = 0
         properties = measure.regionprops(CurrentSegimage, Currentimage)
         for prop in properties:
 
