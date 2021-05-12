@@ -26,6 +26,7 @@ setup(
         "matplotlib",
         "ffmpeg-python",
         "imageio_ffmpeg",
+        "dask"
     ],
     packages=setuptools.find_packages(),
     classifiers=[

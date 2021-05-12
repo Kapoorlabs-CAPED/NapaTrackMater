@@ -32,7 +32,6 @@ from .napari_animation import AnimationWidget
 import dask as da
 from dask.array.image import imread as daskread
 
-
 '''Define function to run multiple processors and pool the results together'''
 
 
@@ -42,7 +41,7 @@ from dask.array.image import imread as daskread
 Boxname = 'TrackBox'
 pd.options.display.float_format = '${:,.2f}'.format
 savedir = None
-cpus = multiprocessing.cpu_count()
+
 ParentDistances = {}
 ChildrenDistances = {}
 timed_mask = {}
@@ -284,11 +283,11 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
         Boundary = np.zeros(
             [mask.shape[0], mask.shape[1], mask.shape[2], mask.shape[3]]
         )
-
+        results = []
         x_ls = range(0, mask.shape[0])
         
-        results = [da.delayed(parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i) for i in tqdm(x_ls))]
-        da.compute(results) 
+        results.append(parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i) for i in tqdm(x_ls))
+        da.delayed(results).compute()
         
 
     return timed_mask, Boundary
@@ -543,6 +542,12 @@ def tracklet_properties(
 
 
 def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
+    
+    image = daskread(image)[0,:]
+    if Segimage is not None:
+        Segimage = daskread(Segimage)[0,:]
+    if Mask is not None:
+        Mask = imread(Mask)
 
     root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
 
@@ -1227,8 +1232,11 @@ def TrackMateLiveTracks(
     mode='fate',
 ):
 
+    Raw = imread(Raw)
+    Seg = imread(Seg)
     Seg = Seg.astype('uint16')
     if Mask is not None:
+        
         Mask = Mask.astype('uint16')
 
 
