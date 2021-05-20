@@ -28,6 +28,11 @@ setup(
         "imageio_ffmpeg",
         "dask"
     ],
+    entry_points = {
+        'console_scripts': [
+            'track = napatrackmater.__main__:main',
+        ]
+    },
     packages=setuptools.find_packages(),
     classifiers=[
         'Development Status :: 3 - Alpha',
