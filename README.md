@@ -89,6 +89,23 @@ Again we divide the notebook into analysis of dividing and non-dividing trajecto
 
 ![Distance Dividing Track](https://github.com/kapoorlab/NapaTrackMater/blob/main/Images/DistanceDividing2.png)
 
+## Docker
+
+A Docker image can be used to run the code in a container. Once inside the project's directory, build the image with:
+
+~~~bash
+docker build -t kapoorlab/NapaTrackMater .
+~~~
+
+Now to run the `track` command:
+
+~~~bash
+# show help
+docker run --rm -it kapoorlab/NapaTrackMater
+# run it with example data
+docker run --rm -it -v $(pwd)/examples/data:/input kapoorlab/NapaTrackMater track -f /input -r /input/Raw.tif -s /input/Seg.tif -s /input/Mask.tif -n test
+~~~
+
 ## Requirements
 
 - Python 3.9 and above.
