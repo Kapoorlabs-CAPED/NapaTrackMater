@@ -16,6 +16,7 @@ ffmpeg-python = "*"
 imageio-ffmpeg = "*"
 tqdm = "*"
 joblib = "*"
+pyqt5 = "*"
 
 [dev-packages]
 jupyterlab = "*"
