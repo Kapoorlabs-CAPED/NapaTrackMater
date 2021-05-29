@@ -59,15 +59,15 @@ def prob_sigmoid(x):
 
 def CreateTrackCheckpoint(ImageName, LabelName, MaskName, Name, savedir):
 
-    
+    Mask = None
 
     Label = imread(LabelName)
-    
+
     Image = imread(ImageName)
-    
+
     if MaskName is not None:
             Mask = imread(MaskName)
-    
+
     assert Image.shape == Label.shape
 
     TimeList = []
@@ -85,7 +85,7 @@ def CreateTrackCheckpoint(ImageName, LabelName, MaskName, Name, savedir):
 
     print('Image has shape:', Image.shape)
     print('Image Dimensions:', len(Image.shape))
-    
+
     if Mask is not None:
         if len(Mask.shape) < len(Image.shape):
             # T Z Y X
