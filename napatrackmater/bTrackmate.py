@@ -890,7 +890,7 @@ class AllTrackViewer(object):
                             )
                             self.AllT = MovingAverage(self.AllT, window_size=self.window_size)
                             if self.saveplot == True:
-                                self.SaveFig()
+                                
                                 df = pd.DataFrame(
                                     list(
                                         zip(
@@ -999,7 +999,7 @@ class AllTrackViewer(object):
                             self.ax[0].plot(self.AllT, self.AllDistance)
                             self.ax[1].plot(parentstarts[1:], parentends[1:], 'og')
                             self.ax[1].plot(childrenstarts[1:], childrenends[1:], 'or')
-        
+                            self.SaveFig()
                             self.figure.canvas.draw()
                             self.figure.canvas.flush_events()
         
@@ -1085,9 +1085,9 @@ class AllTrackViewer(object):
                                 xf = xf[0 : len(xf) // 2]
                                 ffttotal = ffttotal[0 : len(ffttotal) // 2]
                                 if self.saveplot == True:
-                                    self.SaveFig()
+                                    
                                     df = pd.DataFrame(
-                                        list(zip(self.AllT, self.frequ, self.fft)),
+                                        list(zip(self.AllT, xf, ffttotal)),
                                         columns=['Time', 'Frequency', 'FFT'],
                                     )
                                     df.to_csv(
@@ -1101,11 +1101,11 @@ class AllTrackViewer(object):
                                         index=False,
                                     )
                                     df
-        
+                                    print(df)
                                 self.ax[0].plot(self.AllT, self.AllIntensity)
                                 self.ax[1].plot(xf, ffttotal)
                                 self.ax[1].set_yscale('log')        
-        
+                                self.SaveFig()
                                 self.figure.canvas.draw()
                                 self.figure.canvas.flush_events()
 
@@ -1193,9 +1193,10 @@ class AllTrackViewer(object):
         return TrackLayerTracklets
 
     def SaveFig(self):
-
+     
+        
         self.figure.savefig(
-            self.savedir + '/' + 'Track' + str(self.ID) + '.png', transparent=True
+            self.savedir + '/' + 'Track' + self.mode + str(self.ID) + '.png', dpi = 300
         )
 
 
