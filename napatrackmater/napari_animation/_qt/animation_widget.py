@@ -27,7 +27,7 @@ class AnimationWidget(QWidget):
         viewer: 'napari.viewer.Viewer',
         savedir: None,
         start: 0,
-        end: 10,
+        end: 1000,
         parent=None,
     ):
         super().__init__(parent=parent)
@@ -59,10 +59,8 @@ class AnimationWidget(QWidget):
         self.frameWidget.endframeSpinBox.setValue(end)
         self.frameWidget.startframeSpinBox.setValue(start)
         # Create animation
-        start = int(self.frameWidget.startframeSpinBox.value())
-        end = int(self.frameWidget.endframeSpinBox.value())
-        self.animation = Animation(viewer, savedir, start, end)
-
+        
+        self.animation = Animation(viewer, savedir)
         # establish key bindings
         self._add_callbacks()
 
@@ -105,7 +103,9 @@ class AnimationWidget(QWidget):
 
     def _capture_keyframe_callback(self, event=None):
         """Record current key-frame"""
-        self.animation.capture_keyframe(
+        start = int(self.frameWidget.startframeSpinBox.value())
+        end = int(self.frameWidget.endframeSpinBox.value())
+        self.animation.capture_keyframe(start, end,
             steps=self._get_interpolation_steps(), ease=self._get_easing_function()
         )
         self._set_current_frame()
@@ -146,9 +146,7 @@ class AnimationWidget(QWidget):
     def _save_callback(self, event=None):
 
         """Record current key-frame"""
-        self.animation.capture_keyframe(
-            steps=self._get_interpolation_steps(), ease=self._get_easing_function()
-        )
+        self._capture_keyframe_callback()
 
         path = self.pathText.text()
         self.animation.animate(path)

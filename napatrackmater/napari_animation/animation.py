@@ -28,15 +28,14 @@ class Animation:
         Currently shown key frame.
     """
 
-    def __init__(self, viewer, savedir, start, end):
+    def __init__(self, viewer, savedir):
         self.viewer = viewer
         self.savedir = savedir
-        self.start = start
-        self.end = end
+        
         self.key_frames = []
         self.frame = -1
 
-    def capture_keyframe(self, steps=1, ease=None, insert=True, frame=None):
+    def capture_keyframe(self, start, end, steps=1, ease=None, insert=True, frame=None):
         """Record current key-frame
 
         Parameters
@@ -54,9 +53,9 @@ class Animation:
             If provided use this value for frame rather than current frame number.
         """
         self.key_frames = []
-        for frame in tqdm(range(int(self.start), int(self.end))):
+        for frame in tqdm(range(int(start), int(end))):
             self.frame = frame
-            print(self.frame)
+           
             new_state = {
                 'viewer': self._get_viewer_state(),
                 'steps': steps,
