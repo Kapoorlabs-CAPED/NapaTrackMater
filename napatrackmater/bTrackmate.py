@@ -52,6 +52,7 @@ AllStartChildren = {}
 AllEndChildren = {}
 DividingTrackIds = []
 NonDividingTrackIds = []
+AllTrackIds = []
 
 def prob_sigmoid(x):
     return 1 - math.exp(-x)
@@ -431,7 +432,7 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
         dividing_tracklets.append([trackletid, tracklet, trackletspeed])
         trackletid = trackletid + 1
 
-    for i in range(1, len(root_leaf)):
+    for i in range(0, len(root_leaf)):
         leaf = root_leaf[i]
         # For leaf we need to go backward
         tracklet = []
@@ -656,12 +657,14 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
           
             if DividingTrajectory == True:
                 DividingTrackIds.append(track_id)
+                AllTrackIds.append(track_id)
                 tracklets = analyze_dividing_tracklets(
                     root_leaf, split_points, spot_object_source_target
                 )
 
             if DividingTrajectory == False:
                 NonDividingTrackIds.append(track_id)
+                AllTrackIds.append(track_id)
                 tracklets = analyze_non_dividing_tracklets(
                     root_leaf, spot_object_source_target
                 )
@@ -749,7 +752,7 @@ class AllTrackViewer(object):
         canvas,
         ax,
         figure,
-        DividingTrajectory,
+        DividingTrajectory = None,
         saveplot=False,
         window_size=3,
         mode='fate',
@@ -806,8 +809,7 @@ class AllTrackViewer(object):
         IDLocations = []
         TrackLayerTracklets = {}
         for i in range(0, len(self.all_track_properties)):
-            trackid, alltracklets, DividingTrajectory = self.all_track_properties[i]
-            if DividingTrajectory == self.DividingTrajectory:
+                    trackid, alltracklets, DividingTrajectory = self.all_track_properties[i]
                     if self.ID == trackid or self.ID == 'all':
                         AllStartParent[trackid] = [trackid]
                         AllEndParent[trackid] = [trackid]
@@ -870,9 +872,9 @@ class AllTrackViewer(object):
                                 else:
                                     if len(self.AllDistance) > 1:
                                             AllStartChildren[
-                                                int(str(trackid) + str(trackletid))
+                                                int(str(trackid) + str(_trackletid))
                                             ].append(float(self.AllDistance[0]))
-                                            AllEndChildren[int(str(trackid) + str(trackletid))].append(
+                                            AllEndChildren[int(str(trackid) + str(_trackletid))].append(
                                                 float(self.AllDistance[-1])
                                             )
         
@@ -890,7 +892,7 @@ class AllTrackViewer(object):
                             )
                             self.AllT = MovingAverage(self.AllT, window_size=self.window_size)
                             if self.saveplot == True:
-                                
+                                self.SaveFig()
                                 df = pd.DataFrame(
                                     list(
                                         zip(
@@ -999,12 +1001,12 @@ class AllTrackViewer(object):
                             self.ax[0].plot(self.AllT, self.AllDistance)
                             self.ax[1].plot(parentstarts[1:], parentends[1:], 'og')
                             self.ax[1].plot(childrenstarts[1:], childrenends[1:], 'or')
-                            self.SaveFig()
+                            
                             self.figure.canvas.draw()
                             self.figure.canvas.flush_events()
         
-            self.figure.canvas.draw()
-            self.figure.canvas.flush_events()
+        self.figure.canvas.draw()
+        self.figure.canvas.flush_events()
 
     def plotintensity(self):
 
@@ -1085,7 +1087,7 @@ class AllTrackViewer(object):
                                 xf = xf[0 : len(xf) // 2]
                                 ffttotal = ffttotal[0 : len(ffttotal) // 2]
                                 if self.saveplot == True:
-                                    
+                                    self.SaveFig()
                                     df = pd.DataFrame(
                                         list(zip(self.AllT, xf, ffttotal)),
                                         columns=['Time', 'Frequency', 'FFT'],
@@ -1105,7 +1107,7 @@ class AllTrackViewer(object):
                                 self.ax[0].plot(self.AllT, self.AllIntensity)
                                 self.ax[1].plot(xf, ffttotal)
                                 self.ax[1].set_yscale('log')        
-                                self.SaveFig()
+                                
                                 self.figure.canvas.draw()
                                 self.figure.canvas.flush_events()
 
@@ -1116,8 +1118,7 @@ class AllTrackViewer(object):
         TrackLayerTracklets = {}
         self.trackviewer.status = str(self.ID)
         for i in range(0, len(self.all_track_properties)):
-            trackid, alltracklets, DividingTrajectory = self.all_track_properties[i]
-            if DividingTrajectory == self.DividingTrajectory:
+                    trackid, alltracklets, DividingTrajectory = self.all_track_properties[i]
                     if self.ID is not None and self.ID == trackid:
                         TrackLayerTracklets = self.track(
                             TrackLayerTracklets, trackid, alltracklets
@@ -1339,7 +1340,86 @@ def TrackMateLiveTracks(
     viewer.window.add_dock_widget(tracksavebutton, name="Save TrackID", area='left')
     napari.run()
 
+def ShowAllTracks(
+    Raw,
+    Seg,
+    Mask,
+    savedir,
+    calibration,
+    all_track_properties
+):
 
+    Raw = imread(Raw)
+    Seg = imread(Seg)
+    Seg = Seg.astype('uint16')
+    if Mask is not None:
+        
+        Mask = Mask.astype('uint16')
+
+
+    if Raw is not None:
+
+        viewer = napari.view_image(Raw, name='Image')
+        viewer.add_labels(Seg, name='SegImage')
+    else:
+        viewer = napari.view_image(Seg, name='SegImage')
+
+    if Mask is not None:
+        Boundary = Mask.copy()
+        Boundary = Boundary.astype('uint16')
+        viewer.add_labels(Boundary, name='Mask')
+
+    ID = AllTrackIds
+    trackbox = QComboBox()
+    trackbox.addItem(Boxname)
+
+    for i in range(0, len(ID)):
+            trackbox.addItem(str(ID[i]))
+    trackbox.addItem('all')
+
+    T = Seg.shape[0]
+    animation_widget = AnimationWidget(viewer, savedir, 0, T)
+    viewer.window.add_dock_widget(animation_widget, area='right')
+    viewer.update_console({'animation': animation_widget.animation})
+
+    AllTrackViewer(
+        viewer,
+        Raw,
+        Seg,
+        Mask,
+        savedir,
+        calibration,
+        all_track_properties,
+        None,
+        None,
+        None,
+        None,
+        None,
+        False,
+        mode=None,
+    )
+    trackbox.currentIndexChanged.connect(
+        lambda trackid=trackbox: AllTrackViewer(
+            viewer,
+            Raw,
+            Seg,
+            Mask,
+            savedir,
+            calibration,
+            all_track_properties,
+            trackbox.currentText(),
+            None,
+            None,
+            None,
+            None,
+            False,
+            mode=None,
+        )
+    )
+
+
+    viewer.window.add_dock_widget(trackbox, name="TrackID", area='left')
+    napari.run()
 def DistancePlotter():
 
     plt.plot(AllStartParent, AllEndParent, 'g')
