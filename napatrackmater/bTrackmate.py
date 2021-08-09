@@ -513,7 +513,7 @@ def tracklet_properties(
                     distance, location = currenttree.query(testlocation)
                     distance = max(0, distance - float(cellradius))
                     if currentlabel == region_label and region_label > 0:
-                        prob_inside = prob_sigmoid(distance - float(cellradius))
+                        prob_inside = prob_sigmoid(distance)
                     else:
 
                         prob_inside = 0
@@ -613,12 +613,32 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
                 Spotobject.get('POSITION_X'),
             ]
             # Get other properties associated with the Spotobject
+            try:
+                TOTAL_INTENSITY_CH1 = Spotobject.get('TOTAL_INTENSITY_CH1')
+            except:
+                 
+                 TOTAL_INTENSITY_CH1 = 1
+            try:
+                MEAN_INTENSITY_CH1 = Spotobject.get('MEAN_INTENSITY_CH1')
+            except:
+                 MEAN_INTENSITY_CH1 = 1
+            try:      
+                Radius = Spotobject.get('RADIUS')
+            except:
+                Radius = 1
+                
+            try:      
+                QUALITY = Spotobject.get('QUALITY')
+            except:
+                QUALITY = 1
+                    
             Uniqueproperties[cell_id] = [
-                Spotobject.get('TOTAL_INTENSITY_CH1'),
-                Spotobject.get('MEAN_INTENSITY_CH1'),
+                
+                  TOTAL_INTENSITY_CH1,
+                  MEAN_INTENSITY_CH1,
                 Spotobject.get('POSITION_T'),
-                Spotobject.get('RADIUS'),
-                Spotobject.get('QUALITY')
+                Radius,
+                QUALITY
             ]
 
     all_track_properties = []
@@ -633,8 +653,8 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
                 source_id = edge.get('SPOT_SOURCE_ID')
                 target_id = edge.get('SPOT_TARGET_ID')
                 edge_time = edge.get('EDGE_TIME')
+               
                 directional_rate_change = edge.get('DIRECTIONAL_CHANGE_RATE')
-
                 speed = edge.get('SPEED')
 
                 spot_object_source_target.append(
@@ -1103,7 +1123,6 @@ class AllTrackViewer(object):
                                         index=False,
                                     )
                                     df
-                                    print(df)
                                 self.ax[0].plot(self.AllT, self.AllIntensity)
                                 self.ax[1].plot(xf, ffttotal)
                                 self.ax[1].set_yscale('log')        
