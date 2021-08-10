@@ -7,7 +7,7 @@ import xml.etree.cElementTree as et
 from functools import partial
 import multiprocessing
 from pathlib import Path
-
+import sys
 from PyQt5.QtCore import pyqtSlot
 from tqdm import tqdm
 
@@ -53,6 +53,7 @@ AllEndChildren = {}
 DividingTrackIds = []
 NonDividingTrackIds = []
 AllTrackIds = []
+SaveIds = []
 
 def prob_sigmoid(x):
     return 1 - math.exp(-x)
@@ -697,7 +698,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
                 Mask,
                 TimedMask,
                 [xcalibration, ycalibration, zcalibration, tcalibration],
-                DividingTrajectory,
+                DividingTrajectory
             )
 
             all_track_properties.append([track_id, location_prop_dist, DividingTrajectory])
@@ -838,10 +839,10 @@ class AllTrackViewer(object):
                         for (trackletid, tracklets) in alltracklets.items():
         
                             AllStartChildren[int(str(trackid) + str(trackletid))] = [
-                                int(str(trackid) + str(trackletid))
+                                int(str(trackid) + str("_") +str(trackletid))
                             ]
                             AllEndChildren[int(str(trackid) + str(trackletid))] = [
-                                int(str(trackid) + str(trackletid))
+                                int(str(trackid) +str("_") + str(trackletid))
                             ]
         
                             self.AllT = []
@@ -894,7 +895,7 @@ class AllTrackViewer(object):
                                             AllStartChildren[
                                                 int(str(trackid) + str(_trackletid))
                                             ].append(float(self.AllDistance[0]))
-                                            AllEndChildren[int(str(trackid) + str(_trackletid))].append(
+                                            AllEndChildren[int(str(trackid) +str("_") + str(_trackletid))].append(
                                                 float(self.AllDistance[-1])
                                             )
         
@@ -912,6 +913,7 @@ class AllTrackViewer(object):
                             )
                             self.AllT = MovingAverage(self.AllT, window_size=self.window_size)
                             if self.saveplot == True:
+                                SaveIds.append(self.ID)
                                 self.SaveFig()
                                 df = pd.DataFrame(
                                     list(
@@ -931,13 +933,16 @@ class AllTrackViewer(object):
                                         'Cell Speed',
                                     ],
                                 )
+                                
+                                tracksavedir = self.savedir + '/' + str(self.ID)
+                                Path(tracksavedir).mkdir(exist_ok=True)
                                 df.to_csv(
-                                    self.savedir
+                                    tracksavedir
                                     + '/'
                                     + 'Track'
                                     + str(self.ID)
                                     + 'tracklet'
-                                    + str(trackletid)
+                                    + str("_") + str(trackletid)
                                     + '.csv',
                                     index=False,
                                 )
@@ -956,7 +961,7 @@ class AllTrackViewer(object):
                                     columns=['Trackid', 'StartDistance'],
                                 )
                                 df.to_csv(
-                                    self.savedir + '/' + 'ParentFateStart' + '.csv', index=False
+                                    tracksavedir + '/' + 'ParentFateStart' + '.csv', index=False
                                 )
                                 df
         
@@ -973,7 +978,7 @@ class AllTrackViewer(object):
                                     columns=['Trackid', 'endDistance'],
                                 )
                                 df.to_csv(
-                                    self.savedir + '/' + 'ParentFateEnd' + '.csv', index=False
+                                    tracksavedir + '/' + 'ParentFateEnd' + '.csv', index=False
                                 )
                                 df
         
@@ -990,7 +995,7 @@ class AllTrackViewer(object):
                                     columns=['Trackid + Trackletid', 'StartDistance'],
                                 )
                                 df.to_csv(
-                                    self.savedir + '/' + 'ChildrenFateStart' + '.csv',
+                                    tracksavedir + '/' + 'ChildrenFateStart' + '.csv',
                                     index=False,
                                 )
                                 df
@@ -1008,14 +1013,14 @@ class AllTrackViewer(object):
                                     columns=['Trackid + Trackletid', 'EndDistance'],
                                 )
                                 df.to_csv(
-                                    self.savedir + '/' + 'ChildrenFateEnd' + '.csv', index=False
+                                    tracksavedir + '/' + 'ChildrenFateEnd' + '.csv', index=False
                                 )
                                 df
         
                             childrenstarts = AllStartChildren[
                                 int(str(trackid) + str(trackletid))
                             ]
-                            childrenends = AllEndChildren[int(str(trackid) + str(trackletid))]
+                            childrenends = AllEndChildren[int(str(trackid) + str("_") + str(trackletid))]
                             parentstarts = AllStartParent[trackid]
                             parentends = AllEndParent[trackid]
                             self.ax[0].plot(self.AllT, self.AllDistance)
@@ -1047,9 +1052,7 @@ class AllTrackViewer(object):
         TrackLayerTracklets = {}
         for i in range(0, len(self.all_track_properties)):
             trackid, alltracklets, DividingTrajectory = self.all_track_properties[i]
-            
-            if DividingTrajectory == self.DividingTrajectory:
-                    if self.ID == trackid:
+            if self.ID == trackid:
                         AllStartParent[trackid] = [trackid]
                         AllEndParent[trackid] = [trackid]
         
@@ -1107,18 +1110,21 @@ class AllTrackViewer(object):
                                 xf = xf[0 : len(xf) // 2]
                                 ffttotal = ffttotal[0 : len(ffttotal) // 2]
                                 if self.saveplot == True:
+                                    SaveIds.append(self.ID)
+                                    tracksavedir = self.savedir + '/' + str(self.ID)
+                                    Path(tracksavedir).mkdir(exist_ok=True)
                                     self.SaveFig()
                                     df = pd.DataFrame(
                                         list(zip(self.AllT, xf, ffttotal)),
                                         columns=['Time', 'Frequency', 'FFT'],
                                     )
                                     df.to_csv(
-                                        self.savedir
+                                        tracksavedir
                                         + '/'
                                         + 'Track_Frequency'
                                         + str(self.ID)
                                         + 'tracklet'
-                                        + str(trackletid)
+                                        + str("_") +  str(_trackletid)
                                         + '.csv',
                                         index=False,
                                     )
@@ -1152,7 +1158,7 @@ class AllTrackViewer(object):
             tracklets = tracklets[1]
             if len(tracklets) > 0:
                 self.trackviewer.add_tracks(
-                    np.asarray(tracklets), name=self.tracklines + str(trackid)
+                    np.asarray(tracklets), name=self.tracklines + str(trackid), colormap = 'twilight', tail_length = sys.float_info.max
                 )
 
         self.trackviewer.theme = 'light'
@@ -1315,7 +1321,7 @@ def TrackMateLiveTracks(
         ax,
         figure,
         DividingTrajectory,
-        False,
+        saveplot = False,
         mode=mode,
     )
     trackbox.currentIndexChanged.connect(
@@ -1332,7 +1338,7 @@ def TrackMateLiveTracks(
             ax,
             figure,
             DividingTrajectory,
-            False,
+            saveplot = False,
             mode=mode,
         )
     )
@@ -1350,7 +1356,7 @@ def TrackMateLiveTracks(
             ax,
             figure,
             DividingTrajectory,
-            True,
+            saveplot = True,
             mode=mode,
         )
     )
@@ -1365,7 +1371,8 @@ def ShowAllTracks(
     Mask,
     savedir,
     calibration,
-    all_track_properties
+    all_track_properties,
+    mode='fate',
 ):
 
     Raw = imread(Raw)
@@ -1374,7 +1381,6 @@ def ShowAllTracks(
     if Mask is not None:
         
         Mask = Mask.astype('uint16')
-
 
     if Raw is not None:
 
@@ -1391,11 +1397,19 @@ def ShowAllTracks(
     ID = AllTrackIds
     trackbox = QComboBox()
     trackbox.addItem(Boxname)
-
+    tracksavebutton = QPushButton('Save Track')
     for i in range(0, len(ID)):
             trackbox.addItem(str(ID[i]))
     trackbox.addItem('all')
-
+    figure = plt.figure(figsize=(4, 4))
+    multiplot_widget = FigureCanvas(figure)
+    ax = multiplot_widget.figure.subplots(1, 2)
+    width = 400
+    dock_widget = viewer.window.add_dock_widget(
+        multiplot_widget, name="TrackStats", area='right'
+    )
+    multiplot_widget.figure.tight_layout()
+    viewer.window._qt_window.resizeDocks([dock_widget], [width], Qt.Horizontal)
     T = Seg.shape[0]
     animation_widget = AnimationWidget(viewer, savedir, 0, T)
     viewer.window.add_dock_widget(animation_widget, area='right')
@@ -1410,12 +1424,12 @@ def ShowAllTracks(
         calibration,
         all_track_properties,
         None,
+        multiplot_widget,
+        ax,
+        figure,
         None,
-        None,
-        None,
-        None,
-        False,
-        mode=None,
+        saveplot = False,
+        mode=mode,
     )
     trackbox.currentIndexChanged.connect(
         lambda trackid=trackbox: AllTrackViewer(
@@ -1427,17 +1441,35 @@ def ShowAllTracks(
             calibration,
             all_track_properties,
             trackbox.currentText(),
+            multiplot_widget,
+            ax,
+            figure,
             None,
-            None,
-            None,
-            None,
-            False,
-            mode=None,
+            saveplot = False,
+            mode=mode,
         )
     )
-
-
+    
+    tracksavebutton.clicked.connect(
+        lambda trackid=tracksavebutton: AllTrackViewer(
+            viewer,
+            Raw,
+            Seg,
+            Mask,
+            savedir,
+            calibration,
+            all_track_properties,
+            trackbox.currentText(),
+            multiplot_widget,
+            ax,
+            figure,
+            None,
+            saveplot = True,
+            mode=mode,
+        )
+    )
     viewer.window.add_dock_widget(trackbox, name="TrackID", area='left')
+    viewer.window.add_dock_widget(tracksavebutton, name="Save TrackID", area='left')
     napari.run()
 def DistancePlotter():
 

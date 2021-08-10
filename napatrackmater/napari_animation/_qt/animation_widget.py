@@ -47,7 +47,7 @@ class AnimationWidget(QWidget):
         self._layout.addStretch(1)
 
         self.pathText = QLineEdit(parent=self)
-        self.pathText.setText(savedir + 'Track' + '.mp4')
+        self.pathText.setText(savedir + 'Track' + '.gif')
         self._layout.addWidget(self.pathText)
 
         self.saveButton = QPushButton('Save Animation', parent=self)
