@@ -27,7 +27,6 @@ from skimage.filters import sobel
 from skimage.measure import label
 from skimage.segmentation import find_boundaries
 from tifffile import imread, imwrite
-from joblib import Parallel, delayed
 from .napari_animation import AnimationWidget
 import dask as da
 from dask.array.image import imread as daskread
@@ -893,9 +892,9 @@ class AllTrackViewer(object):
                                 else:
                                     if len(self.AllDistance) > 1:
                                             AllStartChildren[
-                                                int(str(trackid) + str(_trackletid))
+                                                int(str(trackid) + str("_") +  str(trackletid))
                                             ].append(float(self.AllDistance[0]))
-                                            AllEndChildren[int(str(trackid) +str("_") + str(_trackletid))].append(
+                                            AllEndChildren[int(str(trackid) +str("_") + str(trackletid))].append(
                                                 float(self.AllDistance[-1])
                                             )
         
