@@ -841,6 +841,8 @@ class AllTrackViewer(object):
         for i in range(0, len(self.all_track_properties)):
                     trackid, alltracklets, DividingTrajectory = self.all_track_properties[i]
                     if self.ID == trackid or self.ID == 'all':
+                        tracksavedir = self.savedir + '/' + 'TrackID' +  str(self.ID)
+                        Path(tracksavedir).mkdir(exist_ok=True)
                         AllStartParent[trackid] = [trackid]
                         AllEndParent[trackid] = [trackid]
         
@@ -861,7 +863,7 @@ class AllTrackViewer(object):
                             self.AllSpeed = []
                             self.AllSize = []
                             self.AllDistance = []
-                            TrackLayerTracklets = []
+                            TrackLayerTrackletsList = []
         
                             Locationtracklets = tracklets[1]
                             if len(Locationtracklets) > 0:
@@ -883,7 +885,7 @@ class AllTrackViewer(object):
                                         speed,
                                         DividingTrajectory,
                                     ) = tracklet
-                                    TrackLayerTracklets.append([trackletid, t, z, y, x])
+                                    TrackLayerTrackletsList.append([trackletid, t, z, y, x])
                                     IDLocations.append([t, z, y, x])
                                     self.AllT.append(int(float(t * self.calibration[3])))
                                     self.AllSpeed.append("{:.1f}".format(float(speed)))
@@ -943,8 +945,7 @@ class AllTrackViewer(object):
                                     ],
                                 )
                                 
-                                tracksavedir = self.savedir + '/' + str(self.ID)
-                                Path(tracksavedir).mkdir(exist_ok=True)
+                                
                                 if df.shape[0] > 2:
                                         df.to_csv(
                                             tracksavedir
@@ -962,7 +963,7 @@ class AllTrackViewer(object):
                                 fakedist = []
                                 for (tid, dist) in AllStartParent.items():
         
-                                    if tid == trackid and  len(dist) > 1:
+                                    if len(dist) > 1:
                                         faketid.append(tid)
                                         fakedist.append(dist[1])
         
@@ -979,7 +980,7 @@ class AllTrackViewer(object):
                                 fakedist = []
                                 for (tid, dist) in AllEndParent.items():
         
-                                    if tid == trackid and len(dist) > 1:
+                                    if len(dist) > 1:
                                         faketid.append(tid)
                                         fakedist.append(dist[1])
         
@@ -996,7 +997,7 @@ class AllTrackViewer(object):
                                 fakedist = []
         
                                 for (tid, dist) in AllStartChildren.items():
-                                    if tid == int(str(trackid) + str("_") +  str(trackletid)) and len(dist) > 1:
+                                    if len(dist) > 1:
                                         faketid.append(tid)
                                         fakedist.append(dist[1])
         
@@ -1015,7 +1016,7 @@ class AllTrackViewer(object):
                                 fakedist = []
         
                                 for (tid, dist) in AllEndChildren.items():
-                                    if tid == int(str(trackid) + str("_") +  str(trackletid)) and  len(dist) > 1:
+                                    if  len(dist) > 1:
                                         faketid.append(tid)
                                         fakedist.append(dist[1])
         
@@ -1243,7 +1244,6 @@ class AllTrackViewer(object):
                     for (trackletid, tracklets) in alltracklets.items():
                        for j in range(0, len(SaveIds)):
                           currentid = SaveIds[j]
-                          print(currentid)
                           if trackid == currentid:
                              
                                 
