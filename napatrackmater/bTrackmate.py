@@ -54,6 +54,16 @@ NonDividingTrackIds = []
 AllTrackIds = []
 SaveIds = []
 
+globalcount = "0"
+parentstartid = []
+parentstartdist = []
+parentendid = []
+parentenddist = []
+childrenstartid = []
+childrenstartdist = []
+childrenendid = []
+childrenenddist = []
+
 def prob_sigmoid(x):
     return 1 - math.exp(-x)
 
@@ -574,7 +584,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     tcalibration = int(float(settings.get('timeinterval')))
 
     if Mask is not None:
-        if len(Mask.shape) < len(Segimage.shape):
+        if len(Mask.shape) < len(image.shape):
             # T Z Y X
             UpdateMask = np.zeros(
                 [
@@ -913,7 +923,7 @@ class AllTrackViewer(object):
                             self.AllT = MovingAverage(self.AllT, window_size=self.window_size)
                             if self.saveplot == True:
                                 SaveIds.append(self.ID)
-                                self.SaveFig()
+                                
                                 df = pd.DataFrame(
                                     list(
                                         zip(
@@ -935,23 +945,24 @@ class AllTrackViewer(object):
                                 
                                 tracksavedir = self.savedir + '/' + str(self.ID)
                                 Path(tracksavedir).mkdir(exist_ok=True)
-                                df.to_csv(
-                                    tracksavedir
-                                    + '/'
-                                    + 'Track'
-                                    + str(self.ID)
-                                    + 'tracklet'
-                                    + str("_") + str(trackletid)
-                                    + '.csv',
-                                    index=False,
-                                )
-                                df
+                                if df.shape[0] > 2:
+                                        df.to_csv(
+                                            tracksavedir
+                                            + '/'
+                                            + 'Track'
+                                            + str(self.ID)
+                                            + 'tracklet'
+                                            + str("_") + str(trackletid)
+                                            + '.csv',
+                                            index=False,
+                                        )
+                                
         
                                 faketid = []
                                 fakedist = []
                                 for (tid, dist) in AllStartParent.items():
         
-                                    if len(dist) > 1:
+                                    if tid == trackid and  len(dist) > 1:
                                         faketid.append(tid)
                                         fakedist.append(dist[1])
         
@@ -968,7 +979,7 @@ class AllTrackViewer(object):
                                 fakedist = []
                                 for (tid, dist) in AllEndParent.items():
         
-                                    if len(dist) > 1:
+                                    if tid == trackid and len(dist) > 1:
                                         faketid.append(tid)
                                         fakedist.append(dist[1])
         
@@ -979,13 +990,13 @@ class AllTrackViewer(object):
                                 df.to_csv(
                                     tracksavedir + '/' + 'ParentFateEnd' + '.csv', index=False
                                 )
-                                df
+                                
         
                                 faketid = []
                                 fakedist = []
         
                                 for (tid, dist) in AllStartChildren.items():
-                                    if len(dist) > 1:
+                                    if tid == int(str(trackid) + str("_") +  str(trackletid)) and len(dist) > 1:
                                         faketid.append(tid)
                                         fakedist.append(dist[1])
         
@@ -993,17 +1004,18 @@ class AllTrackViewer(object):
                                     list(zip(faketid, fakedist)),
                                     columns=['Trackid + Trackletid', 'StartDistance'],
                                 )
-                                df.to_csv(
-                                    tracksavedir + '/' + 'ChildrenFateStart' + '.csv',
-                                    index=False,
-                                )
-                                df
+                                if df.shape[0] > 2:
+                                        df.to_csv(
+                                            tracksavedir + '/' + 'ChildrenFateStart' + '.csv',
+                                            index=False,
+                                        )
+                                
         
                                 faketid = []
                                 fakedist = []
         
                                 for (tid, dist) in AllEndChildren.items():
-                                    if len(dist) > 1:
+                                    if tid == int(str(trackid) + str("_") +  str(trackletid)) and  len(dist) > 1:
                                         faketid.append(tid)
                                         fakedist.append(dist[1])
         
@@ -1011,10 +1023,11 @@ class AllTrackViewer(object):
                                     list(zip(faketid, fakedist)),
                                     columns=['Trackid + Trackletid', 'EndDistance'],
                                 )
-                                df.to_csv(
-                                    tracksavedir + '/' + 'ChildrenFateEnd' + '.csv', index=False
-                                )
-                                df
+                                if df.shape[0] > 2:
+                                        df.to_csv(
+                                            tracksavedir + '/' + 'ChildrenFateEnd' + '.csv', index=False
+                                        )
+                                
         
                             childrenstarts = AllStartChildren[
                                 int(str(trackid) + str(trackletid))
@@ -1025,12 +1038,13 @@ class AllTrackViewer(object):
                             self.ax[0].plot(self.AllT, self.AllDistance)
                             self.ax[1].plot(parentstarts[1:], parentends[1:], 'og')
                             self.ax[1].plot(childrenstarts[1:], childrenends[1:], 'or')
-                            
+                            self.figure.savefig(tracksavedir+ '/' + 'Track' + self.mode + str(self.ID) + '.png', dpi = 300)
                             self.figure.canvas.draw()
                             self.figure.canvas.flush_events()
         
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
+        self.SaveStats()
 
     def plotintensity(self):
 
@@ -1112,7 +1126,7 @@ class AllTrackViewer(object):
                                     SaveIds.append(self.ID)
                                     tracksavedir = self.savedir + '/' + str(self.ID)
                                     Path(tracksavedir).mkdir(exist_ok=True)
-                                    self.SaveFig()
+                                    
                                     df = pd.DataFrame(
                                         list(zip(self.AllT, xf, ffttotal)),
                                         columns=['Time', 'Frequency', 'FFT'],
@@ -1127,7 +1141,8 @@ class AllTrackViewer(object):
                                         + '.csv',
                                         index=False,
                                     )
-                                    df
+                                    
+                                self.figure.savefig(tracksavedir+ '/' + 'Track' + self.mode + str(self.ID) + '.png', dpi = 300)    
                                 self.ax[0].plot(self.AllT, self.AllIntensity)
                                 self.ax[1].plot(xf, ffttotal)
                                 self.ax[1].set_yscale('log')        
@@ -1137,6 +1152,7 @@ class AllTrackViewer(object):
 
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
+        self.SaveStats()
 
     def draw(self):
         TrackLayerTracklets = {}
@@ -1217,13 +1233,116 @@ class AllTrackViewer(object):
 
         return TrackLayerTracklets
 
-    def SaveFig(self):
-     
+    def SaveStats(self):
         
-        self.figure.savefig(
-            self.savedir + '/' + 'Track' + self.mode + str(self.ID) + '.png', dpi = 300
+        tracksavedir = self.savedir + '/' + "SavedTracks"
+        Path(tracksavedir).mkdir(exist_ok=True) 
+        count = globalcount
+        for i in range(0, len(self.all_track_properties)):
+                    trackid, alltracklets, DividingTrajectory = self.all_track_properties[i]
+                    for (trackletid, tracklets) in alltracklets.items():
+                       for j in range(0, len(SaveIds)):
+                          currentid = SaveIds[j]
+                          print(currentid)
+                          if trackid == currentid:
+                             
+                                
+                                for (tid, dist) in AllStartParent.items():
+        
+                                    if tid == trackid and  len(dist) > 1:
+                                        if tid not in parentstartid:
+                                                parentstartid.append(tid)
+                                                parentstartdist.append(dist[1])
+        
+                                
+                                for (tid, dist) in AllEndParent.items():
+                                    if tid not in parentendid:
+                                      if tid == trackid and len(dist) > 1:
+                                        parentendid.append(tid)
+                                        parentenddist.append(dist[1])
+                                
+                                
+        
+                                for (tid, dist) in AllStartChildren.items():
+                                    if tid not in childrenstartid:
+                                      if tid == int(str(trackid) + str("_") +  str(trackletid)) and len(dist) > 1:
+                                          childrenstartid.append(tid)
+                                          childrenstartdist.append(dist[1])
+                                
+                                      
+        
+                                for (tid, dist) in AllEndChildren.items():
+                                    if tid not in childrenendid:
+                                      if tid == int(str(trackid) + str("_") +  str(trackletid)) and  len(dist) > 1:
+                                          childrenendid.append(tid)
+                                          childrenenddist.append(dist[1])
+                                
+                              
+                                
+                                
+                          
+        if count == "0":
+                dfps = pd.DataFrame(
+                    list(zip(parentstartid, parentstartdist)),
+                    columns=['Trackid', 'StartDistance'],
+                )
+                dfpe = pd.DataFrame(
+                    list(zip(parentendid, parentenddist)),
+                    columns=['Trackid', 'endDistance'],
+                )
+                dfcs = pd.DataFrame(
+                    list(zip(childrenstartid, childrenstartdist)),
+                    columns=['Trackid + Trackletid', 'StartDistance'],
+                )
+                dfce = pd.DataFrame(
+                                        list(zip(childrenendid, childrenenddist)),
+                                        columns=['Trackid + Trackletid', 'EndDistance'],
+                                    )
+        else:
+            
+            dfps = pd.DataFrame(
+                    list(zip(parentstartid, parentstartdist)), header = False
+                )
+            dfpe = pd.DataFrame(
+                list(zip(parentendid, parentenddist), header = False)
+            )
+            dfcs = pd.DataFrame(
+                list(zip(childrenstartid, childrenstartdist)), header = False
+            )
+            dfce = pd.DataFrame(
+                                    list(zip(childrenendid, childrenenddist)), header = False
+                                )
+                
+        csvname =  tracksavedir + '/' + 'ChildrenFateStart' + '.csv'
+        if os.path.exists(csvname):
+ 
+              os.remove(csvname)                             
+        dfcs.to_csv(
+            csvname,
+            index=False, mode='a'
         )
-
+        csvname = tracksavedir + '/' + 'ParentFateStart' + '.csv'   
+        if os.path.exists(csvname):
+ 
+              os.remove(csvname)
+        dfps.to_csv(
+            csvname, index=False, mode='a'
+        )   
+        csvname = tracksavedir + '/' + 'ParentFateEnd' + '.csv'
+        if os.path.exists(csvname):
+ 
+              os.remove(csvname)
+        dfpe.to_csv(
+            csvname, index=False, mode='a'
+        )
+        csvname = tracksavedir + '/' + 'ChildrenFateEnd' + '.csv'
+        if os.path.exists(csvname):
+ 
+              os.remove(csvname)
+        dfce.to_csv(csvname, index=False, mode='a'
+                                )                                
+                                             
+        count = globalcount + "1"
 
 def FourierTransform(numbers, tcalibration):
 
@@ -1259,19 +1378,18 @@ def TrackMateLiveTracks(
 ):
 
     Raw = imread(Raw)
-    Seg = imread(Seg)
-    Seg = Seg.astype('uint16')
+    if Seg is not None:
+       Seg = imread(Seg)
+       Seg = Seg.astype('uint16')
     if Mask is not None:
         
         Mask = Mask.astype('uint16')
 
 
-    if Raw is not None:
-
-        viewer = napari.view_image(Raw, name='Image')
+    viewer = napari.view_image(Raw, name='Image')
+        
+    if Seg is not None:
         viewer.add_labels(Seg, name='SegImage')
-    else:
-        viewer = napari.view_image(Seg, name='SegImage')
 
     if Mask is not None:
         Boundary = Mask.copy()
@@ -1302,7 +1420,7 @@ def TrackMateLiveTracks(
     multiplot_widget.figure.tight_layout()
     viewer.window._qt_window.resizeDocks([dock_widget], [width], Qt.Horizontal)
 
-    T = Seg.shape[0]
+    T = Raw.shape[0]
     animation_widget = AnimationWidget(viewer, savedir, 0, T)
     viewer.window.add_dock_widget(animation_widget, area='right')
     viewer.update_console({'animation': animation_widget.animation})
@@ -1375,18 +1493,18 @@ def ShowAllTracks(
 ):
 
     Raw = imread(Raw)
-    Seg = imread(Seg)
-    Seg = Seg.astype('uint16')
+    if Seg is not None:
+        Seg = imread(Seg)
+        Seg = Seg.astype('uint16')
+        
     if Mask is not None:
         
         Mask = Mask.astype('uint16')
 
-    if Raw is not None:
-
-        viewer = napari.view_image(Raw, name='Image')
+    viewer = napari.view_image(Raw, name='Image')
+        
+    if Seg is not None:
         viewer.add_labels(Seg, name='SegImage')
-    else:
-        viewer = napari.view_image(Seg, name='SegImage')
 
     if Mask is not None:
         Boundary = Mask.copy()
@@ -1409,7 +1527,7 @@ def ShowAllTracks(
     )
     multiplot_widget.figure.tight_layout()
     viewer.window._qt_window.resizeDocks([dock_widget], [width], Qt.Horizontal)
-    T = Seg.shape[0]
+    T = Raw.shape[0]
     animation_widget = AnimationWidget(viewer, savedir, 0, T)
     viewer.window.add_dock_widget(animation_widget, area='right')
     viewer.update_console({'animation': animation_widget.animation})
