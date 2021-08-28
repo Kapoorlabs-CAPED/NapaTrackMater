@@ -24,7 +24,7 @@ from scipy import spatial
 from scipy.fftpack import fft, fftfreq, fftshift, ifft
 from skimage import measure
 from skimage.filters import sobel
-from skimage.measure import label
+from skimage.measure import label, regionprops
 from skimage.segmentation import find_boundaries
 from tifffile import imread, imwrite
 from .napari_animation import AnimationWidget
@@ -481,9 +481,10 @@ def tracklet_properties(
     Uniqueobjects,
     Uniqueproperties,
     Mask,
+    Segimage,
     TimedMask,
     calibration,
-    DividingTrajectory,
+    DividingTrajectory
 ):
 
     location_prop_dist = {}
@@ -498,6 +499,7 @@ def tracklet_properties(
             trackletspeed = trackletspeeds[k]
             cell_source_id = tracklet
             frame, z, y, x = Uniqueobjects[int(cell_source_id)]
+         
             total_intensity, mean_intensity, real_time, cellradius, pixel_volume = Uniqueproperties[
                 int(cell_source_id)
             ]
@@ -543,7 +545,7 @@ def tracklet_properties(
                     distance,
                     prob_inside,
                     trackletspeed,
-                    DividingTrajectory,
+                    DividingTrajectory
                 ]
             )
 
@@ -551,12 +553,158 @@ def tracklet_properties(
 
     return location_prop_dist
 
+def relabel_track_property(
+    tracks,
+    filtered_track_ids,
+    Uniqueobjects,
+    Segimage
+):
+
+    location_prop_dist = {}
+    
+    for track in tracks.findall('Track'):
+
+        track_id = int(track.get("TRACK_ID"))
+        
+        spot_object_source_target = []
+        if track_id in filtered_track_ids:
+            location_prop_dist[track_id] = [track_id]
+            
+            for edge in track.findall('Edge'):
+            
+                source_id = edge.get('SPOT_SOURCE_ID')
+                target_id = edge.get('SPOT_TARGET_ID')
+                edge_time = edge.get('EDGE_TIME')
+               
+                directional_rate_change = edge.get('DIRECTIONAL_CHANGE_RATE')
+                speed = edge.get('SPEED')
+
+                spot_object_source_target.append(
+                    [source_id, target_id, edge_time, directional_rate_change, speed]
+                )
+
+            # Sort the tracks by edge time
+            spot_object_source_target = sorted(
+                spot_object_source_target, key=sortTracks, reverse=False
+            )
+            # Get all the IDs, uniquesource, targets attached, leaf, root, splitpoint IDs
+            split_points, root_leaf = Multiplicity(spot_object_source_target)
+
+            # Determine if a track has divisions or none
+            if len(split_points) > 0:
+                split_points = split_points[::-1]
+                DividingTrajectory = True
+            else:
+                DividingTrajectory = False
+          
+            if DividingTrajectory == True:
+                DividingTrackIds.append(track_id)
+                AllTrackIds.append(track_id)
+                alltracklets = analyze_dividing_tracklets(
+                    root_leaf, split_points, spot_object_source_target
+                )
+
+            if DividingTrajectory == False:
+                NonDividingTrackIds.append(track_id)
+                AllTrackIds.append(track_id)
+                alltracklets = analyze_non_dividing_tracklets(
+                    root_leaf, spot_object_source_target
+                )
+            
+            for i in range(0, len(alltracklets)):
+               current_location_prop_dist = []
+               trackletid, tracklets, trackletspeeds = alltracklets[i]
+               for k in range(0, len(tracklets)):
+                        
+                    tracklet = tracklets[k]
+                    trackletspeed = trackletspeeds[k]
+                    cell_source_id = tracklet
+                    frame, z, y, x = Uniqueobjects[int(cell_source_id)]
+                    current_location_prop_dist.append([int(float(frame)), int(float(z)), int(float(y)), int(float(x))])
+        location_prop_dist[track_id].append(current_location_prop_dist)
+    Segimage = RelabelCells(Segimage,location_prop_dist)
+
+    return Segimage
+
+def import_TM_XML_Relabel(xml_path, Segimage):
+    
+    Segimage = imread(Segimage)
+    root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
+
+    filtered_track_ids = [
+        int(track.get('TRACK_ID'))
+        for track in root.find('Model').find('FilteredTracks').findall('TrackID')
+    ]
+
+    # Extract the tracks from xml
+    tracks = root.find('Model').find('AllTracks')
+    settings = root.find('Settings').find('ImageData')
+
+    # Extract the cell objects from xml
+    Spotobjects = root.find('Model').find('AllSpots')
+
+    # Make a dictionary of the unique cell objects with their properties
+    Uniqueobjects = {}
+    Uniqueproperties = {}
+
+    xcalibration = float(settings.get('pixelwidth'))
+    ycalibration = float(settings.get('pixelheight'))
+    zcalibration = float(settings.get('voxeldepth'))
+    tcalibration = int(float(settings.get('timeinterval')))
+
+   
+
+    for frame in Spotobjects.findall('SpotsInFrame'):
+
+        for Spotobject in frame.findall('Spot'):
+            # Create object with unique cell ID
+            cell_id = int(Spotobject.get("ID"))
+            # Get the TZYX location of the cells in that frame
+            Uniqueobjects[cell_id] = [
+                Spotobject.get('FRAME'),
+                Spotobject.get('POSITION_Z'),
+                Spotobject.get('POSITION_Y'),
+                Spotobject.get('POSITION_X'),
+            ]
+            
+            # Get other properties associated with the Spotobject
+            try:
+                TOTAL_INTENSITY_CH1 = Spotobject.get('TOTAL_INTENSITY_CH1')
+            except:
+                 
+                 TOTAL_INTENSITY_CH1 = 1
+            try:
+                MEAN_INTENSITY_CH1 = Spotobject.get('MEAN_INTENSITY_CH1')
+            except:
+                 MEAN_INTENSITY_CH1 = 1
+            try:      
+                Radius = Spotobject.get('RADIUS')
+            except:
+                Radius = 1
+                
+            try:      
+                QUALITY = Spotobject.get('QUALITY')
+            except:
+                QUALITY = 1
+                    
+     
+
+   
+            # for each tracklet get real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside
+    NewSegimage = relabel_track_property(
+                        tracks,
+                filtered_track_ids,
+                        Uniqueobjects,
+                        Segimage
+                    )
+           
+    return  NewSegimage
 
 def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     
     image = daskread(image)[0,:]
     if Segimage is not None:
-        Segimage = daskread(Segimage)[0,:]
+        Segimage = imread(Segimage)
     if Mask is not None:
         Mask = imread(Mask)
 
@@ -622,6 +770,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
                 Spotobject.get('POSITION_Y'),
                 Spotobject.get('POSITION_X'),
             ]
+            
             # Get other properties associated with the Spotobject
             try:
                 TOTAL_INTENSITY_CH1 = Spotobject.get('TOTAL_INTENSITY_CH1')
@@ -705,13 +854,13 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
                 Uniqueobjects,
                 Uniqueproperties,
                 Mask,
+                Segimage,
                 TimedMask,
                 [xcalibration, ycalibration, zcalibration, tcalibration],
                 DividingTrajectory
             )
-
             all_track_properties.append([track_id, location_prop_dist, DividingTrajectory])
-
+   
     return all_track_properties, Boundary, [
         xcalibration,
         ycalibration,
@@ -719,6 +868,47 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
         tcalibration,
     ]
 
+def RelabelCells(Segimage,location_prop_dist):
+    
+        NewSegimage = np.zeros(Segimage.shape)
+        for (k,v) in location_prop_dist.items():
+            
+                indices = v[1:][0]
+                for i in range(0, Segimage.shape[0]):
+                   Labelimage = Segimage[i,:]
+                   NewLabelimage = NewSegimage[i,:]
+                   props =  measure.regionprops(Labelimage,Labelimage) 
+                   centroids = [prop.centroid for prop in props] 
+                   labels = [prop.label for prop in props]
+                   tree = spatial.cKDTree(centroids)
+                   Labels = []
+                   
+                   for index in indices:  
+                          
+                          time = index[0]
+                          z = index[1]
+                          y = index[2]
+                          x = index[3]  
+                            
+                          if i == time:
+                                    
+                                    if z < Labelimage.shape[0]:
+                                       pt = (z,y,x)       
+                                       closest =  tree.query(pt)
+                                       print(pt) 
+                                       print(centroids[closest[1]][0], centroids[closest[1]][1], centroids[closest[1]][2])
+                                       indexlist = centroids.index((centroids[closest[1]][0], centroids[closest[1]][1], centroids[closest[1]][2]))
+                                    
+                                       Labels.append(labels[indexlist])
+                                       
+                                            
+                   for regionlabel in Labels:
+                      try:
+                         NewLabelimage[np.where(Labelimage == regionlabel) ] = k
+                      except:
+                        pass
+                   NewSegimage[i,:] = NewLabelimage
+        return NewSegimage    
 
 def Multiplicity(spot_object_source_target):
 
