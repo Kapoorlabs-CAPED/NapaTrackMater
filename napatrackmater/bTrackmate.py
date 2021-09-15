@@ -1403,7 +1403,7 @@ class AllTrackViewer(object):
                         list_tracklets.append(
                             [
                                 int(str(trackletid)),
-                                int(t) / self.calibration[3],
+                                int(float(t)) / self.calibration[3],
                                 float(z) / self.calibration[2],
                                 float(y) / self.calibration[1],
                                 float(x) / self.calibration[0],
@@ -1413,7 +1413,7 @@ class AllTrackViewer(object):
                         list_tracklets.append(
                             [
                                 int(str(trackletid)),
-                                int(t) / self.calibration[3],
+                                int(float(t)) / self.calibration[3],
                                 float(z) / self.calibration[2],
                                 float(y) / self.calibration[1],
                                 float(x) / self.calibration[0],
