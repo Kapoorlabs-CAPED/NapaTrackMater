@@ -38,6 +38,7 @@ from dask.array.image import imread as daskread
 
 
 Boxname = 'TrackBox'
+AttributeBoxname = 'AttributeIDBox'
 pd.options.display.float_format = '${:,.2f}'.format
 savedir = None
 
@@ -721,9 +722,13 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
 
 
 
-def RelabelCells(Segimage,Alllocations, RelabelProperty):
+def RelabelCells(Segimage,Alllocations, AllKeys, AllValues):
     
         NewSegimage = np.zeros(Segimage.shape)
+        assert len(AllKeys) == len(AllValues)
+        
+        
+        
         for (k,v) in location_prop_dist.items():
             
                 indices = v[1:][0]
@@ -762,6 +767,100 @@ def RelabelCells(Segimage,Alllocations, RelabelProperty):
                         pass
                    NewSegimage[i,:] = NewLabelimage
         return NewSegimage   
+
+class VizCorrect(object):
+
+        def __init__(self, Segimage, savedir,AllKeys, AllValues ):
+            
+            
+               self.Segimage = Segimage
+               self.Name = os.path.basename(os.path.splitext(self.Segimage)[0])
+               self.savedir = savedir
+               self.AllKeys = AllKeys
+               self.AllValues = AllValues
+               Path(self.savedir).mkdir(exist_ok=True)
+               
+               
+            
+        def showNapari(self):
+                 
+                 self.viewer = napari.Viewer()
+                 
+                 Attributeids = []
+                 
+                 for attributename in AllKeys:
+                     Attributeids.append(attributename)
+                     
+                 
+                
+                    
+                 Attributeidbox = QComboBox()   
+                 Attributeidbox.addItem(AttributeBoxname)   
+                
+                 savebutton = QPushButton(' Save Relabelled Image')
+                    
+                 for i in range(0, len(Attributeids)):
+                     
+                     
+                     Attributeidbox.addItem(str(Attributeids[i]))
+                     
+
+                 
+                 Attributeidbox.currentIndexChanged.connect(
+                 lambda trackid = imageidbox: self.second_image_add(
+                         
+                         Attributeidbox.currentText(),
+                         
+                         self.Name,
+                         
+                         False
+                    
+                )
+            )            
+                 
+                 savebutton.clicked.connect(
+                 lambda trackid = imageidbox: self.second_image_add(
+                         
+                         imageidbox.currentText(),
+                         
+                         self.Name,
+                         
+                         True
+                    
+                )
+            )   
+                    
+                
+                 
+                 self.viewer.window.add_dock_widget(Attributeidbox, name="Color Attributes", area='bottom') 
+                 self.viewer.window.add_dock_widget(savebutton, name="Save Relabelled Image", area='bottom') 
+                
+                
+        
+                 
+                        
+        
+
+                                     
+        def second_image_add(self, attribute, imagename, save = False):
+                
+               
+
+
+                        
+                        self.viewer.add_labels(self.Segimage, name = self.Name)
+
+                if save:
+
+
+                        ModifiedArraySeg = self.viewer.layers[self.Name + attribute].data 
+                        ModifiedArraySeg = ModifiedArraySeg.astype('uint16')
+
+                        imwrite((self.savedir  +   self.Name + attribute+ '.tif' ) , ModifiedArraySeg)
+
+                                                  
+            
+       
 
 def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     
@@ -979,6 +1078,10 @@ def Multiplicity(spot_object_source_target):
         scount = 0
 
     return split_points, root_leaf
+
+
+
+
 
 
 class AllTrackViewer(object):
