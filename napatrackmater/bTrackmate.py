@@ -665,10 +665,7 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
 
 
     
-    LocationX = spot_dataset['POSITION_X'].astype('float')/xcalibration  
-    LocationY = spot_dataset['POSITION_Y'].astype('float')/ycalibration
-    LocationZ = spot_dataset['POSITION_Z'].astype('float')/zcalibration
-    LocationT = spot_dataset['FRAME']
+    
     for k in spot_dataset.keys():
         try:
           AllKeys.append(k)
@@ -680,19 +677,19 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
             AllValues.append(Track_id)
             
           if k == 'POSITION_X':
-              LocationX = spot_dataset['POSITION_X'].astype('float')/xcalibration  
+              LocationX = (spot_dataset['POSITION_X'].astype('float')/xcalibration).astype('int')  
               AllValues.append(LocationX)
               
           if k == 'POSITION_Y':
-              LocationY = spot_dataset['POSITION_Y'].astype('float')/ycalibration  
+              LocationY = (spot_dataset['POSITION_Y'].astype('float')/ycalibration).astype('int')   
               AllValues.append(LocationY)
           if k == 'POSITION_Z':
-              LocationZ = spot_dataset['POSITION_Z'].astype('float')/zcalibration  
+              LocationZ = (spot_dataset['POSITION_Z'].astype('float')/zcalibration).astype('int')   
               AllValues.append(LocationZ)
           if k == 'FRAME':
-              LocationT = spot_dataset['FRAME'].astype('float') 
+              LocationT = (spot_dataset['FRAME'].astype('float')).astype('int')  
               AllValues.append(LocationT)    
-          else:  
+          elif k!='TRACK_ID' and k!='POSITION_X' and k!='POSITION_Y' and k!='POSITION_Z' and k!='FRAME':  
             AllValues.append(spot_dataset[k].astype('float'))
             
         except:
@@ -708,11 +705,7 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
             pass
     
     print(AllKeys, AllValues)
-    #Change track ID of 0 to max trackid + 1
-    maxtrack_id = max(Track_id)
-    indices = np.where(Track_id==0)
-    condition_indices = spot_dataset_index[indices]
-    Track_id[condition_indices] = maxtrack_id + 1
+    
     
     #Alllocations = [LocationT.tolist(),LocationZ.tolist(),LocationY.tolist(),LocationX.tolist()]
     #Allproperties = [Track_id.tolist(), ]
