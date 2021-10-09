@@ -668,7 +668,7 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
     
     for k in spot_dataset.keys():
         try:
-          AllKeys.append(k)
+          
           if k == 'TRACK_ID':
             Track_id = spot_dataset[k].astype('float')  
             indices = np.where(Track_id==0)
@@ -692,20 +692,23 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
           elif k!='TRACK_ID' and k!='POSITION_X' and k!='POSITION_Y' and k!='POSITION_Z' and k!='FRAME':  
             AllValues.append(spot_dataset[k].astype('float'))
             
+          AllKeys.append(k)  
+            
         except:
             pass
     
    
     for k in track_dataset.keys():
         try:
-          if(k != 'TRACK_ID'):  
-             AllKeys.append(k)
+          if k != 'TRACK_ID':  
+             
              AllValues.append(track_dataset[k].astype('float'))
+             AllKeys.append(k)
         except:
             pass
     
-    print(AllKeys, AllValues)
-    
+    print(len(AllKeys), len(AllValues))
+    print((AllKeys), (AllValues))
     
     #Alllocations = [LocationT.tolist(),LocationZ.tolist(),LocationY.tolist(),LocationX.tolist()]
     #Allproperties = [Track_id.tolist(), ]
