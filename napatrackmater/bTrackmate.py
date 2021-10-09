@@ -626,9 +626,10 @@ def relabel_track_property(
 
     return Segimage
 
-def import_TM_XML_Relabel(xml_path, Segimage):
+def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
     
     Segimage = imread(Segimage)
+    print('Image dimensions:', Segimage.shape)
     root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
 
     filtered_track_ids = [
@@ -646,59 +647,125 @@ def import_TM_XML_Relabel(xml_path, Segimage):
     # Make a dictionary of the unique cell objects with their properties
     Uniqueobjects = {}
     Uniqueproperties = {}
-
+    AllKeys = []
+    AllValues = []
     xcalibration = float(settings.get('pixelwidth'))
     ycalibration = float(settings.get('pixelheight'))
     zcalibration = float(settings.get('voxeldepth'))
     tcalibration = int(float(settings.get('timeinterval')))
 
-   
+    spot_dataset = pd.read_csv(spot_csv, delimiter = ',')[3:]
+    spot_dataset_index = spot_dataset.index
+    spot_dataset.keys()
+    
+    track_dataset = pd.read_csv(track_csv, delimiter = ',')[3:]
 
-    for frame in Spotobjects.findall('SpotsInFrame'):
+    track_dataset_index = track_dataset.index
+    track_dataset.keys()
 
-        for Spotobject in frame.findall('Spot'):
-            # Create object with unique cell ID
-            cell_id = int(Spotobject.get("ID"))
-            # Get the TZYX location of the cells in that frame
-            Uniqueobjects[cell_id] = [
-                Spotobject.get('FRAME'),
-                Spotobject.get('POSITION_Z'),
-                Spotobject.get('POSITION_Y'),
-                Spotobject.get('POSITION_X'),
-            ]
+
+    
+    LocationX = spot_dataset['POSITION_X'].astype('float')/xcalibration  
+    LocationY = spot_dataset['POSITION_Y'].astype('float')/ycalibration
+    LocationZ = spot_dataset['POSITION_Z'].astype('float')/zcalibration
+    LocationT = spot_dataset['FRAME']
+    for k in spot_dataset.keys():
+        try:
+          AllKeys.append(k)
+          if k == 'TRACK_ID':
+            Track_id = spot_dataset[k].astype('float')  
+            indices = np.where(Track_id==0)
+            condition_indices = spot_dataset_index[indices]
+            Track_id[condition_indices] = maxtrack_id + 1
+            AllValues.append(Track_id)
             
-            # Get other properties associated with the Spotobject
-            try:
-                TOTAL_INTENSITY_CH1 = Spotobject.get('TOTAL_INTENSITY_CH1')
-            except:
-                 
-                 TOTAL_INTENSITY_CH1 = 1
-            try:
-                MEAN_INTENSITY_CH1 = Spotobject.get('MEAN_INTENSITY_CH1')
-            except:
-                 MEAN_INTENSITY_CH1 = 1
-            try:      
-                Radius = Spotobject.get('RADIUS')
-            except:
-                Radius = 1
-                
-            try:      
-                QUALITY = Spotobject.get('QUALITY')
-            except:
-                QUALITY = 1
-                    
-     
+          if k == 'POSITION_X':
+              LocationX = spot_dataset['POSITION_X'].astype('float')/xcalibration  
+              AllValues.append(LocationX)
+              
+          if k == 'POSITION_Y':
+              LocationY = spot_dataset['POSITION_Y'].astype('float')/ycalibration  
+              AllValues.append(LocationY)
+          if k == 'POSITION_Z':
+              LocationZ = spot_dataset['POSITION_Z'].astype('float')/zcalibration  
+              AllValues.append(LocationZ)
+          if k == 'FRAME':
+              LocationT = spot_dataset['FRAME'].astype('float') 
+              AllValues.append(LocationT)    
+          else:  
+            AllValues.append(spot_dataset[k].astype('float'))
+            
+        except:
+            pass
+    
+   
+    for k in track_dataset.keys():
+        try:
+          if(k != 'TRACK_ID'):  
+             AllKeys.append(k)
+             AllValues.append(track_dataset[k].astype('float'))
+        except:
+            pass
+    
+    print(AllKeys, AllValues)
+    #Change track ID of 0 to max trackid + 1
+    maxtrack_id = max(Track_id)
+    indices = np.where(Track_id==0)
+    condition_indices = spot_dataset_index[indices]
+    Track_id[condition_indices] = maxtrack_id + 1
+    
+    #Alllocations = [LocationT.tolist(),LocationZ.tolist(),LocationY.tolist(),LocationX.tolist()]
+    #Allproperties = [Track_id.tolist(), ]
 
    
             # for each tracklet get real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside
-    NewSegimage = relabel_track_property(
-                        tracks,
-                filtered_track_ids,
-                        Uniqueobjects,
-                        Segimage
-                    )
+    #NewSegimage = RelabelCells(Segimage,Alllocations)
            
-    return  NewSegimage
+    #return  NewSegimage
+
+
+
+def RelabelCells(Segimage,Alllocations, RelabelProperty):
+    
+        NewSegimage = np.zeros(Segimage.shape)
+        for (k,v) in location_prop_dist.items():
+            
+                indices = v[1:][0]
+                for i in range(0, Segimage.shape[0]):
+                   Labelimage = Segimage[i,:]
+                   NewLabelimage = NewSegimage[i,:]
+                   props =  measure.regionprops(Labelimage,Labelimage) 
+                   centroids = [prop.centroid for prop in props] 
+                   labels = [prop.label for prop in props]
+                   tree = spatial.cKDTree(centroids)
+                   Labels = []
+                   
+                   for index in indices:  
+                          
+                          time = index[0]
+                          z = index[1]
+                          y = index[2]
+                          x = index[3]  
+                            
+                          if i == time:
+                                    
+                                    if z < Labelimage.shape[0]:
+                                       pt = (z,y,x)       
+                                       closest =  tree.query(pt)
+                                       print(pt) 
+                                       print(centroids[closest[1]][0], centroids[closest[1]][1], centroids[closest[1]][2])
+                                       indexlist = centroids.index((centroids[closest[1]][0], centroids[closest[1]][1], centroids[closest[1]][2]))
+                                    
+                                       Labels.append(labels[indexlist])
+                                       
+                                            
+                   for regionlabel in Labels:
+                      try:
+                         NewLabelimage[np.where(Labelimage == regionlabel) ] = k
+                      except:
+                        pass
+                   NewSegimage[i,:] = NewLabelimage
+        return NewSegimage   
 
 def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     
@@ -868,47 +935,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
         tcalibration,
     ]
 
-def RelabelCells(Segimage,location_prop_dist):
-    
-        NewSegimage = np.zeros(Segimage.shape)
-        for (k,v) in location_prop_dist.items():
-            
-                indices = v[1:][0]
-                for i in range(0, Segimage.shape[0]):
-                   Labelimage = Segimage[i,:]
-                   NewLabelimage = NewSegimage[i,:]
-                   props =  measure.regionprops(Labelimage,Labelimage) 
-                   centroids = [prop.centroid for prop in props] 
-                   labels = [prop.label for prop in props]
-                   tree = spatial.cKDTree(centroids)
-                   Labels = []
-                   
-                   for index in indices:  
-                          
-                          time = index[0]
-                          z = index[1]
-                          y = index[2]
-                          x = index[3]  
-                            
-                          if i == time:
-                                    
-                                    if z < Labelimage.shape[0]:
-                                       pt = (z,y,x)       
-                                       closest =  tree.query(pt)
-                                       print(pt) 
-                                       print(centroids[closest[1]][0], centroids[closest[1]][1], centroids[closest[1]][2])
-                                       indexlist = centroids.index((centroids[closest[1]][0], centroids[closest[1]][1], centroids[closest[1]][2]))
-                                    
-                                       Labels.append(labels[indexlist])
-                                       
-                                            
-                   for regionlabel in Labels:
-                      try:
-                         NewLabelimage[np.where(Labelimage == regionlabel) ] = k
-                      except:
-                        pass
-                   NewSegimage[i,:] = NewLabelimage
-        return NewSegimage    
+ 
 
 def Multiplicity(spot_object_source_target):
 
