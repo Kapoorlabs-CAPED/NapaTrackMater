@@ -629,7 +629,9 @@ def relabel_track_property(
 
 def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
     
+    Name = os.path.basename(os.path.splitext(Segimage)[0])
     Segimage = imread(Segimage)
+    
     print('Image dimensions:', Segimage.shape)
     root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
 
@@ -711,6 +713,9 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
     print(len(AllKeys), len(AllValues))
     print((AllKeys), (AllValues))
     
+    Viz = VizCorrect(Segimage, Name, savedir,AllKeys, AllValues)
+    Viz.showNapari()
+    
     #Alllocations = [LocationT.tolist(),LocationZ.tolist(),LocationY.tolist(),LocationX.tolist()]
     #Allproperties = [Track_id.tolist(), ]
 
@@ -770,11 +775,11 @@ def RelabelCells(Segimage,Alllocations, AllKeys, AllValues):
 
 class VizCorrect(object):
 
-        def __init__(self, Segimage, savedir,AllKeys, AllValues ):
+        def __init__(self, Segimage, Name, savedir,AllKeys, AllValues ):
             
             
                self.Segimage = Segimage
-               self.Name = os.path.basename(os.path.splitext(self.Segimage)[0])
+               self.Name = Name
                self.savedir = savedir
                self.AllKeys = AllKeys
                self.AllValues = AllValues
@@ -785,10 +790,11 @@ class VizCorrect(object):
         def showNapari(self):
                  
                  self.viewer = napari.Viewer()
-                 
+                 self.viewer.theme = 'dark'
+                 self.viewer.add_labels(self.Segimage, name = self.Name)
                  Attributeids = []
                  
-                 for attributename in AllKeys:
+                 for attributename in self.AllKeys:
                      Attributeids.append(attributename)
                      
                  
@@ -807,7 +813,7 @@ class VizCorrect(object):
 
                  
                  Attributeidbox.currentIndexChanged.connect(
-                 lambda trackid = imageidbox: self.second_image_add(
+                 lambda trackid = Attributeidbox: self.second_image_add(
                          
                          Attributeidbox.currentText(),
                          
@@ -819,9 +825,9 @@ class VizCorrect(object):
             )            
                  
                  savebutton.clicked.connect(
-                 lambda trackid = imageidbox: self.second_image_add(
+                 lambda trackid = Attributeidbox: self.second_image_add(
                          
-                         imageidbox.currentText(),
+                         Attributeidbox.currentText(),
                          
                          self.Name,
                          
@@ -848,17 +854,16 @@ class VizCorrect(object):
 
 
                         
-                        self.viewer.add_labels(self.Segimage, name = self.Name)
 
-                if save:
+                        if save:
 
 
-                        ModifiedArraySeg = self.viewer.layers[self.Name + attribute].data 
-                        ModifiedArraySeg = ModifiedArraySeg.astype('uint16')
-
-                        imwrite((self.savedir  +   self.Name + attribute+ '.tif' ) , ModifiedArraySeg)
-
-                                                  
+                                ModifiedArraySeg = self.viewer.layers[self.Name + attribute].data 
+                                ModifiedArraySeg = ModifiedArraySeg.astype('uint16')
+        
+                                imwrite((self.savedir  +   self.Name + attribute+ '.tif' ) , ModifiedArraySeg)
+        
+                                                          
             
        
 
