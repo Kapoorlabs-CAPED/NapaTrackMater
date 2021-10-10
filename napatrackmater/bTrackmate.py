@@ -667,14 +667,12 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
    
     track_dataset_index = track_dataset.index
     track_dataset.keys()
-    print(spot_dataset.keys(), track_dataset.keys())
 
     
     
     for k in spot_dataset.keys():
         try:
           
-          print(k, len(spot_dataset[k]))  
           if k == 'TRACK_ID':
             Track_id = spot_dataset[k].astype('float')  
             indices = np.where(Track_id==0)
@@ -772,8 +770,6 @@ def RelabelCells(Segimage,Alllocations, AllKeys, AllValues):
                                     if z < Labelimage.shape[0]:
                                        pt = (z,y,x)       
                                        closest =  tree.query(pt)
-                                       print(pt) 
-                                       print(centroids[closest[1]][0], centroids[closest[1]][1], centroids[closest[1]][2])
                                        indexlist = centroids.index((centroids[closest[1]][0], centroids[closest[1]][1], centroids[closest[1]][2]))
                                     
                                        Labels.append(labels[indexlist])
@@ -891,7 +887,26 @@ class VizCorrect(object):
                        
                         
                         if compute:
-                          NewSegimage = self.Segimage.copy()
+                          
+                          self.boxes = {}
+                          self.labels = {}
+                          print("Computing region boxes")
+                          for i in tqdm(range(0, self.Segimage.shape[0])):
+                              timeboxes = []
+                              timelabels = []
+                              ThreeDimage = self.Segimage[i,:]
+                              
+                              for region in regionprops(ThreeDimage):
+                              
+                                    timeboxes.append(region.bbox)
+                                    timelabels.append(region.label)
+                              self.boxes[i] = [i]     
+                              self.boxes[i].append(timeboxes)
+                              
+                              self.labels[i] = [i]     
+                              self.labels[i].append(timelabels)
+                              
+                          
                           for k in range(len(self.AllKeys)):
                             
                             locations = []
@@ -899,10 +914,10 @@ class VizCorrect(object):
                             if self.AllKeys[k] ==  attribute:
                                 
                                 for attr, time, z, y, x in tqdm(zip(self.AllValues[k],self.AllValues[self.keyT],self.AllValues[self.keyZ],self.AllValues[self.keyY],self.AllValues[self.keyX] ), total = len(self.AllValues[k])):
-                                      
-                                       locations.append([attr, time, z, y, x]) 
+                                       centroid = (time, z, y, x)
+                                       locations.append([attr, centroid]) 
                                        
-                                [Relabel(NewSegimage, time, z, y, x, attr) for attr, time, z, y, x in locations]
+                                NewSegimage = self.Relabel(self.Segimage.copy(), locations)
                                 self.viewer.add_labels(NewSegimage, name = self.Name + attribute)  
                              
 
@@ -915,14 +930,71 @@ class VizCorrect(object):
                                 imwrite((self.savedir  +   self.Name + attribute+ '.tif' ) , ModifiedArraySeg)
         
                                                           
+        def Conditioncheck(self, centroid, boxA, p, ndim):
             
-def Relabel(image, time, z, y, x, relabelval):
-
-       label = image[time, z, y, x]
-       indices = np.where(image == label)
-       if math.isnan(relabelval):
-           relabelval = 0
-       image[indices] = relabelval
+              condition = False
+            
+              if centroid[p] >=  boxA[p]  and centroid[p] <=  boxA[p + ndim]:
+                  
+                   condition = True
+                   
+              return condition     
+         
+        def iou(self, boxA, centroid, label, relabelval):
+            
+            ndim = len(centroid)
+            inside = False
+            
+            Condition = [self.Conditioncheck(centroid, boxA, p, ndim) for p in range(0,ndim)]
+                
+            inside = all(Condition)
+            
+            if inside:
+                
+                return boxA, relabelval 
+            
+            else:
+                
+                return boxA, label
+                    
+        def Relabel(self, image, locations):
+        
+            
+               NewSegimage = image.copy()
+               for p in tqdm(range(0, NewSegimage.shape[0])):
+                   
+                   sliceimage = NewSegimage[p,:]
+                   originallabels = []
+                   newlabels = []
+                   for  relabelval, centroid in locations:
+                       
+                        time, z, y, x = centroid
+                   
+                   
+                        if p == time: 
+                               
+                               timeboxes = self.boxes[time][1]
+                               timelabels = self.labels[time][1]
+                               for i  in range(len(timeboxes)):
+                                  box =  timeboxes[i]
+                                  originallabel = timelabels[i]
+                                  box, returnval = self.iou(box, (z,y,x), originallabel, relabelval)
+                                                
+                                  if math.isnan(returnval):
+                                      returnval = -1
+                                  if abs(returnval - originallabel) > 0:
+                                      originallabels.append(int(originallabel))
+                                      newlabels.append(int(returnval))
+                                     
+                  
+                   for i in range(len(originallabels)):
+                      np.where(sliceimage == originallabels[i], newlabels[i], 0)
+                      
+                               
+               return NewSegimage                     
+               
+              
+                    
             
 
 def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
