@@ -891,22 +891,20 @@ class VizCorrect(object):
                        
                         
                         if compute:
-                          NewSegimage = np.zeros(self.Segimage.shape, dtype='uint16')  
+                          NewSegimage = self.Segimage.copy()
                           for k in range(len(self.AllKeys)):
                             
-                           
+                            locations = []
+                            attrs = []
                             if self.AllKeys[k] ==  attribute:
                                 
                                 for attr, time, z, y, x in tqdm(zip(self.AllValues[k],self.AllValues[self.keyT],self.AllValues[self.keyZ],self.AllValues[self.keyY],self.AllValues[self.keyX] ), total = len(self.AllValues[k])):
                                       
-                                       label = self.Segimage[time, z, y, x]
+                                       locations.append([attr, time, z, y, x]) 
                                        
-                                       indices = np.where(self.Segimage == label) 
-                                       
-                                       NewSegimage[indices]  = int(attr)
-                                      
-                                       self.viewer.add_labels(NewSegimage, name = self.Name + attribute)  
-                                #break; 
+                                [Relabel(NewSegimage, time, z, y, x, attr) for attr, time, z, y, x in locations]
+                                self.viewer.add_labels(NewSegimage, name = self.Name + attribute)  
+                             
 
                         if save:
 
@@ -918,7 +916,12 @@ class VizCorrect(object):
         
                                                           
             
-       
+def Relabel(image, time, z, y, x, relabelval):
+
+       label = image[time, z, y, x]
+       indices = np.where(image == label)
+       image[indices] = relabelval
+            
 
 def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     
