@@ -988,8 +988,9 @@ class VizCorrect(object):
                                      
                   
                    for i in range(len(originallabels)):
-                      np.where(sliceimage == originallabels[i], newlabels[i], 0)
-                      
+                      indices =  np.where(sliceimage == originallabels[i])
+                      sliceimage[indices] = newlabels[i]
+                   NewSegimage[p,:] = sliceimage
                                
                return NewSegimage                     
                
