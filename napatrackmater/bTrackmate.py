@@ -629,6 +629,7 @@ def relabel_track_property(
 
 def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
     
+    print('Reading Image')
     Name = os.path.basename(os.path.splitext(Segimage)[0])
     Segimage = imread(Segimage)
     
@@ -675,9 +676,12 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
           if k == 'TRACK_ID':
             Track_id = spot_dataset[k].astype('float')  
             indices = np.where(Track_id==0)
+            maxtrack_id = max(Track_id)
             condition_indices = spot_dataset_index[indices]
             Track_id[condition_indices] = maxtrack_id + 1
             AllValues.append(Track_id)
+            print(spot_dataset[k].astype('float'))  
+            print(Track_id)
             
           if k == 'POSITION_X':
               LocationX = (spot_dataset['POSITION_X'].astype('float')/xcalibration).astype('int')  
@@ -694,7 +698,7 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
               AllValues.append(LocationT)    
           elif k!='TRACK_ID' and k!='POSITION_X' and k!='POSITION_Y' and k!='POSITION_Z' and k!='FRAME':  
             AllValues.append(spot_dataset[k].astype('float'))
-            
+          
           AllKeys.append(k)  
             
         except:
@@ -710,8 +714,7 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
         except:
             pass
     
-    print(len(AllKeys), len(AllValues))
-    print((AllKeys), (AllValues))
+   
     
     Viz = VizCorrect(Segimage, Name, savedir,AllKeys, AllValues)
     Viz.showNapari()
