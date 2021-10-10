@@ -920,6 +920,8 @@ def Relabel(image, time, z, y, x, relabelval):
 
        label = image[time, z, y, x]
        indices = np.where(image == label)
+       if math.isnan(relabelval):
+           relabelval = 0
        image[indices] = relabelval
             
 
