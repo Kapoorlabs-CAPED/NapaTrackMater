@@ -659,14 +659,15 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
     tcalibration = int(float(settings.get('timeinterval')))
 
     spot_dataset = pd.read_csv(spot_csv, delimiter = ',')[3:]
+   
     spot_dataset_index = spot_dataset.index
     spot_dataset.keys()
     
     track_dataset = pd.read_csv(track_csv, delimiter = ',')[3:]
-
+   
     track_dataset_index = track_dataset.index
     track_dataset.keys()
-
+    print(spot_dataset.keys(), track_dataset.keys())
 
     
     
@@ -829,7 +830,7 @@ class VizCorrect(object):
                  Attributeidbox.addItem(AttributeBoxname)   
                 
                  savebutton = QPushButton(' Save Relabelled Image')
-                    
+                 computebutton = QPushButton(' compute Relabelled Image')
                  for i in range(0, len(Attributeids)):
                      
                      
@@ -843,7 +844,7 @@ class VizCorrect(object):
                          Attributeidbox.currentText(),
                          
                          self.Name,
-                         
+                         False,
                          False
                     
                 )
@@ -855,17 +856,29 @@ class VizCorrect(object):
                          Attributeidbox.currentText(),
                          
                          self.Name,
-                         
+                         False,
                          True
+                    
+                )
+            ) 
+                 computebutton.clicked.connect(
+                 lambda trackid = Attributeidbox: self.second_image_add(
+                         
+                         Attributeidbox.currentText(),
+                         
+                         self.Name,
+                         True,
+                         False
                     
                 )
             )   
                     
                 
                  
-                 self.viewer.window.add_dock_widget(Attributeidbox, name="Color Attributes", area='bottom') 
-                 self.viewer.window.add_dock_widget(savebutton, name="Save Relabelled Image", area='bottom') 
-                
+                 self.viewer.window.add_dock_widget(Attributeidbox, name="Color Attributes", area='right') 
+                 self.viewer.window.add_dock_widget(computebutton, name="Compute Relabelled Image", area='left') 
+                 self.viewer.window.add_dock_widget(savebutton, name="Save Relabelled Image", area='left') 
+                 
                 
         
                  
@@ -873,27 +886,27 @@ class VizCorrect(object):
         
 
                                      
-        def second_image_add(self, attribute, imagename, save = False):
+        def second_image_add(self, attribute, imagename,compute = False, save = False):
                 
                        
-                        clock.sleep(5)
-                        assert len(self.AllKeys) == len(self.AllValues)
-                        for k in range(len(self.AllKeys)):
+                        
+                        if compute:
+                          NewSegimage = np.zeros(self.Segimage.shape, dtype='uint16')  
+                          for k in range(len(self.AllKeys)):
                             
                            
                             if self.AllKeys[k] ==  attribute:
                                 
                                 for attr, time, z, y, x in tqdm(zip(self.AllValues[k],self.AllValues[self.keyT],self.AllValues[self.keyZ],self.AllValues[self.keyY],self.AllValues[self.keyX] ), total = len(self.AllValues[k])):
-                                   if math.isnan(attr):
-                                       continue
-                                   else:
-                                       label = self.Segimage[time, z, y, x]
-                                       indices = np.where(self.Segimage[time, z, y, x] == label)
-                                       
-                                       self.Segimage[indices]  = int(attr)
                                       
-                                       self.viewer.add_labels(self.Segimage, name = self.Name + attribute)  
-                                break; 
+                                       label = self.Segimage[time, z, y, x]
+                                       
+                                       indices = np.where(self.Segimage == label) 
+                                       
+                                       NewSegimage[indices]  = int(attr)
+                                      
+                                       self.viewer.add_labels(NewSegimage, name = self.Name + attribute)  
+                                #break; 
 
                         if save:
 
