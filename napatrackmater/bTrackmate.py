@@ -10,7 +10,7 @@ from pathlib import Path
 import sys
 from PyQt5.QtCore import pyqtSlot
 from tqdm import tqdm
-
+import time as clock
 import matplotlib.pyplot as plt
 import napari
 import numpy as np
@@ -673,6 +673,7 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
     for k in spot_dataset.keys():
         try:
           
+          print(k, len(spot_dataset[k]))  
           if k == 'TRACK_ID':
             Track_id = spot_dataset[k].astype('float')  
             indices = np.where(Track_id==0)
@@ -680,8 +681,7 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
             condition_indices = spot_dataset_index[indices]
             Track_id[condition_indices] = maxtrack_id + 1
             AllValues.append(Track_id)
-            print(spot_dataset[k].astype('float'))  
-            print(Track_id)
+            
             
           if k == 'POSITION_X':
               LocationX = (spot_dataset['POSITION_X'].astype('float')/xcalibration).astype('int')  
@@ -729,7 +729,17 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
     #return  NewSegimage
 
 
+def normalizeZeroOne(x, scale = 255 * 255):
 
+     x = x.astype('float32')
+
+     minVal = np.min(x)
+     maxVal = np.max(x)
+     
+     x = ((x-minVal) / (maxVal - minVal + 1.0e-20))
+     
+     return x * scale
+ 
 def RelabelCells(Segimage,Alllocations, AllKeys, AllValues):
     
         NewSegimage = np.zeros(Segimage.shape)
@@ -795,6 +805,18 @@ class VizCorrect(object):
                  self.viewer = napari.Viewer()
                  self.viewer.theme = 'dark'
                  self.viewer.add_labels(self.Segimage, name = self.Name)
+                 for k in range(len(self.AllKeys)):
+                            
+                            if self.AllKeys[k] == 'POSITION_X':
+                                self.keyX = k
+                            if self.AllKeys[k] == 'POSITION_Y':
+                                self.keyY = k   
+                            if self.AllKeys[k] == 'POSITION_Z':
+                                self.keyZ = k 
+                            if self.AllKeys[k] == 'FRAME':
+                                self.keyT = k    
+                 
+                 
                  Attributeids = []
                  
                  for attributename in self.AllKeys:
@@ -853,10 +875,25 @@ class VizCorrect(object):
                                      
         def second_image_add(self, attribute, imagename, save = False):
                 
-               
-
-
-                        
+                       
+                        clock.sleep(5)
+                        assert len(self.AllKeys) == len(self.AllValues)
+                        for k in range(len(self.AllKeys)):
+                            
+                           
+                            if self.AllKeys[k] ==  attribute:
+                                
+                                for attr, time, z, y, x in tqdm(zip(self.AllValues[k],self.AllValues[self.keyT],self.AllValues[self.keyZ],self.AllValues[self.keyY],self.AllValues[self.keyX] ), total = len(self.AllValues[k])):
+                                   if math.isnan(attr):
+                                       continue
+                                   else:
+                                       label = self.Segimage[time, z, y, x]
+                                       indices = np.where(self.Segimage[time, z, y, x] == label)
+                                       
+                                       self.Segimage[indices]  = int(attr)
+                                      
+                                       self.viewer.add_labels(self.Segimage, name = self.Name + attribute)  
+                                break; 
 
                         if save:
 
