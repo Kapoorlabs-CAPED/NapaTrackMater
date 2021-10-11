@@ -30,6 +30,7 @@ from tifffile import imread, imwrite
 from .napari_animation import AnimationWidget
 import dask as da
 from dask.array.image import imread as daskread
+from skimage.util import map_array
 
 '''Define function to run multiple processors and pool the results together'''
 
@@ -987,10 +988,9 @@ class VizCorrect(object):
                                       newlabels.append(int(returnval))
                                      
                   
-                   for i in range(len(originallabels)):
-                      indices =  np.where(sliceimage == originallabels[i])
-                      sliceimage[indices] = newlabels[i]
-                   NewSegimage[p,:] = sliceimage
+                      
+                   relabeled = map_array(sliceimage, np.asarray(originallabels), np.asarray(newlabels))
+                   NewSegimage[p,:] = relabeled
                                
                return NewSegimage                     
                
