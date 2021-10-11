@@ -960,7 +960,7 @@ class VizCorrect(object):
                     
         def Relabel(self, image, locations):
         
-            
+               print("Relabelling image with chosen trackmate attribute")
                NewSegimage = image.copy()
                for p in tqdm(range(0, NewSegimage.shape[0])):
                    
