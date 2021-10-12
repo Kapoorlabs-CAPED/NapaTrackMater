@@ -7,8 +7,8 @@ with open('README.md') as f:
 
 setup(
     name="napatrackmater",
-    version='2.3.5',
-    author='Varun Kapoor,Claudia Carabana Garcia',
+    version='2.3.6',
+    author='Varun Kapoor,Claudia Carabana Garcia, Mari Tolonen',
     author_email='randomaccessiblekapoor@gmail.com',
     url='https://github.com/kapoorlab/NapaTrackMater/',
     description='Import Trackmate XML files for Track Visualization and analysis in Napari.',

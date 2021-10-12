@@ -40,6 +40,7 @@ from skimage.util import map_array
 
 Boxname = 'TrackBox'
 AttributeBoxname = 'AttributeIDBox'
+TrackAttributeBoxname = 'TrackAttributeIDBox'
 pd.options.display.float_format = '${:,.2f}'.format
 savedir = None
 
@@ -628,7 +629,7 @@ def relabel_track_property(
 
     return Segimage
 
-def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
+def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale = 255 * 255):
     
     print('Reading Image')
     Name = os.path.basename(os.path.splitext(Segimage)[0])
@@ -653,7 +654,9 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
     Uniqueobjects = {}
     Uniqueproperties = {}
     AllKeys = []
+    AllTrackKeys = []
     AllValues = []
+    AllTrackValues = []
     xcalibration = float(settings.get('pixelwidth'))
     ycalibration = float(settings.get('pixelheight'))
     zcalibration = float(settings.get('voxeldepth'))
@@ -706,17 +709,32 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir):
     
    
     for k in track_dataset.keys():
-        try:
-          if k != 'TRACK_ID':  
-             
-             AllValues.append(track_dataset[k].astype('float'))
-             AllKeys.append(k)
-        except:
-            pass
-    
+          if k == 'TRACK_ID':
+                    Track_id = track_dataset[k].astype('float')  
+                    indices = np.where(Track_id==0)
+                    maxtrack_id = max(Track_id)
+                    condition_indices = track_dataset_index[indices]
+                    Track_id[condition_indices] = maxtrack_id + 1
+                    AllTrackValues.append(Track_id)
+                    AllTrackKeys.append(k)
+          else:  
+                  try:   
+                     x =  track_dataset[k].astype('float')
+                     minval = min(x)
+                     maxval = max(x)
+                     
+                     if minval > 0 and minval < 1:
+                         
+                        x = normalizeZeroOne(x, scale = 255 * 255)
+                        
+                     AllTrackKeys.append(k)
+                     AllTrackValues.append(x)
+                  except:
+                      
+                      pass
    
     
-    Viz = VizCorrect(Segimage, Name, savedir,AllKeys, AllValues)
+    Viz = VizCorrect(Segimage, Name, savedir,AllKeys,AllTrackKeys, AllValues, AllTrackValues)
     Viz.showNapari()
     
     #Alllocations = [LocationT.tolist(),LocationZ.tolist(),LocationY.tolist(),LocationX.tolist()]
@@ -739,61 +757,20 @@ def normalizeZeroOne(x, scale = 255 * 255):
      x = ((x-minVal) / (maxVal - minVal + 1.0e-20))
      
      return x * scale
- 
-def RelabelCells(Segimage,Alllocations, AllKeys, AllValues):
-    
-        NewSegimage = np.zeros(Segimage.shape)
-        assert len(AllKeys) == len(AllValues)
-        
-        
-        
-        for (k,v) in location_prop_dist.items():
-            
-                indices = v[1:][0]
-                for i in range(0, Segimage.shape[0]):
-                   Labelimage = Segimage[i,:]
-                   NewLabelimage = NewSegimage[i,:]
-                   props =  measure.regionprops(Labelimage,Labelimage) 
-                   centroids = [prop.centroid for prop in props] 
-                   labels = [prop.label for prop in props]
-                   tree = spatial.cKDTree(centroids)
-                   Labels = []
-                   
-                   for index in indices:  
-                          
-                          time = index[0]
-                          z = index[1]
-                          y = index[2]
-                          x = index[3]  
-                            
-                          if i == time:
-                                    
-                                    if z < Labelimage.shape[0]:
-                                       pt = (z,y,x)       
-                                       closest =  tree.query(pt)
-                                       indexlist = centroids.index((centroids[closest[1]][0], centroids[closest[1]][1], centroids[closest[1]][2]))
-                                    
-                                       Labels.append(labels[indexlist])
-                                       
-                                            
-                   for regionlabel in Labels:
-                      try:
-                         NewLabelimage[np.where(Labelimage == regionlabel) ] = k
-                      except:
-                        pass
-                   NewSegimage[i,:] = NewLabelimage
-        return NewSegimage   
+
 
 class VizCorrect(object):
 
-        def __init__(self, Segimage, Name, savedir,AllKeys, AllValues ):
+        def __init__(self, Segimage, Name, savedir,AllKeys, AllTrackKeys, AllValues, AllTrackValues ):
             
             
                self.Segimage = Segimage
                self.Name = Name
                self.savedir = savedir
                self.AllKeys = AllKeys
+               self.AllTrackKeys = AllTrackKeys
                self.AllValues = AllValues
+               self.AllTrackValues = AllTrackValues
                Path(self.savedir).mkdir(exist_ok=True)
                
                
@@ -816,24 +793,33 @@ class VizCorrect(object):
                  
                  
                  Attributeids = []
-                 
+                 TrackAttributeids = []
                  for attributename in self.AllKeys:
                      Attributeids.append(attributename)
-                     
+                 for attributename in self.AllTrackKeys:
+                     TrackAttributeids.append(attributename)    
                  
                 
                     
                  Attributeidbox = QComboBox()   
                  Attributeidbox.addItem(AttributeBoxname)   
                 
-                 savebutton = QPushButton(' Save Relabelled Image')
-                 computebutton = QPushButton(' compute Relabelled Image')
+                 TrackAttributeidbox = QComboBox()   
+                 TrackAttributeidbox.addItem(TrackAttributeBoxname) 
+                
+                 computetrackbutton = QPushButton(' compute Track Relabelled Image')
+                 computebutton = QPushButton(' compute Spot Relabelled Image')
                  for i in range(0, len(Attributeids)):
                      
                      
                      Attributeidbox.addItem(str(Attributeids[i]))
                      
-
+                 for i in range(0, len(TrackAttributeids)):
+                     
+                     
+                     TrackAttributeidbox.addItem(str(TrackAttributeids[i]))
+                     
+                     
                  
                  Attributeidbox.currentIndexChanged.connect(
                  lambda trackid = Attributeidbox: self.second_image_add(
@@ -841,19 +827,28 @@ class VizCorrect(object):
                          Attributeidbox.currentText(),
                          
                          self.Name,
-                         False,
                          False
                     
                 )
-            )            
+            )           
                  
-                 savebutton.clicked.connect(
-                 lambda trackid = Attributeidbox: self.second_image_add(
+                 TrackAttributeidbox.currentIndexChanged.connect(
+                 lambda trackid = TrackAttributeidbox: self.image_add(
                          
-                         Attributeidbox.currentText(),
+                         TrackAttributeidbox.currentText(),
                          
                          self.Name,
-                         False,
+                         False
+                    
+                )
+            )          
+                 
+                 computetrackbutton.clicked.connect(
+                 lambda trackid = TrackAttributeidbox: self.image_add(
+                         
+                         TrackAttributeidbox.currentText(),
+                         
+                         self.Name,
                          True
                     
                 )
@@ -864,17 +859,17 @@ class VizCorrect(object):
                          Attributeidbox.currentText(),
                          
                          self.Name,
-                         True,
-                         False
+                         True
                     
                 )
             )   
                     
                 
                  
-                 self.viewer.window.add_dock_widget(Attributeidbox, name="Color Attributes", area='right') 
-                 self.viewer.window.add_dock_widget(computebutton, name="Compute Relabelled Image", area='left') 
-                 self.viewer.window.add_dock_widget(savebutton, name="Save Relabelled Image", area='left') 
+                 self.viewer.window.add_dock_widget(Attributeidbox, name="Color Spot Attributes", area='right') 
+                 self.viewer.window.add_dock_widget(TrackAttributeidbox, name="Color Track Attributes", area='right') 
+                 self.viewer.window.add_dock_widget(computebutton, name="Compute Relabelled Image by Spot features", area='left') 
+                 self.viewer.window.add_dock_widget(computetrackbutton, name="Compute Relabelled Image by Track features", area='left') 
                  
                 
         
@@ -882,8 +877,70 @@ class VizCorrect(object):
                         
         
 
-                                     
-        def second_image_add(self, attribute, imagename,compute = False, save = False):
+        def image_add(self, attribute, imagename, compute = False ):
+
+             if compute:
+                 
+                 
+                          self.boxes = {}
+                          self.labels = {}
+                          self.idattr = {}
+                          print("Computing region boxes")
+                          for i in tqdm(range(0, self.Segimage.shape[0])):
+                              timeboxes = []
+                              timelabels = []
+                              ThreeDimage = self.Segimage[i,:]
+                              
+                              for region in regionprops(ThreeDimage):
+                              
+                                    timeboxes.append(region.bbox)
+                                    timelabels.append(region.label)
+                              self.boxes[i] = [i]     
+                              self.boxes[i].append(timeboxes)
+                              
+                              self.labels[i] = [i]     
+                              self.labels[i].append(timelabels)
+                              
+                          
+                          for k in range(len(self.AllTrackKeys)):
+                            
+                            
+                            if self.AllTrackKeys[k] == 'TRACK_ID':
+                                   p = k
+                            
+                            if self.AllTrackKeys[k] ==  attribute:
+                                
+                                for attr, trackid in tqdm(zip(self.AllTrackValues[k], self.AllTrackValues[p]), total = len(self.AllTrackValues[k])):
+                                    
+                                            
+                                            if math.isnan(trackid):
+                                                continue
+                                            else:
+                                               self.idattr[trackid] = attr
+                                
+                                
+                                
+                          for k in range(len(self.AllKeys)):
+                            
+                            locations = []
+                            attrs = []
+                            if self.AllKeys[k] ==  'TRACK_ID':
+                                
+                                for trackid, time, z, y, x in tqdm(zip(self.AllValues[k],self.AllValues[self.keyT],self.AllValues[self.keyZ],self.AllValues[self.keyY],self.AllValues[self.keyX] ), total = len(self.AllValues[k])):
+                                       centroid = (time, z, y, x)
+                                       try:
+                                         attr = self.idattr[trackid]
+                                         locations.append([attr, centroid]) 
+                                       except:
+                                           pass
+                                           
+                                NewSegimage = self.Relabel(self.Segimage.copy(), locations)
+                                self.viewer.add_labels(NewSegimage, name = self.Name + attribute)
+                 
+                 
+
+                             
+        def second_image_add(self, attribute, imagename, compute = False):
                 
                        
                         
@@ -922,13 +979,7 @@ class VizCorrect(object):
                                 self.viewer.add_labels(NewSegimage, name = self.Name + attribute)  
                              
 
-                        if save:
-
-
-                                ModifiedArraySeg = self.viewer.layers[self.Name + attribute].data 
-                                ModifiedArraySeg = ModifiedArraySeg.astype('uint16')
-        
-                                imwrite((self.savedir  +   self.Name + attribute+ '.tif' ) , ModifiedArraySeg)
+                        
         
                                                           
         def Conditioncheck(self, centroid, boxA, p, ndim):
