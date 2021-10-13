@@ -556,78 +556,7 @@ def tracklet_properties(
 
     return location_prop_dist
 
-def relabel_track_property(
-    tracks,
-    filtered_track_ids,
-    Uniqueobjects,
-    Segimage
-):
 
-    location_prop_dist = {}
-    
-    for track in tracks.findall('Track'):
-
-        track_id = int(track.get("TRACK_ID"))
-        
-        spot_object_source_target = []
-        if track_id in filtered_track_ids:
-            location_prop_dist[track_id] = [track_id]
-            
-            for edge in track.findall('Edge'):
-            
-                source_id = edge.get('SPOT_SOURCE_ID')
-                target_id = edge.get('SPOT_TARGET_ID')
-                edge_time = edge.get('EDGE_TIME')
-               
-                directional_rate_change = edge.get('DIRECTIONAL_CHANGE_RATE')
-                speed = edge.get('SPEED')
-
-                spot_object_source_target.append(
-                    [source_id, target_id, edge_time, directional_rate_change, speed]
-                )
-
-            # Sort the tracks by edge time
-            spot_object_source_target = sorted(
-                spot_object_source_target, key=sortTracks, reverse=False
-            )
-            # Get all the IDs, uniquesource, targets attached, leaf, root, splitpoint IDs
-            split_points, root_leaf = Multiplicity(spot_object_source_target)
-
-            # Determine if a track has divisions or none
-            if len(split_points) > 0:
-                split_points = split_points[::-1]
-                DividingTrajectory = True
-            else:
-                DividingTrajectory = False
-          
-            if DividingTrajectory == True:
-                DividingTrackIds.append(track_id)
-                AllTrackIds.append(track_id)
-                alltracklets = analyze_dividing_tracklets(
-                    root_leaf, split_points, spot_object_source_target
-                )
-
-            if DividingTrajectory == False:
-                NonDividingTrackIds.append(track_id)
-                AllTrackIds.append(track_id)
-                alltracklets = analyze_non_dividing_tracklets(
-                    root_leaf, spot_object_source_target
-                )
-            
-            for i in range(0, len(alltracklets)):
-               current_location_prop_dist = []
-               trackletid, tracklets, trackletspeeds = alltracklets[i]
-               for k in range(0, len(tracklets)):
-                        
-                    tracklet = tracklets[k]
-                    trackletspeed = trackletspeeds[k]
-                    cell_source_id = tracklet
-                    frame, z, y, x = Uniqueobjects[int(cell_source_id)]
-                    current_location_prop_dist.append([int(float(frame)), int(float(z)), int(float(y)), int(float(x))])
-        location_prop_dist[track_id].append(current_location_prop_dist)
-    Segimage = RelabelCells(Segimage,location_prop_dist)
-
-    return Segimage
 
 def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale = 255 * 255):
     
@@ -723,9 +652,9 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
                      minval = min(x)
                      maxval = max(x)
                      
-                     if minval > 0 and minval < 1:
+                     if minval > 0 and maxval <= 1:
                          
-                        x = normalizeZeroOne(x, scale = 255 * 255)
+                        x = normalizeZeroOne(x, scale = scale)
                         
                      AllTrackKeys.append(k)
                      AllTrackValues.append(x)
@@ -1114,7 +1043,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
             cell_id = int(Spotobject.get("ID"))
             # Get the TZYX location of the cells in that frame
             Uniqueobjects[cell_id] = [
-                Spotobject.get('FRAME'),
+                Spotobject.get('POSITION_T'),
                 Spotobject.get('POSITION_Z'),
                 Spotobject.get('POSITION_Y'),
                 Spotobject.get('POSITION_X'),
@@ -1390,7 +1319,7 @@ class AllTrackViewer(object):
                                     ) = tracklet
                                     TrackLayerTrackletsList.append([trackletid, t, z, y, x])
                                     IDLocations.append([t, z, y, x])
-                                    self.AllT.append(int(float(t * self.calibration[3])))
+                                    self.AllT.append(int(float(t )))
                                     self.AllSpeed.append("{:.1f}".format(float(speed)))
                                     self.AllProbability.append(
                                         "{:.2f}".format(float(prob_inside))
@@ -1605,7 +1534,7 @@ class AllTrackViewer(object):
                                         max_int = float(total_intensity)
                                     TrackLayerTracklets.append([trackletid, t, z, y, x])
                                     IDLocations.append([t, z, y, x])
-                                    self.AllT.append(int(float(t * self.calibration[3])))
+                                    self.AllT.append(int(float(t)))
         
                                     self.AllIntensity.append(
                                         "{:.1f}".format((float(total_intensity)))
@@ -1641,7 +1570,7 @@ class AllTrackViewer(object):
                                         + 'Track_Frequency'
                                         + str(self.ID)
                                         + 'tracklet'
-                                        + str("_") +  str(_trackletid)
+                                        + str("_") +  str(trackletid)
                                         + '.csv',
                                         index=False,
                                     )
@@ -1716,23 +1645,22 @@ class AllTrackViewer(object):
                         list_tracklets.append(
                             [
                                 int(str(trackletid)),
-                                int(float(t)) / self.calibration[3],
-                                float(z) / self.calibration[2],
-                                float(y) / self.calibration[1],
-                                float(x) / self.calibration[0],
+                                int(float(t)) ,
+                                float(z) ,
+                                float(y),
+                                float(x) ,
                             ]
                         )
                     else:
                         list_tracklets.append(
                             [
                                 int(str(trackletid)),
-                                int(float(t)) / self.calibration[3],
-                                float(z) / self.calibration[2],
-                                float(y) / self.calibration[1],
-                                float(x) / self.calibration[0],
+                                int(float(t)) ,
+                                float(z) ,
+                                float(y) ,
+                                float(x) ,
                             ]
                         )
-
                 TrackLayerTracklets[trackid].append(list_tracklets)
 
         return TrackLayerTracklets
