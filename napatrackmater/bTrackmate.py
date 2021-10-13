@@ -511,7 +511,7 @@ def tracklet_properties(
 
                 testlocation = (z, y, x)
 
-                tree, indices, masklabel, masklabelvolume = TimedMask[str(int(float(frame)))]
+                tree, indices, masklabel, masklabelvolume = TimedMask[str(int(float(frame)/ calibration[3]))]
 
                 region_label = Mask[
                     int(float(frame) / calibration[3]),
