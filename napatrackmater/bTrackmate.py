@@ -556,8 +556,49 @@ def tracklet_properties(
 
     return location_prop_dist
 
-
-
+def import_TM_Relabel(Segimage, spot_csv, savedir, xcalibration = 1, ycalibration = 1, zcalibration = 1):
+    
+    print('Reading Image')
+    Name = os.path.basename(os.path.splitext(Segimage)[0])
+    Segimage = imread(Segimage)
+    
+    spot_dataset = pd.read_csv(spot_csv, delimiter = ',')[1:]
+   
+    spot_dataset_index = spot_dataset.index
+    spot_dataset.keys() 
+    AllKeys = []
+    AllValues = []
+    for k in spot_dataset.keys():
+       
+          
+          if k == 'TRACK_ID':
+            Track_id = spot_dataset[k].astype('float')  
+            indices = np.where(Track_id==0)
+            maxtrack_id = max(Track_id)
+            condition_indices = spot_dataset_index[indices]
+            Track_id[condition_indices] = maxtrack_id + 1
+            AllValues.append(Track_id)
+            
+            
+          if k == 'POSITION_X':
+              LocationX = (spot_dataset['POSITION_X'].astype('float')/xcalibration).astype('int')  
+              AllValues.append(LocationX)
+              
+          if k == 'POSITION_Y':
+              LocationY = (spot_dataset['POSITION_Y'].astype('float')/ycalibration).astype('int')   
+              AllValues.append(LocationY)
+          
+          if k == 'POSITION_Z':
+              LocationZ = (spot_dataset['POSITION_Z'].astype('float')).astype('int')   
+              AllValues.append(LocationZ)
+          
+          AllKeys.append(k)  
+       
+    
+    Viz = VizCorrect(Segimage, Name, savedir,AllKeys,AllKeys, AllValues, AllValues, True)
+    Viz.showNapari()
+    
+    
 def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale = 255 * 255):
     
     print('Reading Image')
@@ -690,11 +731,12 @@ def normalizeZeroOne(x, scale = 255 * 255):
 
 class VizCorrect(object):
 
-        def __init__(self, Segimage, Name, savedir,AllKeys, AllTrackKeys, AllValues, AllTrackValues ):
+        def __init__(self, Segimage, Name, savedir,AllKeys, AllTrackKeys, AllValues, AllTrackValues, simple = False ):
             
             
                self.Segimage = Segimage
                self.Name = Name
+               self.simple = simple 
                self.savedir = savedir
                self.AllKeys = AllKeys
                self.AllTrackKeys = AllTrackKeys
@@ -735,8 +777,8 @@ class VizCorrect(object):
                 
                  TrackAttributeidbox = QComboBox()   
                  TrackAttributeidbox.addItem(TrackAttributeBoxname) 
-                
-                 computetrackbutton = QPushButton(' compute Track Relabelled Image')
+                 if self.simple == 'False':
+                   computetrackbutton = QPushButton(' compute Track Relabelled Image')
                  computebutton = QPushButton(' compute Spot Relabelled Image')
                  for i in range(0, len(Attributeids)):
                      
@@ -796,9 +838,11 @@ class VizCorrect(object):
                 
                  
                  self.viewer.window.add_dock_widget(Attributeidbox, name="Color Spot Attributes", area='right') 
-                 self.viewer.window.add_dock_widget(TrackAttributeidbox, name="Color Track Attributes", area='right') 
+                 if self.simple == False:
+                   self.viewer.window.add_dock_widget(TrackAttributeidbox, name="Color Track Attributes", area='right')
+                   self.viewer.window.add_dock_widget(computetrackbutton, name="Compute Relabelled Image by Track features", area='left') 
                  self.viewer.window.add_dock_widget(computebutton, name="Compute Relabelled Image by Spot features", area='left') 
-                 self.viewer.window.add_dock_widget(computetrackbutton, name="Compute Relabelled Image by Track features", area='left') 
+                 
                  
                 
         
@@ -1645,20 +1689,20 @@ class AllTrackViewer(object):
                         list_tracklets.append(
                             [
                                 int(str(trackletid)),
-                                int(float(t)) ,
-                                float(z) ,
-                                float(y),
-                                float(x) ,
+                                int(float(t)/self.calibration[3]) ,
+                                float(z)/self.calibration[2] ,
+                                float(y)/self.calibration[1],
+                                float(x)/self.calibration[0] ,
                             ]
                         )
                     else:
                         list_tracklets.append(
                             [
                                 int(str(trackletid)),
-                                int(float(t)) ,
-                                float(z) ,
-                                float(y) ,
-                                float(x) ,
+                                int(float(t)/self.calibration[3]) ,
+                                float(z)/self.calibration[2] ,
+                                float(y)/self.calibration[1],
+                                float(x)/self.calibration[0] ,
                             ]
                         )
                 TrackLayerTracklets[trackid].append(list_tracklets)
