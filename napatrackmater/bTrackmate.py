@@ -383,8 +383,10 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
     # For the root we need to go forward
     tracklet = []
     trackletspeed = []
+    trackletdirection = []
     tracklet.append(Root)
     trackletspeed.append(0)
+    trackletdirection.append(0)
     trackletid = 0
     RootCopy = Root
     visited.append(Root)
@@ -408,8 +410,8 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
                 visited.append(target_id)
                 tracklet.append(source_id)
                 trackletspeed.append(speed)
-
-    dividing_tracklets.append([trackletid, tracklet, trackletspeed])
+                trackletdirection.append(directional_rate_change)
+    dividing_tracklets.append([trackletid, tracklet, trackletspeed, trackletdirection])
 
     trackletid = 1
 
@@ -418,8 +420,10 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
         Start = split_points[i]
         tracklet = []
         trackletspeed = []
+        trackletdirection = []
         tracklet.append(Start)
         trackletspeed.append(0)
+        trackletdirection.append(0)
         Othersplit_points = split_points.copy()
         Othersplit_points.pop(i)
         while Start is not Root:
@@ -439,10 +443,11 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
                     tracklet.append(source_id)
                     visited.append(source_id)
                     trackletspeed.append(speed)
+                    trackletdirection.append(directional_rate_change)
                     if Start in Othersplit_points:
                         break
 
-        dividing_tracklets.append([trackletid, tracklet, trackletspeed])
+        dividing_tracklets.append([trackletid, tracklet, trackletspeed, trackletdirection])
         trackletid = trackletid + 1
 
     for i in range(0, len(root_leaf)):
@@ -450,8 +455,10 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
         # For leaf we need to go backward
         tracklet = []
         trackletspeed = []
+        trackletdirection = []
         tracklet.append(leaf)
         trackletspeed.append(0)
+        trackletdirection.append(0)
         while leaf not in split_points and leaf != Root:
             for (
                 source_id,
@@ -473,7 +480,8 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
                     visited.append(source_id)
                     tracklet.append(source_id)
                     trackletspeed.append(speed)
-        dividing_tracklets.append([trackletid, tracklet, trackletspeed])
+                    trackletdirection.append(directional_rate_change)
+        dividing_tracklets.append([trackletid, tracklet, trackletspeed, trackletdirection])
         trackletid = trackletid + 1
 
     return dividing_tracklets
@@ -494,12 +502,13 @@ def tracklet_properties(
 
     for i in range(0, len(alltracklets)):
         current_location_prop_dist = []
-        trackletid, tracklets, trackletspeeds = alltracklets[i]
+        trackletid, tracklets, trackletspeeds, trackletdirections = alltracklets[i]
         location_prop_dist[trackletid] = [trackletid]
         for k in range(0, len(tracklets)):
 
             tracklet = tracklets[k]
             trackletspeed = trackletspeeds[k]
+            trackletdirection = trackletdirections[k]
             cell_source_id = tracklet
             frame, z, y, x = Uniqueobjects[int(cell_source_id)]
          
@@ -548,6 +557,7 @@ def tracklet_properties(
                     distance,
                     prob_inside,
                     trackletspeed,
+                    trackletdirection,
                     DividingTrajectory
                 ]
             )
@@ -556,78 +566,7 @@ def tracklet_properties(
 
     return location_prop_dist
 
-def relabel_track_property(
-    tracks,
-    filtered_track_ids,
-    Uniqueobjects,
-    Segimage
-):
 
-    location_prop_dist = {}
-    
-    for track in tracks.findall('Track'):
-
-        track_id = int(track.get("TRACK_ID"))
-        
-        spot_object_source_target = []
-        if track_id in filtered_track_ids:
-            location_prop_dist[track_id] = [track_id]
-            
-            for edge in track.findall('Edge'):
-            
-                source_id = edge.get('SPOT_SOURCE_ID')
-                target_id = edge.get('SPOT_TARGET_ID')
-                edge_time = edge.get('EDGE_TIME')
-               
-                directional_rate_change = edge.get('DIRECTIONAL_CHANGE_RATE')
-                speed = edge.get('SPEED')
-
-                spot_object_source_target.append(
-                    [source_id, target_id, edge_time, directional_rate_change, speed]
-                )
-
-            # Sort the tracks by edge time
-            spot_object_source_target = sorted(
-                spot_object_source_target, key=sortTracks, reverse=False
-            )
-            # Get all the IDs, uniquesource, targets attached, leaf, root, splitpoint IDs
-            split_points, root_leaf = Multiplicity(spot_object_source_target)
-
-            # Determine if a track has divisions or none
-            if len(split_points) > 0:
-                split_points = split_points[::-1]
-                DividingTrajectory = True
-            else:
-                DividingTrajectory = False
-          
-            if DividingTrajectory == True:
-                DividingTrackIds.append(track_id)
-                AllTrackIds.append(track_id)
-                alltracklets = analyze_dividing_tracklets(
-                    root_leaf, split_points, spot_object_source_target
-                )
-
-            if DividingTrajectory == False:
-                NonDividingTrackIds.append(track_id)
-                AllTrackIds.append(track_id)
-                alltracklets = analyze_non_dividing_tracklets(
-                    root_leaf, spot_object_source_target
-                )
-            
-            for i in range(0, len(alltracklets)):
-               current_location_prop_dist = []
-               trackletid, tracklets, trackletspeeds = alltracklets[i]
-               for k in range(0, len(tracklets)):
-                        
-                    tracklet = tracklets[k]
-                    trackletspeed = trackletspeeds[k]
-                    cell_source_id = tracklet
-                    frame, z, y, x = Uniqueobjects[int(cell_source_id)]
-                    current_location_prop_dist.append([int(float(frame)), int(float(z)), int(float(y)), int(float(x))])
-        location_prop_dist[track_id].append(current_location_prop_dist)
-    Segimage = RelabelCells(Segimage,location_prop_dist)
-
-    return Segimage
 
 def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale = 255 * 255):
     
@@ -736,15 +675,7 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
     
     Viz = VizCorrect(Segimage, Name, savedir,AllKeys,AllTrackKeys, AllValues, AllTrackValues)
     Viz.showNapari()
-    
-    #Alllocations = [LocationT.tolist(),LocationZ.tolist(),LocationY.tolist(),LocationX.tolist()]
-    #Allproperties = [Track_id.tolist(), ]
 
-   
-            # for each tracklet get real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside
-    #NewSegimage = RelabelCells(Segimage,Alllocations)
-           
-    #return  NewSegimage
 
 
 def normalizeZeroOne(x, scale = 255 * 255):
@@ -1364,6 +1295,7 @@ class AllTrackViewer(object):
                             self.AllIntensity = []
                             self.AllProbability = []
                             self.AllSpeed = []
+                            self.AllDirection = []
                             self.AllSize = []
                             self.AllDistance = []
                             TrackLayerTrackletsList = []
@@ -1386,12 +1318,14 @@ class AllTrackViewer(object):
                                         distance,
                                         prob_inside,
                                         speed,
+                                        directionality,
                                         DividingTrajectory,
                                     ) = tracklet
                                     TrackLayerTrackletsList.append([trackletid, t, z, y, x])
                                     IDLocations.append([t, z, y, x])
                                     self.AllT.append(int(float(t * self.calibration[3])))
                                     self.AllSpeed.append("{:.1f}".format(float(speed)))
+                                    self.AllDirection.append("{:.1f}".format(float(directionality)))
                                     self.AllProbability.append(
                                         "{:.2f}".format(float(prob_inside))
                                     )
@@ -1416,6 +1350,9 @@ class AllTrackViewer(object):
                             self.AllSpeed = MovingAverage(
                                 self.AllSpeed, window_size=self.window_size
                             )
+                            self.AllDirection = MovingAverage(
+                                self.AllDirection, window_size=self.window_size
+                            )
                             self.AllDistance = MovingAverage(
                                 self.AllDistance, window_size=self.window_size
                             )
@@ -1437,6 +1374,7 @@ class AllTrackViewer(object):
                                             self.AllDistance,
                                             self.AllProbability,
                                             self.AllSpeed,
+                                            self.AllDirection
                                         )
                                     ),
                                     columns=[
@@ -1445,6 +1383,7 @@ class AllTrackViewer(object):
                                         'Distance to Border',
                                         'Inner Cell Probability',
                                         'Cell Speed',
+                                        'Directionality'
                                     ],
                                 )
                                 
@@ -1599,6 +1538,7 @@ class AllTrackViewer(object):
                                         distance,
                                         prob_inside,
                                         speed,
+                                        direction,
                                         DividingTrajectory,
                                     ) = tracklet
                                     if float(total_intensity) > max_int:
@@ -1706,6 +1646,7 @@ class AllTrackViewer(object):
                         distance,
                         prob_inside,
                         trackletspeed,
+                        trackletdirection,
                         DividingTrajectory,
                     ) = tracklet
                     if (
