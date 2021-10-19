@@ -35,6 +35,7 @@ import seaborn as sns
 from scipy.stats import norm
 from scipy.optimize import curve_fit
 from lmfit import Model
+from numpy import exp, loadtxt, pi, sqrt
 '''Define function to run multiple processors and pool the results together'''
 
 
@@ -1723,10 +1724,10 @@ class AllTrackViewer(object):
                          
                             self.figure.canvas.draw()
                             self.figure.canvas.flush_events()
-                            
-                          
-        NewSegimage = self.Relabel(self.Seg.copy(), self.attrlocations)
-        self.trackviewer.add_labels(NewSegimage, name = self.ID + "motion") 
+                            NewSegimage = self.Relabel(self.Seg.copy(), self.attrlocations)  
+                            self.trackviewer.add_labels(NewSegimage, name = self.ID + "motion")
+        
+         
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
     
