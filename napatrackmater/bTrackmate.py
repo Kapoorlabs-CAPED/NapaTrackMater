@@ -1263,7 +1263,41 @@ class AllTrackViewer(object):
             self.plotintensity()
         if self.mode == 'motion':
             self.motion()
-
+    def Relabel(self, image, locations):
+        
+               print("Relabelling image with chosen trackmate attribute")
+               NewSegimage = image.copy()
+               for p in tqdm(range(0, NewSegimage.shape[0])):
+                   
+                   sliceimage = NewSegimage[p,:]
+                   originallabels = []
+                   newlabels = []
+                   for  relabelval, centroid in locations:
+                       
+                        time, z, y, x = centroid
+                   
+                   
+                        if p == time: 
+                               
+                               timeboxes = self.boxes[time][1]
+                               timelabels = self.labels[time][1]
+                               for i  in range(len(timeboxes)):
+                                  box =  timeboxes[i]
+                                  originallabel = timelabels[i]
+                                  box, returnval = self.iou(box, (z,y,x), originallabel, relabelval)
+                                                
+                                  if math.isnan(returnval):
+                                      returnval = -1
+                                  if abs(returnval - originallabel) > 0:
+                                      originallabels.append(int(originallabel))
+                                      newlabels.append(int(returnval))
+                                     
+                  
+                      
+                   relabeled = map_array(sliceimage, np.asarray(originallabels), np.asarray(newlabels))
+                   NewSegimage[p,:] = relabeled
+                               
+               return NewSegimage 
     def plot(self):
 
         for i in range(self.ax.shape[0]):
@@ -1512,6 +1546,20 @@ class AllTrackViewer(object):
         self.ax[1].set_ylabel("counts")
         IDLocations = []
         TrackLayerTracklets = {}
+        for i in tqdm(range(0, self.Seg.shape[0])):
+                              timeboxes = []
+                              timelabels = []
+                              ThreeDimage = self.Segimage[i,:]
+                              
+                              for region in regionprops(ThreeDimage):
+                              
+                                    timeboxes.append(region.bbox)
+                                    timelabels.append(region.label)
+                              self.boxes[i] = [i]     
+                              self.boxes[i].append(timeboxes)
+                              
+                              self.labels[i] = [i]     
+                              self.labels[i].append(timelabels)  
         for i in tqdm(range(0, len(self.all_track_properties))):
                     trackid, alltracklets, DividingTrajectory = self.all_track_properties[i]
                     if self.ID == trackid or self.ID == 'all':
@@ -1645,6 +1693,8 @@ class AllTrackViewer(object):
                          
                             self.figure.canvas.draw()
                             self.figure.canvas.flush_events()
+                            
+                          
         NewSegimage = self.Relabel(self.Seg.copy(), self.attrlocations)
         self.trackviewer.add_labels(NewSegimage, name = self.ID + "motion") 
         self.figure.canvas.draw()
