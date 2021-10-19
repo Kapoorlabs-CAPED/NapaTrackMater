@@ -32,6 +32,9 @@ import dask as da
 from dask.array.image import imread as daskread
 from skimage.util import map_array
 import seaborn as sns
+from scipy.stats import norm
+from scipy.optimize import curve_fit
+from lmfit import Model
 '''Define function to run multiple processors and pool the results together'''
 
 
@@ -1497,12 +1500,16 @@ class AllTrackViewer(object):
 
     def motion(self):
 
-        self.ax.cla()
+        for i in range(self.ax.shape[0]):
+            self.ax[i].cla()
 
-    
+        self.ax[0].set_title("Directionality")
+        self.ax[0].set_xlabel("minutes")
+        self.ax[0].set_ylabel("radians")
 
-        # Execute the function
-
+        self.ax[1].set_title("Gauss Fits")
+        self.ax[1].set_xlabel("angle")
+        self.ax[1].set_ylabel("counts")
         IDLocations = []
         TrackLayerTracklets = {}
         for i in tqdm(range(0, len(self.all_track_properties))):
@@ -1531,6 +1538,7 @@ class AllTrackViewer(object):
                             self.AllDirection = []
                             self.AllSize = []
                             self.AllDistance = []
+                            self.attrlocations = []
                             TrackLayerTrackletsList = []
         
                             Locationtracklets = tracklets[1]
@@ -1556,7 +1564,10 @@ class AllTrackViewer(object):
                                     ) = tracklet
                                     TrackLayerTrackletsList.append([trackletid, t, z, y, x])
                                     IDLocations.append([t, z, y, x])
-                                    self.AllT.append(int(float(t )))
+                                    self.attrlocations.append([float(directionality), t, z, y, x])
+                                    
+                                    
+                                    self.AllT.append(int(float(t)))
                                     self.AllSpeed.append("{:.1f}".format(float(speed)))
                                     self.AllDirection.append("{:.1f}".format(float(directionality)))
                                     self.AllProbability.append(
@@ -1621,14 +1632,21 @@ class AllTrackViewer(object):
                                             index=False,
                                         )
                                 
-        
-                            sns.histplot(self.AllDirection, kde = True, ax = self.ax)   
-                            self.ax.set_title(self.ID + "Directionality")
-                            self.ax.set_xlabel("Time")
-                            self.ax.set_ylabel("Counts")
+                            meanX, stdX = norm.fit(self.AllDirection)
+                            gmodel = Model(gaussian)
+                            countsX, binsX = np.histogram(self.AllDirection)
+                            binsX = binsX[:-1]
+                            Gauss = gmodel.fit(countsX, x=binsX, amp=np.max(countsX), mu=meanX, std=stdX)
+  
+                            self.ax[0].plot(self.AllT, self.AllDirection)
+                            
+                            self.ax[1].hist(binsX, binsX, weights=countsX)
+                            self.ax[1].plot(binsX, Gauss.best_fit)
+                         
                             self.figure.canvas.draw()
                             self.figure.canvas.flush_events()
-        
+        NewSegimage = self.Relabel(self.Seg.copy(), self.attrlocations)
+        self.trackviewer.add_labels(NewSegimage, name = self.ID + "motion") 
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
     
@@ -2201,3 +2219,11 @@ def sortTracks(List):
 def sortFirst(List):
 
     return int(float(List[0]))
+
+def gaussian(x, amp, mu, std):
+    return amp * exp(-(x-mu)**2 / std)
+
+
+
+def BiModalgaussian(x, ampA, muA, stdA, ampB, muB, stdB):
+    return ampA * exp(-(x-muA)**2 / stdA) + ampB * exp(-(x-muB)**2 / stdB)
