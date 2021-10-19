@@ -1251,7 +1251,8 @@ class AllTrackViewer(object):
         self.all_track_properties = all_track_properties
         self.DividingTrajectory = DividingTrajectory
         self.tracklines = 'Tracks'
-
+        self.boxes = {}
+        self.labels = {}
         for layer in list(self.trackviewer.layers):
 
             if self.tracklines in layer.name or layer.name in self.tracklines:
@@ -1263,6 +1264,35 @@ class AllTrackViewer(object):
             self.plotintensity()
         if self.mode == 'motion':
             self.motion()
+            
+    def Conditioncheck(self, centroid, boxA, p, ndim):
+            
+              condition = False
+            
+              if centroid[p] >=  boxA[p]  and centroid[p] <=  boxA[p + ndim]:
+                  
+                   condition = True
+                   
+              return condition     
+         
+    def iou(self, boxA, centroid, label, relabelval):
+            
+            ndim = len(centroid)
+            inside = False
+            
+            Condition = [self.Conditioncheck(centroid, boxA, p, ndim) for p in range(0,ndim)]
+                
+            inside = all(Condition)
+            
+            if inside:
+                
+                return boxA, relabelval 
+            
+            else:
+                
+                return boxA, label        
+            
+            
     def Relabel(self, image, locations):
         
                print("Relabelling image with chosen trackmate attribute")
@@ -1549,7 +1579,7 @@ class AllTrackViewer(object):
         for i in tqdm(range(0, self.Seg.shape[0])):
                               timeboxes = []
                               timelabels = []
-                              ThreeDimage = self.Segimage[i,:]
+                              ThreeDimage = self.Seg[i,:]
                               
                               for region in regionprops(ThreeDimage):
                               
