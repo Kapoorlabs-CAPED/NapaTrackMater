@@ -1288,7 +1288,209 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     ]
 
  
+def import_TM_XML_Localization(xml_path,image, Mask):
+    
+    image = daskread(image)[0,:]
+    Mask = imread(Mask)
+    root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
 
+    filtered_track_ids = [
+        int(track.get('TRACK_ID'))
+        for track in root.find('Model').find('FilteredTracks').findall('TrackID')
+    ]
+
+    # Extract the tracks from xml
+    tracks = root.find('Model').find('AllTracks')
+    settings = root.find('Settings').find('ImageData')
+
+    # Extract the cell objects from xml
+    Spotobjects = root.find('Model').find('AllSpots')
+
+    # Make a dictionary of the unique cell objects with their properties
+    Uniqueobjects = {}
+    Uniqueproperties = {}
+
+    xcalibration = float(settings.get('pixelwidth'))
+    ycalibration = float(settings.get('pixelheight'))
+    zcalibration = float(settings.get('voxeldepth'))
+    tcalibration = int(float(settings.get('timeinterval')))
+
+    if Mask is not None:
+        if len(Mask.shape) < len(image.shape):
+            # T Z Y X
+            UpdateMask = np.zeros(
+                [
+                    image.shape[0],
+                    image.shape[1],
+                    image.shape[2],
+                    image.shape[3],
+                ]
+            )
+            for i in range(0, UpdateMask.shape[0]):
+                for j in range(0, UpdateMask.shape[1]):
+
+                    UpdateMask[i, j, :, :] = Mask[i, :, :]
+                    
+        else:
+            UpdateMask = Mask
+            
+            
+        Mask = UpdateMask.astype('uint16')
+
+        TimedMask, Boundary = boundary_points(Mask, xcalibration, ycalibration, zcalibration)
+    else:
+        TimedMask = None
+        Boundary = None
+
+    for frame in Spotobjects.findall('SpotsInFrame'):
+
+        for Spotobject in frame.findall('Spot'):
+            # Create object with unique cell ID
+            cell_id = int(Spotobject.get("ID"))
+            # Get the TZYX location of the cells in that frame
+            Uniqueobjects[cell_id] = [
+                Spotobject.get('POSITION_T'),
+                Spotobject.get('POSITION_Z'),
+                Spotobject.get('POSITION_Y'),
+                Spotobject.get('POSITION_X'),
+            ]
+            
+            # Get other properties associated with the Spotobject
+            try:
+                TOTAL_INTENSITY_CH1 = Spotobject.get('TOTAL_INTENSITY_CH1')
+            except:
+                 
+                 TOTAL_INTENSITY_CH1 = 1
+            try:
+                MEAN_INTENSITY_CH1 = Spotobject.get('MEAN_INTENSITY_CH1')
+            except:
+                 MEAN_INTENSITY_CH1 = 1
+            try:      
+                Radius = Spotobject.get('RADIUS')
+            except:
+                Radius = 1
+                
+            try:      
+                QUALITY = Spotobject.get('QUALITY')
+            except:
+                QUALITY = 1
+                    
+            Uniqueproperties[cell_id] = [
+                
+                  TOTAL_INTENSITY_CH1,
+                  MEAN_INTENSITY_CH1,
+                Spotobject.get('POSITION_T'),
+                Radius,
+                QUALITY
+            ]
+
+    all_track_properties = []
+    for track in tracks.findall('Track'):
+
+        track_id = int(track.get("TRACK_ID"))
+
+        spot_object_source_target = []
+        if track_id in filtered_track_ids:
+            for edge in track.findall('Edge'):
+
+                source_id = edge.get('SPOT_SOURCE_ID')
+                target_id = edge.get('SPOT_TARGET_ID')
+                edge_time = edge.get('EDGE_TIME')
+               
+                directional_rate_change = edge.get('DIRECTIONAL_CHANGE_RATE')
+                speed = edge.get('SPEED')
+
+                spot_object_source_target.append(
+                    [source_id, target_id, edge_time, directional_rate_change, speed]
+                )
+
+            # Sort the tracks by edge time
+            spot_object_source_target = sorted(
+                spot_object_source_target, key=sortTracks, reverse=False
+            )
+            # Get all the IDs, uniquesource, targets attached, leaf, root, splitpoint IDs
+            split_points, root_leaf = Multiplicity(spot_object_source_target)
+
+            # Determine if a track has divisions or none
+            if len(split_points) > 0:
+                split_points = split_points[::-1]
+                DividingTrajectory = True
+            else:
+                DividingTrajectory = False
+          
+            if DividingTrajectory == True:
+                DividingTrackIds.append(track_id)
+                AllTrackIds.append(track_id)
+                tracklets = analyze_dividing_tracklets(
+                    root_leaf, split_points, spot_object_source_target
+                )
+
+            if DividingTrajectory == False:
+                NonDividingTrackIds.append(track_id)
+                AllTrackIds.append(track_id)
+                tracklets = analyze_non_dividing_tracklets(
+                    root_leaf, spot_object_source_target
+                )
+
+            # for each tracklet get real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside
+            location_prop_dist = tracklet_properties(
+                tracklets,
+                Uniqueobjects,
+                Uniqueproperties,
+                Mask,
+                None,
+                TimedMask,
+                [xcalibration, ycalibration, zcalibration, tcalibration],
+                DividingTrajectory
+            )
+            all_track_properties.append([track_id, location_prop_dist, DividingTrajectory])
+            
+            
+    IDLocations = []
+    TrackLayerTracklets = {}
+    Gradients = []
+    AllT = []
+    for i in tqdm(range(0, len(all_track_properties))):
+                    trackid, alltracklets, DividingTrajectory = all_track_properties[i]
+
+                    
+                    AllDistance = []
+                    AllT.append(trackid)
+                    for (trackletid, tracklets) in alltracklets.items():
+                            Locationtracklets = tracklets[1]
+                            if len(Locationtracklets) > 0:
+                                Locationtracklets = sorted(
+                                    Locationtracklets, key=sortFirst, reverse=False
+                                )
+        
+                                for tracklet in Locationtracklets:
+                                    (
+                                        t,
+                                        z,
+                                        y,
+                                        x,
+                                        total_intensity,
+                                        mean_intensity,
+                                        cellradius,
+                                        distance,
+                                        prob_inside,
+                                        speed,
+                                        directionality,
+                                        DividingTrajectory,
+                                    ) = tracklet
+                                    
+                                    AllDistance.append((float(distance)))
+                               
+        
+                    gradient = np.sum(np.diff(AllDistance))
+                    Gradients.append(gradient)
+                            
+    print('Histplot for: ', 'Cell to tissue localization')               
+    sns.histplot(Gradients, kde = True)
+    plt.show()
+            
+            
+            
 def Multiplicity(spot_object_source_target):
 
     split_points = []
