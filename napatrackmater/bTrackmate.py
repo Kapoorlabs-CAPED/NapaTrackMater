@@ -36,6 +36,9 @@ from scipy.stats import norm
 from scipy.optimize import curve_fit
 from lmfit import Model
 from numpy import exp, loadtxt, pi, sqrt
+from windrose import WindroseAxes
+from windrose import plot_windrose
+from matplotlib import cm
 '''Define function to run multiple processors and pool the results together'''
 
 
@@ -375,6 +378,7 @@ def analyze_non_dividing_tracklets(root_leaf, spot_object_source_target):
                         break
                 else:
                     break
+                
         non_dividing_tracklets.append([trackletid, tracklet, trackletspeed, trackletdirection])
     return non_dividing_tracklets
 
@@ -681,7 +685,113 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
     Viz = VizCorrect(Segimage, Name, savedir,AllKeys,AllTrackKeys, AllValues, AllTrackValues)
     Viz.showNapari()
 
+def import_TM_XML_distplots(xml_path, Segimage,spot_csv, track_csv, savedir):
+    
+    print('Reading Image')
+    Name = os.path.basename(os.path.splitext(Segimage)[0])
+    Segimage = imread(Segimage)
+    
+    print('Image dimensions:', Segimage.shape)
+    root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
 
+    filtered_track_ids = [
+        int(track.get('TRACK_ID'))
+        for track in root.find('Model').find('FilteredTracks').findall('TrackID')
+    ]
+
+    # Extract the tracks from xml
+    tracks = root.find('Model').find('AllTracks')
+    settings = root.find('Settings').find('ImageData')
+
+    # Extract the cell objects from xml
+    Spotobjects = root.find('Model').find('AllSpots')
+
+    # Make a dictionary of the unique cell objects with their properties
+    Uniqueobjects = {}
+    Uniqueproperties = {}
+    AllKeys = []
+    AllTrackKeys = []
+    AllValues = []
+    AllTrackValues = []
+    xcalibration = float(settings.get('pixelwidth'))
+    ycalibration = float(settings.get('pixelheight'))
+    zcalibration = float(settings.get('voxeldepth'))
+    tcalibration = int(float(settings.get('timeinterval')))
+
+    spot_dataset = pd.read_csv(spot_csv, delimiter = ',')[3:]
+   
+    spot_dataset_index = spot_dataset.index
+    spot_dataset.keys()
+    
+    track_dataset = pd.read_csv(track_csv, delimiter = ',')[3:]
+   
+    track_dataset_index = track_dataset.index
+    track_dataset.keys()
+
+    
+    
+    for k in spot_dataset.keys():
+        try:
+          
+          if k == 'TRACK_ID':
+            Track_id = spot_dataset[k].astype('float')  
+            indices = np.where(Track_id==0)
+            maxtrack_id = max(Track_id)
+            condition_indices = spot_dataset_index[indices]
+            Track_id[condition_indices] = maxtrack_id + 1
+            AllValues.append(Track_id)
+            
+            
+          if k == 'POSITION_X':
+              LocationX = (spot_dataset['POSITION_X'].astype('float')/xcalibration).astype('int')  
+              AllValues.append(LocationX)
+              
+          if k == 'POSITION_Y':
+              LocationY = (spot_dataset['POSITION_Y'].astype('float')/ycalibration).astype('int')   
+              AllValues.append(LocationY)
+          if k == 'POSITION_Z':
+              LocationZ = (spot_dataset['POSITION_Z'].astype('float')/zcalibration).astype('int')   
+              AllValues.append(LocationZ)
+          if k == 'FRAME':
+              LocationT = (spot_dataset['FRAME'].astype('float')).astype('int')  
+              AllValues.append(LocationT)    
+          elif k!='TRACK_ID' and k!='POSITION_X' and k!='POSITION_Y' and k!='POSITION_Z' and k!='FRAME':  
+            AllValues.append(spot_dataset[k].astype('float'))
+          
+          AllKeys.append(k)  
+            
+        except:
+            pass
+    
+   
+    for k in track_dataset.keys():
+          if k == 'TRACK_ID':
+                    Track_id = track_dataset[k].astype('float')  
+                    indices = np.where(Track_id==0)
+                    maxtrack_id = max(Track_id)
+                    condition_indices = track_dataset_index[indices]
+                    Track_id[condition_indices] = maxtrack_id + 1
+                    AllTrackValues.append(Track_id)
+                    AllTrackKeys.append(k)
+          else:  
+                  try:   
+                     x =  track_dataset[k].astype('float')
+                     minval = min(x)
+                     maxval = max(x)
+                     
+                     if minval > 0 and maxval <= 1:
+                         
+                        x = normalizeZeroOne(x, scale = scale)
+                        
+                     AllTrackKeys.append(k)
+                     AllTrackValues.append(x)
+                  except:
+                      
+                      pass
+   
+    
+    Viz = VizCorrect(Segimage, Name, savedir,AllKeys,AllTrackKeys, AllValues, AllTrackValues)
+    Viz.showWR()
 
 def normalizeZeroOne(x, scale = 255 * 255):
 
@@ -697,12 +807,11 @@ def normalizeZeroOne(x, scale = 255 * 255):
 
 class VizCorrect(object):
 
-        def __init__(self, Segimage, Name, savedir,AllKeys, AllTrackKeys, AllValues, AllTrackValues, simple = False ):
+        def __init__(self, Segimage, Name, savedir,AllKeys, AllTrackKeys, AllValues, AllTrackValues ):
             
             
                self.Segimage = Segimage
                self.Name = Name
-               self.simple = simple 
                self.savedir = savedir
                self.AllKeys = AllKeys
                self.AllTrackKeys = AllTrackKeys
@@ -711,7 +820,47 @@ class VizCorrect(object):
                Path(self.savedir).mkdir(exist_ok=True)
                
                
-            
+        def showWR(self):
+               
+               self.idattr = {}
+               for k in range(len(self.AllKeys)):
+                            
+                            if self.AllKeys[k] == 'POSITION_X':
+                                self.keyX = k
+                            if self.AllKeys[k] == 'POSITION_Y':
+                                self.keyY = k   
+                            if self.AllKeys[k] == 'POSITION_Z':
+                                self.keyZ = k 
+                            if self.AllKeys[k] == 'FRAME':
+                                self.keyT = k    
+               for k in range(len(self.AllTrackKeys)):
+                            
+                            
+                            if self.AllTrackKeys[k] == 'TRACK_ID':
+                                   p = k
+                                   break
+                               
+                                
+               for k in range(len(self.AllTrackKeys)):
+                            
+                            self.AllTrackID = []
+                            self.AllTrackAttr = []                
+                            for attr, trackid in tqdm(zip(self.AllTrackValues[k], self.AllTrackValues[p]), total = len(self.AllTrackValues[k])):
+                                    
+                                            
+                                            if math.isnan(trackid):
+                                                continue
+                                            else:
+                                               self.idattr[trackid] = attr
+                                               
+                                               self.AllTrackID.append(int(float(trackid)))
+                                               self.AllTrackAttr.append(float(attr))
+                            print('Histplot for: ', self.AllTrackKeys[k])               
+                            self.data = {'speed': self.AllTrackID, "direction": self.AllTrackAttr}    
+                            sns.histplot(self.AllTrackAttr, kde = True)
+                            plt.show()
+                            
+    
         def showNapari(self):
                  
                  self.viewer = napari.Viewer()
@@ -743,8 +892,7 @@ class VizCorrect(object):
                 
                  TrackAttributeidbox = QComboBox()   
                  TrackAttributeidbox.addItem(TrackAttributeBoxname) 
-                 if self.simple == 'False':
-                   computetrackbutton = QPushButton(' compute Track Relabelled Image')
+                 computetrackbutton = QPushButton(' compute Track Relabelled Image')
                  computebutton = QPushButton(' compute Spot Relabelled Image')
                  for i in range(0, len(Attributeids)):
                      
@@ -804,9 +952,8 @@ class VizCorrect(object):
                 
                  
                  self.viewer.window.add_dock_widget(Attributeidbox, name="Color Spot Attributes", area='right') 
-                 if self.simple == False:
-                   self.viewer.window.add_dock_widget(TrackAttributeidbox, name="Color Track Attributes", area='right')
-                   self.viewer.window.add_dock_widget(computetrackbutton, name="Compute Relabelled Image by Track features", area='left') 
+                 self.viewer.window.add_dock_widget(TrackAttributeidbox, name="Color Track Attributes", area='right')
+                 self.viewer.window.add_dock_widget(computetrackbutton, name="Compute Relabelled Image by Track features", area='left') 
                  self.viewer.window.add_dock_widget(computebutton, name="Compute Relabelled Image by Spot features", area='left') 
                  
                  
@@ -846,7 +993,12 @@ class VizCorrect(object):
                             
                             if self.AllTrackKeys[k] == 'TRACK_ID':
                                    p = k
+                                   
+                                   
+                          for k in range(len(self.AllTrackKeys)):
                             
+                            self.AllTrackID = []
+                            self.AllTrackAttr = []
                             if self.AllTrackKeys[k] ==  attribute:
                                 
                                 for attr, trackid in tqdm(zip(self.AllTrackValues[k], self.AllTrackValues[p]), total = len(self.AllTrackValues[k])):
@@ -856,7 +1008,9 @@ class VizCorrect(object):
                                                 continue
                                             else:
                                                self.idattr[trackid] = attr
-                                
+                                               
+                                         
+                                                                
                                 
                                 
                           for k in range(len(self.AllKeys)):
@@ -875,7 +1029,7 @@ class VizCorrect(object):
                                            
                                 NewSegimage = self.Relabel(self.Segimage.copy(), locations)
                                 self.viewer.add_labels(NewSegimage, name = self.Name + attribute)
-                 
+                                self.viewer.add_labels(w_rose, name = self.Name + attribute + 'wrose')
                  
 
                              
@@ -1210,6 +1364,59 @@ def Multiplicity(spot_object_source_target):
 
 
 
+def speed_labels(bins, units):   
+    labels = []
+    for left, right in zip(bins[:-1], bins[1:]):
+        if left == bins[0]:
+            labels.append('calm'.format(right))
+        elif np.isinf(right):
+            labels.append('>{} {}'.format(left, units))
+        else:
+            labels.append('{} - {} {}'.format(left, right, units))
+
+    return list(labels)        
+     
+def _convert_dir(directions, N=None):
+    if N is None:
+        N = directions.shape[0]
+    barDir = directions * pi/180. - pi/N
+    barWidth = 2 * pi / N
+    return barDir, barWidth        
+
+
+def wind_rose(rosedata, wind_dirs, palette=None):
+    if palette is None:
+        palette = sns.color_palette('inferno', n_colors=rosedata.shape[1])
+
+    bar_dir, bar_width = _convert_dir(wind_dirs)
+
+    fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
+    ax.set_theta_direction('clockwise')
+    ax.set_theta_zero_location('N')
+
+    for n, (c1, c2) in enumerate(zip(rosedata.columns[:-1], rosedata.columns[1:])):
+        if n == 0:
+            # first column only
+            ax.bar(bar_dir, rosedata[c1].values, 
+                   width=bar_width,
+                   color=palette[0],
+                   edgecolor='none',
+                   label=c1,
+                   linewidth=0)
+
+        # all other columns
+        ax.bar(bar_dir, rosedata[c2].values, 
+               width=bar_width, 
+               bottom=rosedata.cumsum(axis=1)[c1].values,
+               color=palette[n+1],
+               edgecolor='none',
+               label=c2,
+               linewidth=0)
+
+    leg = ax.legend(loc=(0.75, 0.95), ncol=2)
+    xtl = ax.set_xticklabels(['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'])
+    
+    return fig
 class AllTrackViewer(object):
     def __init__(
         self,
@@ -1223,11 +1430,13 @@ class AllTrackViewer(object):
         ID,
         canvas,
         ax,
+        
         figure,
         DividingTrajectory = None,
         saveplot=False,
         window_size=3,
         mode='fate',
+        
     ):
 
         self.trackviewer = originalviewer
@@ -1252,6 +1461,7 @@ class AllTrackViewer(object):
         self.all_track_properties = all_track_properties
         self.DividingTrajectory = DividingTrajectory
         self.tracklines = 'Tracks'
+        self.axwindrose = axwindrose
         self.boxes = {}
         self.labels = {}
         for layer in list(self.trackviewer.layers):
@@ -1263,72 +1473,7 @@ class AllTrackViewer(object):
             self.plot()
         if self.mode == 'intensity':
             self.plotintensity()
-        if self.mode == 'motion':
-            self.motion()
-            
-    def Conditioncheck(self, centroid, boxA, p, ndim):
-            
-              condition = False
-            
-              if centroid[p] >=  boxA[p]  and centroid[p] <=  boxA[p + ndim]:
-                  
-                   condition = True
-                   
-              return condition     
-         
-    def iou(self, boxA, centroid, label, relabelval):
-            
-            ndim = len(centroid)
-            inside = False
-            
-            Condition = [self.Conditioncheck(centroid, boxA, p, ndim) for p in range(0,ndim)]
-                
-            inside = all(Condition)
-            
-            if inside:
-                
-                return boxA, relabelval 
-            
-            else:
-                
-                return boxA, label        
-            
-            
-    def Relabel(self, image, locations):
         
-               print("Relabelling image with chosen trackmate attribute")
-               NewSegimage = image.copy()
-               for p in tqdm(range(0, NewSegimage.shape[0])):
-                   
-                   sliceimage = NewSegimage[p,:]
-                   originallabels = []
-                   newlabels = []
-                   for  relabelval, centroid in locations:
-                       
-                        time, z, y, x = centroid
-                   
-                   
-                        if p == time: 
-                               
-                               timeboxes = self.boxes[time][1]
-                               timelabels = self.labels[time][1]
-                               for i  in range(len(timeboxes)):
-                                  box =  timeboxes[i]
-                                  originallabel = timelabels[i]
-                                  box, returnval = self.iou(box, (z,y,x), originallabel, relabelval)
-                                                
-                                  if math.isnan(returnval):
-                                      returnval = -1
-                                  if abs(returnval - originallabel) > 0:
-                                      originallabels.append(int(originallabel))
-                                      newlabels.append(int(returnval))
-                                     
-                  
-                      
-                   relabeled = map_array(sliceimage, np.asarray(originallabels), np.asarray(newlabels))
-                   NewSegimage[p,:] = relabeled
-                               
-               return NewSegimage 
     def plot(self):
 
         for i in range(self.ax.shape[0]):
@@ -1563,173 +1708,6 @@ class AllTrackViewer(object):
         self.figure.canvas.flush_events()
         self.SaveStats()
 
-    def motion(self):
-
-        for i in range(self.ax.shape[0]):
-            self.ax[i].cla()
-
-        self.ax[0].set_title("Directionality")
-        self.ax[0].set_xlabel("minutes")
-        self.ax[0].set_ylabel("radians")
-
-        self.ax[1].set_title("Gauss Fits")
-        self.ax[1].set_xlabel("angle")
-        self.ax[1].set_ylabel("counts")
-        IDLocations = []
-        TrackLayerTracklets = {}
-        for i in tqdm(range(0, self.Seg.shape[0])):
-                              timeboxes = []
-                              timelabels = []
-                              ThreeDimage = self.Seg[i,:]
-                              
-                              for region in regionprops(ThreeDimage):
-                              
-                                    timeboxes.append(region.bbox)
-                                    timelabels.append(region.label)
-                              self.boxes[i] = [i]     
-                              self.boxes[i].append(timeboxes)
-                              
-                              self.labels[i] = [i]     
-                              self.labels[i].append(timelabels)  
-        for i in tqdm(range(0, len(self.all_track_properties))):
-                    trackid, alltracklets, DividingTrajectory = self.all_track_properties[i]
-                    if self.ID == trackid or self.ID == 'all':
-                        tracksavedir = self.savedir + '/' + 'Motion_TrackID' +  str(self.ID)
-                        Path(tracksavedir).mkdir(exist_ok=True)
-                        AllStartParent[trackid] = [trackid]
-                        AllEndParent[trackid] = [trackid]
-        
-                        TrackLayerTracklets[trackid] = [trackid]
-                        for (trackletid, tracklets) in alltracklets.items():
-        
-                            AllStartChildren[int(str(trackid) + str(trackletid))] = [
-                                int(str(trackid) + str("_") +str(trackletid))
-                            ]
-                            AllEndChildren[int(str(trackid) + str(trackletid))] = [
-                                int(str(trackid) +str("_") + str(trackletid))
-                            ]
-        
-                            self.AllT = []
-                            self.AllArea = []
-                            self.AllIntensity = []
-                            self.AllProbability = []
-                            self.AllSpeed = []
-                            self.AllDirection = []
-                            self.AllSize = []
-                            self.AllDistance = []
-                            self.attrlocations = []
-                            TrackLayerTrackletsList = []
-        
-                            Locationtracklets = tracklets[1]
-                            if len(Locationtracklets) > 0:
-                                Locationtracklets = sorted(
-                                    Locationtracklets, key=sortFirst, reverse=False
-                                )
-        
-                                for tracklet in Locationtracklets:
-                                    (
-                                        t,
-                                        z,
-                                        y,
-                                        x,
-                                        total_intensity,
-                                        mean_intensity,
-                                        cellradius,
-                                        distance,
-                                        prob_inside,
-                                        speed,
-                                        directionality,
-                                        DividingTrajectory,
-                                    ) = tracklet
-                                    TrackLayerTrackletsList.append([trackletid, t, z, y, x])
-                                    IDLocations.append([t, z, y, x])
-                                    self.attrlocations.append([float(directionality), t, z, y, x])
-                                    
-                                    
-                                    self.AllT.append(int(float(t)))
-                                    self.AllSpeed.append("{:.1f}".format(float(speed)))
-                                    self.AllDirection.append("{:.1f}".format(float(directionality)))
-                                    self.AllProbability.append(
-                                        "{:.2f}".format(float(prob_inside))
-                                    )
-                                    self.AllDistance.append("{:.1f}".format(float(distance)))
-                                    self.AllSize.append("{:.1f}".format(float(cellradius)))
-                                    if str(self.ID) + str(trackletid) not in AllID:
-                                        AllID.append(str(self.ID) + str(trackletid))
-                               
-        
-                            self.AllSpeed = MovingAverage(
-                                self.AllSpeed, window_size=self.window_size
-                            )
-                            self.AllDirection = MovingAverage(
-                                self.AllDirection, window_size=self.window_size
-                            )
-                            self.AllDistance = MovingAverage(
-                                self.AllDistance, window_size=self.window_size
-                            )
-                            self.AllSize = MovingAverage(
-                                self.AllSize, window_size=self.window_size
-                            )
-                            self.AllProbability = MovingAverage(
-                                self.AllProbability, window_size=self.window_size
-                            )
-                            self.AllT = MovingAverage(self.AllT, window_size=self.window_size)
-                            if self.saveplot == True:
-                                SaveIds.append(self.ID)
-                                
-                                df = pd.DataFrame(
-                                    list(
-                                        zip(
-                                            self.AllT,
-                                            self.AllSize,
-                                            self.AllDistance,
-                                            self.AllProbability,
-                                            self.AllSpeed,
-                                            self.AllDirection
-                                        )
-                                    ),
-                                    columns=[
-                                        'Time',
-                                        'Cell Size',
-                                        'Distance to Border',
-                                        'Inner Cell Probability',
-                                        'Cell Speed',
-                                        'Directionality'
-                                    ],
-                                )
-                                
-                                
-                                if df.shape[0] > 2:
-                                        df.to_csv(
-                                            tracksavedir
-                                            + '/'
-                                            + 'Track'
-                                            + str(self.ID)
-                                            + 'tracklet'
-                                            + str("_") + str(trackletid)
-                                            + '.csv',
-                                            index=False,
-                                        )
-                                
-                            meanX, stdX = norm.fit(self.AllDirection)
-                            gmodel = Model(gaussian)
-                            countsX, binsX = np.histogram(self.AllDirection)
-                            binsX = binsX[:-1]
-                            Gauss = gmodel.fit(countsX, x=binsX, amp=np.max(countsX), mu=meanX, std=stdX)
-  
-                            self.ax[0].plot(self.AllT, self.AllDirection)
-                            
-                            self.ax[1].hist(binsX, binsX, weights=countsX)
-                            self.ax[1].plot(binsX, Gauss.best_fit)
-                         
-                            self.figure.canvas.draw()
-                            self.figure.canvas.flush_events()
-                            NewSegimage = self.Relabel(self.Seg.copy(), self.attrlocations)  
-                            self.trackviewer.add_labels(NewSegimage, name = self.ID + "motion")
-        
-         
-        self.figure.canvas.draw()
-        self.figure.canvas.flush_events()
     
     def plotintensity(self):
 
@@ -2098,6 +2076,9 @@ def TrackMateLiveTracks(
     figure = plt.figure(figsize=(4, 4))
     multiplot_widget = FigureCanvas(figure)
     ax = multiplot_widget.figure.subplots(1, 2)
+    
+    
+    
     width = 400
     dock_widget = viewer.window.add_dock_widget(
         multiplot_widget, name="TrackStats", area='right'
@@ -2165,6 +2146,53 @@ def TrackMateLiveTracks(
 
     viewer.window.add_dock_widget(trackbox, name="TrackID", area='left')
     viewer.window.add_dock_widget(tracksavebutton, name="Save TrackID", area='left')
+    napari.run()
+    
+def TrackMateWindRoseTracks(
+    Raw,
+    Seg,
+    Mask,
+    savedir,
+    calibration,
+    all_track_properties,
+    mode='motion',
+):
+
+    Raw = imread(Raw)
+    if Seg is not None:
+       Seg = imread(Seg)
+       Seg = Seg.astype('uint16')
+    if Mask is not None:
+        
+        Mask = Mask.astype('uint16')
+
+
+    viewer = napari.view_image(Raw, name='Image')
+        
+    if Seg is not None:
+        viewer.add_labels(Seg, name='SegImage')
+
+    if Mask is not None:
+        Boundary = Mask.copy()
+        Boundary = Boundary.astype('uint16')
+        viewer.add_labels(Boundary, name='Mask')
+
+    
+ 
+
+   
+
+    AllRoseViewer(
+        viewer,
+        Raw,
+        Seg,
+        Mask,
+        savedir,
+        calibration,
+        all_track_properties
+    
+    )
+
     napari.run()
 
 def ShowAllTracks(
