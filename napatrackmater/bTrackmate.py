@@ -36,8 +36,6 @@ from scipy.stats import norm
 from scipy.optimize import curve_fit
 from lmfit import Model
 from numpy import exp, loadtxt, pi, sqrt
-from windrose import WindroseAxes
-from windrose import plot_windrose
 from matplotlib import cm
 '''Define function to run multiple processors and pool the results together'''
 
@@ -1343,7 +1341,7 @@ def import_TM_XML_Localization(xml_path,image, Mask, Btrack_pink = None):
             
     if Btrack_pink is not None and Mask is not None:
         
-        Btrack_pink_time = np.zeros([image.shape[0],image.shape[2], image.shape[3])
+        Btrack_pink_time = np.zeros([image.shape[0],image.shape[2], image.shape[3]])
         for i in range(image.shape[0]):
             
             
@@ -1670,7 +1668,6 @@ class AllTrackViewer(object):
         self.all_track_properties = all_track_properties
         self.DividingTrajectory = DividingTrajectory
         self.tracklines = 'Tracks'
-        self.axwindrose = axwindrose
         self.boxes = {}
         self.labels = {}
         for layer in list(self.trackviewer.layers):
@@ -2357,52 +2354,7 @@ def TrackMateLiveTracks(
     viewer.window.add_dock_widget(tracksavebutton, name="Save TrackID", area='left')
     napari.run()
     
-def TrackMateWindRoseTracks(
-    Raw,
-    Seg,
-    Mask,
-    savedir,
-    calibration,
-    all_track_properties,
-    mode='motion',
-):
 
-    Raw = imread(Raw)
-    if Seg is not None:
-       Seg = imread(Seg)
-       Seg = Seg.astype('uint16')
-    if Mask is not None:
-        
-        Mask = Mask.astype('uint16')
-
-
-    viewer = napari.view_image(Raw, name='Image')
-        
-    if Seg is not None:
-        viewer.add_labels(Seg, name='SegImage')
-
-    if Mask is not None:
-        Boundary = Mask.copy()
-        Boundary = Boundary.astype('uint16')
-        viewer.add_labels(Boundary, name='Mask')
-
-    
- 
-
-   
-
-    AllRoseViewer(
-        viewer,
-        Raw,
-        Seg,
-        Mask,
-        savedir,
-        calibration,
-        all_track_properties
-    
-    )
-
-    napari.run()
 
 def ShowAllTracks(
     Raw,
@@ -2414,16 +2366,22 @@ def ShowAllTracks(
     mode='fate',
 ):
 
+    print('Reading Image') 
     Raw = imread(Raw)
     if Seg is not None:
         Seg = imread(Seg)
         Seg = Seg.astype('uint16')
-        
+        print('Reading Seg Image')   
     if Mask is not None:
         
         Mask = Mask.astype('uint16')
-
-    viewer = napari.view_image(Raw, name='Image')
+        print('Reading Mask Image') 
+        
+        
+    print('Building Napari in augenblick') 
+    
+    viewer = napari.Viewer()
+    viewer.add_image(Raw, name='Image')
         
     if Seg is not None:
         viewer.add_labels(Seg, name='SegImage')
@@ -2432,7 +2390,9 @@ def ShowAllTracks(
         Boundary = Mask.copy()
         Boundary = Boundary.astype('uint16')
         viewer.add_labels(Boundary, name='Mask')
-
+        
+        
+    print('Building Napari GUI')
     ID = AllTrackIds
     trackbox = QComboBox()
     trackbox.addItem(Boxname)
@@ -2447,6 +2407,7 @@ def ShowAllTracks(
     dock_widget = viewer.window.add_dock_widget(
         multiplot_widget, name="TrackStats", area='right'
     )
+    print('Adding widgets')
     multiplot_widget.figure.tight_layout()
     viewer.window._qt_window.resizeDocks([dock_widget], [width], Qt.Horizontal)
     T = Raw.shape[0]
@@ -2507,6 +2468,8 @@ def ShowAllTracks(
             mode=mode,
         )
     )
+    
+    print('About to open Napari')
     viewer.window.add_dock_widget(trackbox, name="TrackID", area='left')
     viewer.window.add_dock_widget(tracksavebutton, name="Save TrackID", area='left')
     napari.run()
