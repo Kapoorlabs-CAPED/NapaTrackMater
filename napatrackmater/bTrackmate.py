@@ -685,7 +685,7 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
     Viz = VizCorrect(Segimage, Name, savedir,AllKeys,AllTrackKeys, AllValues, AllTrackValues)
     Viz.showNapari()
 
-def import_TM_XML_distplots(xml_path, Segimage,spot_csv, track_csv, savedir):
+def import_TM_XML_distplots(xml_path, Segimage,spot_csv, track_csv, savedir, scale = 255):
     
     print('Reading Image')
     Name = os.path.basename(os.path.splitext(Segimage)[0])
@@ -765,6 +765,7 @@ def import_TM_XML_distplots(xml_path, Segimage,spot_csv, track_csv, savedir):
     
    
     for k in track_dataset.keys():
+        
           if k == 'TRACK_ID':
                     Track_id = track_dataset[k].astype('float')  
                     indices = np.where(Track_id==0)
@@ -822,23 +823,10 @@ class VizCorrect(object):
                
         def showWR(self):
                
-               self.idattr = {}
-               for k in range(len(self.AllKeys)):
-                            
-                            if self.AllKeys[k] == 'POSITION_X':
-                                self.keyX = k
-                            if self.AllKeys[k] == 'POSITION_Y':
-                                self.keyY = k   
-                            if self.AllKeys[k] == 'POSITION_Z':
-                                self.keyZ = k 
-                            if self.AllKeys[k] == 'FRAME':
-                                self.keyT = k    
+                  
                for k in range(len(self.AllTrackKeys)):
-                            
-                            
                             if self.AllTrackKeys[k] == 'TRACK_ID':
                                    p = k
-                                   break
                                
                                 
                for k in range(len(self.AllTrackKeys)):
@@ -848,11 +836,6 @@ class VizCorrect(object):
                             for attr, trackid in tqdm(zip(self.AllTrackValues[k], self.AllTrackValues[p]), total = len(self.AllTrackValues[k])):
                                     
                                             
-                                            if math.isnan(trackid):
-                                                continue
-                                            else:
-                                               self.idattr[trackid] = attr
-                                               
                                                self.AllTrackID.append(int(float(trackid)))
                                                self.AllTrackAttr.append(float(attr))
                             print('Histplot for: ', self.AllTrackKeys[k])               
@@ -990,9 +973,9 @@ class VizCorrect(object):
                           for k in range(len(self.AllTrackKeys)):
                             
                             
-                            if self.AllTrackKeys[k] == 'TRACK_ID':
-                                   p = k
-                                   
+                                if self.AllTrackKeys[k] == 'TRACK_ID':
+                                       p = k
+                                       
                                    
                           for k in range(len(self.AllTrackKeys)):
                             
@@ -1008,10 +991,6 @@ class VizCorrect(object):
                                             else:
                                                self.idattr[trackid] = attr
                                                
-                                         
-                                                                
-                                
-                                
                           for k in range(len(self.AllKeys)):
                             
                             locations = []
