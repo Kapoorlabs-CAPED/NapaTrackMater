@@ -856,7 +856,6 @@ class VizCorrect(object):
                                                self.AllTrackID.append(int(float(trackid)))
                                                self.AllTrackAttr.append(float(attr))
                             print('Histplot for: ', self.AllTrackKeys[k])               
-                            self.data = {'speed': self.AllTrackID, "direction": self.AllTrackAttr}    
                             sns.histplot(self.AllTrackAttr, kde = True)
                             plt.show()
                             
@@ -1029,7 +1028,6 @@ class VizCorrect(object):
                                            
                                 NewSegimage = self.Relabel(self.Segimage.copy(), locations)
                                 self.viewer.add_labels(NewSegimage, name = self.Name + attribute)
-                                self.viewer.add_labels(w_rose, name = self.Name + attribute + 'wrose')
                  
 
                              
