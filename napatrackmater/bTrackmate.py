@@ -2096,7 +2096,6 @@ class AllTrackViewerGauss(object):
             
             plt.tight_layout()
             plt.show()    
-            tripleplot(binsz, binsy, binsx, countsz, countsy, countsx, GaussZ, GaussY, GaussX)
             
             if GaussZ is not None:
                print('Fit in Z', GaussZ.fit_report())
@@ -3016,7 +3015,7 @@ def ShowAllTracksGauss(
     trackbox.addItem('all')
     figure = plt.figure(figsize=(4, 4))
     multiplot_widget = FigureCanvas(figure)
-    ax = multiplot_widget.figure.subplots(1, 2)
+    ax = multiplot_widget.figure.subplots(2, 3)
     width = 400
     dock_widget = viewer.window.add_dock_widget(
         multiplot_widget, name="TrackStats", area='right'
