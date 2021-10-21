@@ -1453,7 +1453,6 @@ def import_TM_XML_Randomization(xml_path,image = None, Mask = None, nbins = 5):
     
             
     all_track_properties = common_stats_function(xml_path, image, Mask)        
-    IDLocations = []
     TrackLayerTracklets = {}
     AllT = []
     
@@ -1725,7 +1724,394 @@ def wind_rose(rosedata, wind_dirs, palette=None):
     
     return fig
 
+class AllTrackViewerGauss(object):
+    def __init__(
+        self,
+        originalviewer,
+        Raw,
+        Seg,
+        Mask,
+        savedir,
+        calibration,
+        all_track_properties,
+        ID,
+        canvas,
+        ax,
+        
+        figure,
+        DividingTrajectory = None,
+        saveplot=False,
+        
+        window_size=3,
+        mode='fate',
+        
+    ):
 
+        self.trackviewer = originalviewer
+        self.savedir = savedir
+        Path(self.savedir).mkdir(exist_ok=True)
+        self.Raw = Raw
+        self.Seg = Seg
+        self.Mask = Mask
+        self.calibration = calibration
+        self.mode = mode
+        if ID == 'all':
+            self.ID = ID
+        elif ID is not None:
+            self.ID = int(ID)
+        else:
+            self.ID = ID
+        self.saveplot = saveplot
+        self.canvas = canvas
+        self.ax = ax
+        self.window_size = window_size
+        self.figure = figure
+        self.all_track_properties = all_track_properties
+        self.DividingTrajectory = DividingTrajectory
+        self.tracklines = 'Tracks'
+        self.boxes = {}
+        self.labels = {}
+        for layer in list(self.trackviewer.layers):
+
+            if self.tracklines in layer.name or layer.name in self.tracklines:
+                self.trackviewer.layers.remove(layer)
+        self.draw()
+        if self.mode == 'fate':
+            self.plot()
+        
+    def plot(self):
+
+        for i in range(self.ax.shape[0]):
+            for j in range(self.ax.shape[1]):
+                  self.ax[i].cla()
+                  self.ax[j].cla()
+
+        self.ax[0,0].set_title("distance_to_boundary")
+        self.ax[0,0].set_xlabel("minutes")
+        self.ax[0,0].set_ylabel("um")
+
+        self.ax[0,1].set_title("cell_tissue_localization")
+        self.ax[0,1].set_xlabel("start_distance")
+        self.ax[0,1].set_ylabel("end_distance")
+        
+        
+        self.ax[1,0].set_title("Displacementz")
+        self.ax[1,0].set_xlabel("deltaz")
+        self.ax[1,0].set_ylabel("countsz")
+
+        self.ax[1,1].set_title("Displacementy")
+        self.ax[1,1].set_xlabel("deltay")
+        self.ax[1,1].set_ylabel("countsy")
+
+        self.ax[1,2].set_title("Displacementx")
+        self.ax[1,2].set_xlabel("deltax")
+        self.ax[1,2].set_ylabel("countsx")
+
+        # Execute the function
+        TrackLayerTracklets = {}
+        for i in tqdm(range(0, len(self.all_track_properties))):
+                
+                    IDLocations = []
+                    trackid, alltracklets, DividingTrajectory = self.all_track_properties[i]
+                    if self.ID == trackid or self.ID == 'all':
+                        tracksavedir = self.savedir + '/' + 'TrackID' +  str(self.ID)
+                        Path(tracksavedir).mkdir(exist_ok=True)
+                        AllStartParent[trackid] = [trackid]
+                        AllEndParent[trackid] = [trackid]
+        
+                        TrackLayerTracklets[trackid] = [trackid]
+                        for (trackletid, tracklets) in alltracklets.items():
+        
+                            AllStartChildren[int(str(trackid) + str(trackletid))] = [
+                                int(str(trackid) + str("_") +str(trackletid))
+                            ]
+                            AllEndChildren[int(str(trackid) + str(trackletid))] = [
+                                int(str(trackid) +str("_") + str(trackletid))
+                            ]
+        
+                            self.AllT = []
+                            self.AllArea = []
+                            self.AllIntensity = []
+                            self.AllProbability = []
+                            self.AllSpeed = []
+                            self.AllDirection = []
+                            self.AllSize = []
+                            self.AllDistance = []
+                            TrackLayerTrackletsList = []
+        
+                            Locationtracklets = tracklets[1]
+                            if len(Locationtracklets) > 0:
+                                Locationtracklets = sorted(
+                                    Locationtracklets, key=sortFirst, reverse=False
+                                )
+        
+                                for tracklet in Locationtracklets:
+                                    (
+                                        t,
+                                        z,
+                                        y,
+                                        x,
+                                        total_intensity,
+                                        mean_intensity,
+                                        cellradius,
+                                        distance,
+                                        prob_inside,
+                                        speed,
+                                        directionality,
+                                        DividingTrajectory,
+                                    ) = tracklet
+                                    TrackLayerTrackletsList.append([trackletid, t, z, y, x])
+                                    IDLocations.append([float(t), float(z), float(y), float(x)])
+                                    
+                                    self.AllT.append(int(float(t )))
+                                    self.AllSpeed.append("{:.1f}".format(float(speed)))
+                                    self.AllDirection.append("{:.1f}".format(float(directionality)))
+                                    self.AllProbability.append(
+                                        "{:.2f}".format(float(prob_inside))
+                                    )
+                                    self.AllDistance.append("{:.1f}".format(float(distance)))
+                                    self.AllSize.append("{:.1f}".format(float(cellradius)))
+                                    if str(self.ID) + str(trackletid) not in AllID:
+                                        AllID.append(str(self.ID) + str(trackletid))
+                                if trackletid == 0:
+                                    if len(self.AllDistance) > 1:
+                                            AllStartParent[trackid].append(float(self.AllDistance[0]))
+                                            AllEndParent[trackid].append(float(self.AllDistance[-1]))
+        
+                                else:
+                                    if len(self.AllDistance) > 1:
+                                            AllStartChildren[
+                                                int(str(trackid) + str("_") +  str(trackletid))
+                                            ].append(float(self.AllDistance[0]))
+                                            AllEndChildren[int(str(trackid) +str("_") + str(trackletid))].append(
+                                                float(self.AllDistance[-1])
+                                            )
+        
+                            self.AllSpeed = MovingAverage(
+                                self.AllSpeed, window_size=self.window_size
+                            )
+                            self.AllDirection = MovingAverage(
+                                self.AllDirection, window_size=self.window_size
+                            )
+                            self.AllDistance = MovingAverage(
+                                self.AllDistance, window_size=self.window_size
+                            )
+                            self.AllSize = MovingAverage(
+                                self.AllSize, window_size=self.window_size
+                            )
+                            self.AllProbability = MovingAverage(
+                                self.AllProbability, window_size=self.window_size
+                            )
+                            self.AllT = MovingAverage(self.AllT, window_size=self.window_size)
+                            if self.saveplot == True:
+                                SaveIds.append(self.ID)
+                                
+                                df = pd.DataFrame(
+                                    list(
+                                        zip(
+                                            self.AllT,
+                                            self.AllSize,
+                                            self.AllDistance,
+                                            self.AllProbability,
+                                            self.AllSpeed,
+                                            self.AllDirection
+                                        )
+                                    ),
+                                    columns=[
+                                        'Time',
+                                        'Cell Size',
+                                        'Distance to Border',
+                                        'Inner Cell Probability',
+                                        'Cell Speed',
+                                        'Directionality'
+                                    ],
+                                )
+                                
+                                
+                                if df.shape[0] > 2:
+                                        df.to_csv(
+                                            tracksavedir
+                                            + '/'
+                                            + 'Track'
+                                            + str(self.ID)
+                                            + 'tracklet'
+                                            + str("_") + str(trackletid)
+                                            + '.csv',
+                                            index=False,
+                                        )
+                                
+        
+                                faketid = []
+                                fakedist = []
+                                for (tid, dist) in AllStartParent.items():
+        
+                                    if len(dist) > 1:
+                                        faketid.append(tid)
+                                        fakedist.append(dist[1])
+        
+                                df = pd.DataFrame(
+                                    list(zip(faketid, fakedist)),
+                                    columns=['Trackid', 'StartDistance'],
+                                )
+                                df.to_csv(
+                                    tracksavedir + '/' + 'ParentFateStart' + '.csv', index=False
+                                )
+                                df
+        
+                                faketid = []
+                                fakedist = []
+                                for (tid, dist) in AllEndParent.items():
+        
+                                    if len(dist) > 1:
+                                        faketid.append(tid)
+                                        fakedist.append(dist[1])
+        
+                                df = pd.DataFrame(
+                                    list(zip(faketid, fakedist)),
+                                    columns=['Trackid', 'endDistance'],
+                                )
+                                df.to_csv(
+                                    tracksavedir + '/' + 'ParentFateEnd' + '.csv', index=False
+                                )
+                                
+        
+                                faketid = []
+                                fakedist = []
+        
+                                for (tid, dist) in AllStartChildren.items():
+                                    if len(dist) > 1:
+                                        faketid.append(tid)
+                                        fakedist.append(dist[1])
+        
+                                df = pd.DataFrame(
+                                    list(zip(faketid, fakedist)),
+                                    columns=['Trackid + Trackletid', 'StartDistance'],
+                                )
+                                if df.shape[0] > 2:
+                                        df.to_csv(
+                                            tracksavedir + '/' + 'ChildrenFateStart' + '.csv',
+                                            index=False,
+                                        )
+                                
+        
+                                faketid = []
+                                fakedist = []
+        
+                                for (tid, dist) in AllEndChildren.items():
+                                    if  len(dist) > 1:
+                                        faketid.append(tid)
+                                        fakedist.append(dist[1])
+        
+                                df = pd.DataFrame(
+                                    list(zip(faketid, fakedist)),
+                                    columns=['Trackid + Trackletid', 'EndDistance'],
+                                )
+                                if df.shape[0] > 2:
+                                        df.to_csv(
+                                            tracksavedir + '/' + 'ChildrenFateEnd' + '.csv', index=False
+                                        )
+                                
+        
+                            childrenstarts = AllStartChildren[
+                                int(str(trackid) + str(trackletid))
+                            ]
+                            childrenends = AllEndChildren[int(str(trackid) + str("_") + str(trackletid))]
+                            parentstarts = AllStartParent[trackid]
+                            parentends = AllEndParent[trackid]
+                            self.ax[0,0].plot(self.AllT, self.AllDistance)
+                            self.ax[0,1].plot(parentstarts[1:], parentends[1:], 'og')
+                            self.ax[0,1].plot(childrenstarts[1:], childrenends[1:], 'or')
+                            self.figure.savefig(tracksavedir+ '/' + 'Track' + self.mode + str(self.ID) + '.png', dpi = 300)
+                            self.figure.canvas.draw()
+                            self.figure.canvas.flush_events()
+        
+        
+        
+                        TrackLayerTracklets[trackid].append(TrackIDLocations)
+        
+        for (trackid, tracklets) in TrackLayerTracklets.items():
+
+            
+            locations = tracklets[1]
+            
+            df = pd.DataFrame(locations)
+            #Create deltat, deltaz, deltay, deltax
+            derivativedf = df.diff()
+            t = df[0][1:]
+            deltat = derivativedf[0][1:] 
+            deltaz = derivativedf[1][1:] 
+            deltay = derivativedf[2][1:] 
+            deltax = derivativedf[3][1:] 
+            
+            print('Gaussfits for trackid: ', trackid)
+            gmodel = Model(gaussian)
+            meanz, stdz = norm.fit(deltaz) 
+            countsz, binsz = np.histogram(deltaz,bins = nbins )
+            binsz = binsz[:-1]
+            try:
+              GaussZ = gmodel.fit(countsz, x=binsz, amp=np.max(countsz), mu=meanz, std=stdz)
+            except:
+                GaussZ = None
+            meany, stdy = norm.fit(deltay) 
+            countsy, binsy = np.histogram(deltay, bins = nbins)
+            binsy = binsy[:-1]
+            try:
+              GaussY = gmodel.fit(countsy, x=binsy, amp=np.max(countsy), mu=meany, std=stdy)
+            except:
+              GaussY = None  
+                
+            meanx, stdx = norm.fit(deltax) 
+            countsx, binsx = np.histogram(deltax, bins = nbins)
+            binsx = binsx[:-1]
+            
+            try:
+               GaussX = gmodel.fit(countsx, x=binsx, amp=np.max(countsx), mu=meanx, std=stdx)
+            except:
+                GaussX = None
+                
+                
+             ax[1,0].hist(binsz,binsz, weights = countsz)
+            if GaussZ is not None:
+                ax[1,0].plot(binsz,GaussZ.best_fit,'ro:',label='fit')
+                ax[1,0].set_title('Gaussian Fit')
+                ax[1,0].set_xlabel('Time')
+                ax[1,0].set_ylabel('DisplacementZ')
+            
+            ax[1,1].hist(binsy,binsy, weights = countsy)
+            
+            if GaussY is not None:
+                ax[1,1].plot(binsy,GaussY.best_fit,'ro:',label='fit')
+                ax[1,1].set_title('Gaussian Fit')
+                ax[1,1].set_xlabel('Time')
+                ax[1,1].set_ylabel('DisplacementY')
+            
+            ax[2].hist(binsx,binsx, weights = countsx)
+            
+            if GaussX is not None:
+                ax[1,2].plot(binsx,GaussX.best_fit,'ro:',label='fit')
+                ax[1,2].set_title('Gaussian Fit')
+                ax[1,2].set_xlabel('Time')
+                ax[1,2].set_ylabel('DisplacementX')
+            
+            
+            plt.tight_layout()
+            plt.show()    
+            tripleplot(binsz, binsy, binsx, countsz, countsy, countsx, GaussZ, GaussY, GaussX)
+            
+            if GaussZ is not None:
+               print('Fit in Z', GaussZ.fit_report())
+            if GaussY is not None:   
+               print('Fit in Y', GaussY.fit_report())
+            if GaussX is not None:     
+              print('Fit in X', GaussX.fit_report())
+        
+        
+        
+        self.figure.canvas.draw()
+        self.figure.canvas.flush_events()
+        self.SaveStats()
+        
+    
 
 class AllTrackViewer(object):
     def __init__(
@@ -2459,6 +2845,131 @@ def TrackMateLiveTracks(
     viewer.window.add_dock_widget(tracksavebutton, name="Save TrackID", area='left')
     napari.run()
     
+
+
+
+
+def TrackMateLiveTracksGauss(
+    Raw,
+    Seg,
+    Mask,
+    savedir,
+    calibration,
+    all_track_properties,
+    DividingTrajectory,
+    mode='fate',
+):
+
+    Raw = imread(Raw)
+    if Seg is not None:
+       Seg = imread(Seg)
+       Seg = Seg.astype('uint16')
+    if Mask is not None:
+        
+        Mask = Mask.astype('uint16')
+
+
+    viewer = napari.view_image(Raw, name='Image')
+        
+    if Seg is not None:
+        viewer.add_labels(Seg, name='SegImage')
+
+    if Mask is not None:
+        Boundary = Mask.copy()
+        Boundary = Boundary.astype('uint16')
+        viewer.add_labels(Boundary, name='Mask')
+
+    ID = []
+
+    if DividingTrajectory:
+        ID = DividingTrackIds
+    else:
+        ID = NonDividingTrackIds
+    trackbox = QComboBox()
+    trackbox.addItem(Boxname)
+
+    tracksavebutton = QPushButton('Save Track')
+    for i in range(0, len(ID)):
+            trackbox.addItem(str(ID[i]))
+    trackbox.addItem('all')
+
+    figure = plt.figure(figsize=(4, 4))
+    multiplot_widget = FigureCanvas(figure)
+    ax = multiplot_widget.figure.subplots(2, 3)
+    
+    
+    
+    width = 400
+    dock_widget = viewer.window.add_dock_widget(
+        multiplot_widget, name="TrackStats", area='right'
+    )
+    multiplot_widget.figure.tight_layout()
+    viewer.window._qt_window.resizeDocks([dock_widget], [width], Qt.Horizontal)
+
+    T = Raw.shape[0]
+    animation_widget = AnimationWidget(viewer, savedir, 0, T)
+    viewer.window.add_dock_widget(animation_widget, area='right')
+    viewer.update_console({'animation': animation_widget.animation})
+
+    AllTrackViewerGauss(
+        viewer,
+        Raw,
+        Seg,
+        Mask,
+        savedir,
+        calibration,
+        all_track_properties,
+        None,
+        multiplot_widget,
+        ax,
+        figure,
+        DividingTrajectory,
+        saveplot = False,
+        mode=mode,
+    )
+    trackbox.currentIndexChanged.connect(
+        lambda trackid=trackbox: AllTrackViewerGauss(
+            viewer,
+            Raw,
+            Seg,
+            Mask,
+            savedir,
+            calibration,
+            all_track_properties,
+            trackbox.currentText(),
+            multiplot_widget,
+            ax,
+            figure,
+            DividingTrajectory,
+            saveplot = False,
+            mode=mode,
+        )
+    )
+    tracksavebutton.clicked.connect(
+        lambda trackid=tracksavebutton: AllTrackViewerGauss(
+            viewer,
+            Raw,
+            Seg,
+            Mask,
+            savedir,
+            calibration,
+            all_track_properties,
+            trackbox.currentText(),
+            multiplot_widget,
+            ax,
+            figure,
+            DividingTrajectory,
+            saveplot = True,
+            mode=mode,
+        )
+    )
+
+    viewer.window.add_dock_widget(trackbox, name="TrackID", area='left')
+    viewer.window.add_dock_widget(tracksavebutton, name="Save TrackID", area='left')
+    napari.run()
+    
+
+
 
 
 def ShowAllTracks(
