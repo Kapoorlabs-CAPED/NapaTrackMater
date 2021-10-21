@@ -1505,17 +1505,17 @@ def import_TM_XML_Randomization(xml_path,image = None, Mask = None, nbins = 5):
             print('Gaussfits for trackid: ', trackid)
             gmodel = Model(gaussian)
             meanz, stdz = norm.fit(deltaz) 
-            countsz, binsz = np.histogram(deltaz)
+            countsz, binsz = np.histogram(deltaz,bins = nbins )
             binsz = binsz[:-1]
             GaussZ = gmodel.fit(countsz, x=binsz, amp=np.max(countsz), mu=meanz, std=stdz)
             
             meany, stdy = norm.fit(deltay) 
-            countsy, binsy = np.histogram(deltay)
+            countsy, binsy = np.histogram(deltay, bins = nbins)
             binsy = binsy[:-1]
             GaussY = gmodel.fit(countsy, x=binsy, amp=np.max(countsy), mu=meany, std=stdy)
             
             meanx, stdx = norm.fit(deltax) 
-            countsx, binsx = np.histogram(deltax)
+            countsx, binsx = np.histogram(deltax, bins = nbins)
             binsx = binsx[:-1]
             GaussX = gmodel.fit(countsx, x=binsx, amp=np.max(countsx), mu=meanx, std=stdx)
             
