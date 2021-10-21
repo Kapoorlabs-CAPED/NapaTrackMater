@@ -2026,7 +2026,7 @@ class AllTrackViewerGauss(object):
         
         
         
-                        TrackLayerTracklets[trackid].append(TrackIDLocations)
+                        TrackLayerTracklets[trackid].append(IDLocations)
         
         for (trackid, tracklets) in TrackLayerTracklets.items():
 
