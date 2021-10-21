@@ -1507,23 +1507,34 @@ def import_TM_XML_Randomization(xml_path,image = None, Mask = None, nbins = 5):
             meanz, stdz = norm.fit(deltaz) 
             countsz, binsz = np.histogram(deltaz,bins = nbins )
             binsz = binsz[:-1]
-            GaussZ = gmodel.fit(countsz, x=binsz, amp=np.max(countsz), mu=meanz, std=stdz)
-            
+            try:
+              GaussZ = gmodel.fit(countsz, x=binsz, amp=np.max(countsz), mu=meanz, std=stdz)
+            except:
+                GaussZ = None
             meany, stdy = norm.fit(deltay) 
             countsy, binsy = np.histogram(deltay, bins = nbins)
             binsy = binsy[:-1]
-            GaussY = gmodel.fit(countsy, x=binsy, amp=np.max(countsy), mu=meany, std=stdy)
-            
+            try:
+              GaussY = gmodel.fit(countsy, x=binsy, amp=np.max(countsy), mu=meany, std=stdy)
+            except:
+              GaussY = None  
+                
             meanx, stdx = norm.fit(deltax) 
             countsx, binsx = np.histogram(deltax, bins = nbins)
             binsx = binsx[:-1]
-            GaussX = gmodel.fit(countsx, x=binsx, amp=np.max(countsx), mu=meanx, std=stdx)
             
+            try:
+               GaussX = gmodel.fit(countsx, x=binsx, amp=np.max(countsx), mu=meanx, std=stdx)
+            except:
+                GaussX = None
             tripleplot(binsz, binsy, binsx, countsz, countsy, countsx, GaussZ, GaussY, GaussX)
             
-            print('Fit in Z', GaussZ.fit_report())
-            print('Fit in Y', GaussY.fit_report())
-            print('Fit in X', GaussX.fit_report())
+            if GaussZ is not None:
+               print('Fit in Z', GaussZ.fit_report())
+            if GaussY is not None:   
+               print('Fit in Y', GaussY.fit_report())
+            if GaussX is not None:     
+              print('Fit in X', GaussX.fit_report())
                      
                    
  
@@ -1533,22 +1544,27 @@ def tripleplot(binsz, binsy, binsx, countsz, countsy, countsx, GaussZ, GaussY, G
     ax = axes.ravel()
     
     ax[0].hist(binsz,binsz, weights = countsz)
-    ax[0].plot(binsz,GaussZ.best_fit,'ro:',label='fit')
-    ax[0].set_title('Gaussian Fit')
-    ax[0].set_xlabel('Time')
-    ax[0].set_ylabel('DisplacementZ')
+    if GaussZ is not None:
+        ax[0].plot(binsz,GaussZ.best_fit,'ro:',label='fit')
+        ax[0].set_title('Gaussian Fit')
+        ax[0].set_xlabel('Time')
+        ax[0].set_ylabel('DisplacementZ')
     
     ax[1].hist(binsy,binsy, weights = countsy)
-    ax[1].plot(binsy,GaussY.best_fit,'ro:',label='fit')
-    ax[1].set_title('Gaussian Fit')
-    ax[1].set_xlabel('Time')
-    ax[1].set_ylabel('DisplacementY')
+    
+    if GaussY is not None:
+        ax[1].plot(binsy,GaussY.best_fit,'ro:',label='fit')
+        ax[1].set_title('Gaussian Fit')
+        ax[1].set_xlabel('Time')
+        ax[1].set_ylabel('DisplacementY')
     
     ax[2].hist(binsx,binsx, weights = countsx)
-    ax[2].plot(binsx,GaussX.best_fit,'ro:',label='fit')
-    ax[2].set_title('Gaussian Fit')
-    ax[2].set_xlabel('Time')
-    ax[2].set_ylabel('DisplacementX')
+    
+    if GaussX is not None:
+        ax[2].plot(binsx,GaussX.best_fit,'ro:',label='fit')
+        ax[2].set_title('Gaussian Fit')
+        ax[2].set_xlabel('Time')
+        ax[2].set_ylabel('DisplacementX')
     
     
     plt.tight_layout()
