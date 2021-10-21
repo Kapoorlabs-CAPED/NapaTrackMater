@@ -3058,6 +3058,7 @@ def ShowAllTracksGauss(
     calibration,
     all_track_properties,
     mode='fate',
+    nbins = 10
 ):
 
     print('Reading Image') 
@@ -3124,6 +3125,7 @@ def ShowAllTracksGauss(
         None,
         saveplot = False,
         mode=mode,
+        nbins = nbins
     )
     trackbox.currentIndexChanged.connect(
         lambda trackid=trackbox: AllTrackViewerGauss(
@@ -3141,6 +3143,7 @@ def ShowAllTracksGauss(
             None,
             saveplot = False,
             mode=mode,
+            nbins = nbins
         )
     )
     
@@ -3160,6 +3163,7 @@ def ShowAllTracksGauss(
             None,
             saveplot = True,
             mode=mode,
+            nbins = nbins
         )
     )
     
