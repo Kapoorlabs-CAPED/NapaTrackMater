@@ -2070,7 +2070,7 @@ class AllTrackViewerGauss(object):
                 GaussX = None
                 
                 
-             ax[1,0].hist(binsz,binsz, weights = countsz)
+            ax[1,0].hist(binsz,binsz, weights = countsz)
             if GaussZ is not None:
                 ax[1,0].plot(binsz,GaussZ.best_fit,'ro:',label='fit')
                 ax[1,0].set_title('Gaussian Fit')
@@ -2085,7 +2085,7 @@ class AllTrackViewerGauss(object):
                 ax[1,1].set_xlabel('Time')
                 ax[1,1].set_ylabel('DisplacementY')
             
-            ax[2].hist(binsx,binsx, weights = countsx)
+            ax[1,2].hist(binsx,binsx, weights = countsx)
             
             if GaussX is not None:
                 ax[1,2].plot(binsx,GaussX.best_fit,'ro:',label='fit')
