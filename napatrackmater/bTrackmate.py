@@ -2110,7 +2110,84 @@ class AllTrackViewerGauss(object):
         self.figure.canvas.flush_events()
         self.SaveStats()
         
-    
+        def draw(self):
+        TrackLayerTracklets = {}
+        self.trackviewer.status = str(self.ID)
+        for i in range(0, len(self.all_track_properties)):
+                    trackid, alltracklets, DividingTrajectory = self.all_track_properties[i]
+                    if self.ID is not None and self.ID == trackid:
+                        TrackLayerTracklets = self.track(
+                            TrackLayerTracklets, trackid, alltracklets
+                        )
+                    if self.ID == None or self.ID == 'all':
+                        TrackLayerTracklets = self.track(
+                            TrackLayerTracklets, trackid, alltracklets
+                        )
+
+        for (trackid, tracklets) in TrackLayerTracklets.items():
+
+            tracklets = tracklets[1]
+            if len(tracklets) > 0:
+                self.trackviewer.add_tracks(
+                    np.asarray(tracklets), name=self.tracklines + str(trackid), colormap = 'twilight', tail_length = sys.float_info.max
+                )
+
+        self.trackviewer.theme = 'light'
+        self.trackviewer.dims.ndisplay = 3
+
+    def track(self, TrackLayerTracklets, trackid, alltracklets):
+
+        TrackLayerTracklets[trackid] = [trackid]
+        list_tracklets = []
+        for (trackletid, tracklets) in alltracklets.items():
+
+            Locationtracklets = tracklets[1]
+            if len(Locationtracklets) > 0:
+                Locationtracklets = sorted(
+                    Locationtracklets, key=sortFirst, reverse=False
+                )
+                for tracklet in Locationtracklets:
+                    (
+                        t,
+                        z,
+                        y,
+                        x,
+                        total_intensity,
+                        mean_intensity,
+                        cellradius,
+                        distance,
+                        prob_inside,
+                        trackletspeed,
+                        trackletdirection,
+                        DividingTrajectory,
+                    ) = tracklet
+                    if (
+                        DividingTrajectory == self.DividingTrajectory
+                        and self.ID == None
+                        or self.ID == 'all'
+                    ):
+                        list_tracklets.append(
+                            [
+                                int(str(trackletid)),
+                                int(float(t)/self.calibration[3]) ,
+                                float(z)/self.calibration[2] ,
+                                float(y)/self.calibration[1],
+                                float(x)/self.calibration[0] ,
+                            ]
+                        )
+                    else:
+                        list_tracklets.append(
+                            [
+                                int(str(trackletid)),
+                                int(float(t)/self.calibration[3]) ,
+                                float(z)/self.calibration[2] ,
+                                float(y)/self.calibration[1],
+                                float(x)/self.calibration[0] ,
+                            ]
+                        )
+                TrackLayerTracklets[trackid].append(list_tracklets)
+
+        return TrackLayerTracklets
 
 class AllTrackViewer(object):
     def __init__(
