@@ -2970,7 +2970,123 @@ def TrackMateLiveTracksGauss(
     
 
 
+def ShowAllTracksGauss(
+    Raw,
+    Seg,
+    Mask,
+    savedir,
+    calibration,
+    all_track_properties,
+    mode='fate',
+):
 
+    print('Reading Image') 
+    Raw = imread(Raw)
+    if Seg is not None:
+        Seg = imread(Seg)
+        Seg = Seg.astype('uint16')
+        print('Reading Seg Image')   
+    if Mask is not None:
+        
+        Mask = Mask.astype('uint16')
+        print('Reading Mask Image') 
+        
+        
+    print('Building Napari in augenblick') 
+    
+    viewer = napari.Viewer()
+    viewer.add_image(Raw, name='Image')
+        
+    if Seg is not None:
+        viewer.add_labels(Seg, name='SegImage')
+
+    if Mask is not None:
+        Boundary = Mask.copy()
+        Boundary = Boundary.astype('uint16')
+        viewer.add_labels(Boundary, name='Mask')
+        
+        
+    print('Building Napari GUI')
+    ID = AllTrackIds
+    trackbox = QComboBox()
+    trackbox.addItem(Boxname)
+    tracksavebutton = QPushButton('Save Track')
+    for i in range(0, len(ID)):
+            trackbox.addItem(str(ID[i]))
+    trackbox.addItem('all')
+    figure = plt.figure(figsize=(4, 4))
+    multiplot_widget = FigureCanvas(figure)
+    ax = multiplot_widget.figure.subplots(1, 2)
+    width = 400
+    dock_widget = viewer.window.add_dock_widget(
+        multiplot_widget, name="TrackStats", area='right'
+    )
+    print('Adding widgets')
+    multiplot_widget.figure.tight_layout()
+    viewer.window._qt_window.resizeDocks([dock_widget], [width], Qt.Horizontal)
+    T = Raw.shape[0]
+    animation_widget = AnimationWidget(viewer, savedir, 0, T)
+    viewer.window.add_dock_widget(animation_widget, area='right')
+    viewer.update_console({'animation': animation_widget.animation})
+
+    AllTrackViewer(
+        viewer,
+        Raw,
+        Seg,
+        Mask,
+        savedir,
+        calibration,
+        all_track_properties,
+        None,
+        multiplot_widget,
+        ax,
+        figure,
+        None,
+        saveplot = False,
+        mode=mode,
+    )
+    trackbox.currentIndexChanged.connect(
+        lambda trackid=trackbox: AllTrackViewerGauss(
+            viewer,
+            Raw,
+            Seg,
+            Mask,
+            savedir,
+            calibration,
+            all_track_properties,
+            trackbox.currentText(),
+            multiplot_widget,
+            ax,
+            figure,
+            None,
+            saveplot = False,
+            mode=mode,
+        )
+    )
+    
+    tracksavebutton.clicked.connect(
+        lambda trackid=tracksavebutton: AllTrackViewerGauss(
+            viewer,
+            Raw,
+            Seg,
+            Mask,
+            savedir,
+            calibration,
+            all_track_properties,
+            trackbox.currentText(),
+            multiplot_widget,
+            ax,
+            figure,
+            None,
+            saveplot = True,
+            mode=mode,
+        )
+    )
+    
+    print('About to open Napari')
+    viewer.window.add_dock_widget(trackbox, name="TrackID", area='left')
+    viewer.window.add_dock_widget(tracksavebutton, name="Save TrackID", area='left')
+    napari.run()
 
 def ShowAllTracks(
     Raw,
