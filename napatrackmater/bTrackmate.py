@@ -1741,7 +1741,7 @@ class AllTrackViewerGauss(object):
         figure,
         DividingTrajectory = None,
         saveplot=False,
-        nbins = 10;
+        nbins = 10,
         window_size=3,
         mode='fate',
         
