@@ -3028,7 +3028,7 @@ def ShowAllTracksGauss(
     viewer.window.add_dock_widget(animation_widget, area='right')
     viewer.update_console({'animation': animation_widget.animation})
 
-    AllTrackViewer(
+    AllTrackViewerGauss(
         viewer,
         Raw,
         Seg,
