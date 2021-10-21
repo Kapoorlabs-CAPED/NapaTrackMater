@@ -1286,7 +1286,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     ]
 
  
-def import_TM_XML_Localization(xml_path,image, Mask, Btrack_pink = None):
+def import_TM_XML_Localization(xml_path,image, Mask):
     
     image = daskread(image)[0,:]
     Mask = imread(Mask)
@@ -1339,36 +1339,7 @@ def import_TM_XML_Localization(xml_path,image, Mask, Btrack_pink = None):
         TimedMask = None
         Boundary = None    
             
-    if Btrack_pink is not None and Mask is not None:
-        
-        Btrack_pink_time = np.zeros([image.shape[0],image.shape[2], image.shape[3]])
-        for i in range(image.shape[0]):
-            
-            
-              Btrack_pink_time[i,:,:] =  Btrack_pink[:,:]
-              
-        if len(Btrack_pink_time.shape) < len(image.shape):
-            # T Z Y X
-            UpdateBtrack_pink = np.zeros(
-                [
-                    image.shape[0],
-                    image.shape[1],
-                    image.shape[2],
-                    image.shape[3],
-                ]
-            )
-            for i in range(0, UpdateBtrack_pink.shape[0]):
-                for j in range(0, UpdateBtrack_pink.shape[1]):
-
-                    UpdateBtrack_pink[i, j, :, :] = Btrack_pink_time[i, :, :]
-                    
-        else:
-            UpdateBtrack_pink = Btrack_pink_time    
-            
-        
-        Btrack_pink = UpdateBtrack_pink
-        Mask = np.logical_and(Mask,Btrack_pink)
-        TimedMask, Boundary = boundary_points(Mask, xcalibration, ycalibration, zcalibration)
+   
 
     for frame in Spotobjects.findall('SpotsInFrame'):
 
@@ -1641,6 +1612,7 @@ class AllTrackViewer(object):
         figure,
         DividingTrajectory = None,
         saveplot=False,
+        
         window_size=3,
         mode='fate',
         
