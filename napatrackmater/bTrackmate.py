@@ -1741,7 +1741,7 @@ class AllTrackViewerGauss(object):
         figure,
         DividingTrajectory = None,
         saveplot=False,
-        
+        nbins = 10;
         window_size=3,
         mode='fate',
         
@@ -1753,6 +1753,7 @@ class AllTrackViewerGauss(object):
         self.Raw = Raw
         self.Seg = Seg
         self.Mask = Mask
+        self.nbins = nbins
         self.calibration = calibration
         self.mode = mode
         if ID == 'all':
@@ -2045,14 +2046,14 @@ class AllTrackViewerGauss(object):
             print('Gaussfits for trackid: ', trackid)
             gmodel = Model(gaussian)
             meanz, stdz = norm.fit(deltaz) 
-            countsz, binsz = np.histogram(deltaz,bins = nbins )
+            countsz, binsz = np.histogram(deltaz,bins = self.nbins )
             binsz = binsz[:-1]
             try:
               GaussZ = gmodel.fit(countsz, x=binsz, amp=np.max(countsz), mu=meanz, std=stdz)
             except:
                 GaussZ = None
             meany, stdy = norm.fit(deltay) 
-            countsy, binsy = np.histogram(deltay, bins = nbins)
+            countsy, binsy = np.histogram(deltay, bins = self.nbins)
             binsy = binsy[:-1]
             try:
               GaussY = gmodel.fit(countsy, x=binsy, amp=np.max(countsy), mu=meany, std=stdy)
@@ -2060,7 +2061,7 @@ class AllTrackViewerGauss(object):
               GaussY = None  
                 
             meanx, stdx = norm.fit(deltax) 
-            countsx, binsx = np.histogram(deltax, bins = nbins)
+            countsx, binsx = np.histogram(deltax, bins = self.nbins)
             binsx = binsx[:-1]
             
             try:
@@ -2933,6 +2934,7 @@ def TrackMateLiveTracksGauss(
     all_track_properties,
     DividingTrajectory,
     mode='fate',
+    nbins = 10
 ):
 
     Raw = imread(Raw)
@@ -3001,6 +3003,7 @@ def TrackMateLiveTracksGauss(
         DividingTrajectory,
         saveplot = False,
         mode=mode,
+        nbins = nbins
     )
     trackbox.currentIndexChanged.connect(
         lambda trackid=trackbox: AllTrackViewerGauss(
@@ -3018,6 +3021,7 @@ def TrackMateLiveTracksGauss(
             DividingTrajectory,
             saveplot = False,
             mode=mode,
+            nbins = nbins
         )
     )
     tracksavebutton.clicked.connect(
@@ -3036,6 +3040,7 @@ def TrackMateLiveTracksGauss(
             DividingTrajectory,
             saveplot = True,
             mode=mode,
+            nbins = nbins
         )
     )
 
