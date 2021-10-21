@@ -1783,8 +1783,7 @@ class AllTrackViewerGauss(object):
 
         for i in range(self.ax.shape[0]):
             for j in range(self.ax.shape[1]):
-                  self.ax[i].cla()
-                  self.ax[j].cla()
+                  self.ax[i,j].cla()
 
         self.ax[0,0].set_title("distance_to_boundary")
         self.ax[0,0].set_xlabel("minutes")
