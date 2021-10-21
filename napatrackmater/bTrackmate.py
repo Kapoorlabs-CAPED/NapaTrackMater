@@ -1285,11 +1285,12 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
         tcalibration,
     ]
 
- 
-def import_TM_XML_Localization(xml_path,image, Mask):
+def common_stats_function(xml_path, image, Mask):
     
-    image = daskread(image)[0,:]
-    Mask = imread(Mask)
+    if image is not None:
+      image = daskread(image)[0,:]
+    if Mask is not None:
+        Mask = imread(Mask)
     root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
 
     filtered_track_ids = [
@@ -1444,7 +1445,118 @@ def import_TM_XML_Localization(xml_path,image, Mask):
             )
             all_track_properties.append([track_id, location_prop_dist, DividingTrajectory])
             
+    return all_track_properties        
             
+    
+def import_TM_XML_Randomization(xml_path,image = None, Mask = None, nbins = 5):
+    
+    
+            
+    all_track_properties = common_stats_function(xml_path, image, Mask)        
+    IDLocations = []
+    TrackLayerTracklets = {}
+    AllT = []
+    TrackIDLocations = []
+    for i in tqdm(range(0, len(all_track_properties))):
+                    trackid, alltracklets, DividingTrajectory = all_track_properties[i]
+
+                    TrackLayerTracklets[trackid] = [trackid]
+                    for (trackletid, tracklets) in alltracklets.items():
+                            Locationtracklets = tracklets[1]
+                            if len(Locationtracklets) > 0:
+                                Locationtracklets = sorted(
+                                    Locationtracklets, key=sortFirst, reverse=False
+                                )
+        
+                                for tracklet in Locationtracklets:
+                                    (
+                                        t,
+                                        z,
+                                        y,
+                                        x,
+                                        total_intensity,
+                                        mean_intensity,
+                                        cellradius,
+                                        distance,
+                                        prob_inside,
+                                        speed,
+                                        directionality,
+                                        DividingTrajectory,
+                                    ) = tracklet
+                                    
+                                    TrackIDLocations.append([float(t), float(z), float(y), float(x)])
+        
+                    TrackLayerTracklets[trackid].append(TrackIDLocations)
+                    
+    for (trackid, tracklets) in TrackLayerTracklets.items():
+
+            
+            locations = tracklets[1]
+            df = pd.DataFrame(locations)
+            #Create deltat, deltaz, deltay, deltax
+            derivativedf = df.diff()
+            t = df[0][1:]
+            deltat = derivativedf[0][1:] 
+            deltaz = derivativedf[1][1:] 
+            deltay = derivativedf[2][1:] 
+            deltax = derivativedf[3][1:] 
+            
+            print('Gaussfits for trackid: ', trackid)
+            gmodel = Model(gaussian)
+            meanz, stdz = norm.fit(deltaz) 
+            countsz, binsz = np.histogram(deltaz)
+            binsz = binsz[:-1]
+            GaussZ = gmodel.fit(countsz, x=binsz, amp=np.max(countsz), mu=meanz, std=stdz)
+            
+            meany, stdy = norm.fit(deltay) 
+            countsy, binsy = np.histogram(deltay)
+            binsy = binsy[:-1]
+            GaussY = gmodel.fit(countsy, x=binsy, amp=np.max(countsy), mu=meany, std=stdy)
+            
+            meanx, stdx = norm.fit(deltax) 
+            countsx, binsx = np.histogram(deltax)
+            binsx = binsx[:-1]
+            GaussX = gmodel.fit(countsx, x=binsx, amp=np.max(countsx), mu=meanx, std=stdx)
+            
+            tripleplot(binsz, binsy, binsx, countsz, countsy, countsx, GaussZ, GaussY, GaussX)
+            
+            print('Fit in Z', GaussZ.fit_report())
+            print('Fit in Y', GaussY.fit_report())
+            print('Fit in X', GaussX.fit_report())
+                     
+                   
+ 
+ 
+def tripleplot(binsz, binsy, binsx, countsz, countsy, countsx, GaussZ, GaussY, GaussX):
+    fig, axes = plt.subplots(1, 3, figsize=(15, 6))
+    ax = axes.ravel()
+    
+    ax[0].hist(binsz,binsz, weights = countsz)
+    ax[0].plot(binsz,GaussZ.best_fit,'ro:',label='fit')
+    ax[0].set_title('Gaussian Fit')
+    ax[0].set_xlabel('Time')
+    ax[0].set_ylabel('DisplacementZ')
+    
+    ax[1].hist(binsy,binsy, weights = countsy)
+    ax[1].plot(binsy,GaussY.best_fit,'ro:',label='fit')
+    ax[1].set_title('Gaussian Fit')
+    ax[1].set_xlabel('Time')
+    ax[1].set_ylabel('DisplacementY')
+    
+    ax[2].hist(binsx,binsx, weights = countsx)
+    ax[2].plot(binsx,GaussX.best_fit,'ro:',label='fit')
+    ax[2].set_title('Gaussian Fit')
+    ax[2].set_xlabel('Time')
+    ax[2].set_ylabel('DisplacementX')
+    
+    
+    plt.tight_layout()
+    plt.show()
+
+    
+def import_TM_XML_Localization(xml_path,image, Mask):
+    
+    all_track_properties = common_stats_function(xml_path, image, Mask) 
     IDLocations = []
     TrackLayerTracklets = {}
     Gradients = []
@@ -1595,6 +1707,9 @@ def wind_rose(rosedata, wind_dirs, palette=None):
     xtl = ax.set_xticklabels(['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'])
     
     return fig
+
+
+
 class AllTrackViewer(object):
     def __init__(
         self,
@@ -1666,7 +1781,6 @@ class AllTrackViewer(object):
         self.ax[1].set_ylabel("end_distance")
 
         # Execute the function
-
         IDLocations = []
         TrackLayerTracklets = {}
         for i in tqdm(range(0, len(self.all_track_properties))):
@@ -1720,6 +1834,7 @@ class AllTrackViewer(object):
                                     ) = tracklet
                                     TrackLayerTrackletsList.append([trackletid, t, z, y, x])
                                     IDLocations.append([t, z, y, x])
+                                    
                                     self.AllT.append(int(float(t )))
                                     self.AllSpeed.append("{:.1f}".format(float(speed)))
                                     self.AllDirection.append("{:.1f}".format(float(directionality)))
@@ -1882,6 +1997,7 @@ class AllTrackViewer(object):
                             self.figure.canvas.draw()
                             self.figure.canvas.flush_events()
         
+        
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
         self.SaveStats()
@@ -1915,7 +2031,7 @@ class AllTrackViewer(object):
         
                             self.AllT = []
                             self.AllIntensity = []
-                            TrackLayerTracklets = []
+                            TrackLayerTrackletsList = []
         
                             max_int = 1
                             Locationtracklets = tracklets[1]
@@ -1941,7 +2057,7 @@ class AllTrackViewer(object):
                                     ) = tracklet
                                     if float(total_intensity) > max_int:
                                         max_int = float(total_intensity)
-                                    TrackLayerTracklets.append([trackletid, t, z, y, x])
+                                    TrackLayerTrackletsList.append([trackletid, t, z, y, x])
                                     IDLocations.append([t, z, y, x])
                                     self.AllT.append(int(float(t)))
         
