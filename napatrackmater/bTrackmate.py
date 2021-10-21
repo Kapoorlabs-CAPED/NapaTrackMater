@@ -1456,10 +1456,10 @@ def import_TM_XML_Randomization(xml_path,image = None, Mask = None, nbins = 5):
     IDLocations = []
     TrackLayerTracklets = {}
     AllT = []
-    TrackIDLocations = []
+    
     for i in tqdm(range(0, len(all_track_properties))):
                     trackid, alltracklets, DividingTrajectory = all_track_properties[i]
-
+                    TrackIDLocations = []
                     TrackLayerTracklets[trackid] = [trackid]
                     for (trackletid, tracklets) in alltracklets.items():
                             Locationtracklets = tracklets[1]
@@ -1492,6 +1492,7 @@ def import_TM_XML_Randomization(xml_path,image = None, Mask = None, nbins = 5):
 
             
             locations = tracklets[1]
+            
             df = pd.DataFrame(locations)
             #Create deltat, deltaz, deltay, deltax
             derivativedf = df.diff()
