@@ -2107,7 +2107,7 @@ class AllTrackViewerGauss(object):
         
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
-        self.SaveStats()
+        
         
     def draw(self):
             TrackLayerTracklets = {}
