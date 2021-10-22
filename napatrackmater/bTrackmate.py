@@ -2070,28 +2070,28 @@ class AllTrackViewerGauss(object):
                 GaussX = None
                 
                 
-            ax[1,0].hist(binsz,binsz, weights = countsz)
+            self.ax[1,0].hist(binsz,binsz, weights = countsz)
             if GaussZ is not None:
-                ax[1,0].plot(binsz,GaussZ.best_fit,'ro:',label='fit')
-                ax[1,0].set_title('Gaussian Fit')
-                ax[1,0].set_xlabel('Time')
-                ax[1,0].set_ylabel('DisplacementZ')
+                self.ax[1,0].plot(binsz,GaussZ.best_fit,'ro:',label='fit')
+                self.ax[1,0].set_title('Gaussian Fit')
+                self.ax[1,0].set_xlabel('Time')
+                self.ax[1,0].set_ylabel('DisplacementZ')
             
-            ax[1,1].hist(binsy,binsy, weights = countsy)
+            self.ax[1,1].hist(binsy,binsy, weights = countsy)
             
             if GaussY is not None:
-                ax[1,1].plot(binsy,GaussY.best_fit,'ro:',label='fit')
-                ax[1,1].set_title('Gaussian Fit')
-                ax[1,1].set_xlabel('Time')
-                ax[1,1].set_ylabel('DisplacementY')
+                self.ax[1,1].plot(binsy,GaussY.best_fit,'ro:',label='fit')
+                self.ax[1,1].set_title('Gaussian Fit')
+                self.ax[1,1].set_xlabel('Time')
+                self.ax[1,1].set_ylabel('DisplacementY')
             
-            ax[1,2].hist(binsx,binsx, weights = countsx)
+            self.ax[1,2].hist(binsx,binsx, weights = countsx)
             
             if GaussX is not None:
-                ax[1,2].plot(binsx,GaussX.best_fit,'ro:',label='fit')
-                ax[1,2].set_title('Gaussian Fit')
-                ax[1,2].set_xlabel('Time')
-                ax[1,2].set_ylabel('DisplacementX')
+                self.ax[1,2].plot(binsx,GaussX.best_fit,'ro:',label='fit')
+                self.ax[1,2].set_title('Gaussian Fit')
+                self.ax[1,2].set_xlabel('Time')
+                self.ax[1,2].set_ylabel('DisplacementX')
             
             
             plt.tight_layout()
