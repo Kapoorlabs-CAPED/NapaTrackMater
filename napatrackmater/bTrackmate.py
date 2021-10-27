@@ -1445,14 +1445,14 @@ def common_stats_function(xml_path, image, Mask):
             )
             all_track_properties.append([track_id, location_prop_dist, DividingTrajectory])
             
-    return all_track_properties        
+    return all_track_properties, xcalibration, ycalibration, zcalibration, tcalibration        
             
     
 def import_TM_XML_Randomization(xml_path,image = None, Mask = None, nbins = 5):
     
     
             
-    all_track_properties = common_stats_function(xml_path, image, Mask)        
+    all_track_properties,xcalibration, ycalibration, zcalibration, tcalibration = common_stats_function(xml_path, image, Mask)        
     TrackLayerTracklets = {}
     AllT = []
     
@@ -1572,13 +1572,15 @@ def tripleplot(binsz, binsy, binsx, countsz, countsy, countsx, GaussZ, GaussY, G
     
 def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
     
-    all_track_properties = common_stats_function(xml_path, image, Mask) 
+    all_track_properties,xcalibration, ycalibration, zcalibration, tcalibration = common_stats_function(xml_path, image, Mask) 
+    
     IDLocations = []
     TrackLayerTracklets = {}
     Gradients = []
     AllT = []
     figure = plt.figure(figsize=(16, 10))
     ax = plt.axes(projection='3d')
+    plt.autoscale(enable = True)
     # Data for a three-dimensional line
     print('All Tracks plot') 
     for i in tqdm(range(0, len(all_track_properties))):
@@ -1613,40 +1615,43 @@ def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
                                         DividingTrajectory,
                                     ) = tracklet
                                     
+                                    
                                     AllDistance.append((float(distance)))
-                                    AllTracksZ.append(float(z))
+                                    AllTracksZ.append(float(z) )
                                     AllTracksY.append(float(y))
                                     AllTracksX.append(float(x))
-                                    
-                    #for i in range(len(AllTracksZ)):
-                        #AllTracksZ[i] = AllTracksZ[i] - AllTracksZ[0] 
-                        #AllTracksY[i] = AllTracksY[i] - AllTracksY[0] 
-                        #AllTracksX[i] = AllTracksX[i] - AllTracksX[0] 
+                    subZ = AllTracksZ[0]
+                    subY = AllTracksY[0]
+                    subX = AllTracksX[0]
+                    for i in range(len(AllTracksZ)):
+                         AllTracksZ[i] = (AllTracksZ[i] - subZ) 
+                         AllTracksY[i] = (AllTracksY[i] - subY) 
+                         AllTracksX[i] =  (AllTracksX[i] - subX) 
                         
-                    AllTracksZ = np.diff(AllTracksZ)
-                    AllTracksY = np.diff(AllTracksY)
-                    AllTracksX = np.diff(AllTracksX)
+                    # AllTracksZ = np.diff(AllTracksZ)
+                    # AllTracksY = np.diff(AllTracksY)
+                    # AllTracksX = np.diff(AllTracksX)
                     
-                    AllTracksZ = MovingAverage(
-                                AllTracksZ, window_size=window_size
-                            )
+                    # AllTracksZ = MovingAverage(
+                    #             AllTracksZ, window_size=window_size
+                    #         )
                     
-                    AllTracksY = MovingAverage(
-                                AllTracksY, window_size=window_size
-                            )
+                    # AllTracksY = MovingAverage(
+                    #             AllTracksY, window_size=window_size
+                    #         )
                     
-                    AllTracksX = MovingAverage(
-                                AllTracksX, window_size=window_size
-                            )
+                    # AllTracksX = MovingAverage(
+                    #             AllTracksX, window_size=window_size
+                    #         )
                     gradient = np.sum(np.diff(AllDistance))
                     Gradients.append(gradient)
       
 
-                     
-                    ax.plot3D(AllTracksX, AllTracksY, AllTracksZ)
-                    ax.set_xlabel('dx')
+                    
+                    ax.plot3D(AllTracksZ, AllTracksY, AllTracksX)
+                    ax.set_xlabel('dz')
                     ax.set_ylabel('dy')
-                    ax.set_zlabel('dz');
+                    ax.set_zlabel('dx');
                    
     return Gradients            
             
