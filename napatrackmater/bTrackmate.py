@@ -1581,6 +1581,10 @@ def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
     figure = plt.figure(figsize=(16, 10))
     ax = plt.axes(projection='3d')
     plt.autoscale(enable = True)
+    
+    figure2D = plt.figure(figsize=(16, 10))
+    multiplot_widget = FigureCanvas(figure2D)
+    ax2D = multiplot_widget.figure.subplots(1, 3)
     # Data for a three-dimensional line
     print('All Tracks plot') 
     for i in tqdm(range(0, len(all_track_properties))):
@@ -1652,6 +1656,19 @@ def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
                     ax.set_xlabel('dz')
                     ax.set_ylabel('dy')
                     ax.set_zlabel('dx');
+                    
+                    ax2D[0].plot(AllTracksX, AllTracksY)
+                    ax2D[0].set_xlabel('dx')
+                    ax2D[0].set_ylabel('dy')
+                    
+                    ax2D[1].plot(AllTracksZ, AllTracksY)
+                    ax2D[1].set_xlabel('dz')
+                    ax2D[1].set_ylabel('dy')
+                    
+                    ax2D[2].plot(AllTracksZ, AllTracksX)
+                    ax2D[2].set_xlabel('dz')
+                    ax2D[2].set_ylabel('dx')
+                    
                    
     return Gradients            
             
