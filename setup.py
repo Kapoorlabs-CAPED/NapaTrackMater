@@ -8,7 +8,7 @@ with open('README.md') as f:
 setup(
     name="napatrackmater",
 
-    version='2.4.9',
+    version='2.5.0',
 
     author='Varun Kapoor,Claudia Carabana Garcia, Mari Tolonen',
     author_email='randomaccessiblekapoor@gmail.com',

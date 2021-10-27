@@ -1570,18 +1570,25 @@ def tripleplot(binsz, binsy, binsx, countsz, countsy, countsx, GaussZ, GaussY, G
     plt.show()
 
     
-def import_TM_XML_Localization(xml_path,image, Mask):
+def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
     
     all_track_properties = common_stats_function(xml_path, image, Mask) 
     IDLocations = []
     TrackLayerTracklets = {}
     Gradients = []
     AllT = []
+    figure = plt.figure(figsize=(16, 10))
+    ax = plt.axes(projection='3d')
+    # Data for a three-dimensional line
+    print('All Tracks plot') 
     for i in tqdm(range(0, len(all_track_properties))):
                     trackid, alltracklets, DividingTrajectory = all_track_properties[i]
 
                     
                     AllDistance = []
+                    AllTracksZ = []
+                    AllTracksY = []
+                    AllTracksX = []
                     AllT.append(trackid)
                     for (trackletid, tracklets) in alltracklets.items():
                             Locationtracklets = tracklets[1]
@@ -1607,14 +1614,41 @@ def import_TM_XML_Localization(xml_path,image, Mask):
                                     ) = tracklet
                                     
                                     AllDistance.append((float(distance)))
-                               
-        
+                                    AllTracksZ.append(float(z))
+                                    AllTracksY.append(float(y))
+                                    AllTracksX.append(float(x))
+                                    
+                    #for i in range(len(AllTracksZ)):
+                        #AllTracksZ[i] = AllTracksZ[i] - AllTracksZ[0] 
+                        #AllTracksY[i] = AllTracksY[i] - AllTracksY[0] 
+                        #AllTracksX[i] = AllTracksX[i] - AllTracksX[0] 
+                        
+                    AllTracksZ = np.diff(AllTracksZ)
+                    AllTracksY = np.diff(AllTracksY)
+                    AllTracksX = np.diff(AllTracksX)
+                    
+                    AllTracksZ = MovingAverage(
+                                AllTracksZ, window_size=window_size
+                            )
+                    
+                    AllTracksY = MovingAverage(
+                                AllTracksY, window_size=window_size
+                            )
+                    
+                    AllTracksX = MovingAverage(
+                                AllTracksX, window_size=window_size
+                            )
                     gradient = np.sum(np.diff(AllDistance))
                     Gradients.append(gradient)
-                            
-    print('Histplot for: ', 'Cell to tissue localization')               
-    sns.histplot(Gradients, kde = True)
-    plt.show()
+      
+
+                     
+                    ax.plot3D(AllTracksX, AllTracksY, AllTracksZ)
+                    ax.set_xlabel('dx')
+                    ax.set_ylabel('dy')
+                    ax.set_zlabel('dz');
+                   
+    return Gradients            
             
             
             
