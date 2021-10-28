@@ -873,7 +873,6 @@ class VizCorrect(object):
                             if self.AllKeys[k] == 'FRAME':
                                 self.keyT = k    
                  
-                 print(self.keyT)
                  Attributeids = []
                  TrackAttributeids = []
                  for attributename in self.AllKeys:
@@ -962,27 +961,8 @@ class VizCorrect(object):
         def image_add(self, attribute, imagename, compute = False ):
 
              if compute:
-                 
-                 
-                          self.boxes = {}
-                          self.labels = {}
+                          
                           self.idattr = {}
-                          print("Computing region boxes")
-                          for i in tqdm(range(0, self.Segimage.shape[0])):
-                              timeboxes = []
-                              timelabels = []
-                              ThreeDimage = self.Segimage[i,:]
-                              
-                              for region in regionprops(ThreeDimage):
-                              
-                                    timeboxes.append(region.bbox)
-                                    timelabels.append(region.label)
-                              self.boxes[i] = [i]     
-                              self.boxes[i].append(timeboxes)
-                              
-                              self.labels[i] = [i]     
-                              self.labels[i].append(timelabels)
-                              
                           
                           for k in range(len(self.AllTrackKeys)):
                             
@@ -1029,31 +1009,11 @@ class VizCorrect(object):
 
                              
         def second_image_add(self, attribute, imagename, compute = False):
-                
-                       
                         
                         if compute:
                           
                           self.boxes = {}
                           self.labels = {}
-                          
-                          print("Computing region boxes")
-                          
-                          for i in tqdm(range(0, self.Segimage.shape[0])):
-                              timeboxes = []
-                              timelabels = []
-                              ThreeDimage = self.Segimage[i,:]
-                              
-                              for region in regionprops(ThreeDimage):
-                              
-                                    timeboxes.append(region.bbox)
-                                    timelabels.append(region.label)
-                              self.boxes[i] = [i]     
-                              self.boxes[i].append(timeboxes)
-                              
-                              self.labels[i] = [i]     
-                              self.labels[i].append(timelabels)
-                              
                           
                           for k in range(len(self.AllKeys)):
                             
@@ -1072,35 +1032,6 @@ class VizCorrect(object):
                                 NewSegimage = self.Relabel(self.Segimage.copy(), locations)
                                 self.viewer.add_labels(NewSegimage, name = self.Name + attribute)  
                              
-
-                        
-        
-                                                          
-        def Conditioncheck(self, centroid, boxA, p, ndim):
-            
-              condition = False
-              if centroid[p] >=  boxA[p]  and centroid[p] <=  boxA[p + ndim]:
-                  
-                   condition = True
-                   
-              return condition     
-         
-        def iou(self, boxA, centroid, label, relabelval):
-            
-            ndim = len(centroid)
-            inside = False
-            
-            Condition = [self.Conditioncheck(centroid, boxA, p, ndim) for p in range(0,ndim)]
-                
-            inside = all(Condition)
-            
-            if inside:
-                
-                return boxA, relabelval 
-            
-            else:
-                
-                return boxA, label
                     
         def Relabel(self, image, locations):
         
@@ -1109,7 +1040,6 @@ class VizCorrect(object):
                for p in tqdm(range(0, NewSegimage.shape[0])):
                    
                    sliceimage = NewSegimage[p,:]
-                   
                    originallabels = []
                    newlabels = []
                    for  relabelval, centroid in locations:
@@ -1117,25 +1047,19 @@ class VizCorrect(object):
                             time, z, y, x = centroid
                         else:
                             time, y, x = centroid 
+                        
                         if p == int(time): 
                                
-                               timeboxes = self.boxes[time][1]
-                               timelabels = self.labels[time][1]
-                               for i  in range(len(timeboxes)):
-                                  box =  timeboxes[i]
-                                  originallabel = timelabels[i]
-                                  if len(NewSegimage.shape) == 4:   
-                                     box, returnval = self.iou(box, (z,y,x), originallabel, relabelval)
-                                  else:
-                                     box, returnval = self.iou(box, (y,x), originallabel, relabelval)
+                               if len(NewSegimage.shape) == 4:  
+                                  originallabel = sliceimage[z,y,x]
+                               else:
+                                   originallabel = sliceimage[y,x]
+                                    
                                       
-                                  if math.isnan(returnval):
-                                      returnval = -1
-                                  if abs(returnval - originallabel) > 0:
-                                      originallabels.append(int(originallabel))
-                                      newlabels.append(int(returnval))
-                                     
-                  
+                               if math.isnan(relabelval):
+                                      relabelval = -1
+                               originallabels.append(int(originallabel))
+                               newlabels.append(int(relabelval))
                       
                    relabeled = map_array(sliceimage, np.asarray(originallabels), np.asarray(newlabels))
                    NewSegimage[p,:] = relabeled
