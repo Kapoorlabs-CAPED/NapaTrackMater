@@ -629,7 +629,10 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
             maxtrack_id = max(Track_id)
             condition_indices = spot_dataset_index[indices]
             Track_id[condition_indices] = maxtrack_id + 1
-            AllValues.append(Track_id)
+            list1_as_set = set(Track_id)
+            intersection = list1_as_set.intersection(filtered_track_ids)
+            intersection_as_list = list(intersection)
+            AllValues.append(intersection_as_list)   
             
             
           if k == 'POSITION_X':
@@ -661,7 +664,10 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
                     maxtrack_id = max(Track_id)
                     condition_indices = track_dataset_index[indices]
                     Track_id[condition_indices] = maxtrack_id + 1
-                    AllTrackValues.append(Track_id)
+                    list1_as_set = set(Track_id)
+                    intersection = list1_as_set.intersection(filtered_track_ids)
+                    intersection_as_list = list(intersection)
+                    AllTrackValues.append(intersection_as_list)
                     AllTrackKeys.append(k)
           else:  
                   try:   
@@ -737,7 +743,10 @@ def import_TM_XML_distplots(xml_path, Segimage,spot_csv, track_csv, savedir, sca
             maxtrack_id = max(Track_id)
             condition_indices = spot_dataset_index[indices]
             Track_id[condition_indices] = maxtrack_id + 1
-            AllValues.append(Track_id)
+            list1_as_set = set(Track_id)
+            intersection = list1_as_set.intersection(filtered_track_ids)
+            intersection_as_list = list(intersection)
+            AllValues.append(intersection_as_list)
             
             
           if k == 'POSITION_X':
@@ -770,7 +779,10 @@ def import_TM_XML_distplots(xml_path, Segimage,spot_csv, track_csv, savedir, sca
                     maxtrack_id = max(Track_id)
                     condition_indices = track_dataset_index[indices]
                     Track_id[condition_indices] = maxtrack_id + 1
-                    AllTrackValues.append(Track_id)
+                    list1_as_set = set(Track_id)
+                    intersection = list1_as_set.intersection(filtered_track_ids)
+                    intersection_as_list = list(intersection)
+                    AllTrackValues.append(intersection_as_list)
                     AllTrackKeys.append(k)
           else:  
                   try:   
@@ -1016,7 +1028,9 @@ class VizCorrect(object):
                           
                           self.boxes = {}
                           self.labels = {}
+                          
                           print("Computing region boxes")
+                          
                           for i in tqdm(range(0, self.Segimage.shape[0])):
                               timeboxes = []
                               timelabels = []
@@ -1040,7 +1054,11 @@ class VizCorrect(object):
                             if self.AllKeys[k] ==  attribute:
                                 
                                 for attr, time, z, y, x in tqdm(zip(self.AllValues[k],self.AllValues[self.keyT],self.AllValues[self.keyZ],self.AllValues[self.keyY],self.AllValues[self.keyX] ), total = len(self.AllValues[k])):
-                                       centroid = (time, z, y, x)
+                                       if len(self.Segimage.shape) == 4:
+                                           centroid = (time, z, y, x)
+                                       else:
+                                           centroid = (time, y, x) 
+                                            
                                        locations.append([attr, centroid]) 
                                        
                                 NewSegimage = self.Relabel(self.Segimage.copy(), locations)
@@ -1053,7 +1071,6 @@ class VizCorrect(object):
         def Conditioncheck(self, centroid, boxA, p, ndim):
             
               condition = False
-            
               if centroid[p] >=  boxA[p]  and centroid[p] <=  boxA[p + ndim]:
                   
                    condition = True
@@ -1087,9 +1104,10 @@ class VizCorrect(object):
                    originallabels = []
                    newlabels = []
                    for  relabelval, centroid in locations:
-                       
-                        time, z, y, x = centroid
-                   
+                        if len(NewSegimage.shape) == 4: 
+                            time, z, y, x = centroid
+                        else:
+                            time, y, x = centroid 
                    
                         if p == time: 
                                
@@ -1098,8 +1116,10 @@ class VizCorrect(object):
                                for i  in range(len(timeboxes)):
                                   box =  timeboxes[i]
                                   originallabel = timelabels[i]
-                                  box, returnval = self.iou(box, (z,y,x), originallabel, relabelval)
-                                                
+                                  if len(NewSegimage.shape) == 4:   
+                                     box, returnval = self.iou(box, (z,y,x), originallabel, relabelval)
+                                  else:
+                                     box, returnval = self.iou(box, (y,x), originallabel, relabelval)
                                   if math.isnan(returnval):
                                       returnval = -1
                                   if abs(returnval - originallabel) > 0:
@@ -1285,7 +1305,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
         tcalibration,
     ]
 
-def common_stats_function(xml_path, image, Mask):
+def common_stats_function(xml_path, image = None, Mask = None):
     
     if image is not None:
       image = daskread(image)[0,:]
@@ -1293,10 +1313,7 @@ def common_stats_function(xml_path, image, Mask):
         Mask = imread(Mask)
     root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
 
-    filtered_track_ids = [
-        int(track.get('TRACK_ID'))
-        for track in root.find('Model').find('FilteredTracks').findall('TrackID')
-    ]
+    
 
     # Extract the tracks from xml
     tracks = root.find('Model').find('AllTracks')

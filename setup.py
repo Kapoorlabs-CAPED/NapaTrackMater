@@ -8,7 +8,7 @@ with open('README.md') as f:
 setup(
     name="napatrackmater",
 
-    version='2.5.2',
+    version='2.5.3',
 
     author='Varun Kapoor,Claudia Carabana Garcia, Mari Tolonen',
     author_email='randomaccessiblekapoor@gmail.com',
@@ -28,7 +28,9 @@ setup(
         "matplotlib",
         "ffmpeg-python",
         "imageio_ffmpeg",
-        "dask"
+        "dask",
+        "lmfit",
+        "seaborn"
     ],
     entry_points = {
         'console_scripts': [
