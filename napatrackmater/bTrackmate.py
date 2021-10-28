@@ -607,7 +607,7 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
     ycalibration = float(settings.get('pixelheight'))
     zcalibration = float(settings.get('voxeldepth'))
     tcalibration = int(float(settings.get('timeinterval')))
-
+    print(xcalibration,ycalibration,zcalibration,tcalibration)
     spot_dataset = pd.read_csv(spot_csv, delimiter = ',')[3:]
    
     spot_dataset_index = spot_dataset.index
@@ -629,10 +629,11 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
             maxtrack_id = max(Track_id)
             condition_indices = spot_dataset_index[indices]
             Track_id[condition_indices] = maxtrack_id + 1
-            list1_as_set = set(Track_id)
-            intersection = list1_as_set.intersection(filtered_track_ids)
-            intersection_as_list = list(intersection)
-            AllValues.append(intersection_as_list)   
+            #list1_as_set = set(Track_id)
+            #intersection = list1_as_set.intersection(filtered_track_ids)
+            #intersection_as_list = list(intersection)
+            #AllValues.append(intersection_as_list) 
+            AllValues.append(Track_id)   
             
             
           if k == 'POSITION_X':
@@ -664,10 +665,11 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
                     maxtrack_id = max(Track_id)
                     condition_indices = track_dataset_index[indices]
                     Track_id[condition_indices] = maxtrack_id + 1
-                    list1_as_set = set(Track_id)
-                    intersection = list1_as_set.intersection(filtered_track_ids)
-                    intersection_as_list = list(intersection)
-                    AllTrackValues.append(intersection_as_list)
+                    #list1_as_set = set(Track_id)
+                    #intersection = list1_as_set.intersection(filtered_track_ids)
+                    #intersection_as_list = list(intersection)
+                    #AllTrackValues.append(intersection_as_list)
+                    AllTrackValues.append(Track_id)
                     AllTrackKeys.append(k)
           else:  
                   try:   
@@ -721,7 +723,7 @@ def import_TM_XML_distplots(xml_path, Segimage,spot_csv, track_csv, savedir, sca
     ycalibration = float(settings.get('pixelheight'))
     zcalibration = float(settings.get('voxeldepth'))
     tcalibration = int(float(settings.get('timeinterval')))
-
+    
     spot_dataset = pd.read_csv(spot_csv, delimiter = ',')[3:]
    
     spot_dataset_index = spot_dataset.index
@@ -743,10 +745,11 @@ def import_TM_XML_distplots(xml_path, Segimage,spot_csv, track_csv, savedir, sca
             maxtrack_id = max(Track_id)
             condition_indices = spot_dataset_index[indices]
             Track_id[condition_indices] = maxtrack_id + 1
-            list1_as_set = set(Track_id)
-            intersection = list1_as_set.intersection(filtered_track_ids)
-            intersection_as_list = list(intersection)
-            AllValues.append(intersection_as_list)
+            #list1_as_set = set(Track_id)
+            #intersection = list1_as_set.intersection(filtered_track_ids)
+            #intersection_as_list = list(intersection)
+            #AllValues.append(intersection_as_list)
+            AllValues.append(Track_id)
             
             
           if k == 'POSITION_X':
@@ -779,10 +782,11 @@ def import_TM_XML_distplots(xml_path, Segimage,spot_csv, track_csv, savedir, sca
                     maxtrack_id = max(Track_id)
                     condition_indices = track_dataset_index[indices]
                     Track_id[condition_indices] = maxtrack_id + 1
-                    list1_as_set = set(Track_id)
-                    intersection = list1_as_set.intersection(filtered_track_ids)
-                    intersection_as_list = list(intersection)
-                    AllTrackValues.append(intersection_as_list)
+                    #list1_as_set = set(Track_id)
+                    #intersection = list1_as_set.intersection(filtered_track_ids)
+                    #intersection_as_list = list(intersection)
+                    #AllTrackValues.append(intersection_as_list)
+                    AllTrackValues.append(Track_id)
                     AllTrackKeys.append(k)
           else:  
                   try:   
@@ -869,7 +873,7 @@ class VizCorrect(object):
                             if self.AllKeys[k] == 'FRAME':
                                 self.keyT = k    
                  
-                 
+                 print(self.keyT)
                  Attributeids = []
                  TrackAttributeids = []
                  for attributename in self.AllKeys:
@@ -1008,7 +1012,11 @@ class VizCorrect(object):
                             if self.AllKeys[k] ==  'TRACK_ID':
                                 
                                 for trackid, time, z, y, x in tqdm(zip(self.AllValues[k],self.AllValues[self.keyT],self.AllValues[self.keyZ],self.AllValues[self.keyY],self.AllValues[self.keyX] ), total = len(self.AllValues[k])):
-                                       centroid = (time, z, y, x)
+                                        
+                                       if len(self.Segimage.shape) == 4:
+                                           centroid = (time, z, y, x)
+                                       else:
+                                           centroid = (time, y, x) 
                                        try:
                                          attr = self.idattr[trackid]
                                          locations.append([attr, centroid]) 
@@ -1101,6 +1109,7 @@ class VizCorrect(object):
                for p in tqdm(range(0, NewSegimage.shape[0])):
                    
                    sliceimage = NewSegimage[p,:]
+                   
                    originallabels = []
                    newlabels = []
                    for  relabelval, centroid in locations:
@@ -1108,8 +1117,7 @@ class VizCorrect(object):
                             time, z, y, x = centroid
                         else:
                             time, y, x = centroid 
-                   
-                        if p == time: 
+                        if p == int(time): 
                                
                                timeboxes = self.boxes[time][1]
                                timelabels = self.labels[time][1]
@@ -1120,6 +1128,7 @@ class VizCorrect(object):
                                      box, returnval = self.iou(box, (z,y,x), originallabel, relabelval)
                                   else:
                                      box, returnval = self.iou(box, (y,x), originallabel, relabelval)
+                                      
                                   if math.isnan(returnval):
                                       returnval = -1
                                   if abs(returnval - originallabel) > 0:
