@@ -772,12 +772,7 @@ def import_TM_XML_statplots(xml_path,spot_csv, links_csv, savedir, scale = 255 )
           else:  
                   try:   
                      x =  links_dataset[k].astype('float')
-                     minval = min(x)
-                     maxval = max(x)
-                     
-                     if minval > 0 and maxval <= 1:
-                         
-                        x = normalizeZeroOne(x, scale = scale)
+                  
                         
                      AllLinkKeys.append(k)
                      AllLinkValues.append(x)
