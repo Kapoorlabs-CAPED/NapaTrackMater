@@ -1038,7 +1038,7 @@ class VizCorrect(object):
                ax2D[0].errorbar(Timedcr,Alldcrmean,Alldcrvar, linestyle='None', marker='^')
                ax2D[0].set_title('Directional rate of change')
                ax2D[0].set_xlabel('Time')
-               ax2D[0].set_ylabel('Angle')
+               ax2D[0].set_ylabel('rad/sec')
                
                
                ax2D[1].errorbar(Timespeed,Allspeedmean,Allspeedvar, linestyle='None', marker='^')
@@ -1048,7 +1048,7 @@ class VizCorrect(object):
                
                
                ax2D[2].errorbar(Timedisp,Alldispmean,Alldispvar, linestyle='None', marker='^')
-               ax2D[2].set_title('Displacemente')
+               ax2D[2].set_title('Displacement')
                ax2D[2].set_xlabel('Time')
                ax2D[2].set_ylabel('um')
     
