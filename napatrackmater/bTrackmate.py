@@ -607,7 +607,6 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
     ycalibration = float(settings.get('pixelheight'))
     zcalibration = float(settings.get('voxeldepth'))
     tcalibration = int(float(settings.get('timeinterval')))
-    print(xcalibration,ycalibration,zcalibration,tcalibration)
     spot_dataset = pd.read_csv(spot_csv, delimiter = ',')[3:]
    
     spot_dataset_index = spot_dataset.index
@@ -629,10 +628,6 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
             maxtrack_id = max(Track_id)
             condition_indices = spot_dataset_index[indices]
             Track_id[condition_indices] = maxtrack_id + 1
-            #list1_as_set = set(Track_id)
-            #intersection = list1_as_set.intersection(filtered_track_ids)
-            #intersection_as_list = list(intersection)
-            #AllValues.append(intersection_as_list) 
             AllValues.append(Track_id)   
             
             
@@ -665,10 +660,6 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
                     maxtrack_id = max(Track_id)
                     condition_indices = track_dataset_index[indices]
                     Track_id[condition_indices] = maxtrack_id + 1
-                    #list1_as_set = set(Track_id)
-                    #intersection = list1_as_set.intersection(filtered_track_ids)
-                    #intersection_as_list = list(intersection)
-                    #AllTrackValues.append(intersection_as_list)
                     AllTrackValues.append(Track_id)
                     AllTrackKeys.append(k)
           else:  
@@ -691,13 +682,119 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
     Viz = VizCorrect(Segimage, Name, savedir,AllKeys,AllTrackKeys, AllValues, AllTrackValues)
     Viz.showNapari()
 
-def import_TM_XML_distplots(xml_path, Segimage,spot_csv, track_csv, savedir, scale = 255):
+
+
+def import_TM_XML_statplots(xml_path,spot_csv, links_csv, savedir, scale = 255 ):
     
-    print('Reading Image')
-    Name = os.path.basename(os.path.splitext(Segimage)[0])
-    Segimage = imread(Segimage)
+    Name = os.path.basename(os.path.splitext(spot_csv)[0])
+    root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
+
+    filtered_track_ids = [
+        int(track.get('TRACK_ID'))
+        for track in root.find('Model').find('FilteredTracks').findall('TrackID')
+    ]
+
+    # Extract the tracks from xml
+    tracks = root.find('Model').find('AllTracks')
+    settings = root.find('Settings').find('ImageData')
+
+    # Extract the cell objects from xml
+    Spotobjects = root.find('Model').find('AllSpots')
+
+    # Make a dictionary of the unique cell objects with their properties
+    Uniqueobjects = {}
+    Uniqueproperties = {}
+    AllKeys = []
     
-    print('Image dimensions:', Segimage.shape)
+    AllLinkKeys = []
+    AllValues = []
+    AllLinkValues = []
+    
+    xcalibration = float(settings.get('pixelwidth'))
+    ycalibration = float(settings.get('pixelheight'))
+    zcalibration = float(settings.get('voxeldepth'))
+    tcalibration = int(float(settings.get('timeinterval')))
+    
+    spot_dataset = pd.read_csv(spot_csv, delimiter = ',')[3:]
+   
+    spot_dataset_index = spot_dataset.index
+    spot_dataset.keys()
+    
+    links_dataset = pd.read_csv(links_csv, delimiter = ',')[3:]
+   
+    links_dataset_index = links_dataset.index
+    links_dataset.keys()
+    
+    for k in spot_dataset.keys():
+        try:
+          
+          if k == 'TRACK_ID':
+            Track_id = spot_dataset[k].astype('float')  
+            indices = np.where(Track_id==0)
+            maxtrack_id = max(Track_id)
+            condition_indices = spot_dataset_index[indices]
+            Track_id[condition_indices] = maxtrack_id + 1
+            AllValues.append(Track_id)
+            
+            
+          if k == 'POSITION_X':
+              LocationX = (spot_dataset['POSITION_X'].astype('float')/xcalibration).astype('int')  
+              AllValues.append(LocationX)
+              
+          if k == 'POSITION_Y':
+              LocationY = (spot_dataset['POSITION_Y'].astype('float')/ycalibration).astype('int')   
+              AllValues.append(LocationY)
+          if k == 'POSITION_Z':
+              LocationZ = (spot_dataset['POSITION_Z'].astype('float')/zcalibration).astype('int')   
+              AllValues.append(LocationZ)
+          if k == 'FRAME':
+              LocationT = (spot_dataset['FRAME'].astype('float')).astype('int')  
+              AllValues.append(LocationT)    
+          elif k!='TRACK_ID' and k!='POSITION_X' and k!='POSITION_Y' and k!='POSITION_Z' and k!='FRAME':  
+            AllValues.append(spot_dataset[k].astype('float'))
+          
+          AllKeys.append(k)  
+            
+        except:
+            pass
+    
+   
+    for k in links_dataset.keys():
+        
+          if k == 'TRACK_ID':
+                    Track_id = links_dataset[k].astype('float')  
+                    indices = np.where(Track_id==0)
+                    maxtrack_id = max(Track_id)
+                    condition_indices = links_dataset_index[indices]
+                    Track_id[condition_indices] = maxtrack_id + 1
+                    AllLinkValues.append(Track_id)
+                    AllLinkKeys.append(k)
+          else:  
+                  try:   
+                     x =  links_dataset[k].astype('float')
+                     minval = min(x)
+                     maxval = max(x)
+                     
+                     if minval > 0 and maxval <= 1:
+                         
+                        x = normalizeZeroOne(x, scale = scale)
+                        
+                     AllLinkKeys.append(k)
+                     AllLinkValues.append(x)
+                  except:
+                      
+                      pass
+   
+    
+    Viz = VizCorrect(None, Name, savedir,AllKeys,AllLinkKeys, AllValues, AllLinkValues)
+    Viz.showLR()
+    
+
+
+def import_TM_XML_distplots(xml_path, spot_csv, track_csv, savedir, scale = 255):
+    
+    
+    Name = os.path.basename(os.path.splitext(spot_csv)[0])
     root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
 
     filtered_track_ids = [
@@ -745,10 +842,6 @@ def import_TM_XML_distplots(xml_path, Segimage,spot_csv, track_csv, savedir, sca
             maxtrack_id = max(Track_id)
             condition_indices = spot_dataset_index[indices]
             Track_id[condition_indices] = maxtrack_id + 1
-            #list1_as_set = set(Track_id)
-            #intersection = list1_as_set.intersection(filtered_track_ids)
-            #intersection_as_list = list(intersection)
-            #AllValues.append(intersection_as_list)
             AllValues.append(Track_id)
             
             
@@ -782,10 +875,6 @@ def import_TM_XML_distplots(xml_path, Segimage,spot_csv, track_csv, savedir, sca
                     maxtrack_id = max(Track_id)
                     condition_indices = track_dataset_index[indices]
                     Track_id[condition_indices] = maxtrack_id + 1
-                    #list1_as_set = set(Track_id)
-                    #intersection = list1_as_set.intersection(filtered_track_ids)
-                    #intersection_as_list = list(intersection)
-                    #AllTrackValues.append(intersection_as_list)
                     AllTrackValues.append(Track_id)
                     AllTrackKeys.append(k)
           else:  
@@ -805,7 +894,7 @@ def import_TM_XML_distplots(xml_path, Segimage,spot_csv, track_csv, savedir, sca
                       pass
    
     
-    Viz = VizCorrect(Segimage, Name, savedir,AllKeys,AllTrackKeys, AllValues, AllTrackValues)
+    Viz = VizCorrect(None, Name, savedir,AllKeys,AllTrackKeys, AllValues, AllTrackValues)
     Viz.showWR()
 
 def normalizeZeroOne(x, scale = 255 * 255):
@@ -855,7 +944,118 @@ class VizCorrect(object):
                             print('Histplot for: ', self.AllTrackKeys[k])               
                             sns.histplot(self.AllTrackAttr, kde = True)
                             plt.show()
+                         
                             
+        def showLR(self):
+               
+                  
+               Attr = {}
+               figure2D = plt.figure(figsize=(16, 8))
+               multiplot_widget = FigureCanvas(figure2D)
+               ax2D = multiplot_widget.figure.subplots(1, 3)
+               for k in range(len(self.AllKeys)):
+                            if self.AllKeys[k] == 'TRACK_ID':
+                                   trackid_key = k
+                            if self.AllKeys[k] == 'ID':
+                                   spotid_key = k
+                            if self.AllKeys[k] == 'FRAME':
+                                   frameid_key = k       
+               
+                
+               starttime = min(self.AllValues[frameid_key])
+               endtime = max(self.AllValues[frameid_key])
+                
+               for k in range(len(self.AllTrackKeys)):
+                      if self.AllTrackKeys[k] == 'SPOT_SOURCE_ID':
+                                   sourceid_key = k
+                      if self.AllTrackKeys[k] == 'DIRECTIONAL_CHANGE_RATE':
+                                   dcr_key = k
+                      if self.AllTrackKeys[k] == 'SPEED':
+                                   speed_key = k      
+                      if self.AllTrackKeys[k] == 'DISPLACEMENT':
+                                   disp_key = k              
+               
+                
+               for sourceid, dcrid, speedid, dispid in zip(self.AllTrackValues[sourceid_key], self.AllTrackValues[dcr_key], self.AllTrackValues[speed_key],self.AllTrackValues[disp_key] ):
+                   
+                   Attr[int(sourceid)] = [dcrid, speedid, dispid]
+               
+                
+               Timedcr = []
+               Timespeed = []
+               Timedisp = []
+               Alldcrmean = []
+               Allspeedmean = []
+               Alldispmean = []
+               
+               Alldcrvar = []
+               Allspeedvar = []
+               Alldispvar = []
+               
+               for i in tqdm(range(starttime,endtime), total = endtime - starttime):
+                         
+                         
+                         Curdcr = []
+                         Curspeed = []
+                         Curdisp = []
+                         for spotid, trackid, frameid in zip(self.AllValues[spotid_key], self.AllValues[trackid_key], self.AllValues[frameid_key]):
+                     
+                     
+                         
+                                 
+                                 if i == int(frameid):
+                                     try:
+                                         dcr, speed, disp = Attr[int(spotid)]
+                                         if dcr is not None:
+                                           Curdcr.append(dcr)
+                                           
+                                         if speed is not None:
+                                           Curspeed.append(speed)
+                                         if disp is not None:
+                                           Curdisp.append(disp)
+                                           
+                                     except:
+                                         
+                                         pass
+                               
+                         
+                         meanCurdcr = np.mean(Curdcr)
+                         varCurdcr = np.var(Curdcr)
+                         if meanCurdcr is not None:
+                           Alldcrmean.append(meanCurdcr)
+                           Alldcrvar.append(varCurdcr)
+                           Timedcr.append(i)
+                           
+                         meanCurspeed = np.mean(Curspeed)
+                         varCurspeed = np.var(Curspeed)
+                         if meanCurspeed is not None:
+                           Allspeedmean.append(meanCurspeed)
+                           Allspeedvar.append(varCurspeed)
+                           Timespeed.append(i)  
+                           
+                         meanCurdisp = np.mean(Curdisp)
+                         varCurdisp = np.var(Curdisp)
+                         if meanCurdisp is not None:
+                           Alldispmean.append(meanCurdisp)
+                           Alldispvar.append(varCurdisp)
+                           Timedisp.append(i)
+                     
+               ax2D[0].errorbar(Timedcr,Alldcrmean,Alldcrvar, linestyle='None', marker='^')
+               ax2D[0].set_title('Directional rate of change')
+               ax2D[0].set_xlabel('Time')
+               ax2D[0].set_ylabel('Angle')
+               
+               
+               ax2D[1].errorbar(Timespeed,Allspeedmean,Allspeedvar, linestyle='None', marker='^')
+               ax2D[1].set_title('Speed')
+               ax2D[1].set_xlabel('Time')
+               ax2D[1].set_ylabel('um/min')
+               
+               
+               ax2D[2].errorbar(Timedisp,Alldispmean,Alldispvar, linestyle='None', marker='^')
+               ax2D[2].set_title('Displacemente')
+               ax2D[2].set_xlabel('Time')
+               ax2D[2].set_ylabel('um')
     
         def showNapari(self):
                  
@@ -873,7 +1073,6 @@ class VizCorrect(object):
                             if self.AllKeys[k] == 'FRAME':
                                 self.keyT = k    
                  
-                 print(self.keyT)
                  Attributeids = []
                  TrackAttributeids = []
                  for attributename in self.AllKeys:
