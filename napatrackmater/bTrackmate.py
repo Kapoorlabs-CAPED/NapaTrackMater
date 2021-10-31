@@ -679,7 +679,7 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
                       pass
    
     
-    Viz = VizCorrect(Segimage, Name, savedir,AllKeys,AllTrackKeys, AllValues, AllTrackValues)
+    Viz = VizCorrect(Segimage, Name, savedir,AllKeys,AllTrackKeys, AllValues, AllTrackValues, xcalibration, ycalibration, zcalibration, tcalibration)
     Viz.showNapari()
 
 
@@ -781,7 +781,7 @@ def import_TM_XML_statplots(xml_path,spot_csv, links_csv, savedir, scale = 255 )
                       pass
    
     
-    Viz = VizCorrect(None, Name, savedir,AllKeys,AllLinkKeys, AllValues, AllLinkValues)
+    Viz = VizCorrect(None, Name, savedir,AllKeys,AllLinkKeys, AllValues, AllLinkValues, xcalibration, ycalibration, zcalibration, tcalibration)
     Viz.showLR()
     
 
@@ -889,7 +889,7 @@ def import_TM_XML_distplots(xml_path, spot_csv, track_csv, savedir, scale = 255)
                       pass
    
     
-    Viz = VizCorrect(None, Name, savedir,AllKeys,AllTrackKeys, AllValues, AllTrackValues)
+    Viz = VizCorrect(None, Name, savedir,AllKeys,AllTrackKeys, AllValues, AllTrackValues, xcalibration, ycalibration, zcalibration, tcalibration)
     Viz.showWR()
 
 def normalizeZeroOne(x, scale = 255 * 255):
@@ -906,7 +906,7 @@ def normalizeZeroOne(x, scale = 255 * 255):
 
 class VizCorrect(object):
 
-        def __init__(self, Segimage, Name, savedir,AllKeys, AllTrackKeys, AllValues, AllTrackValues ):
+        def __init__(self, Segimage, Name, savedir,AllKeys, AllTrackKeys, AllValues, AllTrackValues, xcalibration, ycalibration, zcalibration, tcalibration ):
             
             
                self.Segimage = Segimage
@@ -916,6 +916,10 @@ class VizCorrect(object):
                self.AllTrackKeys = AllTrackKeys
                self.AllValues = AllValues
                self.AllTrackValues = AllTrackValues
+               self.xcalibration = xcalibration
+               self.ycalibration = ycalibration
+               self.zcalibration = zcalibration
+               self.tcalibration = tcalibration
                Path(self.savedir).mkdir(exist_ok=True)
                
                
@@ -945,9 +949,8 @@ class VizCorrect(object):
                
                   
                Attr = {}
-               figure2D = plt.figure(figsize=(16, 8))
-               multiplot_widget = FigureCanvas(figure2D)
-               ax2D = multiplot_widget.figure.subplots(1, 3)
+               
+               
                for k in range(len(self.AllKeys)):
                             if self.AllKeys[k] == 'TRACK_ID':
                                    trackid_key = k
@@ -955,10 +958,11 @@ class VizCorrect(object):
                                    spotid_key = k
                             if self.AllKeys[k] == 'FRAME':
                                    frameid_key = k       
-               
+                            if self.AllKeys[k] == 'POSITION_Z':
+                                   zposid_key = k 
                 
-               starttime = min(self.AllValues[frameid_key])
-               endtime = max(self.AllValues[frameid_key])
+               starttime = int(min(self.AllValues[frameid_key]))
+               endtime = int(max(self.AllValues[frameid_key]))
                 
                for k in range(len(self.AllTrackKeys)):
                       if self.AllTrackKeys[k] == 'SPOT_SOURCE_ID':
@@ -971,21 +975,24 @@ class VizCorrect(object):
                                    disp_key = k              
                
                 
-               for sourceid, dcrid, speedid, dispid in zip(self.AllTrackValues[sourceid_key], self.AllTrackValues[dcr_key], self.AllTrackValues[speed_key],self.AllTrackValues[disp_key] ):
+               for sourceid, dcrid, speedid, dispid, zposid in zip(self.AllTrackValues[sourceid_key], self.AllTrackValues[dcr_key], self.AllTrackValues[speed_key],self.AllTrackValues[disp_key],self.AllTrackValues[zposid_key] ):
                    
-                   Attr[int(sourceid)] = [dcrid, speedid, dispid]
+                   Attr[int(sourceid)] = [dcrid, speedid, dispid, zposid]
                
                 
                Timedcr = []
                Timespeed = []
-               Timedisp = []
+               Timedisppos = []
+               Timedispneg = []
                Alldcrmean = []
                Allspeedmean = []
-               Alldispmean = []
+               Alldispmeanpos = []
+               Alldispmeanneg = []
                
                Alldcrvar = []
                Allspeedvar = []
-               Alldispvar = []
+               Alldispvarpos = []
+               Alldispvarneg = []
                
                for i in tqdm(range(starttime,endtime), total = endtime - starttime):
                          
@@ -993,6 +1000,7 @@ class VizCorrect(object):
                          Curdcr = []
                          Curspeed = []
                          Curdisp = []
+                         Curdispz = []
                          for spotid, trackid, frameid in zip(self.AllValues[spotid_key], self.AllValues[trackid_key], self.AllValues[frameid_key]):
                      
                      
@@ -1000,7 +1008,7 @@ class VizCorrect(object):
                                  
                                  if i == int(frameid):
                                      try:
-                                         dcr, speed, disp = Attr[int(spotid)]
+                                         dcr, speed, disp,zpos = Attr[int(spotid)]
                                          if dcr is not None:
                                            Curdcr.append(dcr)
                                            
@@ -1008,50 +1016,62 @@ class VizCorrect(object):
                                            Curspeed.append(speed)
                                          if disp is not None:
                                            Curdisp.append(disp)
-                                           
+                                         if zpos is not None:  
+                                            Curdispz.append(zpos)
                                      except:
                                          
                                          pass
                                
+                         dispZ = np.diff(Curdispz)
                          
                          meanCurdcr = np.mean(Curdcr)
                          varCurdcr = np.var(Curdcr)
                          if meanCurdcr is not None:
                            Alldcrmean.append(meanCurdcr)
                            Alldcrvar.append(varCurdcr)
-                           Timedcr.append(i)
+                           Timedcr.append(i/60*self.tcalibration)
                            
                          meanCurspeed = np.mean(Curspeed)
                          varCurspeed = np.var(Curspeed)
                          if meanCurspeed is not None:
+                             
                            Allspeedmean.append(meanCurspeed)
                            Allspeedvar.append(varCurspeed)
-                           Timespeed.append(i)  
+                           Timespeed.append(i/60*self.tcalibration)  
                            
-                         meanCurdisp = np.mean(Curdisp)
-                         varCurdisp = np.var(Curdisp)
+                         meanCurdisp = np.mean(dispZ)
+                         varCurdisp = np.var(dispZ)
                          if meanCurdisp is not None:
-                           Alldispmean.append(meanCurdisp)
-                           Alldispvar.append(varCurdisp)
-                           Timedisp.append(i)
+                           if meanCurdisp >=0: 
+                              Alldispmeanpos.append(meanCurdisp)
+                              Alldispvarpos.append(varCurdisp)
+                              Timedisppos.append(i/60*self.tcalibration)
+                           else:
+                              Alldispmeanneg.append(meanCurdisp) 
+                              Alldispvarneg.append(varCurdisp)
+                              Timedispneg.append(i/60*self.tcalibration)
+                           
                      
-               ax2D[0].errorbar(Timedcr,Alldcrmean,Alldcrvar, linestyle='None', marker='^')
-               ax2D[0].set_title('Directional rate of change')
-               ax2D[0].set_xlabel('Time')
-               ax2D[0].set_ylabel('rad/sec')
+              
+               
+               plt.figure(figsize=(16, 8))
+               plt.errorbar(Timespeed,Allspeedmean,Allspeedvar, linestyle='None',marker = '.', mfc = 'green', ecolor = 'green')
+               plt.title('Speed')
+               plt.xlabel('Time (min)')
+               plt.ylabel('um/min')
+               plt.savefig(self.savedir + '/' + "Speed", dpi = 300)
+               plt.show()
+               
+               plt.figure(figsize=(16, 8))
+               plt.errorbar(Timedisppos,Alldispmeanpos,Alldispvarpos, linestyle='None',marker = '.',  mfc = 'green', ecolor = 'green')
+               plt.errorbar(Timedispneg,Alldispmeanneg,Alldispvarneg, linestyle='None',marker = '.',  mfc = 'red', ecolor = 'red')
+               plt.title('Displacement in Z')
+               plt.xlabel('Time (min)')
+               plt.ylabel('um')
+               plt.savefig(self.savedir + '/' + "Displacement_Z", dpi = 300)
+               plt.show()
                
                
-               ax2D[1].errorbar(Timespeed,Allspeedmean,Allspeedvar, linestyle='None', marker='^')
-               ax2D[1].set_title('Speed')
-               ax2D[1].set_xlabel('Time')
-               ax2D[1].set_ylabel('um/min')
-               
-               
-               ax2D[2].errorbar(Timedisp,Alldispmean,Alldispvar, linestyle='None', marker='^')
-               ax2D[2].set_title('Displacement')
-               ax2D[2].set_xlabel('Time')
-               ax2D[2].set_ylabel('um')
-    
         def showNapari(self):
                  
                  self.viewer = napari.Viewer()
