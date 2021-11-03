@@ -326,7 +326,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
     # TYX shaped object
     if ndim == 3:
 
-        Boundary = np.zeros([mask.shape[0], mask.shape[1], mask.shape[2]])
+        Boundary = find_boundaries(mask)
         for i in tqdm(range(0, mask.shape[0])):
 
             mask[i, :] = label(mask[i, :])
@@ -357,7 +357,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
                     size.append(radius)
 
             timed_mask[str(i)] = [tree, indices, labels, size]
-
+            
     # TZYX shaped object
     if ndim == 4:
 
@@ -1523,6 +1523,10 @@ def common_stats_function(xml_path, image = None, Mask = None):
         Mask = imread(Mask)
     root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
 
+    filtered_track_ids = [
+        int(track.get('TRACK_ID'))
+        for track in root.find('Model').find('FilteredTracks').findall('TrackID')
+    ]
     
 
     # Extract the tracks from xml
@@ -1672,16 +1676,18 @@ def common_stats_function(xml_path, image = None, Mask = None):
             )
             all_track_properties.append([track_id, location_prop_dist, DividingTrajectory])
             
-    return all_track_properties, xcalibration, ycalibration, zcalibration, tcalibration        
+    return all_track_properties,TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration        
             
     
 def import_TM_XML_Randomization(xml_path,image = None, Mask = None, nbins = 5):
     
     
             
-    all_track_properties,xcalibration, ycalibration, zcalibration, tcalibration = common_stats_function(xml_path, image, Mask)        
+    all_track_properties,TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration = common_stats_function(xml_path, image, Mask)        
     TrackLayerTracklets = {}
     AllT = []
+    
+        
     
     for i in tqdm(range(0, len(all_track_properties))):
                     trackid, alltracklets, DividingTrajectory = all_track_properties[i]
@@ -1799,8 +1805,7 @@ def tripleplot(binsz, binsy, binsx, countsz, countsy, countsx, GaussZ, GaussY, G
     
 def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
     
-    all_track_properties,xcalibration, ycalibration, zcalibration, tcalibration = common_stats_function(xml_path, image, Mask) 
-    
+    all_track_properties,TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration = common_stats_function(xml_path, image, Mask)
     IDLocations = []
     TrackLayerTracklets = {}
     Gradients = []
@@ -1814,6 +1819,30 @@ def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
     ax2D = multiplot_widget.figure.subplots(1, 3)
     # Data for a three-dimensional line
     print('All Tracks plot') 
+    if TimedMask is not None:
+        
+        tree, indices, masklabel, masklabelvolume = TimedMask[str(int(float(0)))]
+       
+        MaskZs = []
+        MaskYs = []
+        MaskXs = []
+        
+        for z,y,x in zip(*indices):
+            MaskZs.append(z)
+            MaskYs.append(y)
+            MaskXs.append(x)
+            
+        tree, indices, masklabel, masklabelvolume = TimedMask[str(int(float(Mask.shape[0])))]
+       
+        MaskZf = []
+        MaskYf = []
+        MaskXf = []
+        
+        for z,y,x in zip(*indices):
+            MaskZf.append(z)
+            MaskYf.append(y)
+            MaskXf.append(x)     
+    
     for i in tqdm(range(0, len(all_track_properties))):
                     trackid, alltracklets, DividingTrajectory = all_track_properties[i]
 
@@ -1879,10 +1908,13 @@ def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
       
 
                     
-                    ax.plot3D(AllTracksZ, AllTracksY, AllTracksX)
-                    ax.set_xlabel('dz')
+                    ax.plot3D(AllTracksX, AllTracksY, AllTracksZ)
+                    if TimedMask is not None:
+                       ax.plot3D(MaskXs, MaskYs, MaskZs, 'green')
+                       ax.plot3D(MaskXf, MaskYf, MaskZf, 'red') 
+                    ax.set_xlabel('dx')
                     ax.set_ylabel('dy')
-                    ax.set_zlabel('dx');
+                    ax.set_zlabel('dz')
                     
                     ax2D[0].plot(AllTracksX, AllTracksY)
                     ax2D[0].set_xlabel('dx')
