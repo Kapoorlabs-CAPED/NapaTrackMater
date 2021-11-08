@@ -1337,7 +1337,7 @@ class VizCorrect(object):
                                else:
                                    originallabel = sliceimage[y,x]
                                     
-                                      
+                               if originallabel ==0: relabelval = 0
                                if math.isnan(relabelval):
                                       relabelval = -1
                                originallabels.append(int(originallabel))
