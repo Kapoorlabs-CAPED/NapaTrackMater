@@ -1522,7 +1522,10 @@ def common_stats_function(xml_path, image = None, Mask = None):
     if Mask is not None:
         Mask = imread(Mask)
     root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
-
+    filtered_track_ids = [
+        int(track.get('TRACK_ID'))
+        for track in root.find('Model').find('FilteredTracks').findall('TrackID')
+    ]
     
 
     # Extract the tracks from xml
