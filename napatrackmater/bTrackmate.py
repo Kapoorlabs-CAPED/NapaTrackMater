@@ -308,8 +308,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             radius = math.sqrt(volume / math.pi)
             boundary = find_boundaries(labelimage)
             indices = np.where(boundary > 0)
-            indices = np.transpose(np.asarray(indices))
-            real_indices = indices.copy()
+            real_indices = np.transpose(np.asarray(indices)).copy()
             for j in range(0, len(real_indices)):
 
                 real_indices[j][0] = real_indices[j][0] * xcalibration
@@ -326,7 +325,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
     # TYX shaped object
     if ndim == 3:
 
-        Boundary = np.zeros([mask.shape[0], mask.shape[1], mask.shape[2]])
+        Boundary = find_boundaries(mask)
         for i in tqdm(range(0, mask.shape[0])):
 
             mask[i, :] = label(mask[i, :])
@@ -344,8 +343,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
                 radius = math.sqrt(volume / math.pi)
                 boundary = find_boundaries(labelimage)
                 indices = np.where(boundary > 0)
-                indices = np.transpose(np.asarray(indices))
-                real_indices = indices.copy()
+                real_indices = np.transpose(np.asarray(indices)).copy()
                 for j in range(0, len(real_indices)):
 
                     real_indices[j][0] = real_indices[j][0] * ycalibration
@@ -357,7 +355,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
                     size.append(radius)
 
             timed_mask[str(i)] = [tree, indices, labels, size]
-
+            
     # TZYX shaped object
     if ndim == 4:
 
@@ -393,9 +391,8 @@ def parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i):
            Boundary[i,j, :, :] = find_boundaries(mask[i, j, :, :])
 
         indices = np.where(Boundary[i, :] > 0)
-
-        indices = np.transpose(np.asarray(indices))
-        real_indices = indices.copy()
+       
+        real_indices = np.transpose(np.asarray(indices)).copy()
         for j in range(0, len(real_indices)):
 
             real_indices[j][0] = real_indices[j][0] * zcalibration
@@ -588,17 +585,25 @@ def tracklet_properties(
 
             if Mask is not None:
 
-                testlocation = (z, y, x)
+                if len(Mask.shape) == 4:  
+                  testlocation = (z, y, x)
+                if len(Mask.shape) == 3:  
+                  testlocation = (y, x)
 
                 tree, indices, masklabel, masklabelvolume = TimedMask[str(int(float(frame)/ calibration[3]))]
-
-                region_label = Mask[
-                    int(float(frame) / calibration[3]),
-                    int(float(z) / calibration[2]),
-                    int(float(y) / calibration[1]),
-                    int(float(x) / calibration[0]),
-                ]
-
+                if len(Mask.shape) == 4:
+                        region_label = Mask[
+                            int(float(frame) / calibration[3]),
+                            int(float(z) / calibration[2]),
+                            int(float(y) / calibration[1]),
+                            int(float(x) / calibration[0]),
+                        ]
+                if len(Mask.shape) == 3:
+                        region_label = Mask[
+                            int(float(frame) / calibration[3]),
+                            int(float(y) / calibration[1]),
+                            int(float(x) / calibration[0]),
+                        ]
                 for k in range(0, len(masklabel)):
                     currentlabel = masklabel[k]
                     currentvolume = masklabelvolume[k]
@@ -1522,6 +1527,7 @@ def common_stats_function(xml_path, image = None, Mask = None):
     if Mask is not None:
         Mask = imread(Mask)
     root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
+
     filtered_track_ids = [
         int(track.get('TRACK_ID'))
         for track in root.find('Model').find('FilteredTracks').findall('TrackID')
@@ -1544,9 +1550,11 @@ def common_stats_function(xml_path, image = None, Mask = None):
     zcalibration = float(settings.get('voxeldepth'))
     tcalibration = int(float(settings.get('timeinterval')))
 
-    if Mask is not None:
+    plotMask = Mask
+    if  Mask is not None:
         if len(Mask.shape) < len(image.shape):
             # T Z Y X
+            plotMask = Mask
             UpdateMask = np.zeros(
                 [
                     image.shape[0],
@@ -1675,16 +1683,18 @@ def common_stats_function(xml_path, image = None, Mask = None):
             )
             all_track_properties.append([track_id, location_prop_dist, DividingTrajectory])
             
-    return all_track_properties, xcalibration, ycalibration, zcalibration, tcalibration        
+    return all_track_properties,TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration , image, Mask, plotMask       
             
     
 def import_TM_XML_Randomization(xml_path,image = None, Mask = None, nbins = 5):
     
     
             
-    all_track_properties,xcalibration, ycalibration, zcalibration, tcalibration = common_stats_function(xml_path, image, Mask)        
+    all_track_properties,TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration, image, Mask = common_stats_function(xml_path, image, Mask)        
     TrackLayerTracklets = {}
     AllT = []
+    
+        
     
     for i in tqdm(range(0, len(all_track_properties))):
                     trackid, alltracklets, DividingTrajectory = all_track_properties[i]
@@ -1802,8 +1812,8 @@ def tripleplot(binsz, binsy, binsx, countsz, countsy, countsx, GaussZ, GaussY, G
     
 def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
     
-    all_track_properties,xcalibration, ycalibration, zcalibration, tcalibration = common_stats_function(xml_path, image, Mask) 
     
+    all_track_properties,TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration, image, Mask, plotMask = common_stats_function(xml_path, image, Mask)
     IDLocations = []
     TrackLayerTracklets = {}
     Gradients = []
@@ -1814,9 +1824,35 @@ def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
     
     figure2D = plt.figure(figsize=(16, 10))
     multiplot_widget = FigureCanvas(figure2D)
-    ax2D = multiplot_widget.figure.subplots(1, 3)
+    ax2D = multiplot_widget.figure.subplots(1, 4)
     # Data for a three-dimensional line
     print('All Tracks plot') 
+    if TimedMask is not None:
+        
+        tree, indices, masklabel, masklabelvolume = TimedMask[str(int(float(0)))]
+       
+        MaskYs = []
+        MaskXs = []
+        count = 0
+        for z,y,x in zip(*indices):
+            if count ==0:
+                y0 = y
+                x0 = x
+            MaskYs.append(y - y0)
+            MaskXs.append(x - x0)
+            count = count + 1
+        tree, indices, masklabel, masklabelvolume = TimedMask[str(int(float(Mask.shape[0] - 1)))]
+       
+        MaskYf = []
+        MaskXf = []
+        count = 0
+        for z,y,x in zip(*indices):
+            if count ==0:
+                y0 = y
+                x0 = x
+            MaskYf.append(y - y0)
+            MaskXf.append(x - x0)     
+            count = count + 1
     for i in tqdm(range(0, len(all_track_properties))):
                     trackid, alltracklets, DividingTrajectory = all_track_properties[i]
 
@@ -1882,10 +1918,11 @@ def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
       
 
                     
-                    ax.plot3D(AllTracksZ, AllTracksY, AllTracksX)
-                    ax.set_xlabel('dz')
+                    ax.plot3D(AllTracksX, AllTracksY, AllTracksZ)
+                     
+                    ax.set_xlabel('dx')
                     ax.set_ylabel('dy')
-                    ax.set_zlabel('dx');
+                    ax.set_zlabel('dz')
                     
                     ax2D[0].plot(AllTracksX, AllTracksY)
                     ax2D[0].set_xlabel('dx')
@@ -1898,7 +1935,7 @@ def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
                     ax2D[2].plot(AllTracksZ, AllTracksX)
                     ax2D[2].set_xlabel('dz')
                     ax2D[2].set_ylabel('dx')
-                    
+    sns.histplot(Gradients, kde = True, ax = ax2D[3])
                    
     return Gradients            
             
