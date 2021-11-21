@@ -83,7 +83,15 @@ def CreateTrackCheckpoint(ImageName, LabelName, MaskName, Name, savedir):
     Label = imread(LabelName)
 
     Image = imread(ImageName)
-
+    
+    if len(Image.shape) == 3:
+        NewImage = np.zeros([Image.shape[0], 1, Image.shape[1], Image.shape[2]])
+        NewImage[:,0,:,:] = Image
+        NewLabel = np.zeros([Image.shape[0], 1, Image.shape[1], Image.shape[2]])
+        NewLabel[:,0,:,:] = Label
+        
+        Label = NewLabel
+        Image = NewImage
     if MaskName is not None:
             Mask = imread(MaskName)
 
@@ -1096,7 +1104,7 @@ class VizCorrect(object):
                          if meanCurdcr is not None:
                            Alldcrmean.append(meanCurdcr)
                            Alldcrvar.append(varCurdcr)
-                           Timedcr.append(i/60*self.tcalibration)
+                           Timedcr.append(i*self.tcalibration)
                            
                          meanCurspeed = np.mean(Curspeed)
                          varCurspeed = np.var(Curspeed)
@@ -1104,7 +1112,7 @@ class VizCorrect(object):
                              
                            Allspeedmean.append(meanCurspeed)
                            Allspeedvar.append(varCurspeed)
-                           Timespeed.append(i/60*self.tcalibration)  
+                           Timespeed.append(i*self.tcalibration)  
                            
                          meanCurdisp = np.mean(dispZ)
                          varCurdisp = np.var(dispZ)
@@ -1112,11 +1120,11 @@ class VizCorrect(object):
                            if meanCurdisp >=0: 
                               Alldispmeanpos.append(meanCurdisp)
                               Alldispvarpos.append(varCurdisp)
-                              Timedisppos.append(i/60*self.tcalibration)
+                              Timedisppos.append(i*self.tcalibration)
                            else:
                               Alldispmeanneg.append(meanCurdisp) 
                               Alldispvarneg.append(varCurdisp)
-                              Timedispneg.append(i/60*self.tcalibration)
+                              Timedispneg.append(i*self.tcalibration)
                            
                      
               
@@ -1124,8 +1132,8 @@ class VizCorrect(object):
                plt.figure(figsize=(16, 8))
                plt.errorbar(Timespeed,Allspeedmean,Allspeedvar, linestyle='None',marker = '.', mfc = 'green', ecolor = 'green')
                plt.title('Speed')
-               plt.xlabel('Time (min)')
-               plt.ylabel('um/min')
+               #plt.xlabel('Time (min)')
+               #plt.ylabel('um/min')
                plt.savefig(self.savedir + '/' + "Speed", dpi = 300)
                plt.show()
                
@@ -1133,8 +1141,8 @@ class VizCorrect(object):
                plt.errorbar(Timedisppos,Alldispmeanpos,Alldispvarpos, linestyle='None',marker = '.',  mfc = 'green', ecolor = 'green')
                plt.errorbar(Timedispneg,Alldispmeanneg,Alldispvarneg, linestyle='None',marker = '.',  mfc = 'red', ecolor = 'red')
                plt.title('Displacement in Z')
-               plt.xlabel('Time (min)')
-               plt.ylabel('um')
+               #plt.xlabel('Time (min)')
+               #plt.ylabel('um')
                plt.savefig(self.savedir + '/' + "Displacement_Z", dpi = 300)
                plt.show()
                
@@ -1689,8 +1697,7 @@ def common_stats_function(xml_path, image = None, Mask = None):
 def import_TM_XML_Randomization(xml_path,image = None, Mask = None, nbins = 5):
     
     
-            
-    all_track_properties,TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration, image, Mask = common_stats_function(xml_path, image, Mask)        
+    all_track_properties,TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration, image, Mask, plotMask = common_stats_function(xml_path, image, Mask)        
     TrackLayerTracklets = {}
     AllT = []
     
