@@ -759,7 +759,7 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
 
 
 
-def import_TM_XML_statplots(xml_path,spot_csv, links_csv, savedir, scale = 255, deltat = 1 ):
+def import_TM_XML_statplots(xml_path,spot_csv, links_csv, savedir, scale = 255 ):
     
     Name = os.path.basename(os.path.splitext(spot_csv)[0])
     root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
@@ -1883,17 +1883,49 @@ def tripleplot(binsz, binsy, binsx, countsz, countsy, countsx, GaussZ, GaussY, G
     plt.tight_layout()
     plt.show()
 
+  
+def plot_3D_polylines_xy(polyline_df_xy, t, ax, line_color, line_alpha):
+    tMin, tMax = polyline_df_xy.t.min(), polyline_df_xy.t.max()
+    xMin, xMax = polyline_df_xy.x.min(), polyline_df_xy.x.max()
+    yMin, yMax = polyline_df_xy.y.min(), polyline_df_xy.y.max()
+    zMin, zMax = polyline_df_xy.z.min(), polyline_df_xy.z.max()
+    shift_x, shift_y, shift_z = np.mean([xMax, xMin]), np.mean([yMax, yMin]), np.mean([zMax, zMin])
     
-def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
+    polyline_df_xy_t = polyline_df_xy.loc[polyline_df_xy.t == t]
+    # plot the horizontal lines pf mesh
+    for i in polyline_df_xy_t.z.unique():
+        temp = polyline_df_xy_t.loc[polyline_df_xy_t.z == i]
+        x, y, z = temp.x.values, temp.y.values, temp.z.values
+        ax.plot(x-shift_x, y-shift_y, z-shift_z, '-', color=line_color, alpha=line_alpha, lw=0.2)
+
+def plot_3D_polylines_yz(polyline_df_yz, t, ax, line_color, line_alpha):
+    tMin, tMax = polyline_df_yz.t.min(), polyline_df_yz.t.max()
+    xMin, xMax = polyline_df_yz.x.min(), polyline_df_yz.x.max()
+    yMin, yMax = polyline_df_yz.y.min(), polyline_df_yz.y.max()
+    zMin, zMax = polyline_df_yz.z.min(), polyline_df_yz.z.max()
+    shift_x, shift_y, shift_z = np.mean([xMax, xMin]), np.mean([yMax, yMin]), np.mean([zMax, zMin])
     
+    polyline_df_yz_t = polyline_df_yz.loc[polyline_df_yz.t == t]
+    # plot the horizontal lines pf mesh
+    for i in polyline_df_yz_t.z.unique():
+        temp = polyline_df_yz_t.loc[polyline_df_yz_t.z == i]
+        x, y, z = temp.x.values, temp.y.values, temp.z.values
+        ax.plot(z-shift_z, y-shift_y, x-shift_x, '-', color=line_color, alpha=line_alpha, lw=0.2)
+  
+def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size = 5, angle_1 = 45, angle_2 = 60):
     
+    print('Reading XML')
     all_track_properties,TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration, image, Mask, plotMask = common_stats_function(xml_path, image, Mask)
+    print('Done, Processing')
     IDLocations = []
     TrackLayerTracklets = {}
     Gradients = []
     AllT = []
     figure = plt.figure(figsize=(16, 10))
     ax = plt.axes(projection='3d')
+    
+    figuressec = plt.figure(figsize=(16, 10))
+    axdir = plt.axes(projection='3d')
     plt.autoscale(enable = True)
     
     figure2D = plt.figure(figsize=(16, 10))
@@ -1935,6 +1967,10 @@ def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
                     AllTracksZ = []
                     AllTracksY = []
                     AllTracksX = []
+                    AllTracksT = []
+                    AllAngles = []
+                    AllAnglesTime = []
+                    AllAnglesTrackID = []
                     AllT.append(trackid)
                     for (trackletid, tracklets) in alltracklets.items():
                             Locationtracklets = tracklets[1]
@@ -1961,17 +1997,44 @@ def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
                                     
                                     
                                     AllDistance.append((float(distance)))
-                                    AllTracksZ.append(float(z) )
+                                    AllTracksZ.append(float(z))
                                     AllTracksY.append(float(y))
                                     AllTracksX.append(float(x))
+                                    AllTracksT.append(float(t))
                     subZ = AllTracksZ[0]
                     subY = AllTracksY[0]
                     subX = AllTracksX[0]
-                    for i in range(len(AllTracksZ)):
-                         AllTracksZ[i] = (AllTracksZ[i] - subZ) 
-                         AllTracksY[i] = (AllTracksY[i] - subY) 
-                         AllTracksX[i] =  (AllTracksX[i] - subX) 
-                        
+                    xMax = np.max(AllTracksX)
+                    yMax = np.max(AllTracksY)
+                    zMax = np.max(AllTracksZ)   
+                    
+                    xMin = np.min(AllTracksX)
+                    yMin = np.min(AllTracksY)
+                    zMin = np.min(AllTracksZ)
+                    
+                                
+                    shift_x, shift_y, shift_z = np.mean([xMax, xMin]), np.mean([yMax, yMin]), np.mean([zMax, zMin])
+                    
+                    for i in range(0,len(AllTracksT), window_size):
+                         
+                         time = AllTracksT[i]
+                         z = AllTracksZ[i]
+                         x = AllTracksX[i]
+                         y = AllTracksY[i]
+                         vector_1 = [z,y,x]
+                         if len(AllTracksZ) > i + window_size:
+                                 nexttime = AllTracksT[i + window_size]
+                                 nextz = AllTracksZ[i + window_size]
+                                 nextx = AllTracksX[i + window_size]  
+                                 nexty = AllTracksY[i + window_size] 
+                                 vector_2 = [nextz,nexty,nextx]
+                                 unit_vector_1 = vector_1 / np.linalg.norm(vector_1)
+                                 unit_vector_2 = vector_2 / np.linalg.norm(vector_2)
+                                 dot_product = np.dot(unit_vector_1, unit_vector_2)
+                                 angle = np.arccos(dot_product) * 180 / np.pi
+                                 AllAngles.append(angle)
+                                 AllAnglesTime.append(nexttime)
+                                 AllAnglesTrackID.append(trackid)
                     # AllTracksZ = np.diff(AllTracksZ)
                     # AllTracksY = np.diff(AllTracksY)
                     # AllTracksX = np.diff(AllTracksX)
@@ -1987,29 +2050,46 @@ def import_TM_XML_Localization(xml_path,image, Mask, window_size = 5):
                     # AllTracksX = MovingAverage(
                     #             AllTracksX, window_size=window_size
                     #         )
+                    
+                    
                     gradient = np.sum(np.diff(AllDistance))
                     Gradients.append(gradient)
       
 
+                    line_color = '#1A6A82'
+                    line_alpha = 0.8
+                    lw = 0.4
+                    ax.view_init(angle_1, angle_2)
+                    ax.plot3D(AllTracksX - shift_x, AllTracksY - shift_y, AllTracksZ - shift_z, '.',  alpha=line_alpha, lw=lw )
                     
-                    ax.plot3D(AllTracksX, AllTracksY, AllTracksZ)
-                     
                     ax.set_xlabel('dx')
                     ax.set_ylabel('dy')
                     ax.set_zlabel('dz')
                     
-                    ax2D[0].plot(AllTracksX, AllTracksY)
+                    axdir.view_init(angle_1, angle_2)
+                    axdir.plot3D(AllAnglesTrackID, AllAnglesTime, AllAngles, '.',  alpha=line_alpha, lw=lw ) 
+                    
+                    axdir.set_xlabel('trackid')
+                    axdir.set_ylabel('time')
+                    axdir.set_zlabel('angles')
+                    
+                    ax2D[0].plot(AllTracksX - shift_x, AllTracksY - shift_y, '-',  alpha=line_alpha, lw=lw )
                     ax2D[0].set_xlabel('dx')
                     ax2D[0].set_ylabel('dy')
                     
-                    ax2D[1].plot(AllTracksZ, AllTracksY)
+                    ax2D[1].plot(AllTracksZ - shift_z, AllTracksY - shift_y, '-',  alpha=line_alpha, lw=lw )
                     ax2D[1].set_xlabel('dz')
                     ax2D[1].set_ylabel('dy')
                     
-                    ax2D[2].plot(AllTracksZ, AllTracksX)
+                    ax2D[2].plot(AllTracksZ - shift_z, AllTracksX - shift_x, '-',  alpha=line_alpha, lw=lw )
                     ax2D[2].set_xlabel('dz')
                     ax2D[2].set_ylabel('dx')
+                    
+                  
+                    
     sns.histplot(Gradients, kde = True, ax = ax2D[3])
+    
+  
                    
     return Gradients            
             
@@ -2606,6 +2686,7 @@ class AllTrackViewer(object):
         
         window_size=3,
         mode='fate',
+        deltat = 1
         
     ):
 
@@ -2626,6 +2707,7 @@ class AllTrackViewer(object):
         self.saveplot = saveplot
         self.canvas = canvas
         self.ax = ax
+        self.deltat = deltat
         self.window_size = window_size
         self.figure = figure
         self.all_track_properties = all_track_properties
@@ -3576,7 +3658,7 @@ def ShowAllTracks(
     savedir,
     calibration,
     all_track_properties,
-    mode='fate',
+    mode='fate'
 ):
 
     print('Reading Image') 
@@ -3642,7 +3724,7 @@ def ShowAllTracks(
         figure,
         None,
         saveplot = False,
-        mode=mode,
+        mode=mode
     )
     trackbox.currentIndexChanged.connect(
         lambda trackid=trackbox: AllTrackViewer(
@@ -3659,7 +3741,7 @@ def ShowAllTracks(
             figure,
             None,
             saveplot = False,
-            mode=mode,
+            mode=mode
         )
     )
     
@@ -3678,7 +3760,7 @@ def ShowAllTracks(
             figure,
             None,
             saveplot = True,
-            mode=mode,
+            mode=mode
         )
     )
     
@@ -3686,6 +3768,9 @@ def ShowAllTracks(
     viewer.window.add_dock_widget(trackbox, name="TrackID", area='left')
     viewer.window.add_dock_widget(tracksavebutton, name="Save TrackID", area='left')
     napari.run()
+    
+    
+    
 def DistancePlotter():
 
     plt.plot(AllStartParent, AllEndParent, 'g')
