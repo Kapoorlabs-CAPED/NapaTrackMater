@@ -759,7 +759,7 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
 
 
 
-def import_TM_XML_statplots(xml_path,spot_csv, links_csv, savedir, scale = 255 ):
+def import_TM_XML_statplots(xml_path,spot_csv, links_csv, savedir, scale = 255, deltat = 1 ):
     
     Name = os.path.basename(os.path.splitext(spot_csv)[0])
     root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
@@ -812,20 +812,8 @@ def import_TM_XML_statplots(xml_path,spot_csv, links_csv, savedir, scale = 255 )
             AllValues.append(Track_id)
             
             
-          if k == 'POSITION_X':
-              LocationX = (spot_dataset['POSITION_X'].astype('float')/xcalibration).astype('int')  
-              AllValues.append(LocationX)
-              
-          if k == 'POSITION_Y':
-              LocationY = (spot_dataset['POSITION_Y'].astype('float')/ycalibration).astype('int')   
-              AllValues.append(LocationY)
-          if k == 'POSITION_Z':
-              LocationZ = (spot_dataset['POSITION_Z'].astype('float')/zcalibration).astype('int')   
-              AllValues.append(LocationZ)
-          if k == 'FRAME':
-              LocationT = (spot_dataset['FRAME'].astype('float')).astype('int')  
-              AllValues.append(LocationT)    
-          elif k!='TRACK_ID' and k!='POSITION_X' and k!='POSITION_Y' and k!='POSITION_Z' and k!='FRAME':  
+            
+          else:  
             AllValues.append(spot_dataset[k].astype('float'))
           
           AllKeys.append(k)  
@@ -833,7 +821,6 @@ def import_TM_XML_statplots(xml_path,spot_csv, links_csv, savedir, scale = 255 )
         except:
             pass
     
-   
     for k in links_dataset.keys():
         
           if k == 'TRACK_ID':
@@ -1025,7 +1012,6 @@ class VizCorrect(object):
                   
                Attr = {}
                
-               
                for k in range(len(self.AllKeys)):
                             if self.AllKeys[k] == 'TRACK_ID':
                                    trackid_key = k
@@ -1035,7 +1021,11 @@ class VizCorrect(object):
                                    frameid_key = k       
                             if self.AllKeys[k] == 'POSITION_Z':
                                    zposid_key = k 
-                
+                            if self.AllKeys[k] == 'POSITION_Y':
+                                   yposid_key = k
+                            if self.AllKeys[k] == 'POSITION_X':
+                                   xposid_key = k       
+            
                starttime = int(min(self.AllValues[frameid_key]))
                endtime = int(max(self.AllValues[frameid_key]))
                 
@@ -1050,24 +1040,44 @@ class VizCorrect(object):
                                    disp_key = k              
                
                 
-               for sourceid, dcrid, speedid, dispid, zposid in zip(self.AllTrackValues[sourceid_key], self.AllTrackValues[dcr_key], self.AllTrackValues[speed_key],self.AllTrackValues[disp_key],self.AllTrackValues[zposid_key] ):
+               for sourceid, dcrid, speedid, dispid, zposid, yposid, xposid in zip(self.AllTrackValues[sourceid_key], self.AllTrackValues[dcr_key], self.AllTrackValues[speed_key],self.AllTrackValues[disp_key],self.AllValues[zposid_key],self.AllValues[yposid_key],self.AllValues[xposid_key] ):
                    
-                   Attr[int(sourceid)] = [dcrid, speedid, dispid, zposid]
+                   Attr[int(sourceid)] = [dcrid, speedid, dispid, zposid, yposid, xposid]
                
                 
                Timedcr = []
                Timespeed = []
                Timedisppos = []
                Timedispneg = []
+               
+               Timedispposy = []
+               Timedispnegy = []
+               
+               Timedispposx = []
+               Timedispnegx = []
+               
+               
                Alldcrmean = []
                Allspeedmean = []
                Alldispmeanpos = []
                Alldispmeanneg = []
                
+               Alldispmeanposx = []
+               Alldispmeanposy = []
+               
+               Alldispmeannegx = []
+               Alldispmeannegy = []
+               
                Alldcrvar = []
                Allspeedvar = []
                Alldispvarpos = []
                Alldispvarneg = []
+               
+               Alldispvarposy = []
+               Alldispvarnegy = []
+               
+               Alldispvarposx = []
+               Alldispvarnegx = []
                
                for i in tqdm(range(starttime,endtime), total = endtime - starttime):
                          
@@ -1076,6 +1086,9 @@ class VizCorrect(object):
                          Curspeed = []
                          Curdisp = []
                          Curdispz = []
+                         Curdispy = []
+                         Curdispx = []
+                         Curvec = []
                          for spotid, trackid, frameid in zip(self.AllValues[spotid_key], self.AllValues[trackid_key], self.AllValues[frameid_key]):
                      
                      
@@ -1083,7 +1096,7 @@ class VizCorrect(object):
                                  
                                  if i == int(frameid):
                                      try:
-                                         dcr, speed, disp,zpos = Attr[int(spotid)]
+                                         dcr, speed, disp, zpos, ypos, xpos = Attr[int(spotid)]
                                          if dcr is not None:
                                            Curdcr.append(dcr)
                                            
@@ -1092,12 +1105,20 @@ class VizCorrect(object):
                                          if disp is not None:
                                            Curdisp.append(disp)
                                          if zpos is not None:  
-                                            Curdispz.append(zpos)
+                                             Curdispz.append(zpos)
+                                         if ypos is not None:
+                                             Curdispy.append(ypos)
+                                            
+                                         if xpos is not None:
+                                             Curdispx.append(xpos)
+                                        
                                      except:
                                          
                                          pass
                                
                          dispZ = np.diff(Curdispz)
+                         dispY = np.diff(Curdispy)
+                         dispX = np.diff(Curdispx)
                          
                          meanCurdcr = np.mean(Curdcr)
                          varCurdcr = np.var(Curdcr)
@@ -1116,6 +1137,14 @@ class VizCorrect(object):
                            
                          meanCurdisp = np.mean(dispZ)
                          varCurdisp = np.var(dispZ)
+                         
+                         meanCurdispy = np.mean(dispY)
+                         varCurdispy = np.var(dispY)
+                         
+                         meanCurdispx = np.mean(dispX)
+                         varCurdispx = np.var(dispX)
+                         
+                         
                          if meanCurdisp is not None:
                            if meanCurdisp >=0: 
                               Alldispmeanpos.append(meanCurdisp)
@@ -1126,8 +1155,28 @@ class VizCorrect(object):
                               Alldispvarneg.append(varCurdisp)
                               Timedispneg.append(i*self.tcalibration)
                            
-                     
-              
+                         
+                             
+                         if meanCurdispy is not None:
+                           if meanCurdispy >=0: 
+                              Alldispmeanposy.append(meanCurdispy)
+                              Alldispvarposy.append(varCurdispy)
+                              Timedispposy.append(i*self.tcalibration)
+                           else:
+                              Alldispmeannegy.append(meanCurdispy) 
+                              Alldispvarnegy.append(varCurdispy)
+                              Timedispnegy.append(i*self.tcalibration)   
+                              
+                         if meanCurdispx is not None:
+                           if meanCurdispx >=0: 
+                              Alldispmeanposx.append(meanCurdispx)
+                              Alldispvarposx.append(varCurdispx)
+                              Timedispposx.append(i*self.tcalibration)
+                           else:
+                              Alldispmeannegx.append(meanCurdispx) 
+                              Alldispvarnegx.append(varCurdispx)
+                              Timedispnegx.append(i*self.tcalibration)     
+               
                
                plt.figure(figsize=(16, 8))
                plt.errorbar(Timespeed,Allspeedmean,Allspeedvar, linestyle='None',marker = '.', mfc = 'green', ecolor = 'green')
@@ -1144,6 +1193,24 @@ class VizCorrect(object):
                #plt.xlabel('Time (min)')
                #plt.ylabel('um')
                plt.savefig(self.savedir + '/' + "Displacement_Z", dpi = 300)
+               plt.show()
+               
+               plt.figure(figsize=(16, 8))
+               plt.errorbar(Timedispposy,Alldispmeanposy,Alldispvarposy, linestyle='None',marker = '.',  mfc = 'green', ecolor = 'green')
+               plt.errorbar(Timedispnegy,Alldispmeannegy,Alldispvarnegy, linestyle='None',marker = '.',  mfc = 'red', ecolor = 'red')
+               plt.title('Displacement in Y')
+               #plt.xlabel('Time (min)')
+               #plt.ylabel('um')
+               plt.savefig(self.savedir + '/' + "Displacement_Y", dpi = 300)
+               plt.show()
+               
+               plt.figure(figsize=(16, 8))
+               plt.errorbar(Timedispposx,Alldispmeanposx,Alldispvarposx, linestyle='None',marker = '.',  mfc = 'green', ecolor = 'green')
+               plt.errorbar(Timedispnegx,Alldispmeannegx,Alldispvarnegx, linestyle='None',marker = '.',  mfc = 'red', ecolor = 'red')
+               plt.title('Displacement in X')
+               #plt.xlabel('Time (min)')
+               #plt.ylabel('um')
+               plt.savefig(self.savedir + '/' + "Displacement_X", dpi = 300)
                plt.show()
                
                
