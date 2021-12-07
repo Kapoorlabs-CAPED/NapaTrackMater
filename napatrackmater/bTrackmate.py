@@ -2040,11 +2040,12 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
                             j = i + window_size
                          if i == 0:
                              j = 0
-                         z = AllTracksZ[j]
-                         x = AllTracksX[j]
-                         y = AllTracksY[j]
-                         vector_1 = [z,y,x]
+                         
                          if len(AllTracksZ) > j + window_size:
+                                 z = AllTracksZ[j]
+                                 x = AllTracksX[j]
+                                 y = AllTracksY[j]
+                                 vector_1 = [z,y,x]
                                  nexttime = AllTracksT[j + window_size]
                                  nextz = AllTracksZ[j + window_size]
                                  nextx = AllTracksX[j + window_size]  
