@@ -1533,6 +1533,8 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
         track_id = int(track.get("TRACK_ID"))
 
         spot_object_source_target = []
+        
+        split_points_times = []
         if track_id in filtered_track_ids:
             for edge in track.findall('Edge'):
 
@@ -1552,8 +1554,8 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
                 spot_object_source_target, key=sortTracks, reverse=False
             )
             # Get all the IDs, uniquesource, targets attached, leaf, root, splitpoint IDs
-            split_points, root_leaf = Multiplicity(spot_object_source_target)
-
+            split_points, split_times, root_leaf = Multiplicity(spot_object_source_target)
+            
             # Determine if a track has divisions or none
             if len(split_points) > 0:
                 split_points = split_points[::-1]
@@ -1567,7 +1569,8 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
                 tracklets = analyze_dividing_tracklets(
                     root_leaf, split_points, spot_object_source_target
                 )
-
+                for i in range(len(split_points)):
+                      split_points_times.append([split_points[i], split_times[i]])
             if DividingTrajectory == False:
                 NonDividingTrackIds.append(track_id)
                 AllTrackIds.append(track_id)
@@ -1588,7 +1591,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
             )
             all_track_properties.append([track_id, location_prop_dist, DividingTrajectory])
    
-    return all_track_properties, Boundary, [
+    return all_track_properties, split_points_times, Boundary, [
         xcalibration,
         ycalibration,
         zcalibration,
@@ -1698,6 +1701,7 @@ def common_stats_function(xml_path, image = None, Mask = None):
             ]
 
     all_track_properties = []
+    split_points_times = []
     for track in tracks.findall('Track'):
 
         track_id = int(track.get("TRACK_ID"))
@@ -1722,7 +1726,7 @@ def common_stats_function(xml_path, image = None, Mask = None):
                 spot_object_source_target, key=sortTracks, reverse=False
             )
             # Get all the IDs, uniquesource, targets attached, leaf, root, splitpoint IDs
-            split_points, root_leaf = Multiplicity(spot_object_source_target)
+            split_points, split_times, root_leaf = Multiplicity(spot_object_source_target)
 
             # Determine if a track has divisions or none
             if len(split_points) > 0:
@@ -1737,7 +1741,8 @@ def common_stats_function(xml_path, image = None, Mask = None):
                 tracklets = analyze_dividing_tracklets(
                     root_leaf, split_points, spot_object_source_target
                 )
-
+                for i in range(len(split_points)):
+                      split_points_times.append([split_points[i], split_times[i]])
             if DividingTrajectory == False:
                 NonDividingTrackIds.append(track_id)
                 AllTrackIds.append(track_id)
@@ -1758,13 +1763,13 @@ def common_stats_function(xml_path, image = None, Mask = None):
             )
             all_track_properties.append([track_id, location_prop_dist, DividingTrajectory])
             
-    return all_track_properties,TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration , image, Mask, plotMask       
+    return all_track_properties, split_points_times, TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration , image, Mask, plotMask       
             
     
 def import_TM_XML_Randomization(xml_path,image = None, Mask = None, nbins = 5):
     
     
-    all_track_properties,TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration, image, Mask, plotMask = common_stats_function(xml_path, image, Mask)        
+    all_track_properties, split_points_times, TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration, image, Mask, plotMask = common_stats_function(xml_path, image, Mask)        
     TrackLayerTracklets = {}
     AllT = []
     
@@ -1915,7 +1920,7 @@ def plot_3D_polylines_yz(polyline_df_yz, t, ax, line_color, line_alpha):
 def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size = 5, angle_1 = 45, angle_2 = 60):
     
     print('Reading XML')
-    all_track_properties,TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration, image, Mask, plotMask = common_stats_function(xml_path, image, Mask)
+    all_track_properties, split_points_times, TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration, image, Mask, plotMask = common_stats_function(xml_path, image, Mask)
     print('Done, Processing')
     IDLocations = []
     TrackLayerTracklets = {}
@@ -1930,7 +1935,7 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
     
     figure2D = plt.figure(figsize=(16, 10))
     multiplot_widget = FigureCanvas(figure2D)
-    ax2D = multiplot_widget.figure.subplots(1, 4)
+    ax2D = multiplot_widget.figure.subplots(1, 5)
     # Data for a three-dimensional line
     print('All Tracks plot') 
     if TimedMask is not None:
@@ -2015,6 +2020,22 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
                                 
                     shift_x, shift_y, shift_z = np.mean([xMax, xMin]), np.mean([yMax, yMin]), np.mean([zMax, zMin])
                     
+                    scounts = []
+                    scounts_time = []
+                    for i in range(len(AllTracksT)):
+                        
+                        time = AllTracksT[i]
+                        scount = 0
+                        for j in range(0, len(split_points_times)):
+                            
+                            split_point, split_time = split_points_times[j]
+                            if split_time == time:
+                                scount = scount + 1
+                            
+                        scounts_time.append(time)
+                        scounts.append(scount)
+                    
+                    
                     for i in range(0,len(AllTracksT), window_size):
                          
                          time = AllTracksT[i]
@@ -2085,9 +2106,13 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
                     ax2D[2].set_xlabel('dz')
                     ax2D[2].set_ylabel('dx')
                     
+                    
+                    ax2D[3].plot(scounts_time, scounts, '-',  alpha=line_alpha, lw=lw )
+                    ax2D[3].set_xlabel('time')
+                    ax2D[3].set_ylabel('division')
                   
                     
-    sns.histplot(Gradients, kde = True, ax = ax2D[3])
+    sns.histplot(Gradients, kde = True, ax = ax2D[4])
     
   
                    
@@ -2098,6 +2123,7 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
 def Multiplicity(spot_object_source_target):
 
     split_points = []
+    split_times = []
     root_leaf = []
     sources = []
     targets = []
@@ -2138,9 +2164,10 @@ def Multiplicity(spot_object_source_target):
                 scount = scount + 1
         if scount > 1:
             split_points.append(source_id)
+            split_times.append(sourcetime)
         scount = 0
 
-    return split_points, root_leaf
+    return split_points, split_times, root_leaf
 
 
 
