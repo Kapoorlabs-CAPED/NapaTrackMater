@@ -2006,9 +2006,6 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
                                     AllTracksY.append(float(y))
                                     AllTracksX.append(float(x))
                                     AllTracksT.append(float(t))
-                    subZ = AllTracksZ[0]
-                    subY = AllTracksY[0]
-                    subX = AllTracksX[0]
                     xMax = np.max(AllTracksX)
                     yMax = np.max(AllTracksY)
                     zMax = np.max(AllTracksZ)   
@@ -2022,32 +2019,36 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
                     
                     scounts = []
                     scounts_time = []
-                    for i in range(len(AllTracksT)):
-                        
-                        time = AllTracksT[i]
-                        scount = 0
-                        for j in range(0, len(split_points_times)):
-                            
-                            split_point, split_time = split_points_times[j]
-                            if split_time == time:
-                                scount = scount + 1
-                            
-                        scounts_time.append(time)
-                        scounts.append(scount)
                     
                     
-                    for i in range(0,len(AllTracksT), window_size):
+                    
+                    for i in range(0,len(AllTracksT)):
                          
-                         time = AllTracksT[i]
-                         z = AllTracksZ[i]
-                         x = AllTracksX[i]
-                         y = AllTracksY[i]
+                         timenow = AllTracksT[i]
+                         scount = 0
+                         for j in range(0, len(split_points_times)):
+                             
+                             split_point, split_time = split_points_times[j]
+                             if split_time == timenow:
+                                 scount = scount + 1
+                             
+                         scounts_time.append(timenow)
+                         scounts.append(scount)
+                        
+                         
+                         if i > 0:
+                            j = i + window_size
+                         if i == 0:
+                             j = 0
+                         z = AllTracksZ[j]
+                         x = AllTracksX[j]
+                         y = AllTracksY[j]
                          vector_1 = [z,y,x]
-                         if len(AllTracksZ) > i + window_size:
-                                 nexttime = AllTracksT[i + window_size]
-                                 nextz = AllTracksZ[i + window_size]
-                                 nextx = AllTracksX[i + window_size]  
-                                 nexty = AllTracksY[i + window_size] 
+                         if len(AllTracksZ) > j + window_size:
+                                 nexttime = AllTracksT[j + window_size]
+                                 nextz = AllTracksZ[j + window_size]
+                                 nextx = AllTracksX[j + window_size]  
+                                 nexty = AllTracksY[j + window_size] 
                                  vector_2 = [nextz,nexty,nextx]
                                  unit_vector_1 = vector_1 / np.linalg.norm(vector_1)
                                  unit_vector_2 = vector_2 / np.linalg.norm(vector_2)
@@ -2056,6 +2057,7 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
                                  AllAngles.append(angle)
                                  AllAnglesTime.append(nexttime)
                                  AllAnglesTrackID.append(trackid)
+                                 
                     # AllTracksZ = np.diff(AllTracksZ)
                     # AllTracksY = np.diff(AllTracksY)
                     # AllTracksX = np.diff(AllTracksX)
