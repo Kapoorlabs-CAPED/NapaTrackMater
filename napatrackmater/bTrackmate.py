@@ -1945,7 +1945,13 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
     
     figure2D = plt.figure(figsize=(16, 10))
     multiplot_widget = FigureCanvas(figure2D)
-    ax2D = multiplot_widget.figure.subplots(1, 5)
+    ax2D = multiplot_widget.figure.subplots(1, 4)
+    
+    
+    figure2Dnext = plt.figure(figsize=(16, 10))
+    multiplot_widget_next = FigureCanvas(figure2Dnext)
+    ax2D_next = multiplot_widget_next.figure.subplots(1, 2)
+    
     # Data for a three-dimensional line
     print('All Tracks plot') 
     if TimedMask is not None:
@@ -1974,6 +1980,10 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
             MaskYf.append(y - y0)
             MaskXf.append(x - x0)     
             count = count + 1
+            
+    SuperTracksT = []
+    SuperAnglesTime = []   
+    SuperAngles = []      
     for i in tqdm(range(0, len(all_track_properties))):
                     trackid, alltracklets, DividingTrajectory = all_track_properties[i]
 
@@ -2016,6 +2026,7 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
                                     AllTracksY.append(float(y))
                                     AllTracksX.append(float(x))
                                     AllTracksT.append(float(t))
+                                    SuperTracksT.append(float(t))
                     xMax = np.max(AllTracksX)
                     yMax = np.max(AllTracksY)
                     zMax = np.max(AllTracksZ)   
@@ -2033,19 +2044,6 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
                     
                     for i in range(0,len(AllTracksT)):
                          
-                         timenow = AllTracksT[i]
-                         
-                         scount = 0
-                         for j in range(0, len(split_points_times)):
-                             
-                             split_point, split_time = split_points_times[j]
-                             split_time = int(split_time)
-                             if split_time == int(timenow):
-                                 scount = scount + 1
-                             
-                         scounts_time.append(timenow)
-                         scounts.append(scount)
-                        
                          
                          if i > 0:
                             j = i + window_size
@@ -2066,9 +2064,13 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
                                  unit_vector_2 = vector_2 / np.linalg.norm(vector_2)
                                  dot_product = np.dot(unit_vector_1, unit_vector_2)
                                  angle = np.arccos(dot_product) * 180 / np.pi
-                                 AllAngles.append(angle)
-                                 AllAnglesTime.append(nexttime)
-                                 AllAnglesTrackID.append(trackid)
+                                 AllAngles.append(float(angle))
+                                 AllAnglesTime.append(float(nexttime))
+                                 
+                                 SuperAnglesTime.append(float(nexttime))
+                                 SuperAngles.append(float(angle))
+                                 
+                                 AllAnglesTrackID.append(float(trackid))
                                  
                     # AllTracksZ = np.diff(AllTracksZ)
                     # AllTracksY = np.diff(AllTracksY)
@@ -2095,14 +2097,14 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
                     line_alpha = 0.8
                     lw = 0.4
                     ax.view_init(angle_1, angle_2)
-                    ax.plot3D(AllTracksX - shift_x, AllTracksY - shift_y, AllTracksZ - shift_z, '.',  alpha=line_alpha, lw=lw )
+                    ax.plot3D(AllTracksX - shift_x, AllTracksY - shift_y, AllTracksZ - shift_z, '-',  alpha=line_alpha, lw=lw )
                     
                     ax.set_xlabel('dx')
                     ax.set_ylabel('dy')
                     ax.set_zlabel('dz')
                     
                     axdir.view_init(angle_1, angle_2)
-                    axdir.plot3D(AllAnglesTrackID, AllAnglesTime, AllAngles, '.',  alpha=line_alpha, lw=lw ) 
+                    axdir.plot3D(AllAnglesTrackID, AllAnglesTime, AllAngles, '-',  alpha=line_alpha, lw=lw ) 
                     
                     axdir.set_xlabel('trackid')
                     axdir.set_ylabel('time')
@@ -2121,12 +2123,47 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
                     ax2D[2].set_ylabel('dx')
                     
                     
-                    ax2D[3].plot(scounts_time, scounts, '-',  alpha=line_alpha, lw=lw )
-                    ax2D[3].set_xlabel('time')
-                    ax2D[3].set_ylabel('division')
+    Alltimes = sorted(set(SuperTracksT.copy()))             
+    for i in range(0,len(Alltimes)):
+         
+         timenow = Alltimes[i]
+         
+         scount = 0
+         for j in range(0, len(split_points_times)):
+             
+             split_point, split_time = split_points_times[j]
+             split_time = int(split_time)
+             if split_time == int(timenow):
+                 scount = scount + 1
+             
+         scounts_time.append(float(timenow))
+         scounts.append(float(scount))
+    SetAllAnglesTime = sorted(set(SuperAnglesTime.copy()))   
+    AverageAngle = []
+    AverageTime = []
+    for i in range(0, len(SetAllAnglesTime)):
+        
+        average_angle = 0
+        time = SetAllAnglesTime[i]
+        for j in range(0, len(SuperAnglesTime)):
+            
+            nexttime = SuperAnglesTime[j]
+            
+            if nexttime == time:
+                average_angle = average_angle + SuperAngles[j]
+        AverageAngle.append(average_angle)
+        AverageTime.append(time)
+
+            
+    ax2D_next[0].plot(scounts_time, scounts, '-',  alpha=line_alpha, lw=lw )
+    ax2D_next[0].set_xlabel('time')
+    ax2D_next[0].set_ylabel('division')
                   
-                    
-    sns.histplot(Gradients, kde = True, ax = ax2D[4])
+    ax2D_next[1].plot(AverageTime, AverageAngle, '-',  alpha=line_alpha, lw=lw )
+    ax2D_next[1].set_xlabel('time')
+    ax2D_next[1].set_ylabel('angles')          
+                  
+    sns.histplot(Gradients, kde = True, ax = ax2D[3])
     
   
                    
