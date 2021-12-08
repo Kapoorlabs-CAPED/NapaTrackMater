@@ -1492,7 +1492,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
             cell_id = int(Spotobject.get("ID"))
             # Get the TZYX location of the cells in that frame
             Uniqueobjects[cell_id] = [
-                Spotobject.get('POSITION_T'),
+                Spotobject.get('FRAME'),
                 Spotobject.get('POSITION_Z'),
                 Spotobject.get('POSITION_Y'),
                 Spotobject.get('POSITION_X'),
@@ -1522,7 +1522,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
                 
                   TOTAL_INTENSITY_CH1,
                   MEAN_INTENSITY_CH1,
-                Spotobject.get('POSITION_T'),
+                Spotobject.get('FRAME'),
                 Radius,
                 QUALITY
             ]
@@ -1540,7 +1540,12 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
 
                 source_id = edge.get('SPOT_SOURCE_ID')
                 target_id = edge.get('SPOT_TARGET_ID')
-                edge_time = edge.get('EDGE_TIME')
+                try:
+                   TOTAL_INTENSITY_CH1, MEAN_INTENSITY_CH1,Position_T,Radius,QUALITY = Uniqueproperties[int(source_id)]
+                except:
+                   TOTAL_INTENSITY_CH1, MEAN_INTENSITY_CH1,Position_T,Radius,QUALITY = Uniqueproperties[int(target_id)]
+                
+                edge_time = Position_T
                
                 directional_rate_change = edge.get('DIRECTIONAL_CHANGE_RATE')
                 speed = edge.get('SPEED')
@@ -1571,6 +1576,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
                 )
                 for i in range(len(split_points)):
                       split_points_times.append([split_points[i], split_times[i]])
+                      print(split_points[i], split_times[i])
             if DividingTrajectory == False:
                 NonDividingTrackIds.append(track_id)
                 AllTrackIds.append(track_id)
@@ -1664,8 +1670,9 @@ def common_stats_function(xml_path, image = None, Mask = None):
             # Create object with unique cell ID
             cell_id = int(Spotobject.get("ID"))
             # Get the TZYX location of the cells in that frame
+            
             Uniqueobjects[cell_id] = [
-                Spotobject.get('POSITION_T'),
+                Spotobject.get('FRAME'),
                 Spotobject.get('POSITION_Z'),
                 Spotobject.get('POSITION_Y'),
                 Spotobject.get('POSITION_X'),
@@ -1695,7 +1702,7 @@ def common_stats_function(xml_path, image = None, Mask = None):
                 
                   TOTAL_INTENSITY_CH1,
                   MEAN_INTENSITY_CH1,
-                Spotobject.get('POSITION_T'),
+                Spotobject.get('FRAME'),
                 Radius,
                 QUALITY
             ]
@@ -1712,8 +1719,11 @@ def common_stats_function(xml_path, image = None, Mask = None):
 
                 source_id = edge.get('SPOT_SOURCE_ID')
                 target_id = edge.get('SPOT_TARGET_ID')
-                edge_time = edge.get('EDGE_TIME')
-               
+                try:
+                   TOTAL_INTENSITY_CH1, MEAN_INTENSITY_CH1,Position_T,Radius,QUALITY = Uniqueproperties[int(source_id)]
+                except:
+                   TOTAL_INTENSITY_CH1, MEAN_INTENSITY_CH1,Position_T,Radius,QUALITY = Uniqueproperties[int(target_id)] 
+                edge_time = Position_T
                 directional_rate_change = edge.get('DIRECTIONAL_CHANGE_RATE')
                 speed = edge.get('SPEED')
 
@@ -2021,15 +2031,16 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
                     scounts_time = []
                     
                     
-                    
                     for i in range(0,len(AllTracksT)):
                          
                          timenow = AllTracksT[i]
+                         
                          scount = 0
                          for j in range(0, len(split_points_times)):
                              
                              split_point, split_time = split_points_times[j]
-                             if split_time == timenow:
+                             split_time = int(split_time)
+                             if split_time == int(timenow):
                                  scount = scount + 1
                              
                          scounts_time.append(timenow)
