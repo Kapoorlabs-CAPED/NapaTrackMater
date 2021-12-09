@@ -2144,6 +2144,7 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
     for i in range(0, len(SetAllAnglesTime)):
         
         average_angle = 0
+        count = 0
         time = SetAllAnglesTime[i]
         for j in range(0, len(SuperAnglesTime)):
             
@@ -2151,16 +2152,17 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
             
             if nexttime == time:
                 average_angle = average_angle + SuperAngles[j]
-        AverageAngle.append(average_angle)
+                count = count + 1
+        AverageAngle.append(average_angle/count)
         AverageTime.append(time)
 
             
     ax2D_next[0].plot(scounts_time, scounts, '-',  alpha=line_alpha, lw=lw )
-    ax2D_next[0].set_xlabel('time')
+    ax2D_next[0].set_xlabel('time (frames)')
     ax2D_next[0].set_ylabel('division')
                   
     ax2D_next[1].plot(AverageTime, AverageAngle, '-',  alpha=line_alpha, lw=lw )
-    ax2D_next[1].set_xlabel('time')
+    ax2D_next[1].set_xlabel('time (frames)')
     ax2D_next[1].set_ylabel('angles')          
                   
     sns.histplot(Gradients, kde = True, ax = ax2D[3])
