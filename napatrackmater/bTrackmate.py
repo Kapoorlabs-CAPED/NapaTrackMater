@@ -1221,7 +1221,7 @@ class VizCorrect(object):
         def showNapari(self):
                  
                  self.viewer = napari.Viewer()
-                 napari.run()
+                 
                  self.viewer.theme = 'dark'
                  self.viewer.add_labels(self.Segimage, name = self.Name)
                  for k in range(len(self.AllKeys)):
@@ -1312,7 +1312,7 @@ class VizCorrect(object):
                  self.viewer.window.add_dock_widget(TrackAttributeidbox, name="Color Track Attributes", area='right')
                  self.viewer.window.add_dock_widget(computetrackbutton, name="Compute Relabelled Image by Track features", area='left') 
                  self.viewer.window.add_dock_widget(computebutton, name="Compute Relabelled Image by Spot features", area='left') 
-                 
+                 napari.run()
                  
                 
         
@@ -1541,19 +1541,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
 
          if track_id in filtered_track_ids:
             tracklets, DividingTrajectory, split_points_times = track_function(track, track_id, filtered_track_ids,Uniqueproperties)
-    #cpu_count = os.cpu_count()
-    #pool = Pool(processes = cpu_count//2)
-    #[pool.apply_async(track_function, args=(track,filtered_track_ids,Uniqueproperties), callback = log_result) for track in x_ls ]
-    #pool.close()
-    #pool.join()
-    #for i in range(len(result_list)):
-        #tracklets, DividingTrajectory, track_id, split_points_times = result_list[i]
-    #print("Calculated track types")   
-    #if tracklets is not None:
     
-
-            # for each tracklet get real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside
-         
  
             location_prop_dist = tracklet_properties(
                 tracklets,
@@ -3666,7 +3654,7 @@ def ShowAllTracksGauss(
     print('Building Napari in augenblick') 
     
     viewer = napari.Viewer()
-    napari.run()
+    
     viewer.add_image(Raw, name='Image')
         
     if Seg is not None:
@@ -3700,7 +3688,7 @@ def ShowAllTracksGauss(
     animation_widget = AnimationWidget(viewer, savedir, 0, T)
     viewer.window.add_dock_widget(animation_widget, area='right')
     viewer.update_console({'animation': animation_widget.animation})
-
+     
     AllTrackViewerGauss(
         viewer,
         Raw,
@@ -3761,7 +3749,7 @@ def ShowAllTracksGauss(
     print('About to open Napari')
     viewer.window.add_dock_widget(trackbox, name="TrackID", area='left')
     viewer.window.add_dock_widget(tracksavebutton, name="Save TrackID", area='left')
-
+    napari.run() 
 def ShowAllTracks(
     Raw,
     Seg,
@@ -3787,7 +3775,7 @@ def ShowAllTracks(
     print('Building Napari in augenblick') 
     
     viewer = napari.Viewer()
-    napari.run()
+    
     viewer.add_image(Raw, name='Image')
         
     if Seg is not None:
@@ -3821,7 +3809,7 @@ def ShowAllTracks(
     animation_widget = AnimationWidget(viewer, savedir, 0, T)
     viewer.window.add_dock_widget(animation_widget, area='right')
     viewer.update_console({'animation': animation_widget.animation})
-
+    
     AllTrackViewer(
         viewer,
         Raw,
@@ -3879,7 +3867,7 @@ def ShowAllTracks(
     print('About to open Napari')
     viewer.window.add_dock_widget(trackbox, name="TrackID", area='left')
     viewer.window.add_dock_widget(tracksavebutton, name="Save TrackID", area='left')
-    
+    napari.run()
     
     
 def DistancePlotter():
