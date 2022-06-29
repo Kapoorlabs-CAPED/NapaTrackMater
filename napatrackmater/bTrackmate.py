@@ -498,7 +498,7 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
     trackletid = 1
 
     # Exclude the split point near root
-    for i in range(0, len(split_points - 1)):
+    for i in range(0, len(split_points ) - 1):
         Start = split_points[i]
         tracklet = []
         trackletspeed = []
