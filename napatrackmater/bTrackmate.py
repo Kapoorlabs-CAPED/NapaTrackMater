@@ -1579,7 +1579,7 @@ def track_function(track, track_id, filtered_track_ids, Uniqueproperties):
 
             # Sort the tracks by edge time
         spot_object_source_target = sorted(
-                spot_object_source_target, key=sortTracks, reverse=True
+                spot_object_source_target, key=sortTracks, reverse=False
             )
             # Get all the IDs, uniquesource, targets attached, leaf, root, splitpoint IDs
         split_points, split_times, root_leaf = Multiplicity(spot_object_source_target)
@@ -1739,7 +1739,7 @@ def common_stats_function(xml_path, image = None, Mask = None):
 
             # Sort the tracks by edge time
             spot_object_source_target = sorted(
-                spot_object_source_target, key=sortTracks, reverse=True
+                spot_object_source_target, key=sortTracks, reverse=False
             )
             # Get all the IDs, uniquesource, targets attached, leaf, root, splitpoint IDs
             split_points, split_times, root_leaf = Multiplicity(spot_object_source_target)
@@ -1798,7 +1798,7 @@ def import_TM_XML_Randomization(xml_path,image = None, Mask = None, nbins = 5):
                             Locationtracklets = tracklets[1]
                             if len(Locationtracklets) > 0:
                                 Locationtracklets = sorted(
-                                    Locationtracklets, key=sortFirst, reverse=True
+                                    Locationtracklets, key=sortFirst, reverse=False
                                 )
         
                                 for tracklet in Locationtracklets:
@@ -2005,7 +2005,7 @@ def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size =
                             Locationtracklets = tracklets[1]
                             if len(Locationtracklets) > 0:
                                 Locationtracklets = sorted(
-                                    Locationtracklets, key=sortFirst, reverse=True
+                                    Locationtracklets, key=sortFirst, reverse=False
                                 )
         
                                 for tracklet in Locationtracklets:
@@ -2403,7 +2403,7 @@ class AllTrackViewerGauss(object):
                             Locationtracklets = tracklets[1]
                             if len(Locationtracklets) > 0:
                                 Locationtracklets = sorted(
-                                    Locationtracklets, key=sortFirst, reverse=True
+                                    Locationtracklets, key=sortFirst, reverse=False
                                 )
         
                                 for tracklet in Locationtracklets:
@@ -2689,7 +2689,7 @@ class AllTrackViewerGauss(object):
     
                 tracklets = tracklets[1]
                 properties = {
-                'time': np.asarray(tracklets)[:, 1],
+                'time': np.asarray(tracklets)[:, 0],
                 
             }
                 if len(tracklets) > 0:
@@ -2708,7 +2708,7 @@ class AllTrackViewerGauss(object):
             Locationtracklets = tracklets[1]
             if len(Locationtracklets) > 0:
                 Locationtracklets = sorted(
-                    Locationtracklets, key=sortFirst, reverse=True
+                    Locationtracklets, key=sortFirst, reverse=False
                 )
                 for tracklet in Locationtracklets:
                     (
@@ -2859,7 +2859,7 @@ class AllTrackViewer(object):
                             Locationtracklets = tracklets[1]
                             if len(Locationtracklets) > 0:
                                 Locationtracklets = sorted(
-                                    Locationtracklets, key=sortFirst, reverse=True
+                                    Locationtracklets, key=sortFirst, reverse=False
                                 )
         
                                 for tracklet in Locationtracklets:
@@ -3082,7 +3082,7 @@ class AllTrackViewer(object):
                             Locationtracklets = tracklets[1]
                             if len(Locationtracklets) > 0:
                                 Locationtracklets = sorted(
-                                    Locationtracklets, key=sortFirst, reverse=True
+                                    Locationtracklets, key=sortFirst, reverse=False
                                 )
         
                                 for tracklet in Locationtracklets:
@@ -3176,7 +3176,7 @@ class AllTrackViewer(object):
             tracklets = tracklets[1]
             if len(tracklets) > 0:
                 properties = {
-                'time': np.asarray(tracklets)[:, 1],
+                'time': np.asarray(tracklets)[:, 0],
                 
             }
                 self.trackviewer.add_tracks(
@@ -3195,7 +3195,7 @@ class AllTrackViewer(object):
             Locationtracklets = tracklets[1]
             if len(Locationtracklets) > 0:
                 Locationtracklets = sorted(
-                    Locationtracklets, key=sortFirst, reverse=True
+                    Locationtracklets, key=sortFirst, reverse=False
                 )
                 for tracklet in Locationtracklets:
                     (
