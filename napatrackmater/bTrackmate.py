@@ -472,32 +472,33 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
     trackletid = 0
     RootCopy = Root
     visited.append(Root)
-    for (
-            source_id,
-            target_id,
-            edge_time,
-            directional_rate_change,
-            speed,
-        ) in spot_object_source_target:
-            # Search for the target id corresponding to leaf
-            if RootCopy == source_id:
+    while RootCopy not in split_points and RootCopy not in root_leaf[1:]:
+            for (
+                    source_id,
+                    target_id,
+                    edge_time,
+                    directional_rate_change,
+                    speed,
+                ) in spot_object_source_target:
+                    # Search for the target id corresponding to leaf
+                    if RootCopy == source_id:
 
-                # Once we find the leaf we move a step fwd to its target to find its target
-                RootCopy = target_id
-                if RootCopy in split_points:
-                    break
-                if RootCopy in visited:
-                    break
-                visited.append(target_id)
-                tracklet.append(source_id)
-                trackletspeed.append(speed)
-                trackletdirection.append(directional_rate_change)
+                        # Once we find the leaf we move a step fwd to its target to find its target
+                        RootCopy = target_id
+                        if RootCopy in split_points:
+                            break
+                        if RootCopy in visited:
+                            break
+                        visited.append(target_id)
+                        tracklet.append(source_id)
+                        trackletspeed.append(speed)
+                        trackletdirection.append(directional_rate_change)
     dividing_tracklets.append([trackletid, tracklet, trackletspeed, trackletdirection])
 
     trackletid = 1
 
     # Exclude the split point near root
-    for i in range(0, len(split_points)):
+    for i in range(0, len(split_points - 1)):
         Start = split_points[i]
         tracklet = []
         trackletspeed = []
@@ -507,29 +508,33 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
         trackletdirection.append(0)
         Othersplit_points = split_points.copy()
         Othersplit_points.pop(i)
-        
-        for (
-                source_id,
-                target_id,
-                edge_time,
-                directional_rate_change,
-                speed,
-            ) in spot_object_source_target:
+        if Start is not Root:
+            while Start is not Root:
+                    
+                for (
+                        source_id,
+                        target_id,
+                        edge_time,
+                        directional_rate_change,
+                        speed,
+                    ) in spot_object_source_target:
+                        
+                        if Start in visited:
+                           break 
+                        if Start in Othersplit_points:
+                            break
+                        if Start == target_id:
 
-                if Start == target_id:
+                            Start = source_id
+                            
+                            tracklet.append(source_id)
+                            visited.append(source_id)
+                            trackletspeed.append(speed)
+                            trackletdirection.append(directional_rate_change)
+                            
 
-                    Start = source_id
-                    if Start in visited:
-                        break
-                    tracklet.append(source_id)
-                    visited.append(source_id)
-                    trackletspeed.append(speed)
-                    trackletdirection.append(directional_rate_change)
-                    if Start in Othersplit_points:
-                        break
-
-        dividing_tracklets.append([trackletid, tracklet, trackletspeed, trackletdirection])
-        trackletid = trackletid + 1
+            dividing_tracklets.append([trackletid, tracklet, trackletspeed, trackletdirection])
+            trackletid = trackletid + 1
 
     for i in range(0, len(root_leaf)):
         leaf = root_leaf[i]
@@ -540,27 +545,30 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
         tracklet.append(leaf)
         trackletspeed.append(0)
         trackletdirection.append(0)
-        for (
-                source_id,
-                target_id,
-                edge_time,
-                directional_rate_change,
-                speed,
-            ) in spot_object_source_target:
-                # Search for the target id corresponding to leaf
-                if leaf == target_id:
-                    # Include the split points here
+        while leaf not in split_points and leaf != Root:
+            for (
+                    source_id,
+                    target_id,
+                    edge_time,
+                    directional_rate_change,
+                    speed,
+                ) in spot_object_source_target:
+                    # Search for the target id corresponding to leaf
+                    if leaf == target_id:
+                        # Include the split points here
 
-                    # Once we find the leaf we move a step back to its source to find its source
-                    leaf = source_id
-                    if leaf in split_points:
-                        break
-                    if leaf in visited:
-                        break
-                    visited.append(source_id)
-                    tracklet.append(source_id)
-                    trackletspeed.append(speed)
-                    trackletdirection.append(directional_rate_change)
+                        # Once we find the leaf we move a step back to its source to find its source
+                        leaf = source_id
+                        if leaf in split_points:
+                            break
+                        if leaf in visited:
+                            break
+                        if leaf == Root:
+                            break
+                        visited.append(source_id)
+                        tracklet.append(source_id)
+                        trackletspeed.append(speed)
+                        trackletdirection.append(directional_rate_change)
         dividing_tracklets.append([trackletid, tracklet, trackletspeed, trackletdirection])
         trackletid = trackletid + 1
 
