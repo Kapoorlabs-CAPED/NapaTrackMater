@@ -2711,7 +2711,7 @@ class AllTrackViewerGauss(object):
                     )
     
             self.trackviewer.theme = 'light'
-            self.trackviewer.dims.ndisplay = 3
+            
 
     def track(self, TrackLayerTracklets, trackid, alltracklets):
 
@@ -3194,7 +3194,7 @@ class AllTrackViewer(object):
                 )
 
         self.trackviewer.theme = 'light'
-        self.trackviewer.dims.ndisplay = 3
+        
 
     def track(self, TrackLayerTracklets, trackid, alltracklets):
 
