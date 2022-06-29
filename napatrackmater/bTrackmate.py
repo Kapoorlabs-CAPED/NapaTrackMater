@@ -5,11 +5,9 @@ import multiprocessing
 import os
 import xml.etree.cElementTree as et
 from functools import partial
-import multiprocessing
 from pathlib import Path
 import sys
-from multiprocessing import Pool
-from multiprocessing import freeze_support
+from multiprocessing import Pool, Process, Queue
 from PyQt5.QtCore import pyqtSlot
 from tqdm import tqdm
 import time as clock
@@ -40,7 +38,6 @@ from lmfit import Model
 from numpy import exp, loadtxt, pi, sqrt
 from matplotlib import cm
 from qtpy.QtCore import Qt
-from multiprocessing import Process
 '''Define function to run multiple processors and pool the results together'''
 
 
@@ -1540,9 +1537,20 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     all_track_properties = []
 
     x_ls = tracks.findall('Track')
-    process_pool = multiprocessing.Pool(os.cpu_count())
-    partial_pool = partial(track_function, filtered_track_ids = filtered_track_ids, Uniqueproperties = Uniqueproperties)
-    tracklets, DividingTrajectory, track_id, split_points_times = process_pool.map(partial_pool, x_ls)
+    cpu_count = os.cpu_count()
+    print(f'Original CPU count {cpu_count}')
+    if cpu_count < 8:
+        cpu_count = 8
+    queue = Queue()
+    processes = [Process(target = track_function, args = (track, filtered_track_ids,Uniqueproperties ) ) for track in x_ls ]
+    for p in processes:
+        p.start()
+    for p in processes:
+        p.join()    
+ 
+    unsorted_result = [queue.get() for _ in processes]
+    result = [val[1] for val in sorted(unsorted_result)]
+    tracklets, DividingTrajectory, track_id, split_points_times = zip(*result)
     if tracklets is not None:
     
 
