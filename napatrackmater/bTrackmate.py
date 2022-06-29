@@ -37,6 +37,7 @@ from scipy.optimize import curve_fit
 from lmfit import Model
 from numpy import exp, loadtxt, pi, sqrt
 from matplotlib import cm
+from qtpy.QtCore import Qt
 '''Define function to run multiple processors and pool the results together'''
 
 
@@ -850,7 +851,6 @@ def import_TM_XML_statplots(xml_path,spot_csv, links_csv, savedir, scale = 255 )
 
 def import_TM_XML_distplots(xml_path, spot_csv, track_csv, savedir, scale = 255):
     
-    
     Name = os.path.basename(os.path.splitext(spot_csv)[0])
     root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
 
@@ -1217,6 +1217,7 @@ class VizCorrect(object):
         def showNapari(self):
                  
                  self.viewer = napari.Viewer()
+                 napari.run()
                  self.viewer.theme = 'dark'
                  self.viewer.add_labels(self.Segimage, name = self.Name)
                  for k in range(len(self.AllKeys)):
@@ -1778,7 +1779,6 @@ def common_stats_function(xml_path, image = None, Mask = None):
     
 def import_TM_XML_Randomization(xml_path,image = None, Mask = None, nbins = 5):
     
-    
     all_track_properties, split_points_times, TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration, image, Mask, plotMask = common_stats_function(xml_path, image, Mask)        
     TrackLayerTracklets = {}
     AllT = []
@@ -1928,7 +1928,6 @@ def plot_3D_polylines_yz(polyline_df_yz, t, ax, line_color, line_alpha):
         ax.plot(z-shift_z, y-shift_y, x-shift_x, '-', color=line_color, alpha=line_alpha, lw=0.2)
   
 def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size = 5, angle_1 = 45, angle_2 = 60):
-    
     print('Reading XML')
     all_track_properties, split_points_times, TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration, image, Mask, plotMask = common_stats_function(xml_path, image, Mask)
     print('Done, Processing')
@@ -3478,7 +3477,6 @@ def TrackMateLiveTracks(
 
     viewer.window.add_dock_widget(trackbox, name="TrackID", area='left')
     viewer.window.add_dock_widget(tracksavebutton, name="Save TrackID", area='left')
-    napari.run()
     
 
 
@@ -3605,7 +3603,6 @@ def TrackMateLiveTracksGauss(
 
     viewer.window.add_dock_widget(trackbox, name="TrackID", area='left')
     viewer.window.add_dock_widget(tracksavebutton, name="Save TrackID", area='left')
-    napari.run()
     
 
 
@@ -3635,6 +3632,7 @@ def ShowAllTracksGauss(
     print('Building Napari in augenblick') 
     
     viewer = napari.Viewer()
+    napari.run()
     viewer.add_image(Raw, name='Image')
         
     if Seg is not None:
@@ -3729,7 +3727,6 @@ def ShowAllTracksGauss(
     print('About to open Napari')
     viewer.window.add_dock_widget(trackbox, name="TrackID", area='left')
     viewer.window.add_dock_widget(tracksavebutton, name="Save TrackID", area='left')
-    napari.run()
 
 def ShowAllTracks(
     Raw,
@@ -3756,6 +3753,7 @@ def ShowAllTracks(
     print('Building Napari in augenblick') 
     
     viewer = napari.Viewer()
+    napari.run()
     viewer.add_image(Raw, name='Image')
         
     if Seg is not None:
@@ -3847,7 +3845,6 @@ def ShowAllTracks(
     print('About to open Napari')
     viewer.window.add_dock_widget(trackbox, name="TrackID", area='left')
     viewer.window.add_dock_widget(tracksavebutton, name="Save TrackID", area='left')
-    napari.run()
     
     
     
