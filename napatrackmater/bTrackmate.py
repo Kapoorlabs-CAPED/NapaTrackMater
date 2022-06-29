@@ -498,7 +498,7 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
     trackletid = 1
 
     # Exclude the split point near root
-    for i in range(0, len(split_points ) - 1):
+    for i in range(0, len(split_points )):
         Start = split_points[i]
         tracklet = []
         trackletspeed = []
@@ -508,10 +508,8 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
         trackletdirection.append(0)
         Othersplit_points = split_points.copy()
         Othersplit_points.pop(i)
-        if Start is not Root:
-            while Start is not Root:
-                    
-                for (
+        
+        for (
                         source_id,
                         target_id,
                         edge_time,
@@ -533,8 +531,8 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
                             trackletdirection.append(directional_rate_change)
                             
 
-            dividing_tracklets.append([trackletid, tracklet, trackletspeed, trackletdirection])
-            trackletid = trackletid + 1
+        dividing_tracklets.append([trackletid, tracklet, trackletspeed, trackletdirection])
+        trackletid = trackletid + 1
 
     for i in range(0, len(root_leaf)):
         leaf = root_leaf[i]
@@ -1230,7 +1228,6 @@ class VizCorrect(object):
                  
                  self.viewer = napari.Viewer()
                  
-                 self.viewer.theme = 'dark'
                  self.viewer.add_labels(self.Segimage, name = self.Name)
                  for k in range(len(self.AllKeys)):
                             
@@ -2715,10 +2712,9 @@ class AllTrackViewerGauss(object):
                 tracklets = tracklets[1]
                 if len(tracklets) > 0:
                     self.trackviewer.add_tracks(
-                        np.asarray(tracklets), name=self.tracklines + str(trackid), colormap = 'twilight', tail_length = sys.float_info.max
+                        np.asarray(tracklets), name=self.tracklines + str(trackid),  tail_length = 10
                     )
     
-            self.trackviewer.theme = 'light'
             
 
     def track(self, TrackLayerTracklets, trackid, alltracklets):
@@ -3198,10 +3194,10 @@ class AllTrackViewer(object):
             tracklets = tracklets[1]
             if len(tracklets) > 0:
                 self.trackviewer.add_tracks(
-                    np.asarray(tracklets), name=self.tracklines + str(trackid), colormap = 'twilight', tail_length = sys.float_info.max
+                    np.asarray(tracklets), name=self.tracklines + str(trackid),  tail_length = 10
                 )
 
-        self.trackviewer.theme = 'light'
+       
         
 
     def track(self, TrackLayerTracklets, trackid, alltracklets):
