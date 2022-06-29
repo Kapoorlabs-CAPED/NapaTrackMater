@@ -1533,7 +1533,6 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
                 Radius,
                 QUALITY
             ]
-
     all_track_properties = []
 
     x_ls = tracks.findall('Track')
@@ -1541,11 +1540,11 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     print(f'Original CPU count {cpu_count}')
     
     pool = Pool(processes = cpu_count//2)
-    results = [pool.apply_async(track_function, args=(track,filtered_track_ids,Uniqueproperties)) for track in x_ls ]
+    [pool.apply_async(track_function, args=(track,filtered_track_ids,Uniqueproperties), callback = log_result) for track in x_ls ]
     pool.close()
     pool.join()
-    for i in range(len(results)):
-        tracklets, DividingTrajectory, track_id, split_points_times = results[i]
+    for i in range(len(result_list)):
+        tracklets, DividingTrajectory, track_id, split_points_times = result_list[i]
     print("Calculated track types")   
     if tracklets is not None:
     
@@ -1570,7 +1569,11 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
         tcalibration,
     ]
 
-
+result_list = []
+def log_result(result):
+    # This is called whenever foo_pool(i) returns a result.
+    # result_list is modified only by the main process, not the pool workers.
+    result_list.append(result)
 def track_function(track, filtered_track_ids, Uniqueproperties):
   
         track_id = int(track.get("TRACK_ID"))
