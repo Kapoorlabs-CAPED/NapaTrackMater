@@ -1450,7 +1450,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     ]
 
     # Extract the tracks from xml
-    tracks = root.find('Model').find('AllTracks')
+    tracks = root.find('Model').find('FilteredTracks')
     settings = root.find('Settings').find('ImageData')
 
     # Extract the cell objects from xml
@@ -1580,6 +1580,7 @@ def track_function(track, filtered_track_ids, Uniqueproperties):
         spot_object_source_target = []
         
         split_points_times = []
+        print("Track ID" + track_id)
         if track_id in filtered_track_ids:
             for edge in track.findall('Edge'):
 
