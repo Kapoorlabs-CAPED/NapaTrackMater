@@ -1540,16 +1540,14 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     cpu_count = os.cpu_count()
     print(f'Original CPU count {cpu_count}')
     
-    queue = Queue()
-    processes = [Process(target = track_function, args = (track, filtered_track_ids,Uniqueproperties, idx, queue ) ) for idx, track in enumerate(x_ls) ]
-    for p in processes:
-        p.start()
-    for p in processes:
-        p.join()    
- 
-    unsorted_result = [queue.get() for _ in processes]
-    result = [val[1] for val in sorted(unsorted_result)]
-    tracklets, DividingTrajectory, track_id, split_points_times = zip(*result)
+    manager = multiprocessing.Manager()
+    return_dict = manager.dict()
+    jobs = []
+    pool = Pool(processes = cpu_count//2)
+    partial_func = partial(track_function, filtered_track_ids,Uniqueproperties)
+    for track in x_ls:
+       tracklets, DividingTrajectory, track_id, split_points_times = pool.apply_async(partial_func, args=(track,))
+     
     if tracklets is not None:
     
 
@@ -1574,7 +1572,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     ]
 
 
-def track_function(track, filtered_track_ids, Uniqueproperties, idx, queue):
+def track_function(track, filtered_track_ids, Uniqueproperties,  queue):
   
         track_id = int(track.get("TRACK_ID"))
 
@@ -1630,7 +1628,7 @@ def track_function(track, filtered_track_ids, Uniqueproperties, idx, queue):
                     root_leaf, spot_object_source_target
                 )
 
-            queue.put(idx, [tracklets, DividingTrajectory, track_id, split_points_times])
+        return tracklets, DividingTrajectory, track_id, split_points_times 
 
 def common_stats_function(xml_path, image = None, Mask = None):
     
