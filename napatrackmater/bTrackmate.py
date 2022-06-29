@@ -472,8 +472,7 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
     trackletid = 0
     RootCopy = Root
     visited.append(Root)
-    while RootCopy not in split_points and RootCopy not in root_leaf[1:]:
-        for (
+    for (
             source_id,
             target_id,
             edge_time,
@@ -498,7 +497,7 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
     trackletid = 1
 
     # Exclude the split point near root
-    for i in range(0, len(split_points) - 1):
+    for i in range(0, len(split_points)):
         Start = split_points[i]
         tracklet = []
         trackletspeed = []
@@ -508,8 +507,8 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
         trackletdirection.append(0)
         Othersplit_points = split_points.copy()
         Othersplit_points.pop(i)
-        while Start is not Root:
-            for (
+        
+        for (
                 source_id,
                 target_id,
                 edge_time,
@@ -541,8 +540,7 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
         tracklet.append(leaf)
         trackletspeed.append(0)
         trackletdirection.append(0)
-        while leaf not in split_points and leaf != Root:
-            for (
+        for (
                 source_id,
                 target_id,
                 edge_time,
@@ -1537,18 +1535,26 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
 
     x_ls = tracks.findall('Track')
     print('total tracks',len(x_ls))
-    cpu_count = os.cpu_count()
-    pool = Pool(processes = cpu_count//2)
-    [pool.apply_async(track_function, args=(track,filtered_track_ids,Uniqueproperties), callback = log_result) for track in x_ls ]
-    pool.close()
-    pool.join()
-    for i in range(len(result_list)):
-        tracklets, DividingTrajectory, track_id, split_points_times = result_list[i]
-    print("Calculated track types")   
-    if tracklets is not None:
+    for track in x_ls:
+
+         track_id = int(track.get("TRACK_ID"))
+
+         if track_id in filtered_track_ids:
+            tracklets, DividingTrajectory, split_points_times = track_function(track, track_id, filtered_track_ids,Uniqueproperties)
+    #cpu_count = os.cpu_count()
+    #pool = Pool(processes = cpu_count//2)
+    #[pool.apply_async(track_function, args=(track,filtered_track_ids,Uniqueproperties), callback = log_result) for track in x_ls ]
+    #pool.close()
+    #pool.join()
+    #for i in range(len(result_list)):
+        #tracklets, DividingTrajectory, track_id, split_points_times = result_list[i]
+    #print("Calculated track types")   
+    #if tracklets is not None:
     
 
             # for each tracklet get real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside
+         
+ 
             location_prop_dist = tracklet_properties(
                 tracklets,
                 Uniqueobjects,
@@ -1573,16 +1579,16 @@ def log_result(result):
     # This is called whenever foo_pool(i) returns a result.
     # result_list is modified only by the main process, not the pool workers.
     result_list.append(result)
-def track_function(track, filtered_track_ids, Uniqueproperties):
+
+def track_function(track, track_id, filtered_track_ids, Uniqueproperties):
   
-        track_id = int(track.get("TRACK_ID"))
+        
 
         spot_object_source_target = []
         
         split_points_times = []
-        print("Track ID" + track_id)
-        if track_id in filtered_track_ids:
-            for edge in track.findall('Edge'):
+        
+        for edge in track.findall('Edge'):
 
                 source_id = edge.get('SPOT_SOURCE_ID')
                 target_id = edge.get('SPOT_TARGET_ID')
@@ -1592,7 +1598,7 @@ def track_function(track, filtered_track_ids, Uniqueproperties):
                    TOTAL_INTENSITY_CH1, MEAN_INTENSITY_CH1,Position_T,Radius,QUALITY = Uniqueproperties[int(target_id)]
                 
                 edge_time = Position_T
-               
+                
                 directional_rate_change = edge.get('DIRECTIONAL_CHANGE_RATE')
                 speed = edge.get('SPEED')
 
@@ -1601,20 +1607,20 @@ def track_function(track, filtered_track_ids, Uniqueproperties):
                 )
 
             # Sort the tracks by edge time
-            spot_object_source_target = sorted(
+        spot_object_source_target = sorted(
                 spot_object_source_target, key=sortTracks, reverse=False
             )
             # Get all the IDs, uniquesource, targets attached, leaf, root, splitpoint IDs
-            split_points, split_times, root_leaf = Multiplicity(spot_object_source_target)
+        split_points, split_times, root_leaf = Multiplicity(spot_object_source_target)
             
             # Determine if a track has divisions or none
-            if len(split_points) > 0:
+        if len(split_points) > 0:
                 split_points = split_points[::-1]
                 DividingTrajectory = True
-            else:
+        else:
                 DividingTrajectory = False
-          
-            if DividingTrajectory == True:
+        
+        if DividingTrajectory == True:
                 DividingTrackIds.append(track_id)
                 AllTrackIds.append(track_id)
                 tracklets = analyze_dividing_tracklets(
@@ -1623,14 +1629,14 @@ def track_function(track, filtered_track_ids, Uniqueproperties):
                 for i in range(len(split_points)):
                       split_points_times.append([split_points[i], split_times[i]])
                       
-            if DividingTrajectory == False:
+        if DividingTrajectory == False:
                 NonDividingTrackIds.append(track_id)
                 AllTrackIds.append(track_id)
                 tracklets = analyze_non_dividing_tracklets(
                     root_leaf, spot_object_source_target
                 )
 
-        return tracklets, DividingTrajectory, track_id, split_points_times 
+        return tracklets, DividingTrajectory, split_points_times 
 
 def common_stats_function(xml_path, image = None, Mask = None):
     
