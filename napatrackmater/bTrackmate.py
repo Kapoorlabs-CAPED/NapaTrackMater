@@ -1450,7 +1450,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     ]
 
     # Extract the tracks from xml
-    tracks = root.find('Model').find('FilteredTracks')
+    tracks = root.find('Model').find('AllTracks')
     settings = root.find('Settings').find('ImageData')
 
     # Extract the cell objects from xml
