@@ -1571,7 +1571,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     ]
 
 
-def track_function(track, filtered_track_ids, Uniqueproperties,  queue):
+def track_function(track, filtered_track_ids, Uniqueproperties):
   
         track_id = int(track.get("TRACK_ID"))
 
