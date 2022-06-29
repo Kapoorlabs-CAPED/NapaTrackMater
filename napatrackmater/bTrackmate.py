@@ -1540,14 +1540,13 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     cpu_count = os.cpu_count()
     print(f'Original CPU count {cpu_count}')
     
-    manager = multiprocessing.Manager()
-    return_dict = manager.dict()
-    jobs = []
     pool = Pool(processes = cpu_count//2)
-    partial_func = partial(track_function, filtered_track_ids,Uniqueproperties)
-    for track in x_ls:
-       tracklets, DividingTrajectory, track_id, split_points_times = pool.apply_async(partial_func, args=(track,))
-     
+    results = [pool.apply_async(track_function, args=(track,filtered_track_ids,Uniqueproperties)) for track in x_ls ]
+    pool.close()
+    pool.join()
+    for i in range(len(results)):
+        tracklets, DividingTrajectory, track_id, split_points_times = results[i]
+    print("Calculated track types")   
     if tracklets is not None:
     
 
