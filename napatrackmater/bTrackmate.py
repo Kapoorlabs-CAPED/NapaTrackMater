@@ -1539,10 +1539,9 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     x_ls = tracks.findall('Track')
     cpu_count = os.cpu_count()
     print(f'Original CPU count {cpu_count}')
-    if cpu_count < 8:
-        cpu_count = 8
+    
     queue = Queue()
-    processes = [Process(target = track_function, args = (track, filtered_track_ids,Uniqueproperties ) ) for track in x_ls ]
+    processes = [Process(target = track_function, args = (track, filtered_track_ids,Uniqueproperties, idx, queue ) ) for idx, track in enumerate(x_ls) ]
     for p in processes:
         p.start()
     for p in processes:
@@ -1575,7 +1574,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     ]
 
 
-def track_function(track, filtered_track_ids, Uniqueproperties):
+def track_function(track, filtered_track_ids, Uniqueproperties, idx, queue):
   
         track_id = int(track.get("TRACK_ID"))
 
@@ -1631,7 +1630,7 @@ def track_function(track, filtered_track_ids, Uniqueproperties):
                     root_leaf, spot_object_source_target
                 )
 
-            return tracklets, DividingTrajectory, track_id, split_points_times
+            queue.put(idx, [tracklets, DividingTrajectory, track_id, split_points_times])
 
 def common_stats_function(xml_path, image = None, Mask = None):
     
