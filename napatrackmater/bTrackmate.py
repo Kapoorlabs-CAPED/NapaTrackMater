@@ -1541,7 +1541,8 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
 
     x_ls = tracks.findall('Track')
     process_pool = multiprocessing.Pool(multiprocessing.cpu_count())
-    tracklets, DividingTrajectory, track_id, split_points_times = process_pool.map(partial(track_function, filtered_track_ids, Uniqueproperties), x_ls)
+    partial_pool = partial(track_function, filtered_track_ids = filtered_track_ids, Uniqueproperties = Uniqueproperties)
+    tracklets, DividingTrajectory, track_id, split_points_times = process_pool.map(partial_pool, x_ls)
     if tracklets is not None:
     
 
