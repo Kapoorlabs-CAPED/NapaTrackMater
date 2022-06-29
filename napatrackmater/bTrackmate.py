@@ -2710,9 +2710,13 @@ class AllTrackViewerGauss(object):
             for (trackid, tracklets) in TrackLayerTracklets.items():
     
                 tracklets = tracklets[1]
+                properties = {
+                'time': np.asarray(tracklets)[:, 1],
+                
+            }
                 if len(tracklets) > 0:
                     self.trackviewer.add_tracks(
-                        np.asarray(tracklets), name=self.tracklines + str(trackid),  tail_length = 10
+                        np.asarray(tracklets), name=self.tracklines + str(trackid), properties=properties
                     )
     
             
@@ -3193,8 +3197,12 @@ class AllTrackViewer(object):
 
             tracklets = tracklets[1]
             if len(tracklets) > 0:
+                properties = {
+                'time': np.asarray(tracklets)[:, 1],
+                
+            }
                 self.trackviewer.add_tracks(
-                    np.asarray(tracklets), name=self.tracklines + str(trackid),  tail_length = 10
+                    np.asarray(tracklets), name=self.tracklines + str(trackid), properties = properties
                 )
 
        
