@@ -1536,9 +1536,8 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     all_track_properties = []
 
     x_ls = tracks.findall('Track')
+    print('total tracks',len(x_ls))
     cpu_count = os.cpu_count()
-    print(f'Original CPU count {cpu_count}')
-    
     pool = Pool(processes = cpu_count//2)
     [pool.apply_async(track_function, args=(track,filtered_track_ids,Uniqueproperties), callback = log_result) for track in x_ls ]
     pool.close()
@@ -1737,6 +1736,7 @@ def common_stats_function(xml_path, image = None, Mask = None):
 
     all_track_properties = []
     split_points_times = []
+    
     for track in tracks.findall('Track'):
 
         track_id = int(track.get("TRACK_ID"))
