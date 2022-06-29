@@ -8,6 +8,8 @@ from functools import partial
 import multiprocessing
 from pathlib import Path
 import sys
+from multiprocessing import Pool
+from multiprocessing import freeze_support
 from PyQt5.QtCore import pyqtSlot
 from tqdm import tqdm
 import time as clock
@@ -38,6 +40,7 @@ from lmfit import Model
 from numpy import exp, loadtxt, pi, sqrt
 from matplotlib import cm
 from qtpy.QtCore import Qt
+from multiprocessing import Process
 '''Define function to run multiple processors and pool the results together'''
 
 
@@ -72,6 +75,12 @@ childrenstartid = []
 childrenstartdist = []
 childrenendid = []
 childrenenddist = []
+
+
+def run_multiprocessing(func, track, filtered_track_ids, Uniqueproperties ):
+    process_pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    
+
 
 def prob_sigmoid(x):
     return 1 - math.exp(-x)
@@ -1529,8 +1538,36 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
             ]
 
     all_track_properties = []
-    for track in tracks.findall('Track'):
 
+    x_ls = tracks.findall('Track')
+    process_pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    tracklets, DividingTrajectory, track_id, split_points_times = process_pool.map(partial(track_function, filtered_track_ids, Uniqueproperties), x_ls)
+    if tracklets is not None:
+    
+
+            # for each tracklet get real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside
+            location_prop_dist = tracklet_properties(
+                tracklets,
+                Uniqueobjects,
+                Uniqueproperties,
+                Mask,
+                Segimage,
+                TimedMask,
+                [xcalibration, ycalibration, zcalibration, tcalibration],
+                DividingTrajectory
+            )
+            all_track_properties.append([track_id, location_prop_dist, DividingTrajectory])
+   
+    return all_track_properties, split_points_times, Boundary, [
+        xcalibration,
+        ycalibration,
+        zcalibration,
+        tcalibration,
+    ]
+
+
+def track_function(track, filtered_track_ids, Uniqueproperties):
+  
         track_id = int(track.get("TRACK_ID"))
 
         spot_object_source_target = []
@@ -1577,7 +1614,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
                 )
                 for i in range(len(split_points)):
                       split_points_times.append([split_points[i], split_times[i]])
-                      print(split_points[i], split_times[i])
+                      
             if DividingTrajectory == False:
                 NonDividingTrackIds.append(track_id)
                 AllTrackIds.append(track_id)
@@ -1585,25 +1622,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
                     root_leaf, spot_object_source_target
                 )
 
-            # for each tracklet get real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside
-            location_prop_dist = tracklet_properties(
-                tracklets,
-                Uniqueobjects,
-                Uniqueproperties,
-                Mask,
-                Segimage,
-                TimedMask,
-                [xcalibration, ycalibration, zcalibration, tcalibration],
-                DividingTrajectory
-            )
-            all_track_properties.append([track_id, location_prop_dist, DividingTrajectory])
-   
-    return all_track_properties, split_points_times, Boundary, [
-        xcalibration,
-        ycalibration,
-        zcalibration,
-        tcalibration,
-    ]
+            return tracklets, DividingTrajectory, track_id, split_points_times
 
 def common_stats_function(xml_path, image = None, Mask = None):
     
