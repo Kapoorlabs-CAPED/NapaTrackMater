@@ -43,7 +43,7 @@ jinja2==3.0.3; python_version >= '3.6'
 joblib==1.0.1
 jsonschema==4.4.0; python_version >= '3.7'
 jupyter-client==7.2.1; python_version >= '3.7'
-jupyter-core==4.9.2; python_version >= '3.6'
+jupyter-core==4.11.2; python_version >= '3.6'
 kiwisolver==1.4.2; python_version >= '3.7'
 locket==0.2.1
 magicgui==0.4.0; python_version >= '3.7'
