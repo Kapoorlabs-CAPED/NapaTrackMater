@@ -30,7 +30,8 @@ setup(
         "imageio_ffmpeg",
         "dask",
         "lmfit",
-        "seaborn"
+        "seaborn",
+        "perfmetrics",
     ],
     entry_points = {
         'console_scripts': [

@@ -38,6 +38,8 @@ from lmfit import Model
 from numpy import exp, loadtxt, pi, sqrt
 from matplotlib import cm
 from qtpy.QtCore import Qt
+from perfmetrics import metric, metricmethod
+
 '''Define function to run multiple processors and pool the results together'''
 
 
@@ -82,7 +84,7 @@ def run_multiprocessing(func, track, filtered_track_ids, Uniqueproperties ):
 def prob_sigmoid(x):
     return 1 - math.exp(-x)
 
-
+@metric
 def CreateTrackCheckpoint(ImageName, LabelName, MaskName, Name, savedir):
 
     Mask = None
@@ -198,7 +200,7 @@ def CreateTrackCheckpoint(ImageName, LabelName, MaskName, Name, savedir):
     df.to_csv(savedir + '/' + 'FijibTMcheckpoint' + Name + '.csv', index=False)
 
 
-
+@metric
 def CreateTrackMate_CSV( LabelName,   savedir):
 
 
@@ -259,7 +261,7 @@ def CreateTrackMate_CSV( LabelName,   savedir):
 
 
 
-
+@metric
 def GetBorderMask(Mask):
 
     ndim = len(Mask.shape)
@@ -301,7 +303,7 @@ Convert an integer image into boundary points for 2,3 and 4D data
 
 """
 
-
+@metric
 def boundary_points(mask, xcalibration, ycalibration, zcalibration):
 
     ndim = len(mask.shape)
@@ -386,7 +388,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
 
     return timed_mask, Boundary
 
-
+@metric
 def parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i):
 
     mask[i, :] = label(mask[i, :])
@@ -421,7 +423,7 @@ def parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i):
 
     timed_mask[str(i)] = [tree, indices, labels, size]
 
-
+@metric
 def analyze_non_dividing_tracklets(root_leaf, spot_object_source_target):
 
     non_dividing_tracklets = []
@@ -454,7 +456,7 @@ def analyze_non_dividing_tracklets(root_leaf, spot_object_source_target):
         non_dividing_tracklets.append([trackletid, tracklet, trackletspeed, trackletdirection])
     return non_dividing_tracklets
 
-
+@metric
 def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_target):
 
     dividing_tracklets = []
@@ -572,6 +574,7 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
     return dividing_tracklets
 
 
+@metric
 def tracklet_properties(
     alltracklets,
     Uniqueobjects,
@@ -659,7 +662,7 @@ def tracklet_properties(
 
     return location_prop_dist
 
-
+@metric
 def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale = 255 * 255):
     
     print('Reading Image')
@@ -771,7 +774,7 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
     Viz.showNapari()
 
 
-
+@metric
 def import_TM_XML_statplots(xml_path,spot_csv, links_csv, savedir, scale = 255 ):
     
     Name = os.path.basename(os.path.splitext(spot_csv)[0])
@@ -860,7 +863,7 @@ def import_TM_XML_statplots(xml_path,spot_csv, links_csv, savedir, scale = 255 )
     Viz.showLR()
     
 
-
+@metric
 def import_TM_XML_distplots(xml_path, spot_csv, track_csv, savedir, scale = 255):
     
     Name = os.path.basename(os.path.splitext(spot_csv)[0])
@@ -996,7 +999,7 @@ class VizCorrect(object):
                self.tcalibration = tcalibration
                Path(self.savedir).mkdir(exist_ok=True)
                
-               
+        @metricmethod       
         def showWR(self):
                
                   
@@ -1018,7 +1021,7 @@ class VizCorrect(object):
                             sns.histplot(self.AllTrackAttr, kde = True)
                             plt.show()
                          
-                            
+        @metricmethod                    
         def showLR(self):
                
                   
@@ -1225,7 +1228,7 @@ class VizCorrect(object):
                plt.savefig(self.savedir + '/' + "Displacement_X", dpi = 300)
                plt.show()
                
-               
+        @metricmethod       
         def showNapari(self):
                  
                  self.viewer = napari.Viewer()
@@ -1329,7 +1332,7 @@ class VizCorrect(object):
                  
                         
         
-
+        @metricmethod
         def image_add(self, attribute, imagename, compute = False ):
 
              if compute:
@@ -1386,7 +1389,7 @@ class VizCorrect(object):
                                     imwrite(os.path.join(self.savedir,self.Name + attribute + '.tif'), self.Segimage )   
                                 
 
-                             
+        @metricmethod                     
         def second_image_add(self, attribute, imagename, compute = False):
                         
                         if compute:
@@ -1411,7 +1414,7 @@ class VizCorrect(object):
                                 NewSegimage = self.Relabel(self.Segimage.copy(), locations)
                                 self.viewer.add_labels(NewSegimage, name = self.Name + attribute)  
                              
-                    
+        @metricmethod            
         def Relabel(self, image, locations):
         
                print("Relabelling image with chosen trackmate attribute")
@@ -1448,7 +1451,7 @@ class VizCorrect(object):
               
                     
             
-
+@metric
 def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
     
     image = imread(image)
@@ -1584,7 +1587,7 @@ def log_result(result):
     # This is called whenever foo_pool(i) returns a result.
     # result_list is modified only by the main process, not the pool workers.
     result_list.append(result)
-
+@metric
 def track_function(track, track_id, filtered_track_ids, Uniqueproperties):
   
         
@@ -1642,7 +1645,7 @@ def track_function(track, track_id, filtered_track_ids, Uniqueproperties):
                 )
 
         return tracklets, DividingTrajectory, split_points_times 
-
+@metric
 def common_stats_function(xml_path, image = None, Mask = None):
     
     if image is not None:
@@ -1815,7 +1818,7 @@ def common_stats_function(xml_path, image = None, Mask = None):
             
     return all_track_properties, split_points_times, TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration , image, Mask, plotMask       
             
-    
+@metric    
 def import_TM_XML_Randomization(xml_path,image = None, Mask = None, nbins = 5):
     
     all_track_properties, split_points_times, TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration, image, Mask, plotMask = common_stats_function(xml_path, image, Mask)        
@@ -1966,6 +1969,7 @@ def plot_3D_polylines_yz(polyline_df_yz, t, ax, line_color, line_alpha):
         x, y, z = temp.x.values, temp.y.values, temp.z.values
         ax.plot(z-shift_z, y-shift_y, x-shift_x, '-', color=line_color, alpha=line_alpha, lw=0.2)
   
+@metric  
 def import_TM_XML_Localization(xml_path,image = None, Mask = None, window_size = 5, angle_1 = 45, angle_2 = 60):
     print('Reading XML')
     all_track_properties, split_points_times, TimedMask, Boundary, xcalibration, ycalibration, zcalibration, tcalibration, image, Mask, plotMask = common_stats_function(xml_path, image, Mask)
