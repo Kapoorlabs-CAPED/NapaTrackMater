@@ -663,8 +663,11 @@ def tracklet_properties(
 def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale = 255 * 255):
     
     print('Reading Image')
-    Name = os.path.basename(os.path.splitext(Segimage)[0])
-    Segimage = imread(Segimage)
+    
+    path_image = Path(Segimage)
+    Name = path_image.stem
+    
+    Segimage = imread(Segimage).astype('uint16')
     
     print('Image dimensions:', Segimage.shape)
     root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
@@ -1227,6 +1230,10 @@ class VizCorrect(object):
                  
                  self.viewer = napari.Viewer()
                  
+                 if self.savedir is None:
+                     self.viewer.add_labels(self.Segimage, name = self.Name)
+                 else:
+                     pass    
                  for k in range(len(self.AllKeys)):
                             
                             if self.AllKeys[k] == 'POSITION_X':
@@ -1372,8 +1379,12 @@ class VizCorrect(object):
                                 for layer in list(self.viewer.layers):
                                    if  layer.name in self.Name or self.Name in layer.name:
                                        self.viewer.layers.remove(layer) 
-                                self.viewer.add_labels(self.Segimage.astype('uint8'), name = self.Name + attribute)
-                                locations = []
+                                 
+                                if self.savedir is None:       
+                                   self.viewer.add_labels(self.Segimage, name = self.Name + attribute)
+                                else:
+                                    imwrite(os.path.join(self.savedir,self.Name + attribute), self.Segimage )   
+                                
 
                              
         def second_image_add(self, attribute, imagename, compute = False):
