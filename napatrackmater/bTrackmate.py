@@ -1227,7 +1227,6 @@ class VizCorrect(object):
                  
                  self.viewer = napari.Viewer()
                  
-                 self.viewer.add_labels(self.Segimage, name = self.Name)
                  for k in range(len(self.AllKeys)):
                             
                             if self.AllKeys[k] == 'POSITION_X':
@@ -1373,8 +1372,8 @@ class VizCorrect(object):
                                 for layer in list(self.viewer.layers):
                                    if  layer.name in self.Name or self.Name in layer.name:
                                        self.viewer.layers.remove(layer) 
-                                self.viewer.add_labels(self.Segimage, name = self.Name + attribute)
-                 
+                                self.viewer.add_labels(self.Segimage.astype('uint8'), name = self.Name + attribute)
+                                locations = []
 
                              
         def second_image_add(self, attribute, imagename, compute = False):
