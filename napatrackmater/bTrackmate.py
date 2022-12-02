@@ -1383,7 +1383,7 @@ class VizCorrect(object):
                                 if self.savedir is None:       
                                    self.viewer.add_labels(self.Segimage, name = self.Name + attribute)
                                 else:
-                                    imwrite(os.path.join(self.savedir,self.Name + attribute), self.Segimage )   
+                                    imwrite(os.path.join(self.savedir,self.Name + attribute + '.tif'), self.Segimage )   
                                 
 
                              
@@ -1415,7 +1415,7 @@ class VizCorrect(object):
         def Relabel(self, image, locations):
         
                print("Relabelling image with chosen trackmate attribute")
-               NewSegimage = image.copy()
+               NewSegimage = np.copy(image)
                for p in tqdm(range(0, NewSegimage.shape[0])):
                    
                    sliceimage = NewSegimage[p,:]
