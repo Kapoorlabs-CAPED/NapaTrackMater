@@ -1370,9 +1370,9 @@ class VizCorrect(object):
                                            pass
                                            
                                 self.Segimage = self.Relabel(self.Segimage.copy(), locations)
-                                for layer in list(self.viewer.value.layers):
+                                for layer in list(self.viewer.layers):
                                    if  layer.name in self.Name or self.Name in layer.name:
-                                       self.viewer.value.layers.remove(layer) 
+                                       self.viewer.layers.remove(layer) 
                                 self.viewer.add_labels(self.Segimage, name = self.Name + attribute)
                  
 
