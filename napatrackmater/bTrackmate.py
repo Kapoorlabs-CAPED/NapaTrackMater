@@ -1234,10 +1234,8 @@ class VizCorrect(object):
                  
                  self.viewer = napari.Viewer()
                  
-                 if self.savedir is None:
-                     self.viewer.add_labels(self.Segimage, name = self.Name)
-                 else:
-                     pass    
+                 self.viewer.add_labels(self.Segimage, name = self.Name)
+                     
                  for k in range(len(self.AllKeys)):
                             
                             if self.AllKeys[k] == 'POSITION_X':
@@ -1380,14 +1378,10 @@ class VizCorrect(object):
                                            pass
                                            
                                 self.Segimage = self.Relabel(self.Segimage.copy(), locations)
-                                for layer in list(self.viewer.layers):
-                                   if  layer.name in self.Name or self.Name in layer.name:
-                                       self.viewer.layers.remove(layer) 
+                               
                                  
-                                if self.savedir is None:       
-                                   self.viewer.add_labels(self.Segimage, name = self.Name + attribute)
-                                else:
-                                    imwrite(os.path.join(self.savedir,self.Name + attribute + '.tif'), self.Segimage.astype('uint16') )   
+                                self.viewer.add_labels(self.Segimage, name = self.Name + attribute)
+                                imwrite(os.path.join(self.savedir,self.Name + attribute + '.tif'), self.Segimage.astype('uint16') )   
                                 
 
         @metricmethod                     

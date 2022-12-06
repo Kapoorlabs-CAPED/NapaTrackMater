@@ -4,11 +4,12 @@ from setuptools import find_packages, setup
 with open('README.md') as f:
     long_description = f.read()
 
-
+with open(path.join(_dir,'stardist','version.py'), encoding="utf-8") as f:
+    exec(f.read())
 setup(
     name="napatrackmater",
 
-    version='2.9.1',
+    version=__version__,
 
     author='Varun Kapoor,Claudia Carabana Garcia, Mari Tolonen',
     author_email='randomaccessiblekapoor@gmail.com',
