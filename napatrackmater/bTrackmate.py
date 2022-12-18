@@ -26,6 +26,7 @@ from skimage import measure
 from skimage.filters import sobel
 from skimage.measure import label, regionprops
 from skimage.segmentation import find_boundaries
+from scipy.ndimage import  binary_dilation
 from tifffile import imread, imwrite
 from .napari_animation import AnimationWidget
 import dask as da
@@ -135,11 +136,11 @@ def CreateTrackCheckpoint(ImageName, LabelName, MaskName, Name, savedir):
             Mask = UpdateMask
     for i in tqdm(range(0, Image.shape[0])):
 
-        CurrentSegimage = Label[i, :].astype('uint16')
+        Currentseg_image = Label[i, :].astype('uint16')
         Currentimage = Image[i, :]
         if Mask is not None:
-            CurrentSegimage[Mask[i, :] == 0] = 0
-        properties = measure.regionprops(CurrentSegimage, Currentimage)
+            Currentseg_image[Mask[i, :] == 0] = 0
+        properties = measure.regionprops(Currentseg_image, Currentimage)
         for prop in properties:
 
             Z = prop.centroid[0]
@@ -217,8 +218,8 @@ def CreateTrackMate_CSV( LabelName,   savedir):
     print('Image has shape:', Label.shape)
     print('Image Dimensions:', len(Label.shape))
 
-    CurrentSegimage = Label.astype('uint16')
-    properties = measure.regionprops(CurrentSegimage)
+    Currentseg_image = Label.astype('uint16')
+    properties = measure.regionprops(Currentseg_image)
     for prop in properties:
 
             T = prop.centroid[0]
@@ -580,7 +581,7 @@ def tracklet_properties(
     Uniqueobjects,
     Uniqueproperties,
     Mask,
-    Segimage,
+    seg_image,
     TimedMask,
     calibration,
     DividingTrajectory
@@ -663,16 +664,16 @@ def tracklet_properties(
     return location_prop_dist
 
 @metric
-def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale = 255 * 255):
+def import_TM_XML_Relabel(xml_path, seg_image,spot_csv, track_csv, savedir, scale = 255 * 255):
     
     print('Reading Image')
     
-    path_image = Path(Segimage)
+    path_image = Path(seg_image)
     Name = path_image.stem
     
-    Segimage = imread(Segimage).astype('uint16')
+    seg_image = imread(seg_image).astype('uint16')
     
-    print('Image dimensions:', Segimage.shape)
+    print('Image dimensions:', seg_image.shape)
     root = et.fromstring(codecs.open(xml_path, 'r', 'utf8').read())
 
     filtered_track_ids = [
@@ -770,7 +771,7 @@ def import_TM_XML_Relabel(xml_path, Segimage,spot_csv, track_csv, savedir, scale
                       pass
    
     
-    Viz = VizCorrect(Segimage, Name, savedir,AllKeys,AllTrackKeys, AllValues, AllTrackValues, xcalibration, ycalibration, zcalibration, tcalibration)
+    Viz = VizCorrect(seg_image, Name, savedir,AllKeys,AllTrackKeys, AllValues, AllTrackValues, xcalibration, ycalibration, zcalibration, tcalibration)
     Viz.showNapari()
 
 
@@ -979,14 +980,41 @@ def normalizeZeroOne(x, scale = 255 * 255):
      x = ((x-minVal) / (maxVal - minVal + 1.0e-20))
      
      return x * scale
-
+ 
+ 
+def get_neighbor_labels(seg_image: np.ndarray):
+    
+    properties = regionprops(seg_image)
+    Labels = [prop.label for prop in properties]
+    
+    neighbour_labels = {}
+    
+    for label_id in Labels:
+        
+        pixel_condition = (seg_image == label_id)
+        indices = zip(*np.where(pixel_condition))
+        _img = np.zeros_like(seg_image)
+        for index in indices:
+           _img[index] = 1
+        _binary_image = find_boundaries(_img, mode = 'inner')
+        _boundary_image = binary_dilation(_binary_image)
+        _contact = (np.asarray(_boundary_image).astype(int) - np.asarray(_binary_image).astype(int))
+        _indices = zip(*np.where(_contact > 0))
+        contact_list = np.unique([seg_image[_index] for _index in _indices]).tolist()
+        contact_list = list(filter(lambda num: num != 0 , contact_list))
+        contact_list = list(filter(lambda num: num != label_id , contact_list))    
+        neighbour_labels[label_id] = contact_list 
+        
+    return neighbour_labels      
+        
+    
 
 class VizCorrect(object):
 
-        def __init__(self, Segimage, Name, savedir,AllKeys, AllTrackKeys, AllValues, AllTrackValues, xcalibration, ycalibration, zcalibration, tcalibration ):
+        def __init__(self, seg_image, Name, savedir,AllKeys, AllTrackKeys, AllValues, AllTrackValues, xcalibration, ycalibration, zcalibration, tcalibration ):
             
             
-               self.Segimage = Segimage
+               self.seg_image = seg_image
                self.Name = Name
                self.savedir = savedir
                self.AllKeys = AllKeys
@@ -998,6 +1026,12 @@ class VizCorrect(object):
                self.zcalibration = zcalibration
                self.tcalibration = tcalibration
                Path(self.savedir).mkdir(exist_ok=True)
+               
+        def read_generator(self):
+            
+            self.neighbor_map = get_neighbor_labels(self.seg_image)
+                   
+               
                
         @metricmethod       
         def showWR(self):
@@ -1234,7 +1268,7 @@ class VizCorrect(object):
                  
                  self.viewer = napari.Viewer()
                  
-                 self.viewer.add_labels(self.Segimage, name = self.Name)
+                 self.viewer.add_labels(self.seg_image, name = self.Name)
                      
                  for k in range(len(self.AllKeys)):
                             
@@ -1367,7 +1401,7 @@ class VizCorrect(object):
                                 
                                 for trackid, time, z, y, x in tqdm(zip(self.AllValues[k],self.AllValues[self.keyT],self.AllValues[self.keyZ],self.AllValues[self.keyY],self.AllValues[self.keyX] ), total = len(self.AllValues[k])):
                                         
-                                       if len(self.Segimage.shape) == 4:
+                                       if len(self.seg_image.shape) == 4:
                                            centroid = (time, z, y, x)
                                        else:
                                            centroid = (time, y, x) 
@@ -1377,11 +1411,11 @@ class VizCorrect(object):
                                        except:
                                            pass
                                            
-                                self.Segimage = self.Relabel(self.Segimage.copy(), locations)
+                                self.seg_image = self.Relabel(self.seg_image.copy(), locations)
                                
                                  
-                                self.viewer.add_labels(self.Segimage, name = self.Name + attribute)
-                                imwrite(os.path.join(self.savedir,self.Name + attribute + '.tif'), self.Segimage.astype('uint16') )   
+                                self.viewer.add_labels(self.seg_image, name = self.Name + attribute)
+                                imwrite(os.path.join(self.savedir,self.Name + attribute + '.tif'), self.seg_image.astype('uint16') )   
                                 
 
         @metricmethod                     
@@ -1399,35 +1433,35 @@ class VizCorrect(object):
                             if self.AllKeys[k] ==  attribute:
                                 
                                 for attr, time, z, y, x in tqdm(zip(self.AllValues[k],self.AllValues[self.keyT],self.AllValues[self.keyZ],self.AllValues[self.keyY],self.AllValues[self.keyX] ), total = len(self.AllValues[k])):
-                                       if len(self.Segimage.shape) == 4:
+                                       if len(self.seg_image.shape) == 4:
                                            centroid = (time, z, y, x)
                                        else:
                                            centroid = (time, y, x) 
                                             
                                        locations.append([attr, centroid]) 
                                        
-                                NewSegimage = self.Relabel(self.Segimage.copy(), locations)
-                                self.viewer.add_labels(NewSegimage, name = self.Name + attribute)  
+                                Newseg_image = self.Relabel(self.seg_image.copy(), locations)
+                                self.viewer.add_labels(Newseg_image, name = self.Name + attribute)  
                              
         @metricmethod            
         def Relabel(self, image, locations):
         
                print("Relabelling image with chosen trackmate attribute")
-               NewSegimage = np.copy(image)
-               for p in tqdm(range(0, NewSegimage.shape[0])):
+               Newseg_image = np.copy(image)
+               for p in tqdm(range(0, Newseg_image.shape[0])):
                    
-                   sliceimage = NewSegimage[p,:]
+                   sliceimage = Newseg_image[p,:]
                    originallabels = []
                    newlabels = []
                    for  relabelval, centroid in locations:
-                        if len(NewSegimage.shape) == 4: 
+                        if len(Newseg_image.shape) == 4: 
                             time, z, y, x = centroid
                         else:
                             time, y, x = centroid 
                         
                         if p == int(time): 
                                
-                               if len(NewSegimage.shape) == 4:  
+                               if len(Newseg_image.shape) == 4:  
                                   originallabel = sliceimage[z,y,x]
                                else:
                                    originallabel = sliceimage[y,x]
@@ -1439,19 +1473,19 @@ class VizCorrect(object):
                                newlabels.append(int(relabelval))
                       
                    relabeled = map_array(sliceimage, np.asarray(originallabels), np.asarray(newlabels))
-                   NewSegimage[p,:] = relabeled
+                   Newseg_image[p,:] = relabeled
                                
-               return NewSegimage                     
+               return Newseg_image                     
                
               
                     
             
 @metric
-def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
+def import_TM_XML(xml_path, image, seg_image = None, Mask=None):
     
     image = imread(image)
-    if Segimage is not None:
-        Segimage = imread(Segimage)
+    if seg_image is not None:
+        seg_image = imread(seg_image)
     if Mask is not None:
         Mask = imread(Mask)
 
@@ -1563,7 +1597,7 @@ def import_TM_XML(xml_path, image, Segimage = None, Mask=None):
                 Uniqueobjects,
                 Uniqueproperties,
                 Mask,
-                Segimage,
+                seg_image,
                 TimedMask,
                 [xcalibration, ycalibration, zcalibration, tcalibration],
                 DividingTrajectory
@@ -3428,7 +3462,7 @@ def TrackMateLiveTracks(
     viewer = napari.view_image(Raw, name='Image')
         
     if Seg is not None:
-        viewer.add_labels(Seg, name='SegImage')
+        viewer.add_labels(Seg, name='seg_image')
 
     if Mask is not None:
         Boundary = Mask.copy()
@@ -3551,7 +3585,7 @@ def TrackMateLiveTracksGauss(
     viewer = napari.view_image(Raw, name='Image')
         
     if Seg is not None:
-        viewer.add_labels(Seg, name='SegImage')
+        viewer.add_labels(Seg, name='seg_image')
 
     if Mask is not None:
         Boundary = Mask.copy()
@@ -3681,7 +3715,7 @@ def ShowAllTracksGauss(
     viewer.add_image(Raw, name='Image')
         
     if Seg is not None:
-        viewer.add_labels(Seg, name='SegImage')
+        viewer.add_labels(Seg, name='seg_image')
 
     if Mask is not None:
         Boundary = Mask.copy()
@@ -3802,7 +3836,7 @@ def ShowAllTracks(
     viewer.add_image(Raw, name='Image')
         
     if Seg is not None:
-        viewer.add_labels(Seg, name='SegImage')
+        viewer.add_labels(Seg, name='seg_image')
 
     if Mask is not None:
         Boundary = Mask.copy()
