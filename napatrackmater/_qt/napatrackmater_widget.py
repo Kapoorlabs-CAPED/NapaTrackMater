@@ -32,12 +32,13 @@ class NapatrackmaterWidget(QWidget):
 if __name__=='__main__':
 	
 			viewer = napari.Viewer() 
-			napatrackmater_widget = NapatrackmaterFrameWidget()
-   #NapatrackmaterWidget(viewer, None, None, None)
+			napatrackmater_widget = NapatrackmaterWidget(viewer, None, None, None)
 			dock_widget = viewer.window.add_dock_widget(
 			napatrackmater_widget, area="right"
 		)
-			
+			viewer.window._qt_window.resizeDocks(
+				[dock_widget], [500], Qt.Horizontal
+			)
 
 			napari.run()
 			
