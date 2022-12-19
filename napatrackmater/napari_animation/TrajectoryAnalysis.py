@@ -16,20 +16,28 @@ class morphology_trajectory(object):
 		self.track_csv = track_csv 
 		self.edges_csv = edges_csv
 		self.seg_image_path = seg_image_path
+		self.mask_image_path = mask_image_path
 		self.root = None 
 		self.filtered_track_ids = None 
 		self.tracks = None 
 		self.settings = None
+		self.detector_settings = None
 		self.spots = None 
 		self.spot_dataset = None
 		self.track_dataset = None
 		self.edges_dataset = None 
-		if seg_image_path is not None:
+  
+		if self.seg_image_path is not None:
 			self.seg_image = imread(self.seg_image_path).astype('uint16')
 			self.ndim = len(self.seg_image.shape)
 		else:
 			self.seg_image = None
 			self.ndim = None    
+		if mask_image_path is not None:
+			self.mask_image = imread(self.mask_image_path).astype('uint16')
+		else:
+			self.mask_image = None
+		
 		
 	def create_interactive_analysis(self):
 		
@@ -43,6 +51,7 @@ class morphology_trajectory(object):
 			#Extract the tracks from xml
 			self.tracks = root.find('Model').find('AllTracks')
 			self.settings = root.find('Settings').find('ImageData')
+			self.detector_settings = root.find('Settings').find('DetectorSettings')
 			#Extract the spots from xml
 			self.spots = root.find('Model').find('AllSpots')
 
@@ -64,7 +73,10 @@ class morphology_trajectory(object):
 			self.xcalibration = float(self.settings.get('pixelwidth'))
 			self.ycalibration = float(self.settings.get('pixelheight'))
 			self.zcalibration = float(self.settings('voxeldepth'))
-			self.tcalibration = float(self.settings('timeinterval'))
+			self.tcalibration = int(float(self.settings('timeinterval')))
+			self.detection_channel = int(float(self.detector_settings('TARGET_CHANNEL')))
+			self.detector = self.detector_settings('DETECTOR_NAME')
+			assert self.detector == 'LABEL_IMAGE_DETECTOR', f'Only Label Image Detector is supported for this library, found: {self.detector} instead'
 			
 	def _neighbor_map(self, _current_image):
 		
@@ -105,4 +117,28 @@ class morphology_trajectory(object):
 				self.temporal_neighbor_map[t] =  self.neighbour_map
 	  
 			
-			
+	def _add_neighbor_spot_attribute(self):
+	 
+				current_spot_ids = self.spot_dataset['ID']
+				current_spot_xs = (self.spot_dataset['POSITION_X'].astype('float')/self.xcalibration).astype('int')
+				current_spot_ys = (self.spot_dataset['POSITION_Y'].astype('float')/self.ycalibration).astype('int')
+				if self.ndim > 3:
+	 				current_spot_zs = (self.spot_dataset['POSITION_Z'].astype('float')/self.zcalibration).astype('int')   
+				current_spot_ts = (self.spot_dataset['FRAME'].astype('float')).astype('int') 
+				contact_cell_list = []
+				for i in range(len(current_spot_ids)):
+					
+					current_id = current_spot_ids[i]
+					current_frame = current_spot_ts[i]
+					current_location = (current_spot_zs[i], current_spot_ys[i], current_spot_xs[i])
+					if self.ndim > 3:
+	 					current_label = self.seg_image[current_frame,current_spot_zs[i], current_spot_ys[i], current_spot_xs[i]]
+					if self.ndim == 3:
+						current_label = self.seg_image[current_frame,current_spot_ys[i], current_spot_xs[i]]
+					neighbor_map = self.temporal_neighbor_map[current_frame]
+					contact_cell_labels = neighbour_map[current_label]
+					#Create a list of neighbour labels for each spot in track  
+					contact_cell_list.append(contact_cell_labels)   
+		
+						  
+				self.spot_dataset['NEIGHBOR_SEG_LABELS'] =  contact_cell_list
