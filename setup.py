@@ -1,10 +1,13 @@
 import setuptools
 from setuptools import find_packages, setup
+import os
+
+_dir = os.path.dirname(__file__)
 
 with open('README.md') as f:
     long_description = f.read()
 
-with open(path.join(_dir,'stardist','version.py'), encoding="utf-8") as f:
+with open(os.path.join(_dir,'napatrackmater','version.py'), encoding="utf-8") as f:
     exec(f.read())
 setup(
     name="napatrackmater",
