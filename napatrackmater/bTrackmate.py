@@ -1006,10 +1006,6 @@ class VizCorrect(object):
                self.tcalibration = tcalibration
                Path(self.savedir).mkdir(exist_ok=True)
                
-        def read_generator(self):
-            
-            self.neighbor_map = get_neighbor_labels(self.seg_image)
-                   
                
                
         @metricmethod       
