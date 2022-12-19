@@ -9,16 +9,17 @@ from qtpy.QtWidgets import (
     QSlider,
     QGridLayout,
     QTableWidget,
-    QGroupBox
+    QGroupBox,
+    QLabel
 )
 
 
 class NapatrackmaterFrameWidget(QWidget):
     
-    def __ini__(self, parent = None):
+    def __init__(self, parent = None):
         super().__init__(parent = parent)
         
-        self._layout = QGridLayout(parent = self)
+        self._layout = QFormLayout(parent = self)
         self.tracktypebox = QComboBox()
         index = self.tracktypebox.findText('linear', Qt.MatchFixedString)
         self.tracktypebox.setCurrentIndex(index)
@@ -32,7 +33,7 @@ class NapatrackmaterFrameWidget(QWidget):
         self.mindurSlider.setTickInterval(1)
         self.mindurSlider.setValue(0)
         
-        self.mindurlabel = QLabel('Minumum track duration (t)', self)
+        self.mindurlabel = QLabel(self)
         self.mindurlabel.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
         self.mindurlabel.setMinimumWidth(80)
         self.mindurlabel.setText(f"{0:.0f}")
@@ -44,7 +45,7 @@ class NapatrackmaterFrameWidget(QWidget):
         self.maxdurSlider.setTickInterval(1)
         self.maxdurSlider.setValue(0)
         
-        self.maxdurlabel = QLabel('Maximum track duration (t)',self)
+        self.maxdurlabel = QLabel(self)
         self.maxdurlabel.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
         self.maxdurlabel.setMinimumWidth(80)
         self.maxdurlabel.setText(f"{0:.0f}")
@@ -56,7 +57,7 @@ class NapatrackmaterFrameWidget(QWidget):
         self.minsplitSlider.setTickInterval(1)
         self.minsplitSlider.setValue(0)
         
-        self.minsplitlabel = QLabel('Minumum number of mitosis events', self)
+        self.minsplitlabel = QLabel(self)
         self.minsplitlabel.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
         self.minsplitlabel.setMinimumWidth(80)
         self.minsplitlabel.setText(f"{5:.0f}")
@@ -68,7 +69,7 @@ class NapatrackmaterFrameWidget(QWidget):
         self.maxsplitSlider.setTickInterval(1)
         self.maxsplitSlider.setValue(5)
         
-        self.maxsplitlabel = QLabel('Maximum number of mitosis events', self)
+        self.maxsplitlabel = QLabel(self)
         self.maxsplitlabel.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
         self.maxsplitlabel.setMinimumWidth(80)
         self.maxsplitlabel.setText(f"{5:.0f}")
@@ -93,7 +94,7 @@ class NapatrackmaterFrameWidget(QWidget):
         self.minsizeSlider.setTickInterval(1)
         self.minsizeSlider.setValue(0)
         
-        self.minsizelabel = QLabel('Minimum cell size (um)', self)
+        self.minsizelabel = QLabel( self)
         self.minsizelabel.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
         self.minsizelabel.setMinimumWidth(80)
         self.minsizelabel.setText(f"{0.0:.2f}")
@@ -105,7 +106,7 @@ class NapatrackmaterFrameWidget(QWidget):
         self.maxsizeSlider.setTickInterval(1)
         self.maxsizeSlider.setValue(1)
         
-        self.maxsizelabel = QLabel('Maximum cell size (um)', self)
+        self.maxsizelabel = QLabel( self)
         self.maxsizelabel.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
         self.maxsizelabel.setMinimumWidth(80)
         self.maxsizelabel.setText(f"{1.0:.2f}")
@@ -117,7 +118,7 @@ class NapatrackmaterFrameWidget(QWidget):
         self.minspeedSlider.setTickInterval(1)
         self.minspeedSlider.setValue(0)
         
-        self.minspeedlabel = QLabel('Minumum median cell speed (um/t)', self)
+        self.minspeedlabel = QLabel( self)
         self.minspeedlabel.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
         self.minspeedlabel.setMinimumWidth(80)
         self.minspeedlabel.setText(f"{0.0:.5f}")
@@ -129,25 +130,39 @@ class NapatrackmaterFrameWidget(QWidget):
         self.maxspeedSlider.setTickInterval(1)
         self.maxspeedSlider.setValue(1)
         
-        self.maxspeedlabel = QLabel('Maximum median cell speed (um/t)', self)
+        self.maxspeedlabel = QLabel( self)
         self.maxspeedlabel.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
         self.maxspeedlabel.setMinimumWidth(80)
         self.maxspeedlabel.setText(f"{1.0:.5f}")
         
         
-        self._layout.addWidget(self.tracktypebox, 0,0)
+        self._layout.addRow('Mitotic or Non Mitotic Trajectory',self.tracktypebox)
         
-        self._layout.addWidget(self.mindurSlider, 1,0)
-        self._layout.addWidget(self.maxdurSlider, 1,1)
         
-        self._layout.addWidget(self.minsplitSlider, 2,0)
-        self._layout.addWidget(self.maxsplitSlider, 2,1)
+        self._layout.addRow('Minumum track duration (t)', self.mindurSlider)
+        self._layout.addRow(self.mindurlabel)
         
-        self._layout.addWidget( self.mindurSlider, 3,0)
-        self._layout.addWidget(self.maxdurSlider, 3,1)
+        self._layout.addRow('Maximum track duration (t)',self.maxdurSlider)
+        self._layout.addRow(self.maxdurlabel)
         
-        self._layout.addWidget( self.minspeedSlider, 4,0)
-        self._layout.addWidget( self.maxspeedSlider, 4,1)
+        self._layout.addRow('Minumum number of mitosis events', self.minsplitSlider)
+        self._layout.addRow(self.minsplitlabel)
+        
+        self._layout.addRow('Maximum number of mitosis events', self.maxsplitSlider)
+        self._layout.addRow(self.maxsplitlabel)
+        
+        self._layout.addRow('Minimum cell size (um)', self.minsizeSlider)
+        self._layout.addRow(self.minsizelabel)
+        
+        self._layout.addRow('Maximum cell size (um)',self.maxsizeSlider)
+        self._layout.addRow(self.maxsizelabel)
+        
+        self._layout.addRow('Minumum median cell speed (um/t)',self.minspeedSlider)
+        self._layout.addRow(self.minspeedlabel)
+        
+       
+        self._layout.addRow('Maximum median cell speed (um/t)', self.maxspeedSlider)
+        self._layout.addRow(self.maxspeedlabel)
         
         
         

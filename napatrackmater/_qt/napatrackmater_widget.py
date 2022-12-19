@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import QLabel, QVBoxLayout, QWidget
-from .NapatrackmaterFrameWidget import NapatrackmaterFrameWidget
-
-
+from napatrackmater._qt.NapatrackmaterFrameWidget import NapatrackmaterFrameWidget
+import napari
+from qtpy.QtCore import Qt
 class NapatrackmaterWidget(QWidget):
 	
 	def __init__(
@@ -29,16 +29,15 @@ class NapatrackmaterWidget(QWidget):
 		self.frameWidget.tracktypebox.addItem('Consider only Mitotic Trajectory')
 		self.frameWidget.tracktypebox.addItem('Consider only Non Mitotic Trajectory')
 		
-if __name__=='main':
+if __name__=='__main__':
 	
 			viewer = napari.Viewer() 
-			napatrackmater_widget = NapatrackmaterWidget(viewer, None, None, None)
+			napatrackmater_widget = NapatrackmaterFrameWidget()
+   #NapatrackmaterWidget(viewer, None, None, None)
 			dock_widget = viewer.window.add_dock_widget(
 			napatrackmater_widget, area="right"
 		)
-			viewer.window._qt_window.resizeDocks(
-				[dock_widget], [200], Qt.Horizontal
-			)
+			
 
 			napari.run()
 			
