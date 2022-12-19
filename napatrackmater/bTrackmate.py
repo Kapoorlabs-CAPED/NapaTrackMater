@@ -663,6 +663,9 @@ def tracklet_properties(
 
     return location_prop_dist
 
+
+
+
 @metric
 def import_TM_XML_Relabel(xml_path, seg_image,spot_csv, track_csv, savedir, scale = 255 * 255):
     
@@ -981,31 +984,7 @@ def normalizeZeroOne(x, scale = 255 * 255):
      
      return x * scale
  
- 
-def get_neighbor_labels(seg_image: np.ndarray):
-    
-    properties = regionprops(seg_image)
-    Labels = [prop.label for prop in properties]
-    
-    neighbour_labels = {}
-    
-    for label_id in Labels:
-        
-        pixel_condition = (seg_image == label_id)
-        indices = zip(*np.where(pixel_condition))
-        _img = np.zeros_like(seg_image)
-        for index in indices:
-           _img[index] = 1
-        _binary_image = find_boundaries(_img, mode = 'inner')
-        _boundary_image = binary_dilation(_binary_image)
-        _contact = (np.asarray(_boundary_image).astype(int) - np.asarray(_binary_image).astype(int))
-        _indices = zip(*np.where(_contact > 0))
-        contact_list = np.unique([seg_image[_index] for _index in _indices]).tolist()
-        contact_list = list(filter(lambda num: num != 0 , contact_list))
-        contact_list = list(filter(lambda num: num != label_id , contact_list))    
-        neighbour_labels[label_id] = contact_list 
-        
-    return neighbour_labels      
+      
         
     
 
