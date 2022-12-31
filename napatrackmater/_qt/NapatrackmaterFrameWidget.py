@@ -136,7 +136,7 @@ class NapatrackmaterFrameWidget(QWidget):
         self.maxspeedlabel.setText(f"{1.0:.5f}")
         
         
-        self._layout.addWidget(self.tracktypebox)
+        self._layout.addRow(self.tracktypebox)
         
         
         self._layout.addRow('Minumum track duration (t)', self.mindurSlider)

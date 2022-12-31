@@ -37,7 +37,7 @@ if __name__=='__main__':
 			napatrackmater_widget, area="right"
 		)
 			viewer.window._qt_window.resizeDocks(
-				[dock_widget], [500], Qt.Horizontal
+				[dock_widget], [1500], Qt.Horizontal
 			)
 
 			napari.run()
