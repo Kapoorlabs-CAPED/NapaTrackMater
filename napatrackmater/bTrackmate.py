@@ -702,12 +702,12 @@ def import_TM_XML_Relabel(xml_path, seg_image,spot_csv, track_csv, savedir, scal
     ycalibration = float(settings.get('pixelheight'))
     zcalibration = float(settings.get('voxeldepth'))
     tcalibration = int(float(settings.get('timeinterval')))
-    spot_dataset = pd.read_csv(spot_csv, delimiter = ',')[3:]
+    spot_dataset = pd.read_csv(spot_csv, delimiter = ',', encoding= 'unicode_escape')[3:]
    
     spot_dataset_index = spot_dataset.index
     spot_dataset.keys()
     
-    track_dataset = pd.read_csv(track_csv, delimiter = ',')[3:]
+    track_dataset = pd.read_csv(track_csv, delimiter = ',', encoding= 'unicode_escape')[3:]
    
     track_dataset_index = track_dataset.index
     track_dataset.keys()
@@ -810,12 +810,12 @@ def import_TM_XML_statplots(xml_path,spot_csv, links_csv, savedir, scale = 255 )
     zcalibration = float(settings.get('voxeldepth'))
     tcalibration = int(float(settings.get('timeinterval')))
     
-    spot_dataset = pd.read_csv(spot_csv, delimiter = ',')[3:]
+    spot_dataset = pd.read_csv(spot_csv, delimiter = ',', encoding= 'unicode_escape')[3:]
    
     spot_dataset_index = spot_dataset.index
     spot_dataset.keys()
     
-    links_dataset = pd.read_csv(links_csv, delimiter = ',')[3:]
+    links_dataset = pd.read_csv(links_csv, delimiter = ',', encoding= 'unicode_escape')[3:]
    
     links_dataset_index = links_dataset.index
     links_dataset.keys()
@@ -897,12 +897,12 @@ def import_TM_XML_distplots(xml_path, spot_csv, track_csv, savedir, scale = 255)
     zcalibration = float(settings.get('voxeldepth'))
     tcalibration = int(float(settings.get('timeinterval')))
     
-    spot_dataset = pd.read_csv(spot_csv, delimiter = ',')[3:]
+    spot_dataset = pd.read_csv(spot_csv, delimiter = ',', encoding= 'unicode_escape')[3:]
    
     spot_dataset_index = spot_dataset.index
     spot_dataset.keys()
     
-    track_dataset = pd.read_csv(track_csv, delimiter = ',')[3:]
+    track_dataset = pd.read_csv(track_csv, delimiter = ',', encoding= 'unicode_escape')[3:]
    
     track_dataset_index = track_dataset.index
     track_dataset.keys()
@@ -1356,8 +1356,6 @@ class VizCorrect(object):
                                    
                           for k in range(len(self.AllTrackKeys)):
                             
-                            self.AllTrackID = []
-                            self.AllTrackAttr = []
                             if self.AllTrackKeys[k] ==  attribute:
                                 
                                 for attr, trackid in tqdm(zip(self.AllTrackValues[k], self.AllTrackValues[p]), total = len(self.AllTrackValues[k])):
@@ -1371,7 +1369,6 @@ class VizCorrect(object):
                           for k in range(len(self.AllKeys)):
                             
                             locations = []
-                            attrs = []
                             if self.AllKeys[k] ==  'TRACK_ID':
                                 
                                 for trackid, time, z, y, x in tqdm(zip(self.AllValues[k],self.AllValues[self.keyT],self.AllValues[self.keyZ],self.AllValues[self.keyY],self.AllValues[self.keyX] ), total = len(self.AllValues[k])):
@@ -1398,13 +1395,10 @@ class VizCorrect(object):
                         
                         if compute:
                           
-                          self.boxes = {}
-                          self.labels = {}
                           
                           for k in range(len(self.AllKeys)):
                             
                             locations = []
-                            attrs = []
                             if self.AllKeys[k] ==  attribute:
                                 
                                 for attr, time, z, y, x in tqdm(zip(self.AllValues[k],self.AllValues[self.keyT],self.AllValues[self.keyZ],self.AllValues[self.keyY],self.AllValues[self.keyX] ), total = len(self.AllValues[k])):
