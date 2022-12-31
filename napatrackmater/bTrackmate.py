@@ -739,7 +739,7 @@ def import_TM_XML_Relabel(xml_path, seg_image,spot_csv, track_csv, savedir, scal
           if k == 'FRAME':
               LocationT = (spot_dataset['FRAME'].astype('float')).astype('int')  
               AllValues.append(LocationT)    
-          elif k!='TRACK_ID' and k!='POSITION_X' and k!='POSITION_Y' and k!='POSITION_Z' and k!='FRAME':  
+          elif k!='TRACK_ID' and k!= "LABEL" and k!='POSITION_X' and k!='POSITION_Y' and k!='POSITION_Z' and k!='FRAME':  
             AllValues.append(spot_dataset[k].astype('float'))
           
           AllKeys.append(k)  
@@ -757,7 +757,8 @@ def import_TM_XML_Relabel(xml_path, seg_image,spot_csv, track_csv, savedir, scal
                     Track_id[condition_indices] = maxtrack_id + 1
                     AllTrackValues.append(Track_id)
                     AllTrackKeys.append(k)
-          else:  
+          elif k!="LABEL":
+
                   try:   
                      x =  track_dataset[k].astype('float')
                      minval = min(x)
