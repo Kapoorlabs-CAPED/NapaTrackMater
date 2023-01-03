@@ -739,7 +739,7 @@ def import_TM_XML_Relabel(xml_path, seg_image,spot_csv, track_csv, savedir, scal
           if k == 'FRAME':
               LocationT = (spot_dataset['FRAME'].astype('float')).astype('int')  
               AllValues.append(LocationT)    
-          elif k!='TRACK_ID' and k!= "LABEL" and k!='POSITION_X' and k!='POSITION_Y' and k!='POSITION_Z' and k!='FRAME':  
+          elif k!='TRACK_ID' and k!='POSITION_X' and k!='POSITION_Y' and k!='POSITION_Z' and k!='FRAME':  
             AllValues.append(spot_dataset[k].astype('float'))
           
           AllKeys.append(k)  
@@ -757,7 +757,7 @@ def import_TM_XML_Relabel(xml_path, seg_image,spot_csv, track_csv, savedir, scal
                     Track_id[condition_indices] = maxtrack_id + 1
                     AllTrackValues.append(Track_id)
                     AllTrackKeys.append(k)
-          elif k!="LABEL":
+          else:
 
                   try:   
                      x =  track_dataset[k].astype('float')
@@ -852,7 +852,7 @@ def import_TM_XML_statplots(xml_path,spot_csv, links_csv, savedir, scale = 255 )
                     Track_id[condition_indices] = maxtrack_id + 1
                     AllLinkValues.append(Track_id)
                     AllLinkKeys.append(k)
-          elif k!= 'LABEL':  
+          else:
                   try:   
                      x =  links_dataset[k].astype('float')
                   
