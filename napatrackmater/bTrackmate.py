@@ -852,7 +852,7 @@ def import_TM_XML_statplots(xml_path,spot_csv, links_csv, savedir, scale = 255 )
                     Track_id[condition_indices] = maxtrack_id + 1
                     AllLinkValues.append(Track_id)
                     AllLinkKeys.append(k)
-          else:  
+          elif k!= 'LABEL':  
                   try:   
                      x =  links_dataset[k].astype('float')
                   
@@ -1645,59 +1645,7 @@ def track_function(track, track_id, filtered_track_ids, Uniqueproperties):
 
         return tracklets, DividingTrajectory, split_points_times 
     
-@metric
-def load_tracks(track, track_id, filtered_track_ids):
-  
-        
 
-        spot_object_source_target = []
-        
-        split_points_times = []
-        
-        for edge in track.findall('Edge'):
-
-                source_id = edge.get('SPOT_SOURCE_ID')
-                target_id = edge.get('SPOT_TARGET_ID')
-                edge_time = Position_T
-                
-                directional_rate_change = edge.get('DIRECTIONAL_CHANGE_RATE')
-                speed = edge.get('SPEED')
-
-                spot_object_source_target.append(
-                    [source_id, target_id, edge_time, directional_rate_change, speed]
-                )
-
-            # Sort the tracks by edge time
-        spot_object_source_target = sorted(
-                spot_object_source_target, key=sortTracks, reverse=False
-            )
-            # Get all the IDs, uniquesource, targets attached, leaf, root, splitpoint IDs
-        split_points, split_times, root_leaf = Multiplicity(spot_object_source_target)
-            
-            # Determine if a track has divisions or none
-        if len(split_points) > 0:
-                split_points = split_points[::-1]
-                DividingTrajectory = True
-        else:
-                DividingTrajectory = False
-        
-        if DividingTrajectory == True:
-                DividingTrackIds.append(track_id)
-                AllTrackIds.append(track_id)
-                tracklets = analyze_dividing_tracklets(
-                    root_leaf, split_points, spot_object_source_target
-                )
-                for i in range(len(split_points)):
-                      split_points_times.append([split_points[i], split_times[i]])
-                      
-        if DividingTrajectory == False:
-                NonDividingTrackIds.append(track_id)
-                AllTrackIds.append(track_id)
-                tracklets = analyze_non_dividing_tracklets(
-                    root_leaf, spot_object_source_target
-                )
-
-        return tracklets, DividingTrajectory, split_points_times    
     
 @metric
 def common_stats_function(xml_path, image = None, Mask = None):
