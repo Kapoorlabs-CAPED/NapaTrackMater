@@ -1044,13 +1044,13 @@ class VizCorrect(object):
                             if self.AllKeys[k] == 'ID':
                                    spotid_key = k
                             if self.AllKeys[k] == 'FRAME':
-                                   frameid_key = k       
+                                   frameid_key = k - 1       
                             if self.AllKeys[k] == 'POSITION_Z':
-                                   zposid_key = k 
+                                   zposid_key = k - 1 
                             if self.AllKeys[k] == 'POSITION_Y':
-                                   yposid_key = k
+                                   yposid_key = k - 1
                             if self.AllKeys[k] == 'POSITION_X':
-                                   xposid_key = k       
+                                   xposid_key = k - 1       
             
                starttime = int(min(self.AllValues[frameid_key]))
                endtime = int(max(self.AllValues[frameid_key]))
@@ -1249,13 +1249,13 @@ class VizCorrect(object):
                  for k in range(len(self.AllKeys)):
                             
                             if self.AllKeys[k] == 'POSITION_X':
-                                self.keyX = k
+                                self.keyX = k - 1
                             if self.AllKeys[k] == 'POSITION_Y':
-                                self.keyY = k   
+                                self.keyY = k - 1   
                             if self.AllKeys[k] == 'POSITION_Z':
-                                self.keyZ = k 
+                                self.keyZ = k - 1 
                             if self.AllKeys[k] == 'FRAME':
-                                self.keyT = k    
+                                self.keyT = k - 1    
                  
                  Attributeids = []
                  TrackAttributeids = []
