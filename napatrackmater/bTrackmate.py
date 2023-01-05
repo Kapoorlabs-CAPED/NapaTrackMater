@@ -3935,3 +3935,8 @@ def gaussian(x, amp, mu, std):
 
 def BiModalgaussian(x, ampA, muA, stdA, ampB, muB, stdB):
     return ampA * exp(-(x-muA)**2 / stdA) + ampB * exp(-(x-muB)**2 / stdB)
+
+
+
+    
+    
