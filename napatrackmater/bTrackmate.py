@@ -1416,36 +1416,34 @@ class VizCorrect(object):
         @metricmethod            
         def Relabel(self, image, locations):
         
-               print("Relabelling image with chosen trackmate attribute")
-               Newseg_image = np.copy(image)
-               for p in tqdm(range(0, Newseg_image.shape[0])):
-                   
-                   sliceimage = Newseg_image[p,:]
-                   originallabels = []
-                   newlabels = []
-                   for  relabelval, centroid in locations:
-                        if len(Newseg_image.shape) == 4: 
-                            time, z, y, x = centroid
-                        else:
-                            time, y, x = centroid 
-                        
-                        if p == int(time): 
-                               
-                               if len(Newseg_image.shape) == 4:  
-                                  originallabel = sliceimage[z,y,x]
-                               else:
-                                   originallabel = sliceimage[y,x]
-                                    
-                               if originallabel ==0: relabelval = 0
-                               if math.isnan(relabelval):
-                                      relabelval = -1
-                               originallabels.append(int(originallabel))
-                               newlabels.append(int(relabelval))
-                      
-                   relabeled = map_array(sliceimage, np.asarray(originallabels), np.asarray(newlabels))
-                   Newseg_image[p,:] = relabeled
-                               
-               return Newseg_image                     
+                print("Relabelling image with chosen trackmate attribute")
+                Newseg_image = np.copy(image)
+                originallabels = []
+                newlabels = []
+                for relabelval, centroid in locations:
+
+                    if len(Newseg_image.shape) == 4:
+                        time, z, y, x = centroid
+                    else:
+                        time, y, x = centroid
+
+                    if len(Newseg_image.shape) == 4:
+                        originallabel = Newseg_image[time, z, y, x]
+                    else:
+                        originallabel = Newseg_image[time, y, x]
+
+                    if originallabel == 0:
+                        relabelval = 0
+                    if math.isnan(relabelval):
+                        relabelval = -1
+                    originallabels.append(int(originallabel))
+                    newlabels.append(int(relabelval))
+
+                relabeled = map_array(
+                    Newseg_image, np.asarray(originallabels), np.asarray(newlabels)
+                )
+
+                return relabeled                     
                
               
                     
