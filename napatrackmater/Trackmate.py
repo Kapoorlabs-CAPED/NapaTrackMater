@@ -133,9 +133,16 @@ class TrackMate(object):
                     .find("FilteredTracks")
                     .findall("TrackID")
                 ]
+                
+                self.AllTrackIds.append("")
+                self.DividingTrackIds.append("")
+                self.NormalTrackIds.append("")
+                
                 self.AllTrackIds.append(self.TrackidBox)
                 self.DividingTrackIds.append(self.TrackidBox)
                 self.NormalTrackIds.append(self.TrackidBox)
+                
+                
                 self.Spotobjects = self.xml_content.find('Model').find('AllSpots')
                 # Extract the tracks from xml
                 self.tracks = self.xml_content.find("Model").find("AllTracks")
@@ -976,7 +983,7 @@ def all_tracks(TrackLayerTracklets, trackid, alltracklets, xcalibration, ycalibr
                         trackletdirection,
                         DividingTrajectory,
                     ) = tracklet
-                    print('time', t, 'trackletid', trackletid, 'z', int(float(z)/zcalibration), 'x',int(float(x)/xcalibration))
+                   
                     list_tracklets.append(
                             [
                                 trackletid, 
@@ -986,7 +993,10 @@ def all_tracks(TrackLayerTracklets, trackid, alltracklets, xcalibration, ycalibr
                                 int(float(x)/xcalibration),
                             ]
                         )
-                TrackLayerTracklets[trackid].append(list_tracklets)
+        list_tracklets = sorted(
+                    list_tracklets, key=sortFirst, reverse=False
+                )            
+        TrackLayerTracklets[trackid].append(list_tracklets)
 
         return TrackLayerTracklets    
     

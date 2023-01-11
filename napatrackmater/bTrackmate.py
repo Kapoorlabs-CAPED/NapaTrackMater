@@ -2787,7 +2787,7 @@ class AllTrackViewerGauss(object):
                                 int(float(x)/self.calibration[0]) ,
                             ]
                         )
-                TrackLayerTracklets[trackid].append(list_tracklets)
+        TrackLayerTracklets[trackid].append(list_tracklets)
 
         return TrackLayerTracklets
 
