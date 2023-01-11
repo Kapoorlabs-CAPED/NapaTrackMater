@@ -612,17 +612,17 @@ def tracklet_properties(
                 if len(Mask.shape) == 3:  
                   testlocation = (y, x)
 
-                tree, indices, masklabel, masklabelvolume = TimedMask[str(int(float(frame)/ calibration[3]))]
+                tree, indices, masklabel, masklabelvolume = TimedMask[str(int(float(frame)))]
                 if len(Mask.shape) == 4:
                         region_label = Mask[
-                            int(float(frame) / calibration[3]),
+                            int(float(frame) ),
                             int(float(z) / calibration[2]),
                             int(float(y) / calibration[1]),
                             int(float(x) / calibration[0]),
                         ]
                 if len(Mask.shape) == 3:
                         region_label = Mask[
-                            int(float(frame) / calibration[3]),
+                            int(float(frame) ),
                             int(float(y) / calibration[1]),
                             int(float(x) / calibration[0]),
                         ]
@@ -2770,21 +2770,21 @@ class AllTrackViewerGauss(object):
                     ):
                         list_tracklets.append(
                             [
-                                int(str(trackletid)),
+                                trackletid, 
                                 int(float(t)/self.calibration[3]) ,
-                                float(z)/self.calibration[2] ,
-                                float(y)/self.calibration[1],
-                                float(x)/self.calibration[0] ,
+                                int(float(z)/self.calibration[2]) ,
+                                int(float(y)/self.calibration[1]),
+                                int(float(x)/self.calibration[0]) ,
                             ]
                         )
                     else:
                         list_tracklets.append(
                             [
-                                int(str(trackletid)),
+                                trackletid, 
                                 int(float(t)/self.calibration[3]) ,
-                                float(z)/self.calibration[2] ,
-                                float(y)/self.calibration[1],
-                                float(x)/self.calibration[0] ,
+                                int(float(z)/self.calibration[2]) ,
+                                int(float(y)/self.calibration[1]),
+                                int(float(x)/self.calibration[0]) ,
                             ]
                         )
                 TrackLayerTracklets[trackid].append(list_tracklets)

@@ -271,6 +271,8 @@ class TrackMate(object):
                             DividingTrajectory
                         )
                         self.all_track_properties.append([track_id, self.location_prop_dist, DividingTrajectory])
+                        
+                        
                 
     def _temporal_plots_trackmate(self):
     
@@ -947,3 +949,47 @@ def normalizeZeroOne(x, scale = 255 * 255):
      
      return x * scale          
     
+    
+def all_tracks(TrackLayerTracklets, trackid, alltracklets, xcalibration, ycalibration, zcalibration, tcalibration):
+
+        TrackLayerTracklets[trackid] = [trackid]
+        list_tracklets = []
+        for (trackletid, tracklets) in alltracklets.items():
+
+            Locationtracklets = tracklets[1]
+            if len(Locationtracklets) > 0:
+                Locationtracklets = sorted(
+                    Locationtracklets, key=sortFirst, reverse=False
+                )
+                for tracklet in Locationtracklets:
+                    (
+                        t,
+                        z,
+                        y,
+                        x,
+                        total_intensity,
+                        mean_intensity,
+                        cellradius,
+                        distance,
+                        prob_inside,
+                        trackletspeed,
+                        trackletdirection,
+                        DividingTrajectory,
+                    ) = tracklet
+                    print('time', t, 'trackletid', trackletid, 'z', int(float(z)/zcalibration), 'x',int(float(x)/xcalibration))
+                    list_tracklets.append(
+                            [
+                                trackletid, 
+                                int(float(t)) ,
+                                int(float(z)/zcalibration),
+                                int(float(y)/ycalibration),
+                                int(float(x)/xcalibration),
+                            ]
+                        )
+                TrackLayerTracklets[trackid].append(list_tracklets)
+
+        return TrackLayerTracklets    
+    
+def sortFirst(List):
+
+    return int(float(List[0]))    
