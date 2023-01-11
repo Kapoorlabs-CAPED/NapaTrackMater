@@ -8,7 +8,7 @@ import pandas as pd
 
 class TrackMate(object):
     
-    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname,  image = None, mask = None, scale = 255 * 255):
+    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, image = None, mask = None, scale = 255 * 255):
         
         
         self.xml_path = xml_path
@@ -19,6 +19,7 @@ class TrackMate(object):
         self.mask = mask 
         self.AttributeBoxname = AttributeBoxname
         self.TrackAttributeBoxname = TrackAttributeBoxname
+        self.TrackidBox = TrackidBox
         self.spot_dataset, self.spot_dataset_index = get_csv_data(self.spot_csv_path)
         self.track_dataset, self.track_dataset_index = get_csv_data(self.track_csv_path)
         self.edges_dataset, self.edges_dataset_index = get_csv_data(self.edges_csv_path)
@@ -121,9 +122,9 @@ class TrackMate(object):
 
                 self.Uniqueobjects = {}
                 self.Uniqueproperties = {}
-                self.DividingTrackIds = []
-                self.NonDividingTrackIds = []
                 self.AllTrackIds = []
+                self.DividingTrackIds = []
+                self.NormalTrackIds = []
                 self.all_track_properties = []
                 self.split_points_times = []
                 self.filtered_track_ids = [
@@ -132,6 +133,9 @@ class TrackMate(object):
                     .find("FilteredTracks")
                     .findall("TrackID")
                 ]
+                self.AllTrackIds.append(self.TrackidBox)
+                self.DividingTrackIds.append(self.TrackidBox)
+                self.NormalTrackIds.append(self.TrackidBox)
                 self.Spotobjects = self.xml_content.find('Model').find('AllSpots')
                 # Extract the tracks from xml
                 self.tracks = self.xml_content.find("Model").find("AllTracks")
@@ -208,6 +212,8 @@ class TrackMate(object):
 
                     self.spot_object_source_target = []
                     if track_id in self.filtered_track_ids:
+                        
+                        
                         for edge in track.findall('Edge'):
 
                             source_id = edge.get(self.spot_source_id_key)
@@ -239,16 +245,16 @@ class TrackMate(object):
                             DividingTrajectory = False
                     
                         if DividingTrajectory == True:
-                            self.DividingTrackIds.append(track_id)
-                            self.AllTrackIds.append(track_id)
+                            self.AllTrackIds.append(str(track_id))
+                            self.DividingTrackIds.append(str(track_id))
                             self.tracklets = analyze_dividing_tracklets(
                                 root_leaf, split_points, self.spot_object_source_target
                             )
                             for i in range(len(split_points)):
                                 self.split_points_times.append([split_points[i], split_times[i]])
                         if DividingTrajectory == False:
-                            self.NonDividingTrackIds.append(track_id)
-                            self.AllTrackIds.append(track_id)
+                            self.AllTrackIds.append(str(track_id))
+                            self.NormalTrackIds.append(str(track_id))
                             self.tracklets = analyze_non_dividing_tracklets(
                                 root_leaf, self.spot_object_source_target
                             )
@@ -429,12 +435,8 @@ class TrackMate(object):
 
                     self.Alldispmeanpos.append(meanCurdisp)
                     self.Alldispvarpos.append(varCurdisp)
-                    
-
                     self.Alldispmeanposy.append(meanCurdispy)
                     self.Alldispvarposy.append(varCurdispy)
-                  
-
                     self.Alldispmeanposx.append(meanCurdispx)
                     self.Alldispvarposx.append(varCurdispx)
                    
