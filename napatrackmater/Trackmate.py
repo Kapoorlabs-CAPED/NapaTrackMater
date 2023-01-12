@@ -4,6 +4,12 @@ import numpy as np
 import codecs
 import xml.etree.ElementTree as et
 import pandas as pd
+import math
+from skimage.measure import label, regionprops
+from skimage.segmentation import find_boundaries
+from scipy import spatial
+import dask as da
+from dask.array.image import imread as daskread
 
 
 class TrackMate(object):
@@ -103,6 +109,7 @@ class TrackMate(object):
         self.edge_z_location_key = self.track_analysis_edges_keys["edge_z_location"]
         
         self._get_xml_data()
+        self._get_boundary_points()
         self._get_attributes()
         self._temporal_plots_trackmate()
 
@@ -116,17 +123,115 @@ class TrackMate(object):
              
              self.AllEdgesValues = get_edges_dataset(self.edges_dataset, self.edges_dataset_index, self.track_analysis_spot_keys, self.track_analysis_edges_keys)
         
+    def _get_boundary_points(self):
+         
+        if  self.mask is not None and self.image is not None:
+                    if len(self.mask.shape) < len(self.image.shape):
+                        self.update_mask = np.zeros(
+                            [
+                                self.image.shape[0],
+                                self.image.shape[1],
+                                self.image.shape[2],
+                                self.image.shape[3],
+                            ]
+                        )
+                        for i in range(0, self.update_mask.shape[0]):
+                            for j in range(0, self.update_mask.shape[1]):
+
+                                self.update_mask[i, j, :, :] = self.mask[i, :, :]
+                                
+                    else:
+                        self.update_mask = self.mask
+                        
+                    self.mask = self.update_mask.astype('uint16')
+
+                    self.timed_mask, self.boundary = boundary_points(self.mask, self.xcalibration, self.ycalibration, self.zcalibration)
+        else:
+                    self.timed_mask = None
+                    self.boundary = None
+
+    def _create_generations(self, track_id, all_source_ids, all_target_ids):
+         
+        root_leaf = []
+        root_id = []
+        root_splits = []
+        split_count = 0
+        #Get the root id
+        for source_id in all_source_ids:
+              if source_id not in all_target_ids:
+                   root_id.append(source_id) 
+              
+
+
+        #Get the leafs and splits     
+        for target_id in all_target_ids:
+             if target_id not in all_source_ids:
+                  root_leaf.append(target_id)   
+             if target_id in all_source_ids:
+                   split_count = split_count + 1
+                   if split_count > 1:
+                      root_splits.append(target_id)       
+
+                       
+    def _distance_root_leaf(self, root_id, root_leaf, root_splits):
+
+
+         
+         #Generation 0
+         root_cell_id = root_id[0]    
+         self.generation_dict[root_cell_id] = '0'
+         max_generation = len(root_splits) + 1
+         #Generation > 1
+
+         for root_split in root_leaf:
+              if root_split == root_cell_id:
+                   self.generation_dict[root_split] = '0'
+              else:
+                   self.generation_dict[root_split] = str(max_generation) 
+                   source_id = self.edge_source_lookup[root_split]                         
+                   source_id = self._recursive_path(source_id, root_splits, root_id, max_generation)
+                   
+                   
+                              
+                   
+    def _recursive_path(self, source_id, root_splits, root_id, max_generation, gen_count = 1):
+         
+          while source_id not in root_splits:
+                        source_id = self.edge_source_lookup[source_id]
+                        if source_id in root_id:
+                             break
+          else:
+                                 self.generation_dict[source_id] = str(max_generation - gen_count)
+                                 gen_count = gen_count - 1
+                                 self._recursive_path(source_id, root_splits, root_id, max_generation, gen_count = gen_count)
+                            
+
+          
+              
+
+
+
     def _get_xml_data(self):
 
                 self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
 
-                self.Uniqueobjects = {}
-                self.Uniqueproperties = {}
+
+                self.unique_tracks = {}
+                self.unique_track_properties = {}
+                self.unique_spot_properties = {}
+                self.edge_target_lookup = {}
+                self.edge_source_lookup = {}
+                self.generation_dict = {}
+
+                self.unique_objects = {}
+                self.unique_properties = {}
                 self.AllTrackIds = []
                 self.DividingTrackIds = []
                 self.NormalTrackIds = []
                 self.all_track_properties = []
                 self.split_points_times = []
+
+
                 self.filtered_track_ids = [
                     int(track.get(self.trackid_key))
                     for track in self.xml_content.find("Model")
@@ -152,66 +257,31 @@ class TrackMate(object):
                 self.zcalibration = float(self.settings.get("voxeldepth"))
                 self.tcalibration = int(float(self.settings.get("timeinterval")))
 
-               
-
-                if  self.mask is not None and self.image is not None:
-                    if len(self.mask.shape) < len(self.image.shape):
-                        # T Z Y X
-                        self.update_mask = np.zeros(
-                            [
-                                self.image.shape[0],
-                                self.image.shape[1],
-                                self.image.shape[2],
-                                self.image.shape[3],
-                            ]
-                        )
-                        for i in range(0, self.update_mask.shape[0]):
-                            for j in range(0, self.update_mask.shape[1]):
-
-                                self.update_mask[i, j, :, :] = self.mask[i, :, :]
-                                
-                    else:
-                        self.update_mask = self.mask
-                        
-                    self.mask = self.update_mask.astype('uint16')
-
-                    self.timed_mask, self.boundary = boundary_points(self.mask, self.xcalibration, self.ycalibration, self.zcalibration)
-                else:
-                    self.timed_mask = None
-                    self.boundary = None    
-                        
-            
-
                 for frame in self.Spotobjects.findall('SpotsInFrame'):
 
                     for Spotobject in frame.findall('Spot'):
                         # Create object with unique cell ID
                         cell_id = int(Spotobject.get(self.spotid_key))
                         # Get the TZYX location of the cells in that frame
-                        
-                        self.Uniqueobjects[cell_id] = [
+                        TOTAL_INTENSITY_CH1 = Spotobject.get(self.total_intensity_ch1_key)
+                        MEAN_INTENSITY_CH1 = Spotobject.get(self.mean_intensity_ch1_key)
+                        TOTAL_INTENSITY_CH2 = Spotobject.get(self.total_intensity_ch2_key)
+                        MEAN_INTENSITY_CH2 = Spotobject.get(self.mean_intensity_ch2_key)
+                        Radius = Spotobject.get(self.radius_key)
+                        QUALITY = Spotobject.get(self.quality_key)
+
+                        self.unique_spot_properties[cell_id] = [
                             Spotobject.get(self.frameid_key),
                             Spotobject.get(self.zposid_key),
                             Spotobject.get(self.yposid_key),
                             Spotobject.get(self.xposid_key),
-                        ]
-                        
-                        # Get other properties associated with the Spotobject
-                        TOTAL_INTENSITY_CH1 = Spotobject.get(self.total_intensity_ch1_key)
-                        MEAN_INTENSITY_CH1 = Spotobject.get(self.mean_intensity_ch1_key)
-                        Radius = Spotobject.get(self.radius_key)
-                        QUALITY = Spotobject.get(self.quality_key)
-                                
-                        self.Uniqueproperties[cell_id] = [
-                            
                             TOTAL_INTENSITY_CH1,
                             MEAN_INTENSITY_CH1,
-                            Spotobject.get(self.frameid_key),
+                            TOTAL_INTENSITY_CH2,
+                            MEAN_INTENSITY_CH2,
                             Radius,
                             QUALITY
                         ]
-
-                
                 
                 for track in self.tracks.findall('Track'):
 
@@ -220,16 +290,24 @@ class TrackMate(object):
                     self.spot_object_source_target = []
                     if track_id in self.filtered_track_ids:
                         
-                        
+                        all_source_ids = []
+                        all_target_ids = []
                         for edge in track.findall('Edge'):
 
                             source_id = edge.get(self.spot_source_id_key)
                             target_id = edge.get(self.spot_target_id_key)
-                            if int(source_id) in self.Uniqueproperties:
-                                TOTAL_INTENSITY_CH1, MEAN_INTENSITY_CH1,Position_T,Radius,QUALITY = self.Uniqueproperties[int(source_id)]
+                            all_source_ids.append(source_id)
+                            all_target_ids.append(target_id)
+                            self.edge_target_lookup[source_id] = target_id
+                            self.edge_source_lookup[target_id] = source_id 
+                             
+
+
+
+                            if int(source_id) in self.unique_properties:
+                                TOTAL_INTENSITY_CH1, MEAN_INTENSITY_CH1,TOTAL_INTENSITY_CH2, MEAN_INTENSITY_CH2, edge_time,Radius,QUALITY = self.unique_properties[int(source_id)]
                             else:
-                                TOTAL_INTENSITY_CH1, MEAN_INTENSITY_CH1,Position_T,Radius,QUALITY = self.Uniqueproperties[int(target_id)] 
-                            edge_time = Position_T
+                                TOTAL_INTENSITY_CH1, MEAN_INTENSITY_CH1,TOTAL_INTENSITY_CH2, MEAN_INTENSITY_CH2, edge_time,Radius,QUALITY = self.unique_properties[int(target_id)] 
                             directional_rate_change = edge.get(self.directional_change_rate_key)
                             speed = edge.get(self.speed_key)
 
@@ -269,8 +347,8 @@ class TrackMate(object):
                         # for each tracklet get real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside
                         self.location_prop_dist = tracklet_properties(
                             self.tracklets,
-                            self.Uniqueobjects,
-                            self.Uniqueproperties,
+                            self.unique_objects,
+                            self.unique_properties,
                             self.mask,
                             None,
                             self.timed_mask,
@@ -440,7 +518,7 @@ class TrackMate(object):
                     self.AllCurmeaninch2mean.append(meanCurmeaninch2)
                     self.AllCurmeaninch2var.append(varCurmeaninch2)
 
-                    
+                     
 
                     self.Alldispmeanpos.append(meanCurdisp)
                     self.Alldispvarpos.append(varCurdisp)
@@ -500,7 +578,7 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
     tracklet.append(Root)
     trackletspeed.append(0)
     trackletdirection.append(0)
-    trackletid = 1
+    trackletid = 0
     RootCopy = Root
     visited.append(Root)
     while RootCopy not in split_points and RootCopy not in root_leaf[1:]:
@@ -525,7 +603,7 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
                         trackletspeed.append(speed)
                         trackletdirection.append(directional_rate_change)
     dividing_tracklets.append([trackletid, tracklet, trackletspeed, trackletdirection])
-    trackletid = 2
+    trackletid = 1
 
     # Exclude the split point near root
     for i in range(0, len(split_points )):
@@ -605,11 +683,11 @@ def analyze_dividing_tracklets(root_leaf, split_points, spot_object_source_targe
 
 def tracklet_properties(
     alltracklets,
-    Uniqueobjects,
-    Uniqueproperties,
-    Mask,
+    unique_objects,
+    unique_properties,
+    mask,
     seg_image,
-    TimedMask,
+    timed_mask,
     calibration,
     DividingTrajectory
 ):
@@ -618,7 +696,7 @@ def tracklet_properties(
 
     for i in range(0, len(alltracklets)):
         current_location_prop_dist = []
-        trackletid, tracklets, trackletspeeds, trackletdirections = alltracklets[i]
+        trackid,  trackletid, tracklets, trackletspeeds, trackletdirections = alltracklets[i]
         location_prop_dist[trackletid] = [trackletid]
         for k in range(0, len(tracklets)):
 
@@ -626,30 +704,30 @@ def tracklet_properties(
             trackletspeed = trackletspeeds[k]
             trackletdirection = trackletdirections[k]
             cell_source_id = tracklet
-            frame, z, y, x = Uniqueobjects[int(cell_source_id)]
+            frame, z, y, x = unique_objects[int(cell_source_id)]
          
-            total_intensity, mean_intensity, real_time, cellradius, pixel_volume = Uniqueproperties[
+            total_intensity_ch1, mean_intensity_ch1, total_intensity_ch2, mean_intensity_ch2,  frame_time, cellradius = unique_properties[
                 int(cell_source_id)
             ]
 
-            if Mask is not None:
+            if mask is not None:
 
-                if len(Mask.shape) == 4:  
+                if len(mask.shape) == 4:  
                   testlocation = (z, y, x)
-                if len(Mask.shape) == 3:  
+                if len(mask.shape) == 3:  
                   testlocation = (y, x)
 
-                tree, indices, masklabel, masklabelvolume = TimedMask[str(int(float(frame)/ calibration[3]))]
-                if len(Mask.shape) == 4:
-                        region_label = Mask[
-                            int(float(frame) / calibration[3]),
+                tree, indices, masklabel, masklabelvolume = timed_mask[str(int(float(frame)))]
+                if len(mask.shape) == 4:
+                        region_label = mask[
+                            int(float(frame) ),
                             int(float(z) / calibration[2]),
                             int(float(y) / calibration[1]),
                             int(float(x) / calibration[0]),
                         ]
-                if len(Mask.shape) == 3:
-                        region_label = Mask[
-                            int(float(frame) / calibration[3]),
+                if len(mask.shape) == 3:
+                        region_label = mask[
+                            int(float(frame) ),
                             int(float(y) / calibration[1]),
                             int(float(x) / calibration[0]),
                         ]
@@ -675,8 +753,10 @@ def tracklet_properties(
                     z,
                     y,
                     x,
-                    total_intensity,
-                    mean_intensity,
+                    total_intensity_ch1,
+                    mean_intensity_ch1,
+                    total_intensity_ch2,
+                    mean_intensity_ch2,
                     cellradius,
                     distance,
                     prob_inside,
@@ -698,14 +778,14 @@ def tracklet_properties(
 def boundary_points(mask, xcalibration, ycalibration, zcalibration):
 
     ndim = len(mask.shape)
-
+    timed_mask = {}
     # YX shaped object
     if ndim == 2:
         mask = label(mask)
         labels = []
         size = []
         tree = []
-        properties = measure.regionprops(mask, mask)
+        properties = regionprops(mask, mask)
         for prop in properties:
 
             labelimage = prop.image
@@ -737,7 +817,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
         for i in tqdm(range(0, mask.shape[0])):
 
             mask[i, :] = label(mask[i, :])
-            properties = measure.regionprops(mask[i, :], mask[i, :])
+            properties = regionprops(mask[i, :], mask[i, :])
             labels = []
             size = []
             tree = []
@@ -773,12 +853,45 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
         results = []
         x_ls = range(0, mask.shape[0])
         
-        results.append(parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i) for i in tqdm(x_ls))
+        results.append(parallel_map(timed_mask,mask, xcalibration, ycalibration, zcalibration, Boundary, i) for i in tqdm(x_ls))
         da.delayed(results).compute()
         
 
     return timed_mask, Boundary        
 
+def parallel_map(timed_mask, mask, xcalibration, ycalibration, zcalibration, Boundary, i):
+
+    mask[i, :] = label(mask[i, :])
+    properties = regionprops(mask[i, :], mask[i, :])
+    labels = []
+    size = []
+    tree = []
+    for prop in properties:
+
+        regionlabel = prop.label
+        sizez = abs(prop.bbox[0] - prop.bbox[3]) * zcalibration
+        sizey = abs(prop.bbox[1] - prop.bbox[4]) * ycalibration
+        sizex = abs(prop.bbox[2] - prop.bbox[5]) * xcalibration
+        volume = sizex * sizey * sizez
+        radius = math.pow(3 * volume / (4 * math.pi), 1.0 / 3.0)
+        for j in range(mask.shape[1]):
+           Boundary[i,j, :, :] = find_boundaries(mask[i, j, :, :])
+
+        indices = np.where(Boundary[i, :] > 0)
+       
+        real_indices = np.transpose(np.asarray(indices)).copy()
+        for j in range(0, len(real_indices)):
+
+            real_indices[j][0] = real_indices[j][0] * zcalibration
+            real_indices[j][1] = real_indices[j][1] * ycalibration
+            real_indices[j][2] = real_indices[j][2] * xcalibration
+
+        tree.append(spatial.cKDTree(real_indices))
+        if regionlabel not in labels:
+            labels.append(regionlabel)
+            size.append(radius)
+
+    timed_mask[str(i)] = [tree, indices, labels, size]
 
            
 def Multiplicity(spot_object_source_target):
@@ -957,11 +1070,11 @@ def normalizeZeroOne(x, scale = 255 * 255):
      return x * scale          
     
     
-def all_tracks(TrackLayerTracklets, trackid, alltracklets, xcalibration, ycalibration, zcalibration, tcalibration):
+def all_tracks(TrackLayerTracklets, trackid, location_prop_dist, xcalibration, ycalibration, zcalibration, tcalibration):
 
         TrackLayerTracklets[trackid] = [trackid]
         list_tracklets = []
-        for (trackletid, tracklets) in alltracklets.items():
+        for (trackletid, tracklets) in location_prop_dist.items():
 
             Locationtracklets = tracklets[1]
             if len(Locationtracklets) > 0:
@@ -1003,3 +1116,6 @@ def all_tracks(TrackLayerTracklets, trackid, alltracklets, xcalibration, ycalibr
 def sortFirst(List):
 
     return int(float(List[0]))    
+
+def prob_sigmoid(x):
+    return 1 - math.exp(-x)
