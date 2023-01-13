@@ -118,7 +118,6 @@ class TrackMate(object):
         self.edge_source_lookup = {}
         self.generation_dict = {}
         self.tracklet_dict = {}
-        self.visited = {}
 
 
         self._get_xml_data()
@@ -197,7 +196,6 @@ class TrackMate(object):
         for source_id in all_source_ids:
               if source_id not in all_target_ids:
                    root_root.append(source_id) 
-                   self.visited[source_id] = False 
                    self.tracklet_dict[source_id] = 0
 
 
@@ -206,14 +204,12 @@ class TrackMate(object):
         for target_id in all_target_ids:
              if target_id not in all_source_ids:
                   root_leaf.append(target_id)
-                  self.visited[target_id] = False 
                   self.tracklet_dict[target_id] = 0
 
              if target_id in all_source_ids:
                    split_count = split_count + 1
                    if split_count > 1:
                       root_splits.append(target_id)
-                      self.visited[target_id] = False 
                       self.tracklet_dict[target_id] = 0       
 
         self._distance_root_leaf(root_root, root_leaf, root_splits)
@@ -239,7 +235,7 @@ class TrackMate(object):
               self.tracklet_dict[target_cell_id] = target_cell_tracklet_id
               if target_cell_id not in root_leaf:
                  target_cell_id = self.edge_target_lookup(target_cell_id)
-                 self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_splits)
+                 self._assign_tracklet_id(target_cell_id[0], target_cell_tracklet_id, root_splits)
                       
   
 
@@ -250,7 +246,6 @@ class TrackMate(object):
          #Generation 0
          root_cell_id = root_root[0]    
          self.generation_dict[root_cell_id] = '0'
-         self.visited[root_cell_id] = True 
          max_generation = len(root_splits) + 1
          #Generation > 1
 
@@ -260,8 +255,6 @@ class TrackMate(object):
               else:
                    self.generation_dict[root_split] = str(max_generation) 
                    source_id = self.edge_source_lookup[root_split]
-                   if self.visited[source_id] == False:
-                            self.visited[source_id] = True 
                    if source_id not in root_splits and source_id not in root_root:                         
                          source_id = self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = 1)
                    
@@ -275,13 +268,9 @@ class TrackMate(object):
             if source_id not in root_splits:
                             
                             source_id = self.edge_source_lookup[source_id]
-                            if self.visited[source_id] == False:
-                               self.visited[source_id] = True 
                             self.generation_dict[source_id] = str(max_generation - gen_count)
                             self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = gen_count)
             if source_id in root_splits:
-                                    if self.visited[source_id] == False:
-                                         self.visited[source_id] = True 
                                     gen_count = gen_count - 1
                                     source_id = self.edge_source_lookup[source_id]
                                     self.generation_dict[source_id] = str(max_generation - gen_count)
