@@ -109,6 +109,16 @@ class TrackMate(object):
         self.edge_y_location_key = self.track_analysis_edges_keys["edge_y_location"]
         self.edge_z_location_key = self.track_analysis_edges_keys["edge_z_location"]
         
+        self.unique_tracks = {}
+        self.unique_track_properties = {}
+        self.unique_spot_properties = {}
+        self.edge_target_lookup = {}
+        self.edge_source_lookup = {}
+        self.generation_dict = {}
+        self.tracklet_dict = {}
+        self.visited = {}
+
+
         self._get_xml_data()
         self._get_boundary_points()
         self._get_attributes()
@@ -179,17 +189,24 @@ class TrackMate(object):
         for source_id in all_source_ids:
               if source_id not in all_target_ids:
                    root_root.append(source_id) 
-              
+                   self.visited[source_id] = False 
+                   self.tracklet_dict[source_id] = 0
+
 
 
         #Get the leafs and splits     
         for target_id in all_target_ids:
              if target_id not in all_source_ids:
-                  root_leaf.append(target_id)   
+                  root_leaf.append(target_id)
+                  self.visited[target_id] = False 
+                  self.tracklet_dict[target_id] = 0
+
              if target_id in all_source_ids:
                    split_count = split_count + 1
                    if split_count > 1:
-                      root_splits.append(target_id)       
+                      root_splits.append(target_id)
+                      self.visited[target_id] = False 
+                      self.tracklet_dict[target_id] = 0       
 
         self._distance_root_leaf(root_root, root_leaf, root_splits)
 
@@ -203,6 +220,7 @@ class TrackMate(object):
          #Generation 0
          root_cell_id = root_root[0]    
          self.generation_dict[root_cell_id] = '0'
+         self.visited[root_cell_id] = True 
          max_generation = len(root_splits) + 1
          #Generation > 1
 
@@ -212,6 +230,10 @@ class TrackMate(object):
               else:
                    self.generation_dict[root_split] = str(max_generation) 
                    source_id = self.edge_source_lookup[root_split]
+                   if self.visited[source_id] == False:
+                            self.visited[source_id] = True 
+                   else:
+                            self.tracklet_dict[source_id] = self.tracklet_dict[source_id] + 1
                    if source_id not in root_splits and source_id not in root_root:                         
                          source_id = self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = 1)
                    
@@ -225,9 +247,17 @@ class TrackMate(object):
             if source_id not in root_splits:
                             
                             source_id = self.edge_source_lookup[source_id]
+                            if self.visited[source_id] == False:
+                               self.visited[source_id] = True 
+                            else:
+                               self.tracklet_dict[source_id] = self.tracklet_dict[source_id] + 1     
                             self.generation_dict[source_id] = str(max_generation - gen_count)
                             self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = gen_count)
             if source_id in root_splits:
+                                    if self.visited[source_id] == False:
+                                         self.visited[source_id] = True 
+                                    else:
+                                         self.tracklet_dict[source_id] = self.tracklet_dict[source_id] + 1
                                     gen_count = gen_count - 1
                                     source_id = self.edge_source_lookup[source_id]
                                     self.generation_dict[source_id] = str(max_generation - gen_count)
@@ -241,12 +271,7 @@ class TrackMate(object):
                 self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
 
 
-                self.unique_tracks = {}
-                self.unique_track_properties = {}
-                self.unique_spot_properties = {}
-                self.edge_target_lookup = {}
-                self.edge_source_lookup = {}
-                self.generation_dict = {}
+                
 
                 self.unique_objects = {}
                 self.unique_properties = {}
