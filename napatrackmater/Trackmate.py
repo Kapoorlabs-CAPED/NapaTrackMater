@@ -91,7 +91,7 @@ class TrackMate(object):
         self.trackid_key = self.track_analysis_spot_keys["track_id"]
         self.radius_key = self.track_analysis_spot_keys["radius"]
         self.quality_key = self.track_analysis_spot_keys["quality"]
-
+        self.trackletid_key = 'unique_tracklet_id'
 
         self.mean_intensity_ch1_key = self.track_analysis_spot_keys["mean_intensity_ch1"]
         self.mean_intensity_ch2_key = self.track_analysis_spot_keys["mean_intensity_ch2"]
@@ -150,16 +150,16 @@ class TrackMate(object):
                     self.timed_mask = None
                     self.boundary = None
 
-    def _create_generations(self, track_id, all_source_ids, all_target_ids):
+    def _create_generations(self, all_source_ids, all_target_ids):
          
         root_leaf = []
-        root_id = []
+        root_root = []
         root_splits = []
         split_count = 0
         #Get the root id
         for source_id in all_source_ids:
               if source_id not in all_target_ids:
-                   root_id.append(source_id) 
+                   root_root.append(source_id) 
               
 
 
@@ -172,13 +172,17 @@ class TrackMate(object):
                    if split_count > 1:
                       root_splits.append(target_id)       
 
-                       
-    def _distance_root_leaf(self, root_id, root_leaf, root_splits):
+        self._distance_root_leaf(root_root, root_leaf, root_splits)
+
+        return root_root, root_splits, root_leaf
+
+
+    def _distance_root_leaf(self, root_root, root_leaf, root_splits):
 
 
          
          #Generation 0
-         root_cell_id = root_id[0]    
+         root_cell_id = root_root[0]    
          self.generation_dict[root_cell_id] = '0'
          max_generation = len(root_splits) + 1
          #Generation > 1
@@ -188,27 +192,29 @@ class TrackMate(object):
                    self.generation_dict[root_split] = '0'
               else:
                    self.generation_dict[root_split] = str(max_generation) 
-                   source_id = self.edge_source_lookup[root_split]                         
-                   source_id = self._recursive_path(source_id, root_splits, root_id, max_generation)
+                   source_id = self.edge_source_lookup[root_split]
+                   if source_id not in root_splits and source_id not in root_root:                         
+                         source_id = self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = 1)
                    
                    
                               
-                   
-    def _recursive_path(self, source_id, root_splits, root_id, max_generation, gen_count = 1):
+    #Assign generation ID to each cell               
+    def _recursive_path(self, source_id, root_splits, root_root, max_generation, gen_count = 1):
          
-          while source_id not in root_splits:
-                        source_id = self.edge_source_lookup[source_id]
-                        if source_id in root_id:
-                             break
-          else:
-                                 self.generation_dict[source_id] = str(max_generation - gen_count)
-                                 gen_count = gen_count - 1
-                                 self._recursive_path(source_id, root_splits, root_id, max_generation, gen_count = gen_count)
+
+        if source_id not in root_root:  
+            if source_id not in root_splits:
                             
-
-          
-              
-
+                            source_id = self.edge_source_lookup[source_id]
+                            self.generation_dict[source_id] = str(max_generation - gen_count)
+                            self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = gen_count)
+            if source_id in root_splits:
+                                    gen_count = gen_count - 1
+                                    source_id = self.edge_source_lookup[source_id]
+                                    self.generation_dict[source_id] = str(max_generation - gen_count)
+                                    self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = gen_count)
+                                    
+                            
 
 
     def _get_xml_data(self):
@@ -270,18 +276,18 @@ class TrackMate(object):
                         Radius = Spotobject.get(self.radius_key)
                         QUALITY = Spotobject.get(self.quality_key)
 
-                        self.unique_spot_properties[cell_id] = [
-                            Spotobject.get(self.frameid_key),
-                            Spotobject.get(self.zposid_key),
-                            Spotobject.get(self.yposid_key),
-                            Spotobject.get(self.xposid_key),
-                            TOTAL_INTENSITY_CH1,
-                            MEAN_INTENSITY_CH1,
-                            TOTAL_INTENSITY_CH2,
-                            MEAN_INTENSITY_CH2,
-                            Radius,
-                            QUALITY
-                        ]
+                        self.unique_spot_properties[cell_id] = {
+                            self.frameid_key : Spotobject.get(self.frameid_key),
+                            self.zposid_key :Spotobject.get(self.zposid_key),
+                            self.yposid_key :Spotobject.get(self.yposid_key),
+                            self.xposid_key :Spotobject.get(self.xposid_key),
+                            self.total_intensity_ch1_key :TOTAL_INTENSITY_CH1,
+                            self.mean_intensity_ch1_key :MEAN_INTENSITY_CH1,
+                            self.total_intensity_ch2_key :TOTAL_INTENSITY_CH2,
+                            self.mean_intensity_ch2_key :MEAN_INTENSITY_CH2,
+                            self.radius_key :Radius,
+                            self.quality_key :QUALITY
+                        }
                 
                 for track in self.tracks.findall('Track'):
 
@@ -300,20 +306,23 @@ class TrackMate(object):
                             all_target_ids.append(target_id)
                             self.edge_target_lookup[source_id] = target_id
                             self.edge_source_lookup[target_id] = source_id 
-                             
+                            
+                        root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
 
+                        if int(source_id) in self.unique_spot_properties:
+                                generation_id = self.generation_dict[int(source_id)]
+                        else:  
+                                generation_id = self.generation_dict[int(track_id)]   
 
+                        tracklet_id = str(track_id) + generation_id
+                        self.unique_spot_properties[int(source_id)].update({self.trackletid_key : tracklet_id}) 
+                        
+                        directional_rate_change = edge.get(self.directional_change_rate_key)
+                        speed = edge.get(self.speed_key)
 
-                            if int(source_id) in self.unique_properties:
-                                TOTAL_INTENSITY_CH1, MEAN_INTENSITY_CH1,TOTAL_INTENSITY_CH2, MEAN_INTENSITY_CH2, edge_time,Radius,QUALITY = self.unique_properties[int(source_id)]
-                            else:
-                                TOTAL_INTENSITY_CH1, MEAN_INTENSITY_CH1,TOTAL_INTENSITY_CH2, MEAN_INTENSITY_CH2, edge_time,Radius,QUALITY = self.unique_properties[int(target_id)] 
-                            directional_rate_change = edge.get(self.directional_change_rate_key)
-                            speed = edge.get(self.speed_key)
-
-                            self.spot_object_source_target.append(
-                                [source_id, target_id, edge_time, directional_rate_change, speed]
-                            )
+                        self.spot_object_source_target.append(
+                            [source_id, target_id, edge_time, directional_rate_change, speed]
+                        )
 
                         # Sort the tracks by edge time
                         self.spot_object_source_target = sorted(
