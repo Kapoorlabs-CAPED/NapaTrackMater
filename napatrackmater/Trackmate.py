@@ -91,6 +91,8 @@ class TrackMate(object):
         self.trackid_key = self.track_analysis_spot_keys["track_id"]
         self.radius_key = self.track_analysis_spot_keys["radius"]
         self.quality_key = self.track_analysis_spot_keys["quality"]
+
+        self.generationid_key = 'generation_id'
         self.trackletid_key = 'unique_tracklet_id'
         self.dividing_key = 'dividing_normal'
 
@@ -348,17 +350,23 @@ class TrackMate(object):
                                 target_id = edge.get(self.spot_target_id_key)
                                 if int(source_id) in self.unique_spot_properties:
                                         generation_id = self.generation_dict[int(source_id)]
+                                        tracklet_id = self.tracklet_dict[int(source_id)]
                                 else:  
                                         generation_id = self.generation_dict[int(target_id)]   
+                                        tracklet_id = self.tracklet_dict[int(target_id)]
 
-                                tracklet_id = str(track_id) + generation_id
+                                unique_id = str(track_id) + str(generation_id) + str(tracklet_id)
                                 if int(source_id) in self.unique_spot_properties:
-                                        self.unique_spot_properties[int(source_id)].update({self.trackletid_key : tracklet_id}) 
+                                        self.unique_spot_properties[int(source_id)].update({self.trackletid_key : unique_id}) 
+                                        self.unique_spot_properties[int(source_id)].update({self.generationid_key : str(generation_id)}) 
+                                        self.unique_spot_properties[int(source_id)].update({self.trackid_key : str(track_id)})
                                         self.unique_spot_properties[int(source_id)].update({self.directional_change_rate_key : edge.get(self.directional_change_rate_key)})
                                         self.unique_spot_properties[int(source_id)].update({self.speed_key : edge.get(self.speed_key)})
                                 else:
                                      
-                                        self.unique_spot_properties[int(target_id)].update({self.trackletid_key : tracklet_id}) 
+                                        self.unique_spot_properties[int(target_id)].update({self.trackletid_key : unique_id}) 
+                                        self.unique_spot_properties[int(target_id)].update({self.generationid_key : str(generation_id)})
+                                        self.unique_spot_properties[int(target_id)].update({self.trackid_key : str(track_id)})
                                         self.unique_spot_properties[int(target_id)].update({self.directional_change_rate_key : edge.get(self.directional_change_rate_key)})
                                         self.unique_spot_properties[int(target_id)].update({self.speed_key : edge.get(self.speed_key)})
                                              
