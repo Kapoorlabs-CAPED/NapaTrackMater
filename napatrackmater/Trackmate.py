@@ -230,15 +230,17 @@ class TrackMate(object):
                    
                    target_cell_id = target_cells[i]
                    target_cell_tracklet_id = i 
-                   self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_splits)
+                   self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
 
    
-    def _assign_tracklet_id(self, target_cell_id, target_cell_tracklet_id, root_splits):
+    def _assign_tracklet_id(self, target_cell_id, target_cell_tracklet_id, root_leaf, root_splits):
          
          if target_cell_id not in root_splits:
               self.tracklet_dict[target_cell_id] = target_cell_tracklet_id
-              target_cell_id = self.edge_target_lookup(target_cell_id)
-              self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_splits)
+              if target_cell_id not in root_leaf:
+                 target_cell_id = self.edge_target_lookup(target_cell_id)
+                 self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_splits)
+                      
   
 
     def _distance_root_leaf(self, root_root, root_leaf, root_splits):
