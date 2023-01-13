@@ -175,7 +175,13 @@ class TrackMate(object):
                             target_id = edge.get(self.spot_target_id_key)
                             all_source_ids.append(source_id)
                             all_target_ids.append(target_id)
-                            self.edge_target_lookup[source_id] = target_id
+                            
+                            if sourceid in self.edge_target_lookup.keys():
+                               self.edge_target_lookup[source_id].append(target_id)
+                            else:      
+                               self.edge_target_lookup[source_id] = [target_id]
+
+
                             self.edge_source_lookup[target_id] = source_id 
 
         return all_source_ids, all_target_ids 
@@ -215,6 +221,26 @@ class TrackMate(object):
         return root_root, root_splits, root_leaf
 
 
+    def _iterate_split_down(self, root_leaf, root_splits):
+         
+         for root_split in root_splits:
+              
+              target_cells = self.edge_target_lookup[root_split]
+              for i in range(len(target_cells)):
+                   
+                   target_cell_id = target_cells[i]
+                   target_cell_tracklet_id = i 
+                   self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_splits)
+
+   
+    def _assign_tracklet_id(self, target_cell_id, target_cell_tracklet_id, root_splits):
+         
+         if target_cell_id not in root_splits:
+              self.tracklet_dict[target_cell_id] = target_cell_tracklet_id
+              target_cell_id = self.edge_target_lookup(target_cell_id)
+              self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_splits)
+  
+
     def _distance_root_leaf(self, root_root, root_leaf, root_splits):
 
 
@@ -234,8 +260,6 @@ class TrackMate(object):
                    source_id = self.edge_source_lookup[root_split]
                    if self.visited[source_id] == False:
                             self.visited[source_id] = True 
-                   else:
-                            self.tracklet_dict[source_id] = self.tracklet_dict[source_id] + 1
                    if source_id not in root_splits and source_id not in root_root:                         
                          source_id = self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = 1)
                    
@@ -251,15 +275,11 @@ class TrackMate(object):
                             source_id = self.edge_source_lookup[source_id]
                             if self.visited[source_id] == False:
                                self.visited[source_id] = True 
-                            else:
-                               self.tracklet_dict[source_id] = self.tracklet_dict[source_id] + 1     
                             self.generation_dict[source_id] = str(max_generation - gen_count)
                             self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = gen_count)
             if source_id in root_splits:
                                     if self.visited[source_id] == False:
                                          self.visited[source_id] = True 
-                                    else:
-                                         self.tracklet_dict[source_id] = self.tracklet_dict[source_id] + 1
                                     gen_count = gen_count - 1
                                     source_id = self.edge_source_lookup[source_id]
                                     self.generation_dict[source_id] = str(max_generation - gen_count)
@@ -343,6 +363,8 @@ class TrackMate(object):
                             all_source_ids, all_target_ids =  self._generate_generations(track, track_id)
 
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
+
+                            self._iterate_split_down(root_leaf, root_splits)
 
                             for edge in track.findall('Edge'):
                                   
