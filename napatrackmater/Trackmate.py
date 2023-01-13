@@ -95,6 +95,7 @@ class TrackMate(object):
         self.generationid_key = 'generation_id'
         self.trackletid_key = 'unique_tracklet_id'
         self.dividing_key = 'dividing_normal'
+        self.distance_cell_mask_key = 'distance_cell_mask'
 
         self.mean_intensity_ch1_key = self.track_analysis_spot_keys["mean_intensity_ch1"]
         self.mean_intensity_ch2_key = self.track_analysis_spot_keys["mean_intensity_ch2"]
@@ -121,7 +122,6 @@ class TrackMate(object):
 
 
         self._get_xml_data()
-        self._get_boundary_points()
         self._get_attributes()
         self._temporal_plots_trackmate()
 
@@ -277,15 +277,44 @@ class TrackMate(object):
                                     self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = gen_count)
                                     
                             
+    def _get_boundary_dist(self, frame, testlocation, cellradius):
+         
+        if self.mask is not None:
 
+                tree, indices, masklabel, masklabelvolume = self.timed_mask[str(int(float(frame)))]
+                if len(self.mask.shape) == 4:
+                        z, y, x = testlocation 
+                        region_label = self.mask[
+                            int(float(frame) ),
+                            int(float(z) / self.zcalibration),
+                            int(float(y) / self.ycalibration),
+                            int(float(x) / self.xcalibration),
+                        ]
+                if len(mask.shape) == 3:
+                        y,x = testlocation
+                        region_label = mask[
+                            int(float(frame) ),
+                            int(float(y) / self.ycalibration),
+                            int(float(x) / self.xcalibration),
+                        ]
+                for k in range(0, len(masklabel)):
+                    currentlabel = masklabel[k]
+                    currentvolume = masklabelvolume[k]
+                    currenttree = tree[k]
+                    # Get the location and distance to the nearest boundary point
+                    distance_cell_mask, location = currenttree.query(testlocation)
+                    distance_cell_mask = max(0, distance_cell_mask - float(cellradius))
+                   
+        else:
+                distance_cell_mask = 0
+
+        return distance_cell_mask        
+         
+    
 
     def _get_xml_data(self):
 
                 self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
-
-
-                
-
                 self.unique_objects = {}
                 self.unique_properties = {}
                 self.AllTrackIds = []
@@ -293,7 +322,6 @@ class TrackMate(object):
                 self.NormalTrackIds = []
                 self.all_track_properties = []
                 self.split_points_times = []
-
 
                 self.filtered_track_ids = [
                     int(track.get(self.trackid_key))
@@ -319,6 +347,7 @@ class TrackMate(object):
                 self.ycalibration = float(self.settings.get("pixelheight"))
                 self.zcalibration = float(self.settings.get("voxeldepth"))
                 self.tcalibration = int(float(self.settings.get("timeinterval")))
+                self._get_boundary_points()
 
                 for frame in self.Spotobjects.findall('SpotsInFrame'):
 
@@ -332,6 +361,9 @@ class TrackMate(object):
                         MEAN_INTENSITY_CH2 = Spotobject.get(self.mean_intensity_ch2_key)
                         Radius = Spotobject.get(self.radius_key)
                         QUALITY = Spotobject.get(self.quality_key)
+                        testlocation = (Spotobject.get(self.zposid_key), Spotobject.get(self.yposid_key),  Spotobject.get(self.xposid_key))
+                        frame = Spotobject.get(self.frameid_key)
+                        distance_cell_mask = self._get_boundary_dist(frame, testlocation, Radius)
 
                         self.unique_spot_properties[cell_id] = {
                             self.frameid_key : Spotobject.get(self.frameid_key),
@@ -343,7 +375,8 @@ class TrackMate(object):
                             self.total_intensity_ch2_key : TOTAL_INTENSITY_CH2,
                             self.mean_intensity_ch2_key : MEAN_INTENSITY_CH2,
                             self.radius_key : Radius,
-                            self.quality_key : QUALITY
+                            self.quality_key : QUALITY,
+                            self.distance_cell_mask_key: distance_cell_mask
                         }
                 for track in self.tracks.findall('Track'):
 
@@ -400,6 +433,8 @@ class TrackMate(object):
                                         self.unique_spot_properties[int(source_id)].update({self.dividing_key : DividingTrajectory})
                                 else:
                                         self.unique_spot_properties[int(target_id)].update({self.dividing_key : DividingTrajectory})    
+
+                                        
                             
                         # for each tracklet get real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside
                         self.location_prop_dist = tracklet_properties(
@@ -827,9 +862,6 @@ def tracklet_properties(
 
     return location_prop_dist
 
-
-          
-        
         
         
 def boundary_points(mask, xcalibration, ycalibration, zcalibration):
