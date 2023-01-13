@@ -92,6 +92,7 @@ class TrackMate(object):
         self.radius_key = self.track_analysis_spot_keys["radius"]
         self.quality_key = self.track_analysis_spot_keys["quality"]
         self.trackletid_key = 'unique_tracklet_id'
+        self.dividing_key = 'dividing_normal'
 
         self.mean_intensity_ch1_key = self.track_analysis_spot_keys["mean_intensity_ch1"]
         self.mean_intensity_ch2_key = self.track_analysis_spot_keys["mean_intensity_ch2"]
@@ -149,6 +150,24 @@ class TrackMate(object):
         else:
                     self.timed_mask = None
                     self.boundary = None
+
+    def _generate_generations(self, track_id):
+         
+        all_source_ids = []
+        all_target_ids = [] 
+
+
+        for edge in track.findall('Edge'):
+
+                            source_id = edge.get(self.spot_source_id_key)
+                            target_id = edge.get(self.spot_target_id_key)
+                            all_source_ids.append(source_id)
+                            all_target_ids.append(target_id)
+                            self.edge_target_lookup[source_id] = target_id
+                            self.edge_source_lookup[target_id] = source_id 
+
+        return all_source_ids, all_target_ids 
+
 
     def _create_generations(self, all_source_ids, all_target_ids):
          
@@ -278,81 +297,64 @@ class TrackMate(object):
 
                         self.unique_spot_properties[cell_id] = {
                             self.frameid_key : Spotobject.get(self.frameid_key),
-                            self.zposid_key :Spotobject.get(self.zposid_key),
-                            self.yposid_key :Spotobject.get(self.yposid_key),
-                            self.xposid_key :Spotobject.get(self.xposid_key),
-                            self.total_intensity_ch1_key :TOTAL_INTENSITY_CH1,
-                            self.mean_intensity_ch1_key :MEAN_INTENSITY_CH1,
-                            self.total_intensity_ch2_key :TOTAL_INTENSITY_CH2,
-                            self.mean_intensity_ch2_key :MEAN_INTENSITY_CH2,
-                            self.radius_key :Radius,
-                            self.quality_key :QUALITY
+                            self.zposid_key : Spotobject.get(self.zposid_key),
+                            self.yposid_key : Spotobject.get(self.yposid_key),
+                            self.xposid_key : Spotobject.get(self.xposid_key),
+                            self.total_intensity_ch1_key : TOTAL_INTENSITY_CH1,
+                            self.mean_intensity_ch1_key : MEAN_INTENSITY_CH1,
+                            self.total_intensity_ch2_key : TOTAL_INTENSITY_CH2,
+                            self.mean_intensity_ch2_key : MEAN_INTENSITY_CH2,
+                            self.radius_key : Radius,
+                            self.quality_key : QUALITY
                         }
-                
                 for track in self.tracks.findall('Track'):
 
                     track_id = int(track.get(self.trackid_key))
 
-                    self.spot_object_source_target = []
                     if track_id in self.filtered_track_ids:
                         
-                        all_source_ids = []
-                        all_target_ids = []
-                        for edge in track.findall('Edge'):
+                            all_source_ids, all_target_ids =  self._generate_generations(track, track_id)
 
-                            source_id = edge.get(self.spot_source_id_key)
-                            target_id = edge.get(self.spot_target_id_key)
-                            all_source_ids.append(source_id)
-                            all_target_ids.append(target_id)
-                            self.edge_target_lookup[source_id] = target_id
-                            self.edge_source_lookup[target_id] = source_id 
+                            root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
+
+                            for edge in track.findall('Edge'):
+                                  
+                                source_id = edge.get(self.spot_source_id_key)
+                                target_id = edge.get(self.spot_target_id_key)
+                                if int(source_id) in self.unique_spot_properties:
+                                        generation_id = self.generation_dict[int(source_id)]
+                                else:  
+                                        generation_id = self.generation_dict[int(target_id)]   
+
+                                tracklet_id = str(track_id) + generation_id
+                                if int(source_id) in self.unique_spot_properties:
+                                        self.unique_spot_properties[int(source_id)].update({self.trackletid_key : tracklet_id}) 
+                                        self.unique_spot_properties[int(source_id)].update({self.directional_change_rate_key : edge.get(self.directional_change_rate_key)})
+                                        self.unique_spot_properties[int(source_id)].update({self.speed_key : edge.get(self.speed_key)})
+                                else:
+                                     
+                                        self.unique_spot_properties[int(target_id)].update({self.trackletid_key : tracklet_id}) 
+                                        self.unique_spot_properties[int(target_id)].update({self.directional_change_rate_key : edge.get(self.directional_change_rate_key)})
+                                        self.unique_spot_properties[int(target_id)].update({self.speed_key : edge.get(self.speed_key)})
+                                             
+                                        
+
+                                # Determine if a track has divisions or none
+                                if len(root_splits) > 0:
+                                    DividingTrajectory = True
+                                    self.AllTrackIds.append(str(track_id))
+                                    self.DividingTrackIds.append(str(track_id))
+                                         
+                                else:
+                                    DividingTrajectory = False
+                                    self.AllTrackIds.append(str(track_id))
+                                    self.NormalTrackIds.append(str(track_id))
+
+                                if int(source_id) in self.unique_spot_properties:
+                                        self.unique_spot_properties[int(source_id)].update({self.dividing_key : DividingTrajectory})
+                                else:
+                                        self.unique_spot_properties[int(target_id)].update({self.dividing_key : DividingTrajectory})    
                             
-                        root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
-
-                        if int(source_id) in self.unique_spot_properties:
-                                generation_id = self.generation_dict[int(source_id)]
-                        else:  
-                                generation_id = self.generation_dict[int(track_id)]   
-
-                        tracklet_id = str(track_id) + generation_id
-                        self.unique_spot_properties[int(source_id)].update({self.trackletid_key : tracklet_id}) 
-                        
-                        directional_rate_change = edge.get(self.directional_change_rate_key)
-                        speed = edge.get(self.speed_key)
-
-                        self.spot_object_source_target.append(
-                            [source_id, target_id, edge_time, directional_rate_change, speed]
-                        )
-
-                        # Sort the tracks by edge time
-                        self.spot_object_source_target = sorted(
-                            self.spot_object_source_target, key=sortTracks, reverse=False
-                        )
-                        # Get all the IDs, uniquesource, targets attached, leaf, root, splitpoint IDs
-                        split_points, split_times, root_leaf = Multiplicity(self.spot_object_source_target)
-
-                        # Determine if a track has divisions or none
-                        if len(split_points) > 0:
-                            split_points = split_points[::-1]
-                            DividingTrajectory = True
-                        else:
-                            DividingTrajectory = False
-                    
-                        if DividingTrajectory == True:
-                            self.AllTrackIds.append(str(track_id))
-                            self.DividingTrackIds.append(str(track_id))
-                            self.tracklets = analyze_dividing_tracklets(
-                                root_leaf, split_points, self.spot_object_source_target
-                            )
-                            for i in range(len(split_points)):
-                                self.split_points_times.append([split_points[i], split_times[i]])
-                        if DividingTrajectory == False:
-                            self.AllTrackIds.append(str(track_id))
-                            self.NormalTrackIds.append(str(track_id))
-                            self.tracklets = analyze_non_dividing_tracklets(
-                                root_leaf, self.spot_object_source_target
-                            )
-
                         # for each tracklet get real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside
                         self.location_prop_dist = tracklet_properties(
                             self.tracklets,
