@@ -93,7 +93,8 @@ class TrackMate(object):
         self.quality_key = self.track_analysis_spot_keys["quality"]
 
         self.generationid_key = 'generation_id'
-        self.trackletid_key = 'unique_tracklet_id'
+        self.trackletid_key = 'tracklet_id'
+        self.uniqueid_key = 'unique_id'
         self.dividing_key = 'dividing_normal'
         self.distance_cell_mask_key = 'distance_cell_mask'
 
@@ -119,6 +120,7 @@ class TrackMate(object):
         self.edge_source_lookup = {}
         self.generation_dict = {}
         self.tracklet_dict = {}
+        self.graph_split = {}
 
 
         self._get_xml_data()
@@ -162,7 +164,7 @@ class TrackMate(object):
                     self.timed_mask = None
                     self.boundary = None
 
-    def _generate_generations(self, track_id):
+    def _generate_generations(self, track, track_id):
          
         all_source_ids = []
         all_target_ids = [] 
@@ -175,7 +177,7 @@ class TrackMate(object):
                             all_source_ids.append(source_id)
                             all_target_ids.append(target_id)
                             
-                            if sourceid in self.edge_target_lookup.keys():
+                            if source_id in self.edge_target_lookup.keys():
                                self.edge_target_lookup[source_id].append(target_id)
                             else:      
                                self.edge_target_lookup[source_id] = [target_id]
@@ -222,9 +224,12 @@ class TrackMate(object):
          for root_split in root_splits:
               
               target_cells = self.edge_target_lookup[root_split]
+
               for i in range(len(target_cells)):
                    
                    target_cell_id = target_cells[i]
+                   self.graph_split[target_cell_id] = [root_split] 
+
                    target_cell_tracklet_id = i 
                    self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
 
@@ -238,6 +243,8 @@ class TrackMate(object):
                  self._assign_tracklet_id(target_cell_id[0], target_cell_tracklet_id, root_splits)
                       
   
+         
+
 
     def _distance_root_leaf(self, root_root, root_leaf, root_splits):
 
@@ -246,7 +253,7 @@ class TrackMate(object):
          #Generation 0
          root_cell_id = root_root[0]    
          self.generation_dict[root_cell_id] = '0'
-         max_generation = len(root_splits) + 1
+         max_generation = len(root_splits)
          #Generation > 1
 
          for root_split in root_leaf:
@@ -256,12 +263,12 @@ class TrackMate(object):
                    self.generation_dict[root_split] = str(max_generation) 
                    source_id = self.edge_source_lookup[root_split]
                    if source_id not in root_splits and source_id not in root_root:                         
-                         source_id = self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = 1)
+                         source_id = self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = 0)
                    
                    
                               
     #Assign generation ID to each cell               
-    def _recursive_path(self, source_id, root_splits, root_root, max_generation, gen_count = 1):
+    def _recursive_path(self, source_id, root_splits, root_root, max_generation, gen_count = 0):
          
 
         if source_id not in root_root:  
@@ -290,9 +297,9 @@ class TrackMate(object):
                             int(float(y) / self.ycalibration),
                             int(float(x) / self.xcalibration),
                         ]
-                if len(mask.shape) == 3:
+                if len(self.mask.shape) == 3:
                         y,x = testlocation
-                        region_label = mask[
+                        region_label = self.mask[
                             int(float(frame) ),
                             int(float(y) / self.ycalibration),
                             int(float(x) / self.xcalibration),
@@ -384,6 +391,8 @@ class TrackMate(object):
 
                     if track_id in self.filtered_track_ids:
                         
+                            current_cell_ids = []
+                            unique_tracklet_ids = []
                             all_source_ids, all_target_ids =  self._generate_generations(track, track_id)
 
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
@@ -402,15 +411,19 @@ class TrackMate(object):
                                         tracklet_id = self.tracklet_dict[int(target_id)]
 
                                 unique_id = str(track_id) + str(generation_id) + str(tracklet_id)
+                                unique_tracklet_ids.append(str(unique_id))
                                 if int(source_id) in self.unique_spot_properties:
-                                        self.unique_spot_properties[int(source_id)].update({self.trackletid_key : unique_id}) 
+                                        current_cell_ids.append(int(source_id))
+                                        self.unique_spot_properties[int(source_id)].update({self.uniqueid_key : str(unique_id)})
+                                        self.unique_spot_properties[int(source_id)].update({self.trackletid_key : str(tracklet_id)}) 
                                         self.unique_spot_properties[int(source_id)].update({self.generationid_key : str(generation_id)}) 
                                         self.unique_spot_properties[int(source_id)].update({self.trackid_key : str(track_id)})
                                         self.unique_spot_properties[int(source_id)].update({self.directional_change_rate_key : edge.get(self.directional_change_rate_key)})
                                         self.unique_spot_properties[int(source_id)].update({self.speed_key : edge.get(self.speed_key)})
                                 else:
-                                     
-                                        self.unique_spot_properties[int(target_id)].update({self.trackletid_key : unique_id}) 
+                                        current_cell_ids.append(int(target_id)) 
+                                        self.unique_spot_properties[int(target_id)].update({self.uniqueid_key : str(unique_id)})
+                                        self.unique_spot_properties[int(target_id)].update({self.trackletid_key : str(tracklet_id)}) 
                                         self.unique_spot_properties[int(target_id)].update({self.generationid_key : str(generation_id)})
                                         self.unique_spot_properties[int(target_id)].update({self.trackid_key : str(track_id)})
                                         self.unique_spot_properties[int(target_id)].update({self.directional_change_rate_key : edge.get(self.directional_change_rate_key)})
@@ -433,22 +446,28 @@ class TrackMate(object):
                                         self.unique_spot_properties[int(source_id)].update({self.dividing_key : DividingTrajectory})
                                 else:
                                         self.unique_spot_properties[int(target_id)].update({self.dividing_key : DividingTrajectory})    
-
-                                        
-                            
-                        # for each tracklet get real_time,z,y,x,total_intensity, mean_intensity, cellradius, distance, prob_inside
-                        self.location_prop_dist = tracklet_properties(
-                            self.tracklets,
-                            self.unique_objects,
-                            self.unique_properties,
-                            self.mask,
-                            None,
-                            self.timed_mask,
-                            [self.xcalibration, self.ycalibration, self.zcalibration, self.tcalibration],
-                            DividingTrajectory
-                        )
-                        self.all_track_properties.append([track_id, self.location_prop_dist, DividingTrajectory])
-                        
+                            current_tracklets_id = []
+                            current_tracklets_t = []
+                            current_tracklets_z = []
+                            current_tracklets_y = []
+                            current_tracklets_x = []
+                            for current_cell_id in  current_cell_ids:
+                                 current_tracklet_id = int(self.unique_spot_properties[current_cell_id][self.uniqueid_key])     
+                                 for unique_tracklet in unique_tracklet_ids:       
+                                     if unique_tracklet == current_tracklet_id:
+                                          t = self.unique_spot_properties[current_cell_id][self.frameid_key]
+                                          z = self.unique_spot_properties[current_cell_id][self.zposid_key]
+                                          y = self.unique_spot_properties[current_cell_id][self.yposid_key]
+                                          x = self.unique_spot_properties[current_cell_id][self.xposid_key]
+                                          current_tracklets_id.append(current_tracklet_id)
+                                          current_tracklets_t.append(t)
+                                          current_tracklets_z.append(z)
+                                          current_tracklets_y.append(y)
+                                          current_tracklets_x.append(x)
+                            current_tracklets = np.stack([current_tracklets_id,current_tracklets_t,current_tracklets_z,current_tracklets_y,current_tracklets_x], axis = 1)
+                            self.unique_tracks[track_id] = current_tracklets              
+                                          
+                      
                         
                 
     def _temporal_plots_trackmate(self):
