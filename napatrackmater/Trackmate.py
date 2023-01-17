@@ -481,7 +481,7 @@ class TrackMate(object):
                                   mean_intensity_ch2 =  all_dict_values[self.mean_intensity_ch2_key]
                                   if current_track_id in current_tracklets:
                                      tracklet_array = current_tracklets[current_track_id]
-                                     current_tracklet_array = np.array([int(float(unique_id)), t, z, y, x])
+                                     current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
                                      current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
 
                                      value_array = current_tracklets_properties[current_track_id]
@@ -489,7 +489,7 @@ class TrackMate(object):
                                      current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
 
                                   else:
-                                     current_tracklet_array = np.array([int(float(unique_id)), t, z, y, x])
+                                     current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
                                      current_tracklets[current_track_id] = current_tracklet_array 
 
                                      current_value_array = np.array([t, gen_id, speed, dcr, mean_intensity_ch1, mean_intensity_ch2])
