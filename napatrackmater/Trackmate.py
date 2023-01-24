@@ -10,6 +10,7 @@ from skimage.segmentation import find_boundaries
 from scipy import spatial
 import dask as da
 from dask.array.image import imread as daskread
+from typing import List
 
 
 class TrackMate(object):
@@ -94,6 +95,8 @@ class TrackMate(object):
         self.generationid_key = 'generation_id'
         self.trackletid_key = 'tracklet_id'
         self.uniqueid_key = 'unique_id'
+        self.afterid_key = 'after_id'
+        self.beforeid_key = 'before_id'
         self.dividing_key = 'dividing_normal'
         self.distance_cell_mask_key = 'distance_cell_mask'
 
@@ -413,37 +416,22 @@ class TrackMate(object):
                                 target_id = edge.get(self.spot_target_id_key)
 
                                 
-                                 
+                                #Root 
                                 if int(source_id) not in all_target_ids:
-                                        generation_id = self.generation_dict[source_id]
-                                        tracklet_id = self.tracklet_dict[source_id]
+                                        
+                                        self._dict_update(self, unique_tracklet_ids, current_cell_ids, edge, source_id, track_id, None, target_id)
 
-                                        unique_id = str(track_id) + str(generation_id) + str(tracklet_id)
-                                        unique_tracklet_ids.append(str(unique_id))
-                                    
-                                        current_cell_ids.append(int(source_id))
-                                        self.unique_spot_properties[int(source_id)].update({self.uniqueid_key : str(unique_id)})
-                                        self.unique_spot_properties[int(source_id)].update({self.trackletid_key : str(tracklet_id)}) 
-                                        self.unique_spot_properties[int(source_id)].update({self.generationid_key : str(generation_id)}) 
-                                        self.unique_spot_properties[int(source_id)].update({self.trackid_key : str(track_id)})
-                                        self.unique_spot_properties[int(source_id)].update({self.directional_change_rate_key : edge.get(self.directional_change_rate_key)})
-                                        self.unique_spot_properties[int(source_id)].update({self.speed_key : edge.get(self.speed_key)})
-                                if int(target_id) not in all_source_ids:
-                                        generation_id = self.generation_dict[target_id]   
-                                        tracklet_id = self.tracklet_dict[target_id]
+                                #Leaf
+                                elif int(target_id) not in all_source_ids:
+                                        self._dict_update(self, unique_tracklet_ids, current_cell_ids, edge, target_id, track_id, source_id, None)
 
-                                        unique_id = str(track_id) + str(generation_id) + str(tracklet_id) 
-                                        unique_tracklet_ids.append(str(unique_id))
-                                    
-                                        current_cell_ids.append(int(target_id)) 
-                                        self.unique_spot_properties[int(target_id)].update({self.uniqueid_key : str(unique_id)})
-                                        self.unique_spot_properties[int(target_id)].update({self.trackletid_key : str(tracklet_id)}) 
-                                        self.unique_spot_properties[int(target_id)].update({self.generationid_key : str(generation_id)})
-                                        self.unique_spot_properties[int(target_id)].update({self.trackid_key : str(track_id)})
-                                        self.unique_spot_properties[int(target_id)].update({self.directional_change_rate_key : edge.get(self.directional_change_rate_key)})
-                                        self.unique_spot_properties[int(target_id)].update({self.speed_key : edge.get(self.speed_key)})
-                                                
-                                                
+                                       
+                                #All other types
+                                elif int(source_id) in all_target_ids and int(target_id) in all_source_ids:
+                                        self._dict_update(self, unique_tracklet_ids, current_cell_ids, edge, source_id, track_id, source_id, target_id)
+                                        
+                                      
+                                                 
 
                                 # Determine if a track has divisions or none
                                 if len(root_splits) > 0:
@@ -508,7 +496,27 @@ class TrackMate(object):
                             daughter_track_id =  int(float(str(self.unique_spot_properties[int(float(k))][self.uniqueid_key])))
                             parent_track_id = int(float(str(self.unique_spot_properties[int(float(v))][self.uniqueid_key])))
                             self.graph_tracks[daughter_track_id] = parent_track_id
-                                
+                            
+               
+                                 
+    def _dict_update(self, unique_tracklet_ids: List, current_cell_ids: List, edge, cell_id, track_id, source_id, target_id):
+
+        generation_id = self.generation_dict[cell_id]
+        tracklet_id = self.tracklet_dict[cell_id]
+
+        unique_id = str(track_id) + str(generation_id) + str(tracklet_id)
+        unique_tracklet_ids.append(str(unique_id))
+    
+        current_cell_ids.append(int(cell_id))
+        self.unique_spot_properties[int(cell_id)].update({self.uniqueid_key : str(unique_id)})
+        self.unique_spot_properties[int(cell_id)].update({self.trackletid_key : str(tracklet_id)}) 
+        self.unique_spot_properties[int(cell_id)].update({self.generationid_key : str(generation_id)}) 
+        self.unique_spot_properties[int(cell_id)].update({self.trackid_key : str(track_id)})
+        self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : edge.get(self.directional_change_rate_key)})
+        self.unique_spot_properties[int(cell_id)].update({self.speed_key : edge.get(self.speed_key)})
+        self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : int(source_id)})
+        self.unique_spot_properties[int(cell_id)].update({self.afterid_key : int(target_id)}) 
+                                    
                 
     def _temporal_plots_trackmate(self):
     
