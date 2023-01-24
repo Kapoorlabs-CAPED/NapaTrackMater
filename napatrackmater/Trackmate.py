@@ -99,6 +99,7 @@ class TrackMate(object):
         self.beforeid_key = 'before_id'
         self.dividing_key = 'dividing_normal'
         self.distance_cell_mask_key = 'distance_cell_mask'
+        self.cellid_key = 'cell_id'
 
         self.mean_intensity_ch1_key = self.track_analysis_spot_keys["mean_intensity_ch1"]
         self.mean_intensity_ch2_key = self.track_analysis_spot_keys["mean_intensity_ch2"]
@@ -381,8 +382,8 @@ class TrackMate(object):
                         testlocation = (Spotobject.get(self.zposid_key), Spotobject.get(self.yposid_key),  Spotobject.get(self.xposid_key))
                         frame = Spotobject.get(self.frameid_key)
                         distance_cell_mask = self._get_boundary_dist(frame, testlocation, Radius)
-
                         self.unique_spot_properties[cell_id] = {
+                            self.cellid_key: int(cell_id), 
                             self.frameid_key : Spotobject.get(self.frameid_key),
                             self.zposid_key : Spotobject.get(self.zposid_key),
                             self.yposid_key : Spotobject.get(self.yposid_key),
@@ -418,17 +419,16 @@ class TrackMate(object):
                                 
                                 #Root 
                                 if int(source_id) not in all_target_ids:
-                                        
-                                        self._dict_update(self, unique_tracklet_ids, current_cell_ids, edge, source_id, track_id, None, target_id)
+                                        self._dict_update(unique_tracklet_ids, current_cell_ids, edge, source_id, track_id, None, target_id)
 
                                 #Leaf
-                                elif int(target_id) not in all_source_ids:
-                                        self._dict_update(self, unique_tracklet_ids, current_cell_ids, edge, target_id, track_id, source_id, None)
+                                if int(target_id) not in all_source_ids:
+                                        self._dict_update(unique_tracklet_ids, current_cell_ids, edge, target_id, track_id, source_id, None)
 
                                        
                                 #All other types
-                                elif int(source_id) in all_target_ids and int(target_id) in all_source_ids:
-                                        self._dict_update(self, unique_tracklet_ids, current_cell_ids, edge, source_id, track_id, source_id, target_id)
+                                else:
+                                        self._dict_update(unique_tracklet_ids, current_cell_ids, edge, source_id, track_id, source_id, target_id)
                                         
                                       
                                                  
@@ -514,8 +514,16 @@ class TrackMate(object):
         self.unique_spot_properties[int(cell_id)].update({self.trackid_key : str(track_id)})
         self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : edge.get(self.directional_change_rate_key)})
         self.unique_spot_properties[int(cell_id)].update({self.speed_key : edge.get(self.speed_key)})
-        self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : int(source_id)})
-        self.unique_spot_properties[int(cell_id)].update({self.afterid_key : int(target_id)}) 
+        if source_id is not None:
+            self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : int(source_id)})
+        else:
+            self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : None}) 
+
+        if target_id is not None:       
+            self.unique_spot_properties[int(cell_id)].update({self.afterid_key : int(target_id)}) 
+        else:
+            self.unique_spot_properties[int(cell_id)].update({self.afterid_key : None})
+                 
                                     
                 
     def _temporal_plots_trackmate(self):
