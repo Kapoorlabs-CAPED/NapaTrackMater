@@ -348,9 +348,9 @@ class TrackMate(object):
                     .findall("TrackID")
                 ]
                 
-                self.AllTrackIds.append("")
-                self.DividingTrackIds.append("")
-                self.NormalTrackIds.append("")
+                self.AllTrackIds.append(None)
+                self.DividingTrackIds.append(None)
+                self.NormalTrackIds.append(None)
                 
                 self.AllTrackIds.append(self.TrackidBox)
                 self.DividingTrackIds.append(self.TrackidBox)
@@ -436,13 +436,17 @@ class TrackMate(object):
                                 # Determine if a track has divisions or none
                                 if len(root_splits) > 0:
                                     DividingTrajectory = True
-                                    self.AllTrackIds.append(str(track_id))
-                                    self.DividingTrackIds.append(str(track_id))
+                                    if str(track_id) not in self.AllTrackIds:
+                                       self.AllTrackIds.append(str(track_id))
+                                    if str(track_id) not in self.DividingTrackIds:     
+                                      self.DividingTrackIds.append(str(track_id))
                                          
                                 else:
                                     DividingTrajectory = False
-                                    self.AllTrackIds.append(str(track_id))
-                                    self.NormalTrackIds.append(str(track_id))
+                                    if str(track_id) not in self.AllTrackIds:
+                                        self.AllTrackIds.append(str(track_id))
+                                    if str(track_id) not in self.NormalTrackIds:    
+                                       self.NormalTrackIds.append(str(track_id))
 
                                 if int(source_id) not in all_target_ids:
                                         self.unique_spot_properties[int(source_id)].update({self.dividing_key : DividingTrajectory})
@@ -465,22 +469,23 @@ class TrackMate(object):
                                   dcr = float(all_dict_values[self.directional_change_rate_key])
                                   dcr = scale_value(float(dcr))
                                   speed = scale_value(float(speed))
-                                  mean_intensity_ch1 =  all_dict_values[self.mean_intensity_ch1_key]
-                                  mean_intensity_ch2 =  all_dict_values[self.mean_intensity_ch2_key]
+                                  mean_intensity_ch1 =  float(all_dict_values[self.mean_intensity_ch1_key])
+                                  mean_intensity_ch2 =  float(all_dict_values[self.mean_intensity_ch2_key])
+                                  volume_pixels = float(all_dict_values[self.quality_key])
                                   if current_track_id in current_tracklets:
                                      tracklet_array = current_tracklets[current_track_id]
                                      current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
                                      current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
 
                                      value_array = current_tracklets_properties[current_track_id]
-                                     current_value_array = np.array([t, gen_id, speed, dcr, mean_intensity_ch1, mean_intensity_ch2])
+                                     current_value_array = np.array([t, gen_id, speed, dcr, mean_intensity_ch1, mean_intensity_ch2, volume_pixels])
                                      current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
 
                                   else:
                                      current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
                                      current_tracklets[current_track_id] = current_tracklet_array 
 
-                                     current_value_array = np.array([t, gen_id, speed, dcr, mean_intensity_ch1, mean_intensity_ch2])
+                                     current_value_array = np.array([t, gen_id, speed, dcr, mean_intensity_ch1, mean_intensity_ch2, volume_pixels])
                                      current_tracklets_properties[current_track_id] = current_value_array
                                            
 
@@ -497,7 +502,8 @@ class TrackMate(object):
                             parent_track_id = int(float(str(self.unique_spot_properties[int(float(v))][self.uniqueid_key])))
                             self.graph_tracks[daughter_track_id] = parent_track_id
                             
-               
+                
+                
                                  
     def _dict_update(self, unique_tracklet_ids: List, current_cell_ids: List, edge, cell_id, track_id, source_id, target_id):
 
