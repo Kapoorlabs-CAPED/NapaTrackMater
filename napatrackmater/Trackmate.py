@@ -471,7 +471,7 @@ class TrackMate(object):
                                   speed = scale_value(float(speed))
                                   mean_intensity_ch1 =  float(all_dict_values[self.mean_intensity_ch1_key])
                                   mean_intensity_ch2 =  float(all_dict_values[self.mean_intensity_ch2_key])
-                                  volume_pixels = float(all_dict_values[self.quality_key])
+                                  volume_pixels = int(float(all_dict_values[self.quality_key]))
                                   if current_track_id in current_tracklets:
                                      tracklet_array = current_tracklets[current_track_id]
                                      current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
