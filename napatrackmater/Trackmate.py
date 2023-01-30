@@ -844,13 +844,6 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
         posiy = track_analysis_spot_keys["posiy"]
         posiz = track_analysis_spot_keys["posiz"]
         frame = track_analysis_spot_keys["frame"]
-        Tid = spot_dataset[track_id].astype("float")
-        indices = np.where(Tid == 0)
-        maxtrack_id = max(Tid)
-        condition_indices = spot_dataset_index[indices]
-        Tid[condition_indices] = maxtrack_id + 1
-
-        AllValues[track_id] = Tid
         LocationX = (
             spot_dataset[posix].astype("float") / xcalibration
         ).astype("int")
@@ -881,7 +874,8 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
         Attributeids = []
         Attributeids.append(AttributeBoxname)
         for attributename in track_analysis_spot_keys.keys():
-            Attributeids.append(attributename)    
+            if k != track_id:
+               Attributeids.append(attributename)    
             
         
         return Attributeids, AllValues     
