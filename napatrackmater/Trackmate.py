@@ -879,8 +879,11 @@ def get_track_dataset(track_dataset, track_analysis_spot_keys, track_analysis_tr
 
         AllTrackValues = {}
         track_id = track_analysis_spot_keys["track_id"]
+        Tid = track_dataset[track_id].astype("float")
+       
+        AllTrackValues[track_id] = Tid
       
-        AllTrackValues[track_id] = float(track_id)
+        AllTrackValues[track_id] = track_id
         for (k, v) in track_analysis_track_keys.items():
 
                 x = track_dataset[v].astype("float")
