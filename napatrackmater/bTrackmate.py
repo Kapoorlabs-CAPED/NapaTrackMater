@@ -1417,33 +1417,38 @@ class VizCorrect(object):
         def Relabel(self, image, locations):
         
                 print("Relabelling image with chosen trackmate attribute")
-                Newseg_image = np.copy(image)
-                originallabels = []
-                newlabels = []
-                for relabelval, centroid in locations:
+                NewSegimage = image.copy()
+                for p in range(0, NewSegimage.shape[0]):
 
-                    if len(Newseg_image.shape) == 4:
-                        time, z, y, x = centroid
-                    else:
-                        time, y, x = centroid
+                    sliceimage = NewSegimage[p, :]
+                    originallabels = []
+                    newlabels = []
+                    for relabelval, centroid in locations:
+                        if len(NewSegimage.shape) == 4:
+                            time, z, y, x = centroid
+                        else:
+                            time, y, x = centroid
 
-                    if len(Newseg_image.shape) == 4:
-                        originallabel = Newseg_image[time, z, y, x]
-                    else:
-                        originallabel = Newseg_image[time, y, x]
+                        if p == int(time):
 
-                    if originallabel == 0:
-                        relabelval = 0
-                    if math.isnan(relabelval):
-                        relabelval = -1
-                    originallabels.append(int(originallabel))
-                    newlabels.append(int(relabelval))
+                            if len(NewSegimage.shape) == 4:
+                                originallabel = sliceimage[z, y, x]
+                            else:
+                                originallabel = sliceimage[y, x]
 
-                relabeled = map_array(
-                    Newseg_image, np.asarray(originallabels), np.asarray(newlabels)
-                )
+                            if originallabel == 0:
+                                relabelval = 0
+                            if math.isnan(relabelval):
+                                relabelval = -1
+                            originallabels.append(int(originallabel))
+                            newlabels.append(int(relabelval))
 
-                return relabeled                     
+                    relabeled = map_array(
+                        sliceimage, np.asarray(originallabels), np.asarray(newlabels)
+                    )
+                    NewSegimage[p, :] = relabeled
+
+        return NewSegimage                     
                
               
                     
