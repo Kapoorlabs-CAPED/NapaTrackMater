@@ -835,7 +835,6 @@ def get_csv_data(csv):
         return dataset, dataset_index
     
 def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycalibration, zcalibration, AttributeBoxname):
-        print(xcalibration, ycalibration, zcalibration)
         AllValues = {}
         posix = track_analysis_spot_keys["posix"]
         posiy = track_analysis_spot_keys["posiy"]
@@ -851,7 +850,6 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
         LocationZ = (
             spot_dataset[posiz].astype("float") / zcalibration
         ).astype("int")
-        print(LocationZ, spot_dataset[posiz].astype("float"))
         LocationT = (spot_dataset[frame].astype("float")).astype("int")
         AllValues[posix] = LocationX
         AllValues[posiy] = LocationY
@@ -860,10 +858,11 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
 
         for (k,v) in track_analysis_spot_keys.items():
             if (
+                 
                 k != posix
-                and k != posiy
-                and k != posiz
-                and k != frame
+                or k != posiy
+                or k != posiz
+                or k != frame
             ):
 
                 AllValues[v] = spot_dataset[v].astype("float")
