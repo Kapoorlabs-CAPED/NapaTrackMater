@@ -867,12 +867,12 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
                 and k != frame
             ):
 
-                AllValues[k] = spot_dataset[v].astype("float")
+                AllValues[v] = spot_dataset[v].astype("float")
 
         Attributeids = []
         Attributeids.append(AttributeBoxname)
         for attributename in track_analysis_spot_keys.keys():
-            if k != track_id:
+            if attributename != track_id:
               Attributeids.append(attributename)    
             
         
