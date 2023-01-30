@@ -135,9 +135,9 @@ class TrackMate(object):
 
     def _get_attributes(self):
             
-             self.Attributeids, self.AllValues =  get_spot_dataset(self.spot_dataset, self.spot_dataset_index, self.track_analysis_spot_keys, self.xcalibration, self.ycalibration, self.zcalibration, self.AttributeBoxname)
+             self.Attributeids, self.AllValues =  get_spot_dataset(self.spot_dataset, self.track_analysis_spot_keys, self.xcalibration, self.ycalibration, self.zcalibration, self.AttributeBoxname)
         
-             self.TrackAttributeids, self.AllTrackValues = get_track_dataset(self.track_dataset, self.track_dataset_index, self.track_analysis_spot_keys, self.track_analysis_track_keys, self.TrackAttributeBoxname)
+             self.TrackAttributeids, self.AllTrackValues = get_track_dataset(self.track_dataset,  self.track_analysis_spot_keys, self.track_analysis_track_keys, self.TrackAttributeBoxname)
              
              self.AllEdgesValues = get_edges_dataset(self.edges_dataset, self.edges_dataset_index, self.track_analysis_spot_keys, self.track_analysis_edges_keys)
         
@@ -834,7 +834,7 @@ def get_csv_data(csv):
         dataset_index = dataset.index
         return dataset, dataset_index
     
-def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys, xcalibration, ycalibration, zcalibration, AttributeBoxname):
+def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycalibration, zcalibration, AttributeBoxname):
 
         AllValues = {}
         posix = track_analysis_spot_keys["posix"]
@@ -875,10 +875,12 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
         
         return Attributeids, AllValues     
     
-def get_track_dataset(track_dataset, track_dataset_index, track_analysis_spot_keys, track_analysis_track_keys, TrackAttributeBoxname):
+def get_track_dataset(track_dataset, track_analysis_spot_keys, track_analysis_track_keys, TrackAttributeBoxname):
 
         AllTrackValues = {}
+        track_id = track_analysis_spot_keys["track_id"]
       
+        AllTrackValues[track_id] = track_id
         for (k, v) in track_analysis_track_keys.items():
 
                 x = track_dataset[v].astype("float")
