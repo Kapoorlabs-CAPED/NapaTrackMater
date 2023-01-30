@@ -856,7 +856,7 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
         for (k,v) in track_analysis_spot_keys.items():
             
 
-                AllValues[k] = spot_dataset[v].astype("float")
+                AllValues[v] = spot_dataset[v].astype("float")
 
         AllValues[posix] = LocationX
         AllValues[posiy] = LocationY
@@ -864,7 +864,7 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
         AllValues[frame] = LocationT
         Attributeids = []
         Attributeids.append(AttributeBoxname)
-        for attributename in track_analysis_spot_keys.keys():
+        for attributename in track_analysis_spot_keys.values():
               Attributeids.append(attributename)    
             
         
