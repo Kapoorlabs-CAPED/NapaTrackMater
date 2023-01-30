@@ -876,7 +876,7 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
 
         Attributeids = []
         Attributeids.append(AttributeBoxname)
-        for attributename in track_analysis_spot_keys.keys():
+        for attributename in track_analysis_spot_keys.values():
               Attributeids.append(attributename)    
             
         
