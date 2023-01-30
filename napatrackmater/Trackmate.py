@@ -377,11 +377,11 @@ class TrackMate(object):
                         MEAN_INTENSITY_CH1 = Spotobject.get(self.mean_intensity_ch1_key)
                         TOTAL_INTENSITY_CH2 = Spotobject.get(self.total_intensity_ch2_key)
                         MEAN_INTENSITY_CH2 = Spotobject.get(self.mean_intensity_ch2_key)
-                        Radius = Spotobject.get(self.radius_key)
+                        RADIUS = Spotobject.get(self.radius_key)
                         QUALITY = Spotobject.get(self.quality_key)
                         testlocation = (Spotobject.get(self.zposid_key), Spotobject.get(self.yposid_key),  Spotobject.get(self.xposid_key))
                         frame = Spotobject.get(self.frameid_key)
-                        distance_cell_mask = self._get_boundary_dist(frame, testlocation, Radius)
+                        distance_cell_mask = self._get_boundary_dist(frame, testlocation, RADIUS)
                         self.unique_spot_properties[cell_id] = {
                             self.cellid_key: int(cell_id), 
                             self.frameid_key : Spotobject.get(self.frameid_key),
@@ -392,7 +392,7 @@ class TrackMate(object):
                             self.mean_intensity_ch1_key : MEAN_INTENSITY_CH1,
                             self.total_intensity_ch2_key : TOTAL_INTENSITY_CH2,
                             self.mean_intensity_ch2_key : MEAN_INTENSITY_CH2,
-                            self.radius_key : Radius,
+                            self.radius_key : RADIUS,
                             self.quality_key : QUALITY,
                             self.distance_cell_mask_key: distance_cell_mask
                         }
