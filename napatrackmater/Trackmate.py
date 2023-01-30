@@ -837,17 +837,11 @@ def get_csv_data(csv):
 def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys, xcalibration, ycalibration, zcalibration, AttributeBoxname):
 
         AllValues = {}
-        track_id = track_analysis_spot_keys["track_id"]
         posix = track_analysis_spot_keys["posix"]
         posiy = track_analysis_spot_keys["posiy"]
         posiz = track_analysis_spot_keys["posiz"]
         frame = track_analysis_spot_keys["frame"]
-        Tid = spot_dataset[track_id].astype("float")
-        indices = np.where(Tid == 0)
-        maxtrack_id = max(Tid)
-        condition_indices = spot_dataset_index[indices]
-        Tid[condition_indices] = maxtrack_id + 1
-        AllValues[track_id] = Tid
+        
         LocationX = (
             spot_dataset[posix].astype("float") / xcalibration
         ).astype("int")
@@ -865,8 +859,7 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
 
         for (k,v) in track_analysis_spot_keys.items():
             if (
-                k != track_id
-                and k != posix
+                k != posix
                 and k != posiy
                 and k != posiz
                 and k != frame
@@ -885,16 +878,9 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
 def get_track_dataset(track_dataset, track_dataset_index, track_analysis_spot_keys, track_analysis_track_keys, TrackAttributeBoxname):
 
         AllTrackValues = {}
-        track_id = track_analysis_spot_keys["track_id"]
-        Tid = track_dataset[track_id].astype("float")
-        indices = np.where(Tid == 0)
-        maxtrack_id = max(Tid)
-        condition_indices = track_dataset_index[indices]
-        Tid[condition_indices] = maxtrack_id + 1
-        AllTrackValues[track_id] = Tid
+      
         for (k, v) in track_analysis_track_keys.items():
 
-            if k != track_id:
                 x = track_dataset[v].astype("float")
                 minval = min(x)
                 maxval = max(x)
