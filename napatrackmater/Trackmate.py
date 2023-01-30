@@ -541,7 +541,7 @@ class TrackMate(object):
                 dcr_key = self.track_analysis_edges_keys["directional_change_rate"]
                 speed_key = self.track_analysis_edges_keys["speed"]
                 disp_key = self.track_analysis_edges_keys["displacement"]
-
+                print(self.AllValues[self.radius_key])
                 starttime = int(min(self.AllValues[self.frameid_key]))
                 endtime = int(max(self.AllValues[self.frameid_key]))
                 for (
@@ -859,7 +859,6 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
         AllValues[frame] = LocationT
 
         for (k,v) in track_analysis_spot_keys.items():
-            print('keys', k,v) 
             if (
                 k != track_id
                 and k != posix
@@ -869,7 +868,6 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
             ):
 
                 AllValues[k] = spot_dataset[v].astype("float")
-                print(k, AllValues[k])
 
         Attributeids = []
         Attributeids.append(AttributeBoxname)
