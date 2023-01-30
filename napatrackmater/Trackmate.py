@@ -866,7 +866,7 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
         AllValues[posiz] = LocationZ
         AllValues[frame] = LocationT
 
-        for k in track_analysis_spot_keys.values():
+        for k in track_analysis_spot_keys.items():
 
             if (
                 k != track_id
