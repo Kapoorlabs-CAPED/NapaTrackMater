@@ -844,20 +844,7 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
         posiy = track_analysis_spot_keys["posiy"]
         posiz = track_analysis_spot_keys["posiz"]
         frame = track_analysis_spot_keys["frame"]
-        LocationX = (
-            spot_dataset[posix].astype("float") / xcalibration
-        ).astype("int")
-        LocationY = (
-            spot_dataset[posiy].astype("float") / ycalibration
-        ).astype("int")
-        LocationZ = (
-            spot_dataset[posiz].astype("float") / zcalibration
-        ).astype("int")
-        LocationT = (spot_dataset[frame].astype("float")).astype("int")
-        AllValues[posix] = LocationX
-        AllValues[posiy] = LocationY
-        AllValues[posiz] = LocationZ
-        AllValues[frame] = LocationT
+        
 
         for (k,v) in track_analysis_spot_keys.items():
 
