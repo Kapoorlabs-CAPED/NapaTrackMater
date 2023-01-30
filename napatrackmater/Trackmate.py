@@ -544,7 +544,7 @@ class TrackMate(object):
 
                 starttime = int(min(self.AllValues[self.frameid_key]))
                 endtime = int(max(self.AllValues[self.frameid_key]))
-
+                print(self.AllValues)
                 for (
                     sourceid,
                     dcrid,
