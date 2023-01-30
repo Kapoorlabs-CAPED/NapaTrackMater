@@ -866,7 +866,7 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
         AllValues[posiz] = LocationZ
         AllValues[frame] = LocationT
 
-        for k in track_analysis_spot_keys.items():
+        for (k,v) in track_analysis_spot_keys.items():
 
             if (
                 k != track_id
@@ -876,7 +876,7 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
                 and k != frame
             ):
 
-                AllValues[k] = spot_dataset[k].astype("float")
+                AllValues[k] = spot_dataset[v].astype("float")
 
         Attributeids = []
         Attributeids.append(AttributeBoxname)
