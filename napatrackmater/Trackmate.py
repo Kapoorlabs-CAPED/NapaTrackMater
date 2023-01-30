@@ -878,7 +878,7 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
 def get_track_dataset(track_dataset, track_analysis_spot_keys, track_analysis_track_keys, TrackAttributeBoxname):
 
         AllTrackValues = {}
-        track_id = track_analysis_spot_keys["track_id"]
+        track_id = track_analysis_spot_keys["track_id"].astype("float")
       
         AllTrackValues[track_id] = track_id
         for (k, v) in track_analysis_track_keys.items():
