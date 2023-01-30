@@ -541,7 +541,6 @@ class TrackMate(object):
                 dcr_key = self.track_analysis_edges_keys["directional_change_rate"]
                 speed_key = self.track_analysis_edges_keys["speed"]
                 disp_key = self.track_analysis_edges_keys["displacement"]
-                print(self.AllValues[self.radius_key])
                 starttime = int(min(self.AllValues[self.frameid_key]))
                 endtime = int(max(self.AllValues[self.frameid_key]))
                 for (
@@ -843,6 +842,12 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
         posiy = track_analysis_spot_keys["posiy"]
         posiz = track_analysis_spot_keys["posiz"]
         frame = track_analysis_spot_keys["frame"]
+        Tid = spot_dataset[track_id].astype("float")
+        indices = np.where(Tid == 0)
+        maxtrack_id = max(Tid)
+        condition_indices = spot_dataset_index[indices]
+        Tid[condition_indices] = maxtrack_id + 1
+        AllValues[track_id] = Tid
         LocationX = (
             spot_dataset[posix].astype("float") / xcalibration
         ).astype("int")
@@ -872,7 +877,6 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
         Attributeids = []
         Attributeids.append(AttributeBoxname)
         for attributename in track_analysis_spot_keys.keys():
-            if attributename != track_id:
               Attributeids.append(attributename)    
             
         
