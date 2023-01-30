@@ -544,7 +544,6 @@ class TrackMate(object):
 
                 starttime = int(min(self.AllValues[self.frameid_key]))
                 endtime = int(max(self.AllValues[self.frameid_key]))
-                print(self.AllValues)
                 for (
                     sourceid,
                     dcrid,
@@ -870,7 +869,7 @@ def get_spot_dataset(spot_dataset, spot_dataset_index, track_analysis_spot_keys,
             ):
 
                 AllValues[k] = spot_dataset[v].astype("float")
-                
+                print(k, AllValues[k])
 
         Attributeids = []
         Attributeids.append(AttributeBoxname)
