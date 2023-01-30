@@ -856,7 +856,7 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
         for (k,v) in track_analysis_spot_keys.items():
             
 
-                AllValues[v] = spot_dataset[v].astype("float")
+                AllValues[k] = spot_dataset[v].astype("float")
 
         AllValues[posix] = LocationX
         AllValues[posiy] = LocationY
