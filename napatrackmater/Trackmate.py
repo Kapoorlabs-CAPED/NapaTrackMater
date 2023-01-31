@@ -529,7 +529,7 @@ class TrackMate(object):
             self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : int(source_id)})
             vec_1 = [float(self.unique_spot_properties[int(cell_id)][self.xposid_key]) - float(self.unique_spot_properties[int(source_id)][self.xposid_key]), 
                             float(self.unique_spot_properties[int(cell_id)][self.yposid_key]) - float(self.unique_spot_properties[int(source_id)][self.yposid_key]), 
-                            float(self.unique_spot_properties[int(cell_id)][self.zposid_key]) -  float(self.unique_spot_properties[int(source_id)][self.zposid_key]])
+                            float(self.unique_spot_properties[int(cell_id)][self.zposid_key]) -  float(self.unique_spot_properties[int(source_id)][self.zposid_key])]
             delta_vec = [self.xcalibration, self.ycalibration,self.zcalibration  ]
             speed_vec = np.dot(vec_1, delta_vec)
             speed = np.sqrt(np.dot(speed_vec, speed_vec))/self.tcalibration
