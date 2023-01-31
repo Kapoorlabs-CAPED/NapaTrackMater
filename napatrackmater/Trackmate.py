@@ -386,16 +386,16 @@ class TrackMate(object):
                         self.unique_spot_properties[cell_id] = {
                             self.cellid_key: int(cell_id), 
                             self.frameid_key : Spotobject.get(self.frameid_key),
-                            self.zposid_key : Spotobject.get(self.zposid_key),
-                            self.yposid_key : Spotobject.get(self.yposid_key),
-                            self.xposid_key : Spotobject.get(self.xposid_key),
-                            self.total_intensity_ch1_key : TOTAL_INTENSITY_CH1,
-                            self.mean_intensity_ch1_key : MEAN_INTENSITY_CH1,
-                            self.total_intensity_ch2_key : TOTAL_INTENSITY_CH2,
-                            self.mean_intensity_ch2_key : MEAN_INTENSITY_CH2,
-                            self.radius_key : RADIUS,
-                            self.quality_key : QUALITY,
-                            self.distance_cell_mask_key: distance_cell_mask
+                            self.zposid_key : round(Spotobject.get(self.zposid_key), 3),
+                            self.yposid_key : round(Spotobject.get(self.yposid_key), 3),
+                            self.xposid_key : round(Spotobject.get(self.xposid_key), 3),
+                            self.total_intensity_ch1_key : round(TOTAL_INTENSITY_CH1),
+                            self.mean_intensity_ch1_key : round(MEAN_INTENSITY_CH1),
+                            self.total_intensity_ch2_key : round(TOTAL_INTENSITY_CH2),
+                            self.mean_intensity_ch2_key : round(MEAN_INTENSITY_CH2),
+                            self.radius_key : round(RADIUS),
+                            self.quality_key : round(QUALITY),
+                            self.distance_cell_mask_key: round(distance_cell_mask,2)
                         }
 
 
@@ -533,7 +533,7 @@ class TrackMate(object):
             delta_vec = [self.xcalibration, self.ycalibration,self.zcalibration  ]
             speed_vec = np.dot(vec_1, delta_vec)
             speed = np.sqrt(np.dot(speed_vec, speed_vec))/self.tcalibration
-            self.unique_spot_properties[int(cell_id)].update({self.speed_key : speed})
+            self.unique_spot_properties[int(cell_id)].update({self.speed_key : round(speed, 3)})
             if str(source_id) in self.edge_source_lookup:
                     pre_source_id = self.edge_source_lookup[str(source_id)]
                     
@@ -547,8 +547,8 @@ class TrackMate(object):
                     acc_vec = np.dot(vec_2, delta_vec)
                     acc = np.sqrt(np.dot(acc_vec, acc_vec))/self.tcalibration
                     angle = angular_change(vec_0, vec_1)
-                    self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : angle})
-                    self.unique_spot_properties[int(cell_id)].update({self.acceleration_key : acc})
+                    self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : round(angle, 3)})
+                    self.unique_spot_properties[int(cell_id)].update({self.acceleration_key : round(acc, 3)})
         else:
             self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : None}) 
 
@@ -885,10 +885,10 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
 
                 AllValues[v] = spot_dataset[v].astype("float")
 
-        AllValues[posix] = LocationX
-        AllValues[posiy] = LocationY
-        AllValues[posiz] = LocationZ
-        AllValues[frame] = LocationT
+        AllValues[posix] = round(LocationX,3)
+        AllValues[posiy] = round(LocationY,3)
+        AllValues[posiz] = round(LocationZ,3)
+        AllValues[frame] = round(LocationT,3)
         Attributeids = []
         Attributeids.append(AttributeBoxname)
         for attributename in track_analysis_spot_keys.values():
@@ -915,7 +915,7 @@ def get_track_dataset(track_dataset, track_analysis_spot_keys, track_analysis_tr
 
                     x = x + 1
 
-                AllTrackValues[k] = x
+                AllTrackValues[k] = round(x, 3)
 
         TrackAttributeids = []
         TrackAttributeids.append(TrackAttributeBoxname)
