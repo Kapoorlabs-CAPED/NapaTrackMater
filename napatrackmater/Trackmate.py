@@ -100,6 +100,7 @@ class TrackMate(object):
         self.dividing_key = 'dividing_normal'
         self.distance_cell_mask_key = 'distance_cell_mask'
         self.cellid_key = 'cell_id'
+        self.acceleration_key = 'acceleration'
 
         self.mean_intensity_ch1_key = self.track_analysis_spot_keys["mean_intensity_ch1"]
         self.mean_intensity_ch2_key = self.track_analysis_spot_keys["mean_intensity_ch2"]
@@ -520,21 +521,34 @@ class TrackMate(object):
         self.unique_spot_properties[int(cell_id)].update({self.trackletid_key : str(tracklet_id)}) 
         self.unique_spot_properties[int(cell_id)].update({self.generationid_key : str(generation_id)}) 
         self.unique_spot_properties[int(cell_id)].update({self.trackid_key : str(track_id)})
-        
-        self.unique_spot_properties[int(cell_id)].update({self.speed_key : edge.get(self.speed_key)})
+        self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : 0.0})
+        self.unique_spot_properties[int(cell_id)].update({self.speed_key : 0.0})
+        self.unique_spot_properties[int(cell_id)].update({self.acceleration_key : 0.0})
+
         if source_id is not None:
             self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : int(source_id)})
+            vec_1 = [self.unique_spot_properties[int(cell_id)][self.xposid_key] - self.unique_spot_properties[int(source_id)][self.xposid_key], 
+                            self.unique_spot_properties[int(cell_id)][self.yposid_key] - self.unique_spot_properties[int(source_id)][self.yposid_key], 
+                            self.unique_spot_properties[int(cell_id)][self.zposid_key] -  self.unique_spot_properties[int(source_id)][self.zposid_key]]
+            delta_vec = [self.xcalibration, self.ycalibration,self.zcalibration  ]
+            speed_vec = np.dot(vec_1, delta_vec)
+            speed = np.sqrt(np.dot(speed_vec, speed_vec))/self.tcalibration
+            self.unique_spot_properties[int(cell_id)].update({self.speed_key : speed})
             if source_id in self.edge_source_lookup:
                     pre_source_id = self.edge_source_lookup[int(source_id)]
             
-                    vec_0 = (self.unique_spot_properties[int(source_id)][self.xposid_key] - self.unique_spot_properties[int(pre_source_id)][self.xposid_key], 
+                    vec_0 = [self.unique_spot_properties[int(source_id)][self.xposid_key] - self.unique_spot_properties[int(pre_source_id)][self.xposid_key], 
                             self.unique_spot_properties[int(source_id)][self.yposid_key] - self.unique_spot_properties[int(pre_source_id)][self.yposid_key], 
-                            self.unique_spot_properties[int(source_id)][self.zposid_key] -  self.unique_spot_properties[int(pre_source_id)][self.zposid_key])
-                    vec_1 = (self.unique_spot_properties[int(cell_id)][self.xposid_key] - self.unique_spot_properties[int(source_id)][self.xposid_key], 
-                            self.unique_spot_properties[int(cell_id)][self.yposid_key] - self.unique_spot_properties[int(source_id)][self.yposid_key], 
-                            self.unique_spot_properties[int(cell_id)][self.zposid_key] -  self.unique_spot_properties[int(source_id)][self.zposid_key])
+                            self.unique_spot_properties[int(source_id)][self.zposid_key] -  self.unique_spot_properties[int(pre_source_id)][self.zposid_key]]
+                    
+                    vec_2 = [self.unique_spot_properties[int(cell_id)][self.xposid_key] - 2 * self.unique_spot_properties[int(source_id)][self.xposid_key] + self.unique_spot_properties[int(pre_source_id)][self.xposid_key], 
+                            self.unique_spot_properties[int(cell_id)][self.yposid_key] - 2 * self.unique_spot_properties[int(source_id)][self.yposid_key] + self.unique_spot_properties[int(pre_source_id)][self.yposid_key], 
+                            self.unique_spot_properties[int(cell_id)][self.zposid_key] -  2 * self.unique_spot_properties[int(source_id)][self.zposid_key]] + self.unique_spot_properties[int(pre_source_id)][self.zposid_key]]
+                    acc_vec = np.dot(vec_2, delta_vec)
+                    acc = np.sqrt(np.dot(acc_vec, acc_vec))/self.tcalibration
                     angle = angular_change(vec_0, vec_1)
                     self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : angle})
+                    self.unique_spot_properties[int(cell_id)].update({self.acceleration_key : acc})
         else:
             self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : None}) 
 
