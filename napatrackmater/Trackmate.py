@@ -385,17 +385,17 @@ class TrackMate(object):
                         distance_cell_mask = self._get_boundary_dist(frame, testlocation, RADIUS)
                         self.unique_spot_properties[cell_id] = {
                             self.cellid_key: int(cell_id), 
-                            self.frameid_key : Spotobject.get(self.frameid_key),
-                            self.zposid_key : round(Spotobject.get(self.zposid_key), 3),
-                            self.yposid_key : round(Spotobject.get(self.yposid_key), 3),
-                            self.xposid_key : round(Spotobject.get(self.xposid_key), 3),
-                            self.total_intensity_ch1_key : round(TOTAL_INTENSITY_CH1),
-                            self.mean_intensity_ch1_key : round(MEAN_INTENSITY_CH1),
-                            self.total_intensity_ch2_key : round(TOTAL_INTENSITY_CH2),
-                            self.mean_intensity_ch2_key : round(MEAN_INTENSITY_CH2),
-                            self.radius_key : round(RADIUS),
-                            self.quality_key : round(QUALITY),
-                            self.distance_cell_mask_key: round(distance_cell_mask,2)
+                            self.frameid_key : float(Spotobject.get(self.frameid_key)),
+                            self.zposid_key : round(float(Spotobject.get(self.zposid_key), 3)),
+                            self.yposid_key : round(float(Spotobject.get(self.yposid_key), 3)),
+                            self.xposid_key : round(float(Spotobject.get(self.xposid_key), 3)),
+                            self.total_intensity_ch1_key : round(float(TOTAL_INTENSITY_CH1)),
+                            self.mean_intensity_ch1_key : round(float(MEAN_INTENSITY_CH1)),
+                            self.total_intensity_ch2_key : round(float(TOTAL_INTENSITY_CH2)),
+                            self.mean_intensity_ch2_key : round(float(MEAN_INTENSITY_CH2)),
+                            self.radius_key : round(float(RADIUS)),
+                            self.quality_key : round(float(QUALITY)),
+                            self.distance_cell_mask_key: round(float(distance_cell_mask,2))
                         }
 
 
