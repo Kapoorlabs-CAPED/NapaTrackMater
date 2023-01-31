@@ -535,7 +535,7 @@ class TrackMate(object):
             speed = np.sqrt(np.dot(speed_vec, speed_vec))/self.tcalibration
             self.unique_spot_properties[int(cell_id)].update({self.speed_key : speed})
             if str(source_id) in self.edge_source_lookup:
-                    pre_source_id = self.edge_source_lookup[int(source_id)]
+                    pre_source_id = self.edge_source_lookup[str(source_id)]
                     
                     vec_0 = [float(self.unique_spot_properties[int(source_id)][self.xposid_key]) - float(self.unique_spot_properties[int(pre_source_id)][self.xposid_key]), 
                             float(self.unique_spot_properties[int(source_id)][self.yposid_key]) - float(self.unique_spot_properties[int(pre_source_id)][self.yposid_key]), 
