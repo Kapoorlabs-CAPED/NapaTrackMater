@@ -1448,7 +1448,7 @@ class VizCorrect(object):
                     )
                     NewSegimage[p, :] = relabeled
 
-        return NewSegimage                     
+                return NewSegimage                     
                
               
                     
