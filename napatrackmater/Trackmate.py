@@ -543,7 +543,7 @@ class TrackMate(object):
                     
                     vec_2 = [self.unique_spot_properties[int(cell_id)][self.xposid_key] - 2 * self.unique_spot_properties[int(source_id)][self.xposid_key] + self.unique_spot_properties[int(pre_source_id)][self.xposid_key], 
                             self.unique_spot_properties[int(cell_id)][self.yposid_key] - 2 * self.unique_spot_properties[int(source_id)][self.yposid_key] + self.unique_spot_properties[int(pre_source_id)][self.yposid_key], 
-                            self.unique_spot_properties[int(cell_id)][self.zposid_key] -  2 * self.unique_spot_properties[int(source_id)][self.zposid_key]] + self.unique_spot_properties[int(pre_source_id)][self.zposid_key]]
+                            self.unique_spot_properties[int(cell_id)][self.zposid_key] -  2 * self.unique_spot_properties[int(source_id)][self.zposid_key] + self.unique_spot_properties[int(pre_source_id)][self.zposid_key]]
                     acc_vec = np.dot(vec_2, delta_vec)
                     acc = np.sqrt(np.dot(acc_vec, acc_vec))/self.tcalibration
                     angle = angular_change(vec_0, vec_1)
