@@ -396,6 +396,8 @@ class TrackMate(object):
                             self.quality_key : QUALITY,
                             self.distance_cell_mask_key: distance_cell_mask
                         }
+
+
                 for track in self.tracks.findall('Track'):
 
                     track_id = int(track.get(self.trackid_key))
@@ -518,10 +520,21 @@ class TrackMate(object):
         self.unique_spot_properties[int(cell_id)].update({self.trackletid_key : str(tracklet_id)}) 
         self.unique_spot_properties[int(cell_id)].update({self.generationid_key : str(generation_id)}) 
         self.unique_spot_properties[int(cell_id)].update({self.trackid_key : str(track_id)})
-        self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : edge.get(self.directional_change_rate_key)})
+        
         self.unique_spot_properties[int(cell_id)].update({self.speed_key : edge.get(self.speed_key)})
         if source_id is not None:
             self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : int(source_id)})
+            if source_id in self.edge_source_lookup:
+                    pre_source_id = self.edge_source_lookup[int(source_id)]
+            
+                    vec_0 = (self.unique_spot_properties[int(source_id)][self.xposid_key] - self.unique_spot_properties[int(pre_source_id)][self.xposid_key], 
+                            self.unique_spot_properties[int(source_id)][self.yposid_key] - self.unique_spot_properties[int(pre_source_id)][self.yposid_key], 
+                            self.unique_spot_properties[int(source_id)][self.zposid_key] -  self.unique_spot_properties[int(pre_source_id)][self.zposid_key])
+                    vec_1 = (self.unique_spot_properties[int(cell_id)][self.xposid_key] - self.unique_spot_properties[int(source_id)][self.xposid_key], 
+                            self.unique_spot_properties[int(cell_id)][self.yposid_key] - self.unique_spot_properties[int(source_id)][self.yposid_key], 
+                            self.unique_spot_properties[int(cell_id)][self.zposid_key] -  self.unique_spot_properties[int(source_id)][self.zposid_key])
+                    angle = angular_change(vec_0, vec_1)
+                    self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : angle})
         else:
             self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : None}) 
 
@@ -930,3 +943,13 @@ def sortFirst(List):
 
 def prob_sigmoid(x):
     return 1 - math.exp(-x)
+
+
+def angular_change(vec_0, vec_1):
+        
+        vec_0 = vec_0 / np.linalg.norm(vec_0)
+        vec_1 = vec_1 / np.linalg.norm(vec_1)
+        angle = np.arccos(np.clip(np.dot(vec_0, vec_1), -1.0, 1.0))
+        angle = angle * 180 / np.pi
+        return angle
+     
