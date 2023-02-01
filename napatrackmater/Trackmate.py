@@ -537,7 +537,7 @@ class TrackMate(object):
                             ffttotal_sample_ch2 = ffttotal_sample_ch2[0 : len(ffttotal_sample_ch2) // 2] 
 
                 self.unique_fft_properties[track_id] = np.asarray(list(zip(time, xf_sample_ch1, ffttotal_sample_ch1, xf_sample_ch2, ffttotal_sample_ch2)))
-                print(self.unique_fft_properties[track_id].shape)                       
+                print(self.unique_fft_properties[track_id])                       
 
                                  
     def _dict_update(self, unique_tracklet_ids: List, current_cell_ids: List, edge, cell_id, track_id, source_id, target_id):
