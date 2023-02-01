@@ -522,7 +522,7 @@ class TrackMate(object):
                 intensity_ch1_list.append(tracklet_properties[-4:-3])
                 intensity_ch2_list.append(tracklet_properties[-3:-2])
                 time_list.append(tracklet_properties[0:1])
-
+                print(time_list, intensity_ch1_list)
                 point_sample_ch1 = len(intensity_ch1_list)
                 if point_sample_ch1 > 0:
                             xf_sample_ch1 = fftfreq(point_sample_ch1, self.tcalibration)
