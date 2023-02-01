@@ -500,8 +500,7 @@ class TrackMate(object):
                             self.unique_tracks[track_id] = current_tracklets     
                             self.unique_track_properties[track_id] = current_tracklets_properties
          
-                            print(current_tracklets.shape)
-                #self._compute_fourier()
+                self._compute_fourier()
                 for (k,v) in self.graph_split.items():
                            
                             daughter_track_id =  int(float(str(self.unique_spot_properties[int(float(k))][self.uniqueid_key])))
@@ -519,12 +518,10 @@ class TrackMate(object):
                 track_id = k
                 tracklets = v 
                 tracklet_properties = self.unique_track_properties[k] 
-                for intensity_ch1 in tracklet_properties[-4:-3]:    
-                    intensity_ch1_list.append(intensity_ch1)
-                for intensity_ch2 in tracklet_properties[-3:-2]:
-                     intensity_ch2_list.append(intensity_ch2)
-                for time in tracklet_properties[0:1]:
-                    time_list.append(time)
+                
+                intensity_ch1_list.append(tracklet_properties[-4:-3])
+                intensity_ch2_list.append(tracklet_properties[-3:-2])
+                time_list.append(tracklet_properties[0:1])
 
                 point_sample_ch1 = len(intensity_ch1_list)
                 if point_sample_ch1 > 0:
