@@ -562,9 +562,7 @@ class TrackMate(object):
             vec_1 = [float(self.unique_spot_properties[int(cell_id)][self.xposid_key]) - float(self.unique_spot_properties[int(source_id)][self.xposid_key]), 
                             float(self.unique_spot_properties[int(cell_id)][self.yposid_key]) - float(self.unique_spot_properties[int(source_id)][self.yposid_key]), 
                             float(self.unique_spot_properties[int(cell_id)][self.zposid_key]) -  float(self.unique_spot_properties[int(source_id)][self.zposid_key])]
-            delta_vec = [self.xcalibration, self.ycalibration,self.zcalibration  ]
-            speed_vec = np.dot(vec_1, delta_vec)
-            speed = np.sqrt(np.dot(speed_vec, speed_vec))/self.tcalibration
+            speed = np.sqrt(np.dot(vec_1, vec_1))/self.tcalibration
             self.unique_spot_properties[int(cell_id)].update({self.speed_key : round(speed, 3)})
             if str(source_id) in self.edge_source_lookup:
                     pre_source_id = self.edge_source_lookup[str(source_id)]
@@ -576,8 +574,7 @@ class TrackMate(object):
                     vec_2 = [float(self.unique_spot_properties[int(cell_id)][self.xposid_key]) - 2 * float(self.unique_spot_properties[int(source_id)][self.xposid_key]) + float(self.unique_spot_properties[int(pre_source_id)][self.xposid_key]), 
                             float(self.unique_spot_properties[int(cell_id)][self.yposid_key]) - 2 * float(self.unique_spot_properties[int(source_id)][self.yposid_key]) + float(self.unique_spot_properties[int(pre_source_id)][self.yposid_key]), 
                             float(self.unique_spot_properties[int(cell_id)][self.zposid_key]) -  2 * float(self.unique_spot_properties[int(source_id)][self.zposid_key]) + float(self.unique_spot_properties[int(pre_source_id)][self.zposid_key])]
-                    acc_vec = np.dot(vec_2, delta_vec)
-                    acc = np.sqrt(np.dot(acc_vec, acc_vec))/self.tcalibration
+                    acc = np.sqrt(np.dot(vec_2, vec_2))/self.tcalibration
                     angle = angular_change(vec_0, vec_1)
                     self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : round(angle, 3)})
                     self.unique_spot_properties[int(cell_id)].update({self.acceleration_key : round(acc, 3)})
