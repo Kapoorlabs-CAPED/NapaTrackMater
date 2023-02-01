@@ -640,13 +640,13 @@ class TrackMate(object):
                 self.non_mitotic_mean_directional_change = []
                 self.non_mitotic_var_directional_change = []
 
-                self.all_mitotic_mean_disp_z = []
-                self.all_mitotic_var_disp_z = []
+                self.all_mean_disp_z = []
+                self.all_var_disp_z = []
 
-                self.all_mitotic_mean_disp_y = []
-                self.all_mitotic_var_disp_y = []
+                self.all_mean_disp_y = []
+                self.all_var_disp_y = []
 
-                self.all_mitotic_mean_disp_x = []
+                self.all_mean_disp_x = []
                 self.all_mitotic_var_disp_x = []
 
                 self.all_mitotic_mean_radius = []
