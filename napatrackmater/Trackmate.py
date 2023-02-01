@@ -536,7 +536,7 @@ class TrackMate(object):
                             xf_sample_ch2 = xf_sample_ch2[0 : len(xf_sample_ch2) // 2]
                             ffttotal_sample_ch2 = ffttotal_sample_ch2[0 : len(ffttotal_sample_ch2) // 2] 
 
-                self.unique_fft_properties[track_id] = [time, xf_sample_ch1, ffttotal_sample_ch1, xf_sample_ch2, ffttotal_sample_ch2]
+                self.unique_fft_properties[track_id] = time, xf_sample_ch1, ffttotal_sample_ch1, xf_sample_ch2, ffttotal_sample_ch2
                 print(self.unique_fft_properties[track_id])                       
 
                                  
