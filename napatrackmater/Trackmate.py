@@ -666,7 +666,7 @@ class TrackMate(object):
                       
                       all_spots = self.unique_spot_properties[k]
                       if self.trackid_key in all_spots:
-                          all_spots_tracks[k] = all_spots[k]
+                          all_spots_tracks[k] = all_spots
                 
                 for i in tqdm(range(starttime, endtime), total=endtime - starttime):
                       
