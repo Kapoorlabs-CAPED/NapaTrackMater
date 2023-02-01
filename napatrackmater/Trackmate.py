@@ -9,9 +9,8 @@ from skimage.measure import label, regionprops
 from skimage.segmentation import find_boundaries
 from scipy import spatial
 import dask as da
-from dask.array.image import imread as daskread
 from typing import List
-
+from scipy.fftpack import fft, fftfreq, fftshift, ifft
 
 class TrackMate(object):
     
@@ -119,6 +118,7 @@ class TrackMate(object):
         
         self.unique_tracks = {}
         self.unique_track_properties = {}
+        self.unique_fft_properties = {}
         self.unique_spot_properties = {}
         self.edge_target_lookup = {}
         self.edge_source_lookup = {}
@@ -472,8 +472,8 @@ class TrackMate(object):
                                   dcr = float(all_dict_values[self.directional_change_rate_key])
                                   dcr = scale_value(float(dcr))
                                   speed = scale_value(float(speed))
-                                  mean_intensity_ch1 =  float(all_dict_values[self.mean_intensity_ch1_key])
-                                  mean_intensity_ch2 =  float(all_dict_values[self.mean_intensity_ch2_key])
+                                  total_intensity_ch1 =  float(all_dict_values[self.total_intensity_ch1_key])
+                                  total_intensity_ch2 =  float(all_dict_values[self.total_intensity_ch2_key])
                                   volume_pixels = int(float(all_dict_values[self.quality_key]))
                                   if current_track_id in current_tracklets:
                                      tracklet_array = current_tracklets[current_track_id]
@@ -481,14 +481,14 @@ class TrackMate(object):
                                      current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
 
                                      value_array = current_tracklets_properties[current_track_id]
-                                     current_value_array = np.array([t, gen_id, speed, dcr, mean_intensity_ch1, mean_intensity_ch2, volume_pixels])
+                                     current_value_array = np.array([t, gen_id, speed, dcr, total_intensity_ch1, total_intensity_ch2, volume_pixels])
                                      current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
 
                                   else:
                                      current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
                                      current_tracklets[current_track_id] = current_tracklet_array 
 
-                                     current_value_array = np.array([t, gen_id, speed, dcr, mean_intensity_ch1, mean_intensity_ch2, volume_pixels])
+                                     current_value_array = np.array([t, gen_id, speed, dcr, total_intensity_ch1, total_intensity_ch2, volume_pixels])
                                      current_tracklets_properties[current_track_id] = current_value_array
                                            
 
@@ -499,6 +499,8 @@ class TrackMate(object):
                             
                             self.unique_tracks[track_id] = current_tracklets     
                             self.unique_track_properties[track_id] = current_tracklets_properties
+         
+                self._compute_fourier()
                 for (k,v) in self.graph_split.items():
                            
                             daughter_track_id =  int(float(str(self.unique_spot_properties[int(float(k))][self.uniqueid_key])))
@@ -506,7 +508,39 @@ class TrackMate(object):
                             self.graph_tracks[daughter_track_id] = parent_track_id
                             
                 
+    def _compute_fourier(self):
+
+          for (k,v) in self.unique_tracks.items():
                 
+                time_list = []
+                intensity_ch1_list = []
+                intensity_ch2_list = []
+                track_id = k
+                tracklets = v 
+                tracklet_properties = self.unique_track_properties[k] 
+                intensity_ch1_list.append([intensity_ch1 for intensity_ch1 in tracklet_properties[-4:-3]])
+                intensity_ch2_list.append([intensity_ch2 for intensity_ch2 in tracklet_properties[-3:-2]])
+                time_list.append([time for time in tracklet_properties[0:1]])
+
+                point_sample_ch1 = len(intensity_ch1_list)
+                if point_sample_ch1 > 0:
+                            xf_sample_ch1 = fftfreq(point_sample_ch1, self.tcalibration)
+                            fftstrip_sample_ch1 = fft(intensity_ch1_list)
+                            ffttotal_sample_ch1 = np.abs(fftstrip_sample_ch1)
+                            xf_sample_ch1 = xf_sample_ch1[0 : len(xf_sample_ch1) // 2]
+                            ffttotal_sample_ch1 = ffttotal_sample_ch1[0 : len(ffttotal_sample_ch1) // 2]
+
+                point_sample_ch2 = len(intensity_ch2_list)
+                if point_sample_ch2 > 0:
+                            xf_sample_ch2 = fftfreq(point_sample_ch2, self.tcalibration)
+                            fftstrip_sample_ch2 = fft(intensity_ch2_list)
+                            ffttotal_sample_ch2 = np.abs(fftstrip_sample_ch2)
+                            xf_sample_ch2 = xf_sample_ch2[0 : len(xf_sample_ch2) // 2]
+                            ffttotal_sample_ch2 = ffttotal_sample_ch2[0 : len(ffttotal_sample_ch2) // 2] 
+
+                self.unique_fft_properties[track_id] = np.asarray(list(zip(time_list, xf_sample_ch1, ffttotal_sample_ch1, xf_sample_ch2, ffttotal_sample_ch2)))
+                print(self.unique_fft_properties[track_id].shape)                       
+
                                  
     def _dict_update(self, unique_tracklet_ids: List, current_cell_ids: List, edge, cell_id, track_id, source_id, target_id):
 
@@ -967,3 +1001,5 @@ def angular_change(vec_0, vec_1):
         angle = angle * 180 / np.pi
         return angle
      
+
+           
