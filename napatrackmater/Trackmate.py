@@ -515,10 +515,10 @@ class TrackMate(object):
                 track_id = k
                 tracklets = v 
                 tracklet_properties = self.unique_track_properties[k] 
-                
-                intensity_ch1 = tracklet_properties[-4:-3]
-                intensity_ch2 = tracklet_properties[-3:-2]
-                time = tracklet_properties[0:1]
+                intensity_ch1 = tracklet_properties[:,-4:-3]
+                intensity_ch2 = tracklet_properties[:,-3:-2]
+                time = tracklet_properties[:,0:1]
+
                 print(time.shape)
                 point_sample_ch1 = intensity_ch1.shape[0]
                 if point_sample_ch1 > 0:
