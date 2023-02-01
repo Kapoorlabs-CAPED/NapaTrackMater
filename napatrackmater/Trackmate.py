@@ -537,7 +537,6 @@ class TrackMate(object):
                             ffttotal_sample_ch2 = ffttotal_sample_ch2[0 : len(ffttotal_sample_ch2) // 2] 
 
                 self.unique_fft_properties[track_id] = time, xf_sample_ch1, ffttotal_sample_ch1, xf_sample_ch2, ffttotal_sample_ch2
-                print(self.unique_fft_properties[track_id])                       
 
                                  
     def _dict_update(self, unique_tracklet_ids: List, current_cell_ids: List, edge, cell_id, track_id, source_id, target_id):
@@ -786,12 +785,6 @@ class TrackMate(object):
 
                     self.all_mean_directional_change.append(np.mean(all_directional_change))
                     self.all_var_directional_change.append(np.std(all_directional_change))
-
-                                        
-                                  
-
- 
-                   
                             
         
 def boundary_points(mask, xcalibration, ycalibration, zcalibration):
