@@ -385,7 +385,7 @@ class TrackMate(object):
                         distance_cell_mask = self._get_boundary_dist(frame, testlocation, RADIUS)
                         self.unique_spot_properties[cell_id] = {
                             self.cellid_key: int(cell_id), 
-                            self.frameid_key : float(Spotobject.get(self.frameid_key)),
+                            self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
                             self.zposid_key : round(float(Spotobject.get(self.zposid_key)), 3),
                             self.yposid_key : round(float(Spotobject.get(self.yposid_key)), 3),
                             self.xposid_key : round(float(Spotobject.get(self.xposid_key)), 3),
@@ -602,160 +602,198 @@ class TrackMate(object):
                 disp_key = self.track_analysis_edges_keys["displacement"]
                 starttime = int(min(self.AllValues[self.frameid_key]))
                 endtime = int(max(self.AllValues[self.frameid_key]))
-                for (
-                    sourceid,
-                    dcrid,
-                    speedid,
-                    dispid,
-                    zposid,
-                    yposid,
-                    xposid,
-                    radiusid,
-                    meanintensitych1id,
-                    meanintensitych2id,
-                ) in zip(
-                    self.AllEdgesValues[sourceid_key],
-                    self.AllEdgesValues[dcr_key],
-                    self.AllEdgesValues[speed_key],
-                    self.AllEdgesValues[disp_key],
-                    self.AllValues[self.zposid_key],
-                    self.AllValues[self.yposid_key],
-                    self.AllValues[self.xposid_key],
-                    self.AllValues[self.radius_key],
-                    self.AllValues[self.mean_intensity_ch1_key],
-                    self.AllValues[self.mean_intensity_ch2_key],
-                ):
+                 
+                self.time = []
+                self.mitotic_mean_disp_z = []
+                self.mitotic_var_disp_z = []
 
-                    self.Attr[int(sourceid)] = [
-                        dcrid,
-                        speedid,
-                        dispid,
-                        zposid,
-                        yposid,
-                        xposid,
-                        radiusid,
-                        meanintensitych1id,
-                        meanintensitych2id,
-                    ]
+                self.mitotic_mean_disp_y = []
+                self.mitotic_var_disp_y = []
+
+                self.mitotic_mean_disp_x = []
+                self.mitotic_var_disp_x = []
+
+                self.mitotic_mean_radius = []
+                self.mitotic_var_radius = []
+
+                self.mitotic_mean_speed = []
+                self.mitotic_var_speed = []
+
+                self.mitotic_mean_directional_change = []
+                self.mitotic_var_directional_change = []
+
+                self.non_mitotic_mean_disp_z = []
+                self.non_mitotic_var_disp_z = []
+
+                self.non_mitotic_mean_disp_y = []
+                self.non_mitotic_var_disp_y = []
+
+                self.non_mitotic_mean_disp_x = []
+                self.non_mitotic_var_disp_x = []
+
+                self.non_mitotic_mean_radius = []
+                self.non_mitotic_var_radius = []
+
+                self.non_mitotic_mean_speed = []
+                self.non_mitotic_var_speed = []
+
+                self.non_mitotic_mean_directional_change = []
+                self.non_mitotic_var_directional_change = []
+
+                self.all_mitotic_mean_disp_z = []
+                self.all_mitotic_var_disp_z = []
+
+                self.all_mitotic_mean_disp_y = []
+                self.all_mitotic_var_disp_y = []
+
+                self.all_mitotic_mean_disp_x = []
+                self.all_mitotic_var_disp_x = []
+
+                self.all_mitotic_mean_radius = []
+                self.all_mitotic_var_radius = []
+
+                self.all_mitotic_mean_speed = []
+                self.all_mitotic_var_speed = []
+
+                self.all_mitotic_mean_directional_change = []
+                self.all_mitotic_var_directional_change = []
 
 
-                self.Time = []
-                self.Alldcrmean = []
-                self.Allspeedmean = []
-                self.Allradiusmean = []
-                self.AllCurmeaninch1mean = []
-                self.AllCurmeaninch2mean = []
-                self.Alldispmeanpos = []
-                self.Alldispmeanneg = []
-                self.Alldispmeanposx = []
-                self.Alldispmeanposy = []
-                self.Alldispmeannegx = []
-                self.Alldispmeannegy = []
-                self.Alldcrvar = []
-                self.Allspeedvar = []
-                self.Allradiusvar = []
-                self.AllCurmeaninch1var = []
-                self.AllCurmeaninch2var = []
-                self.Alldispvarpos = []
-                self.Alldispvarneg = []
-                self.Alldispvarposy = []
-                self.Alldispvarnegy = []
-                self.Alldispvarposx = []
-                self.Alldispvarnegx = []
 
+
+                all_spots_tracks = {}
+                for (k,v) in self.unique_spot_properties.items():
+                      
+                      all_spots = self.unique_spot_properties[k]
+                      if self.trackid_key in all_spots:
+                          all_spots_tracks[k] = all_spots[k]
+                
                 for i in tqdm(range(starttime, endtime), total=endtime - starttime):
+                      
+                    mitotic_disp_z = []
+                    mitotic_disp_y = []
+                    mitotic_disp_x = []
+                    mitotic_radius = []
+                    mitotic_speed = []
+                    mitotic_directional_change = []
 
-                    Curdcr = []
-                    Curspeed = []
-                    Curdisp = []
-                    Curdispz = []
-                    Curdispy = []
-                    Curdispx = []
-                    Currpos = []
-                    Curmeaninch1 = []
-                    Curmeaninch2 = []
-                    for spotid, trackid, frameid in zip(
-                        self.AllValues[self.spotid_key],
-                        self.AllValues[self.trackid_key],
-                        self.AllValues[self.frameid_key],
-                    ):
+                    non_mitotic_disp_z = []
+                    non_mitotic_disp_y = []
+                    non_mitotic_disp_x = []
+                    non_mitotic_radius = []
+                    non_mitotic_speed = []
+                    non_mitotic_directional_change = []
+ 
+                    all_disp_z = []
+                    all_disp_y = []
+                    all_disp_x = []
+                    all_radius = []
+                    all_speed = []
+                    all_directional_change = []
 
-                        if i == int(frameid):
-                            if int(spotid) in self.Attr:
-                                (
-                                    dcr,
-                                    speed,
-                                    disp,
-                                    zpos,
-                                    ypos,
-                                    xpos,
-                                    rpos,
-                                    meaninch1pos,
-                                    meaninch2pos,
-                                ) = self.Attr[int(spotid)]
-                                if dcr is not None:
-                                    Curdcr.append(dcr)
 
-                                if speed is not None:
-                                    Curspeed.append(speed)
-                                if disp is not None:
-                                    Curdisp.append(disp)
-                                if zpos is not None:
-                                    Curdispz.append(zpos)
-                                if ypos is not None:
-                                    Curdispy.append(ypos)
+                    for (k,v) in all_spots_tracks.items():
+                            
+                            current_time = all_spots_tracks[k][self.frameid_key]
+                            mitotic = all_spots_tracks[k][self.dividing_key]
+                            if i == int(current_time):
+                                  if mitotic:
+                                        mitotic_disp_z.append(all_spots_tracks[k][self.zposid_key])
+                                        mitotic_disp_y.append(all_spots_tracks[k][self.yposid_key])
+                                        mitotic_disp_x.append(all_spots_tracks[k][self.xposid_key])
+                                        mitotic_radius.append(all_spots_tracks[k][self.radius_key])
+                                        mitotic_speed.append(all_spots_tracks[k][self.speed_key])
+                                        mitotic_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])
+                                  if not mitotic:
+                                        non_mitotic_disp_z.append(all_spots_tracks[k][self.zposid_key])
+                                        non_mitotic_disp_y.append(all_spots_tracks[k][self.yposid_key])
+                                        non_mitotic_disp_x.append(all_spots_tracks[k][self.xposid_key])
+                                        non_mitotic_radius.append(all_spots_tracks[k][self.radius_key])
+                                        non_mitotic_speed.append(all_spots_tracks[k][self.speed_key])
+                                        non_mitotic_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])
 
-                                if xpos is not None:
-                                    Curdispx.append(xpos)
-                                if rpos is not None:
-                                    Currpos.append(rpos)
-                                if meaninch1pos is not None:
-                                    Curmeaninch1.append(meaninch1pos)
+                                  all_disp_z.append(all_spots_tracks[k][self.zposid_key])
+                                  all_disp_y.append(all_spots_tracks[k][self.yposid_key])
+                                  all_disp_x.append(all_spots_tracks[k][self.xposid_key])
+                                  all_radius.append(all_spots_tracks[k][self.radius_key])
+                                  all_speed.append(all_spots_tracks[k][self.speed_key])
+                                  all_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])       
+                                              
 
-                                if meaninch2pos is not None:
-                                    Curmeaninch2.append(meaninch2pos)
+                    mitotic_disp_z = np.abs(np.diff(mitotic_disp_z))
+                    mitotic_disp_y = np.abs(np.diff(mitotic_disp_y))
+                    mitotic_disp_x = np.abs(np.diff(mitotic_disp_x))
 
-                    dispZ = np.abs(np.diff(Curdispz))
-                    dispY = np.abs(np.diff(Curdispy))
-                    dispX = np.abs(np.diff(Curdispx))
-                    
-                    meanCurdcr = np.mean(Curdcr)
-                    varCurdcr = np.std(Curdcr)
-                    meanCurspeed = np.mean(Curspeed)
-                    varCurspeed = np.std(Curspeed)
-                    meanCurrpos = np.mean(Currpos)
-                    varCurrpos = np.std(Currpos)
-                    meanCurmeaninch1 = np.mean(Curmeaninch1)
-                    varCurmeaninch1 = np.std(Curmeaninch1)
-                    meanCurmeaninch2 = np.mean(Curmeaninch2)
-                    varCurmeaninch2 = np.std(Curmeaninch2)
-                    meanCurdisp = np.mean(dispZ)
-                    varCurdisp = np.std(dispZ)
-                    meanCurdispy = np.mean(dispY)
-                    varCurdispy = np.std(dispY)
-                    meanCurdispx = np.mean(dispX)
-                    varCurdispx = np.std(dispX)
-                    
-                    self.Time.append(i * self.tcalibration)
-                    self.Alldcrmean.append(meanCurdcr)
-                    self.Alldcrvar.append(varCurdcr)
-                    self.Allspeedmean.append(meanCurspeed)
-                    self.Allspeedvar.append(varCurspeed)
-                    self.Allradiusmean.append(meanCurrpos)
-                    self.Allradiusvar.append(varCurrpos)
-                    self.AllCurmeaninch1mean.append(meanCurmeaninch1)
-                    self.AllCurmeaninch1var.append(varCurmeaninch1)
-                    self.AllCurmeaninch2mean.append(meanCurmeaninch2)
-                    self.AllCurmeaninch2var.append(varCurmeaninch2)
+                    non_mitotic_disp_z = np.abs(np.diff(non_mitotic_disp_z))
+                    non_mitotic_disp_y = np.abs(np.diff(non_mitotic_disp_y))
+                    non_mitotic_disp_x = np.abs(np.diff(non_mitotic_disp_x))
 
-                     
+                    all_disp_z = np.abs(np.diff(all_disp_z))
+                    all_disp_y = np.abs(np.diff(all_disp_y))
+                    all_disp_x = np.abs(np.diff(all_disp_x))
 
-                    self.Alldispmeanpos.append(meanCurdisp)
-                    self.Alldispvarpos.append(varCurdisp)
-                    self.Alldispmeanposy.append(meanCurdispy)
-                    self.Alldispvarposy.append(varCurdispy)
-                    self.Alldispmeanposx.append(meanCurdispx)
-                    self.Alldispvarposx.append(varCurdispx)
+
+                                        
+                    self.time.append(i * self.tcalibration)
+
+                    self.mitotic_mean_disp_z.append(np.mean(mitotic_disp_z))
+                    self.mitotic_var_disp_z.append(np.std(mitotic_disp_z))
+
+                    self.mitotic_mean_disp_y.append(np.mean(mitotic_disp_y))
+                    self.mitotic_var_disp_y.append(np.std(mitotic_disp_y))
+
+                    self.mitotic_mean_disp_x.append(np.mean(mitotic_disp_x))
+                    self.mitotic_var_disp_x.append(np.std(mitotic_disp_x))
+
+                    self.mitotic_mean_radius.append(np.mean(mitotic_radius))
+                    self.mitotic_var_radius.append(np.std(mitotic_radius))
+
+                    self.mitotic_mean_speed.append(np.mean(mitotic_speed))
+                    self.mitotic_var_speed.append(np.std(mitotic_speed))
+
+                    self.mitotic_mean_directional_change.append(np.mean(mitotic_directional_change))
+                    self.mitotic_var_directional_change.append(np.std(mitotic_directional_change))
+
+                    self.non_mitotic_mean_disp_z.append(np.mean(non_mitotic_disp_z))
+                    self.non_mitotic_var_disp_z.append(np.std(non_mitotic_disp_z))
+
+                    self.non_mitotic_mean_disp_y.append(np.mean(non_mitotic_disp_y))
+                    self.non_mitotic_var_disp_y.append(np.std(non_mitotic_disp_y))
+
+                    self.non_mitotic_mean_disp_x.append(np.mean(non_mitotic_disp_x))
+                    self.non_mitotic_var_disp_x.append(np.std(non_mitotic_disp_x))
+
+                    self.non_mitotic_mean_radius.append(np.mean(non_mitotic_radius))
+                    self.non_mitotic_var_radius.append(np.std(non_mitotic_radius))
+
+                    self.non_mitotic_mean_speed.append(np.mean(non_mitotic_speed))
+                    self.non_mitotic_var_speed.append(np.std(non_mitotic_speed))
+
+                    self.non_mitotic_mean_directional_change.append(np.mean(non_mitotic_directional_change))
+                    self.non_mitotic_var_directional_change.append(np.std(non_mitotic_directional_change)) 
+
+                    self.all_mean_disp_z.append(np.mean(all_disp_z))
+                    self.all_var_disp_z.append(np.std(all_disp_z))
+
+                    self.all_mean_disp_y.append(np.mean(all_disp_y))
+                    self.all_var_disp_y.append(np.std(all_disp_y))
+
+                    self.all_mean_disp_x.append(np.mean(all_disp_x))
+                    self.all_var_disp_x.append(np.std(all_disp_x))
+
+                    self.all_mean_radius.append(np.mean(all_radius))
+                    self.all_var_radius.append(np.std(all_radius))
+
+                    self.all_mean_speed.append(np.mean(all_speed))
+                    self.all_var_speed.append(np.std(all_speed))
+
+                    self.all_mean_directional_change.append(np.mean(all_directional_change))
+                    self.all_var_directional_change.append(np.std(all_directional_change))
+
+                                        
+                                  
+
+ 
                    
                             
         
