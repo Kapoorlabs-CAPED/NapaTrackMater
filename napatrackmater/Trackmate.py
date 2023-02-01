@@ -512,34 +512,31 @@ class TrackMate(object):
 
           for (k,v) in self.unique_tracks.items():
                 
-                time_list = []
-                intensity_ch1_list = []
-                intensity_ch2_list = []
                 track_id = k
                 tracklets = v 
                 tracklet_properties = self.unique_track_properties[k] 
                 
-                intensity_ch1_list.append(tracklet_properties[-4:-3])
-                intensity_ch2_list.append(tracklet_properties[-3:-2])
-                time_list.append(tracklet_properties[0:1])
-                print(time_list, intensity_ch1_list)
-                point_sample_ch1 = len(intensity_ch1_list)
+                intensity_ch1 = tracklet_properties[-4:-3]
+                intensity_ch2 = tracklet_properties[-3:-2]
+                time = tracklet_properties[0:1]
+                print(time.shape)
+                point_sample_ch1 = intensity_ch1.shape[0]
                 if point_sample_ch1 > 0:
                             xf_sample_ch1 = fftfreq(point_sample_ch1, self.tcalibration)
-                            fftstrip_sample_ch1 = fft(intensity_ch1_list)
+                            fftstrip_sample_ch1 = fft(intensity_ch1)
                             ffttotal_sample_ch1 = np.abs(fftstrip_sample_ch1)
                             xf_sample_ch1 = xf_sample_ch1[0 : len(xf_sample_ch1) // 2]
                             ffttotal_sample_ch1 = ffttotal_sample_ch1[0 : len(ffttotal_sample_ch1) // 2]
 
-                point_sample_ch2 = len(intensity_ch2_list)
+                point_sample_ch2 = intensity_ch2.shape[0]
                 if point_sample_ch2 > 0:
                             xf_sample_ch2 = fftfreq(point_sample_ch2, self.tcalibration)
-                            fftstrip_sample_ch2 = fft(intensity_ch2_list)
+                            fftstrip_sample_ch2 = fft(intensity_ch2)
                             ffttotal_sample_ch2 = np.abs(fftstrip_sample_ch2)
                             xf_sample_ch2 = xf_sample_ch2[0 : len(xf_sample_ch2) // 2]
                             ffttotal_sample_ch2 = ffttotal_sample_ch2[0 : len(ffttotal_sample_ch2) // 2] 
 
-                self.unique_fft_properties[track_id] = np.asarray(list(zip(time_list, xf_sample_ch1, ffttotal_sample_ch1, xf_sample_ch2, ffttotal_sample_ch2)))
+                self.unique_fft_properties[track_id] = np.asarray(list(zip(time, xf_sample_ch1, ffttotal_sample_ch1, xf_sample_ch2, ffttotal_sample_ch2)))
                 print(self.unique_fft_properties[track_id].shape)                       
 
                                  
