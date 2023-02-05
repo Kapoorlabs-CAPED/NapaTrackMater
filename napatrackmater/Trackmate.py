@@ -14,7 +14,7 @@ from scipy.fftpack import fft, fftfreq, fftshift, ifft
 
 class TrackMate(object):
     
-    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, image = None, mask = None):
+    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, channel_seg_image = None, image = None, mask = None):
         
         
         self.xml_path = xml_path
@@ -23,6 +23,7 @@ class TrackMate(object):
         self.edges_csv_path = edges_csv_path
         self.image = image 
         self.mask = mask 
+        self.channel_seg_image = channel_seg_image
         self.AttributeBoxname = AttributeBoxname
         self.TrackAttributeBoxname = TrackAttributeBoxname
         self.TrackidBox = TrackidBox
@@ -120,6 +121,7 @@ class TrackMate(object):
         self.unique_track_properties = {}
         self.unique_fft_properties = {}
         self.unique_spot_properties = {}
+        self.channel_unique_spot_properties = {}
         self.edge_target_lookup = {}
         self.edge_source_lookup = {}
         self.generation_dict = {}
@@ -131,8 +133,22 @@ class TrackMate(object):
         self._get_xml_data()
         self._get_attributes()
         self._temporal_plots_trackmate()
+        if self.channel_seg_image is not None:
+              self._create_channel_tree()
+              
 
 
+    def _create_channel_tree(self):
+          self._timed_channel_seg_image = {}
+          for i in range(self.channel_seg_image.shape[0]):
+                properties = regionprops(self.channel_seg_image[i,:])
+                centroids = [prop.centroid for prop in properties]
+                labels = [prop.label for prop in properties]
+                volume = [prop.area for prop in properties]
+                tree = spatial.cKDTree(centroids)
+
+                self._timed_channel_seg_image[str(i)] =  tree, centroid, labels, volume
+          
 
     def _get_attributes(self):
             
@@ -168,6 +184,10 @@ class TrackMate(object):
         else:
                     self.timed_mask = None
                     self.boundary = None
+
+    def _exchange_xml(self, frame):
+          
+
 
     def _generate_generations(self, track):
          
@@ -383,6 +403,7 @@ class TrackMate(object):
                         testlocation = (Spotobject.get(self.zposid_key), Spotobject.get(self.yposid_key),  Spotobject.get(self.xposid_key))
                         frame = Spotobject.get(self.frameid_key)
                         distance_cell_mask = self._get_boundary_dist(frame, testlocation, RADIUS)
+                        
                         self.unique_spot_properties[cell_id] = {
                             self.cellid_key: int(cell_id), 
                             self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
@@ -397,7 +418,31 @@ class TrackMate(object):
                             self.quality_key : round(float(QUALITY)),
                             self.distance_cell_mask_key: round(float(distance_cell_mask),2)
                         }
+            
+                        if self.channel_seg_image is not None:
+                                    tree, centroids, labels, vloume = self._timed_channel_seg_image[str(int(float(frame)))]
+                                    dist, index = tree.query(testlocation)
+                                    location = (int(centroids[index][0]), int(centroids[index][1]), int(centroids[index][2]))
+                                    QUALITY = volume[index]
+                                    RADIUS = math.pow(QUALITY, 1.0/3.0) * self.xcalibration * self.ycalibration * self.zcalibration
+                                    distance_cell_mask = self._get_boundary_dist(frame, location, RADIUS)
+                                    channel_unique_spot_properties[cell_id] = {
+                                            self.cellid_key: int(cell_id), 
+                                            self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
+                                            self.zposid_key : round(float(centroids[index][0]), 3),
+                                            self.yposid_key : round(float(centroids[index][1]), 3),
+                                            self.xposid_key : round(float(centroids[index][2]), 3),
 
+                                            self.total_intensity_ch1_key : round(float(TOTAL_INTENSITY_CH1)),
+                                            self.mean_intensity_ch1_key : round(float(MEAN_INTENSITY_CH1)),
+                                            self.total_intensity_ch2_key : round(float(TOTAL_INTENSITY_CH2)),
+                                            self.mean_intensity_ch2_key : round(float(MEAN_INTENSITY_CH2)),
+                                            
+                                            self.radius_key : round(float(RADIUS)),
+                                            self.quality_key : round(float(QUALITY)),
+                                            self.distance_cell_mask_key: round(float(distance_cell_mask),2)
+
+                                    } 
 
                 for track in self.tracks.findall('Track'):
 
