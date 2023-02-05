@@ -140,14 +140,22 @@ class TrackMate(object):
 
     def _create_channel_tree(self):
           self._timed_channel_seg_image = {}
+          if self.image is not None:
+                intensity_image = self.image
+          else:
+                intensity_image = self.channel_seg_image
+
           for i in range(self.channel_seg_image.shape[0]):
-                properties = regionprops(self.channel_seg_image[i,:])
+                
+                properties = regionprops(self.channel_seg_image[i,:], intensity_image)
                 centroids = [prop.centroid for prop in properties]
                 labels = [prop.label for prop in properties]
                 volume = [prop.area for prop in properties]
+                intensity_mean = [prop.intensity_mean for prop in properties]
+
                 tree = spatial.cKDTree(centroids)
 
-                self._timed_channel_seg_image[str(i)] =  tree, centroid, labels, volume
+                self._timed_channel_seg_image[str(i)] =  tree, centroid, labels, volume, intensity_mean
           
 
     def _get_attributes(self):
@@ -420,7 +428,8 @@ class TrackMate(object):
                         }
             
                         if self.channel_seg_image is not None:
-                                    tree, centroids, labels, vloume = self._timed_channel_seg_image[str(int(float(frame)))]
+                                    tree, centroids, labels, vloume, intensity_mean = self._timed_channel_seg_image[str(int(float(frame)))]
+                                    intensity_total = volume * intensity_mean
                                     dist, index = tree.query(testlocation)
                                     location = (int(centroids[index][0]), int(centroids[index][1]), int(centroids[index][2]))
                                     QUALITY = volume[index]
@@ -433,11 +442,11 @@ class TrackMate(object):
                                             self.yposid_key : round(float(centroids[index][1]), 3),
                                             self.xposid_key : round(float(centroids[index][2]), 3),
 
-                                            self.total_intensity_ch1_key : round(float(TOTAL_INTENSITY_CH1)),
-                                            self.mean_intensity_ch1_key : round(float(MEAN_INTENSITY_CH1)),
-                                            self.total_intensity_ch2_key : round(float(TOTAL_INTENSITY_CH2)),
-                                            self.mean_intensity_ch2_key : round(float(MEAN_INTENSITY_CH2)),
-                                            
+                                            self.total_intensity_ch1_key : round(float(intensity_total)),
+                                            self.mean_intensity_ch1_key : round(float(intensity_mean)),
+                                            self.total_intensity_ch2_key : round(float(intensity_total)),
+                                            self.mean_intensity_ch2_key : round(float(intensity_mean)),
+
                                             self.radius_key : round(float(RADIUS)),
                                             self.quality_key : round(float(QUALITY)),
                                             self.distance_cell_mask_key: round(float(distance_cell_mask),2)
