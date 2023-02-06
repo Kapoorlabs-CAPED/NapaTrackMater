@@ -133,8 +133,7 @@ class TrackMate(object):
         self._get_xml_data()
         self._get_attributes()
         self._temporal_plots_trackmate()
-        if self.channel_seg_image is not None:
-              self._create_channel_tree()
+        
               
 
 
@@ -361,6 +360,9 @@ class TrackMate(object):
 
     def _get_xml_data(self):
 
+
+                
+
                 self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
                 
                 if self.channel_seg_image is not None:
@@ -369,6 +371,7 @@ class TrackMate(object):
                       self.xml_root = self.xml_tree.getroot()
                       self.channel_xml_name = 'second_channel_' + os.path.splitext(os.path.basename(self.xml_path))[0] + '.xml'
                       self.channel_xml_path = os.path.dirname(self.xml_path)
+                      self._create_channel_tree()
                        
                 self.unique_objects = {}
                 self.unique_properties = {}
