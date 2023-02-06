@@ -11,7 +11,7 @@ from scipy import spatial
 import dask as da
 from typing import List
 from scipy.fftpack import fft, fftfreq, fftshift, ifft
-
+import os
 class TrackMate(object):
     
     def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, channel_seg_image = None, image = None, mask = None):
@@ -155,7 +155,7 @@ class TrackMate(object):
 
                 tree = spatial.cKDTree(centroids)
 
-                self._timed_channel_seg_image[str(i)] =  tree, centroid, labels, volume, intensity_mean
+                self._timed_channel_seg_image[str(i)] =  tree, centroids, labels, volume, intensity_mean
           
 
     def _get_attributes(self):
@@ -193,7 +193,7 @@ class TrackMate(object):
                     self.timed_mask = None
                     self.boundary = None
 
-    def _exchange_xml(self, frame):
+    #def _exchange_xml(self, frame):
           
 
 
@@ -362,6 +362,14 @@ class TrackMate(object):
     def _get_xml_data(self):
 
                 self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
+                
+                if self.channel_seg_image is not None:
+                      self.channel_xml_content = self.xml_content
+                      self.xml_tree = et.parse(self.xml_path)
+                      self.xml_root = self.xml_tree.getroot()
+                      self.channel_xml_name = 'second_channel_' + os.path.splitext(os.path.basename(self.xml_path)[0]) + '.xml'
+                      self.channel_xml_path = os.path.dirname(self.xml_path)
+                       
                 self.unique_objects = {}
                 self.unique_properties = {}
                 self.AllTrackIds = []
@@ -452,6 +460,41 @@ class TrackMate(object):
                                             self.distance_cell_mask_key: round(float(distance_cell_mask),2)
 
                                     } 
+
+                if self.channel_seg_image is not None:                    
+                        for Spotobject in self.xml_root.iter('Spot'):
+                                cell_id = int(Spotobject.get(self.spotid_key))
+                                
+ 
+                                new_positionx =  self.channel_unique_spot_properties[cell_id][self.xposid_key]
+                                new_positiony =  self.channel_unique_spot_properties[cell_id][self.yposid_key]
+                                new_positionz =  self.channel_unique_spot_properties[cell_id][self.zposid_key]
+
+                                new_total_intensity_ch1 = self.channel_unique_spot_properties[cell_id][self.total_intensity_ch1_key]
+                                new_mean_intensity_ch1 = self.channel_unique_spot_properties[cell_id][self.mean_intensity_ch1_key]
+                                new_total_intensity_ch2 = self.channel_unique_spot_properties[cell_id][self.total_intensity_ch2_key]
+                                new_mean_intensity_ch2 = self.channel_unique_spot_properties[cell_id][self.mean_intensity_ch2_key]
+
+                                new_radius = self.channel_unique_spot_properties[cell_id][self.radius_key]
+                                new_quality = self.channel_unique_spot_properties[cell_id][self.quality_key]
+                                new_distance_cell_mask = self.channel_unique_spot_properties[cell_id][self.distance_cell_mask_key]
+
+                                Spotobject.set(self.xposid_key, new_positionx)     
+                                Spotobject.set(self.yposid_key, new_positiony)
+                                Spotobject.set(self.zposid_key, new_positionz)
+
+                                Spotobject.set(self.total_intensity_ch1_key, new_total_intensity_ch1)     
+                                Spotobject.set(self.mean_intensity_ch1_key, new_mean_intensity_ch1)
+                                Spotobject.set(self.total_intensity_ch2_key, new_total_intensity_ch2)
+                                Spotobject.set(self.mean_intensity_ch2_key, new_mean_intensity_ch2)
+
+                                Spotobject.set(self.radius_key, new_radius)     
+                                Spotobject.set(self.quality_key, new_quality)
+                                Spotobject.set(self.distance_cell_mask_key, new_distance_cell_mask)
+
+
+
+
 
                 for track in self.tracks.findall('Track'):
 
