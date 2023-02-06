@@ -495,7 +495,7 @@ class TrackMate(object):
                                 Spotobject.set(self.quality_key, str(new_quality))
                                 Spotobject.set(self.distance_cell_mask_key, str(new_distance_cell_mask))
 
-                tree.write(os.path.join(self.channel_xml_path, self.channel_xml_name))
+                self.xml_tree.write(os.path.join(self.channel_xml_path, self.channel_xml_name))
 
 
 
