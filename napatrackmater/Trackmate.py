@@ -151,10 +151,11 @@ class TrackMate(object):
                 labels = [prop.label for prop in properties]
                 volume = [prop.area for prop in properties]
                 intensity_mean = [prop.intensity_mean for prop in properties]
+                intensity_total = [prop.intensity_mean * prop.area for prop in properties]
 
                 tree = spatial.cKDTree(centroids)
 
-                self._timed_channel_seg_image[str(i)] =  tree, centroids, labels, volume, intensity_mean
+                self._timed_channel_seg_image[str(i)] =  tree, centroids, labels, volume, intensity_mean, intensity_total
           
 
     def _get_attributes(self):
@@ -439,8 +440,7 @@ class TrackMate(object):
                         }
             
                         if self.channel_seg_image is not None:
-                                    tree, centroids, labels, volume, intensity_mean = self._timed_channel_seg_image[str(int(float(frame)))]
-                                    intensity_total = volume * intensity_mean
+                                    tree, centroids, labels, volume, intensity_mean, intensity_total = self._timed_channel_seg_image[str(int(float(frame)))]
                                     dist, index = tree.query(testlocation)
                                     location = (int(centroids[index][0]), int(centroids[index][1]), int(centroids[index][2]))
                                     QUALITY = volume[index]
