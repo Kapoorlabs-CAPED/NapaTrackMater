@@ -479,20 +479,20 @@ class TrackMate(object):
                                 new_quality = self.channel_unique_spot_properties[cell_id][self.quality_key]
                                 new_distance_cell_mask = self.channel_unique_spot_properties[cell_id][self.distance_cell_mask_key]
 
-                                Spotobject.set(self.xposid_key, new_positionx)     
-                                Spotobject.set(self.yposid_key, new_positiony)
-                                Spotobject.set(self.zposid_key, new_positionz)
+                                Spotobject.set(self.xposid_key, str(new_positionx))     
+                                Spotobject.set(self.yposid_key, str(new_positiony))
+                                Spotobject.set(self.zposid_key, str(new_positionz))
 
-                                Spotobject.set(self.total_intensity_ch1_key, new_total_intensity_ch1)     
-                                Spotobject.set(self.mean_intensity_ch1_key, new_mean_intensity_ch1)
-                                Spotobject.set(self.total_intensity_ch2_key, new_total_intensity_ch2)
-                                Spotobject.set(self.mean_intensity_ch2_key, new_mean_intensity_ch2)
+                                Spotobject.set(self.total_intensity_ch1_key, str(new_total_intensity_ch1))     
+                                Spotobject.set(self.mean_intensity_ch1_key, str(new_mean_intensity_ch1))
+                                Spotobject.set(self.total_intensity_ch2_key, str(new_total_intensity_ch2))
+                                Spotobject.set(self.mean_intensity_ch2_key, str(new_mean_intensity_ch2))
 
-                                Spotobject.set(self.radius_key, new_radius)     
-                                Spotobject.set(self.quality_key, new_quality)
-                                Spotobject.set(self.distance_cell_mask_key, new_distance_cell_mask)
+                                Spotobject.set(self.radius_key, str(new_radius))     
+                                Spotobject.set(self.quality_key, str(new_quality))
+                                Spotobject.set(self.distance_cell_mask_key, str(new_distance_cell_mask))
 
-
+                tree.write(os.path.join(self.channel_xml_path, self.channel_xml_name))
 
 
 
