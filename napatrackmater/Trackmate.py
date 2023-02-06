@@ -428,14 +428,14 @@ class TrackMate(object):
                         }
             
                         if self.channel_seg_image is not None:
-                                    tree, centroids, labels, vloume, intensity_mean = self._timed_channel_seg_image[str(int(float(frame)))]
+                                    tree, centroids, labels, volume, intensity_mean = self._timed_channel_seg_image[str(int(float(frame)))]
                                     intensity_total = volume * intensity_mean
                                     dist, index = tree.query(testlocation)
                                     location = (int(centroids[index][0]), int(centroids[index][1]), int(centroids[index][2]))
                                     QUALITY = volume[index]
                                     RADIUS = math.pow(QUALITY, 1.0/3.0) * self.xcalibration * self.ycalibration * self.zcalibration
                                     distance_cell_mask = self._get_boundary_dist(frame, location, RADIUS)
-                                    channel_unique_spot_properties[cell_id] = {
+                                    self.channel_unique_spot_properties[cell_id] = {
                                             self.cellid_key: int(cell_id), 
                                             self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
                                             self.zposid_key : round(float(centroids[index][0]), 3),
