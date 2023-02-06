@@ -453,10 +453,10 @@ class TrackMate(object):
                                             self.yposid_key : round(float(centroids[index][1]), 3),
                                             self.xposid_key : round(float(centroids[index][2]), 3),
 
-                                            self.total_intensity_ch1_key : round(float(intensity_total)),
-                                            self.mean_intensity_ch1_key : round(float(intensity_mean)),
-                                            self.total_intensity_ch2_key : round(float(intensity_total)),
-                                            self.mean_intensity_ch2_key : round(float(intensity_mean)),
+                                            self.total_intensity_ch1_key : round(float(intensity_total[index])),
+                                            self.mean_intensity_ch1_key : round(float(intensity_mean[index])),
+                                            self.total_intensity_ch2_key : round(float(intensity_total[index])),
+                                            self.mean_intensity_ch2_key : round(float(intensity_mean[index])),
 
                                             self.radius_key : round(float(RADIUS)),
                                             self.quality_key : round(float(QUALITY)),
