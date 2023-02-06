@@ -146,7 +146,7 @@ class TrackMate(object):
 
           for i in range(self.channel_seg_image.shape[0]):
                 
-                properties = regionprops(self.channel_seg_image[i,:], intensity_image)
+                properties = regionprops(self.channel_seg_image[i,:], intensity_image[i,:])
                 centroids = [prop.centroid for prop in properties]
                 labels = [prop.label for prop in properties]
                 volume = [prop.area for prop in properties]
