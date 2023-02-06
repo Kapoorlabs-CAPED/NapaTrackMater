@@ -367,7 +367,7 @@ class TrackMate(object):
                       self.channel_xml_content = self.xml_content
                       self.xml_tree = et.parse(self.xml_path)
                       self.xml_root = self.xml_tree.getroot()
-                      self.channel_xml_name = 'second_channel_' + os.path.splitext(os.path.basename(self.xml_path)[0]) + '.xml'
+                      self.channel_xml_name = 'second_channel_' + os.path.splitext(os.path.basename(self.xml_path))[0] + '.xml'
                       self.channel_xml_path = os.path.dirname(self.xml_path)
                        
                 self.unique_objects = {}
