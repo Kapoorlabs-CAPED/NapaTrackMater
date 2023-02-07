@@ -392,95 +392,94 @@ class TrackMate(object):
                             self._iterate_split_down(root_leaf, root_splits)
                             for edge in track.findall('Edge'):
                                 print('last edge loop')
-                                self._edge_computer(edge, current_tracklets, current_tracklets_properties,  root_splits, all_source_ids, all_target_ids, unique_tracklet_ids, current_cell_ids, track_id)
+                                source_id = edge.get(self.spot_source_id_key)
+                                target_id = edge.get(self.spot_target_id_key)
+                                
+                                #Root 
+                                if int(source_id) not in all_target_ids:
+                                        current_cell_ids.append(int(source_id))
+                                        self._dict_update(unique_tracklet_ids, source_id, track_id, None, target_id)
+
+                                #Leaf
+                                if int(target_id) not in all_source_ids:
+                                        current_cell_ids.append(int(target_id))
+                                        self._dict_update(unique_tracklet_ids, target_id, track_id, source_id, None)
+
+                                        
+                                #All other types
+                                else:
+                                        current_cell_ids.append(int(source_id)) 
+                                        self._dict_update(unique_tracklet_ids, source_id, track_id, source_id, target_id)
+                                        
+                                        
+                                                    
+
+                                # Determine if a track has divisions or none
+                                if len(root_splits) > 0:
+                                    DividingTrajectory = True
+                                    if str(track_id) not in self.AllTrackIds:
+                                        self.AllTrackIds.append(str(track_id))
+                                    if str(track_id) not in self.DividingTrackIds:     
+                                        self.DividingTrackIds.append(str(track_id))
+                                            
+                                else:
+                                    DividingTrajectory = False
+                                    if str(track_id) not in self.AllTrackIds:
+                                        self.AllTrackIds.append(str(track_id))
+                                    if str(track_id) not in self.NormalTrackIds:    
+                                        self.NormalTrackIds.append(str(track_id))
+
+                                if int(source_id) not in all_target_ids:
+                                        self.unique_spot_properties[int(source_id)].update({self.dividing_key : DividingTrajectory})
+                                if int(target_id) not in all_source_ids:
+                                        self.unique_spot_properties[int(target_id)].update({self.dividing_key : DividingTrajectory})    
+                            
                             
 
-    def _edge_computer(self, edge, current_tracklets, current_tracklets_properties, root_splits, all_source_ids, all_target_ids, unique_tracklet_ids, current_cell_ids, track_id):
-            
+                            for k in range(len(current_cell_ids)):
+                                        
+                                    print('loop of unique spot properties')
+                                    all_dict_values = self.unique_spot_properties[k]
+                                    unique_id = str(all_dict_values[self.uniqueid_key])
+                                    current_track_id = str(all_dict_values[self.trackid_key])
+                                    t = int(float(all_dict_values[self.frameid_key]))
+                                    z = float(all_dict_values[self.zposid_key])
+                                    y = float(all_dict_values[self.yposid_key])
+                                    x = float(all_dict_values[self.xposid_key])
+                                    gen_id = int(float(all_dict_values[self.generationid_key]))
+                                    speed = float(all_dict_values[self.speed_key])
+                                    dcr = float(all_dict_values[self.directional_change_rate_key])
+                                    dcr = scale_value(float(dcr))
+                                    speed = scale_value(float(speed))
+                                    total_intensity_ch1 =  float(all_dict_values[self.total_intensity_ch1_key])
+                                    total_intensity_ch2 =  float(all_dict_values[self.total_intensity_ch2_key])
+                                    volume_pixels = int(float(all_dict_values[self.quality_key]))
+                                    if current_track_id in current_tracklets:
+                                        tracklet_array = current_tracklets[current_track_id]
+                                        current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
+                                        current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
 
-        source_id = edge.get(self.spot_source_id_key)
-        target_id = edge.get(self.spot_target_id_key)
-        
-        #Root 
-        if int(source_id) not in all_target_ids:
-                self._dict_update(unique_tracklet_ids, current_cell_ids, edge, source_id, track_id, None, target_id)
+                                        value_array = current_tracklets_properties[current_track_id]
+                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity_ch1, total_intensity_ch2, volume_pixels])
+                                        current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
 
-        #Leaf
-        if int(target_id) not in all_source_ids:
-                self._dict_update(unique_tracklet_ids, current_cell_ids, edge, target_id, track_id, source_id, None)
+                                    else:
+                                        current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
+                                        current_tracklets[current_track_id] = current_tracklet_array 
 
-                
-        #All other types
-        else:
-                self._dict_update(unique_tracklet_ids, current_cell_ids, edge, source_id, track_id, source_id, target_id)
-                
-                
+                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity_ch1, total_intensity_ch2, volume_pixels])
+                                        current_tracklets_properties[current_track_id] = current_value_array
+                                            
+
+                                
+                                
+                            current_tracklets = np.asarray(current_tracklets[str(track_id)])
+                            current_tracklets_properties = np.asarray(current_tracklets_properties[str(track_id)])
                             
-
-        # Determine if a track has divisions or none
-        if len(root_splits) > 0:
-            DividingTrajectory = True
-            if str(track_id) not in self.AllTrackIds:
-                self.AllTrackIds.append(str(track_id))
-            if str(track_id) not in self.DividingTrackIds:     
-                self.DividingTrackIds.append(str(track_id))
-                    
-        else:
-            DividingTrajectory = False
-            if str(track_id) not in self.AllTrackIds:
-                self.AllTrackIds.append(str(track_id))
-            if str(track_id) not in self.NormalTrackIds:    
-                self.NormalTrackIds.append(str(track_id))
-
-        if int(source_id) not in all_target_ids:
-                self.unique_spot_properties[int(source_id)].update({self.dividing_key : DividingTrajectory})
-        if int(target_id) not in all_source_ids:
-                self.unique_spot_properties[int(target_id)].update({self.dividing_key : DividingTrajectory})    
-    
-    
-
-        for (k,v) in self.unique_spot_properties.items():
-            print('loop of unique spot properties')
-            if int(k) in current_cell_ids:
-                all_dict_values = self.unique_spot_properties[k]
-                unique_id = str(all_dict_values[self.uniqueid_key])
-                current_track_id = str(all_dict_values[self.trackid_key])
-                t = int(float(all_dict_values[self.frameid_key]))
-                z = float(all_dict_values[self.zposid_key])
-                y = float(all_dict_values[self.yposid_key])
-                x = float(all_dict_values[self.xposid_key])
-                gen_id = int(float(all_dict_values[self.generationid_key]))
-                speed = float(all_dict_values[self.speed_key])
-                dcr = float(all_dict_values[self.directional_change_rate_key])
-                dcr = scale_value(float(dcr))
-                speed = scale_value(float(speed))
-                total_intensity_ch1 =  float(all_dict_values[self.total_intensity_ch1_key])
-                total_intensity_ch2 =  float(all_dict_values[self.total_intensity_ch2_key])
-                volume_pixels = int(float(all_dict_values[self.quality_key]))
-                if current_track_id in current_tracklets:
-                    tracklet_array = current_tracklets[current_track_id]
-                    current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
-                    current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
-
-                    value_array = current_tracklets_properties[current_track_id]
-                    current_value_array = np.array([t, gen_id, speed, dcr, total_intensity_ch1, total_intensity_ch2, volume_pixels])
-                    current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
-
-                else:
-                    current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
-                    current_tracklets[current_track_id] = current_tracklet_array 
-
-                    current_value_array = np.array([t, gen_id, speed, dcr, total_intensity_ch1, total_intensity_ch2, volume_pixels])
-                    current_tracklets_properties[current_track_id] = current_value_array
-                        
+                            self.unique_tracks[track_id] = current_tracklets     
+                            self.unique_track_properties[track_id] = current_tracklets_properties
 
         
-        
-        current_tracklets = np.asarray(current_tracklets[str(track_id)])
-        current_tracklets_properties = np.asarray(current_tracklets_properties[str(track_id)])
-        
-        self.unique_tracks[track_id] = current_tracklets     
-        self.unique_track_properties[track_id] = current_tracklets_properties
 
 
     def _spot_computer(self, frame):
@@ -704,7 +703,7 @@ class TrackMate(object):
                 self.unique_fft_properties[track_id] = time, xf_sample_ch1, ffttotal_sample_ch1, xf_sample_ch2, ffttotal_sample_ch2
 
                                  
-    def _dict_update(self, unique_tracklet_ids: List, current_cell_ids: List, edge, cell_id, track_id, source_id, target_id):
+    def _dict_update(self, unique_tracklet_ids: List,  cell_id, track_id, source_id, target_id):
 
  
         print('dict update') 
@@ -714,7 +713,7 @@ class TrackMate(object):
         unique_id = str(track_id) + str(generation_id) + str(tracklet_id)
         unique_tracklet_ids.append(str(unique_id))
     
-        current_cell_ids.append(int(cell_id))
+        
         self.unique_spot_properties[int(cell_id)].update({self.uniqueid_key : str(unique_id)})
         self.unique_spot_properties[int(cell_id)].update({self.trackletid_key : str(tracklet_id)}) 
         self.unique_spot_properties[int(cell_id)].update({self.generationid_key : str(generation_id)}) 
