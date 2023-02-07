@@ -172,6 +172,7 @@ class TrackMate(object):
         
     def _get_boundary_points(self):
          
+        print('Computing boundary points') 
         if  self.mask is not None and self.image is not None:
                     if len(self.mask.shape) < len(self.image.shape):
                         self.update_mask = np.zeros(
@@ -532,7 +533,7 @@ class TrackMate(object):
 
 
                 
-
+                self.count = 0
                 self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
                 
                 if self.channel_seg_image is not None:
@@ -582,18 +583,18 @@ class TrackMate(object):
                              futures.append(executor.submit(self._spot_computer, frame))
 
                 [r.result() for r in futures]
-
+                print('Iterating over spots in frame')  
                 with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
                     futures = []         
                     for track in self.tracks.findall('Track'):
                         futures.append(executor.submit(self._track_computer, track))
 
                 [r.result() for r in futures]
-
+                print('Iterating over tracks')
                 if self.channel_seg_image is not None:  
 
                         channel_filtered_tracks = []    
-                                      
+                        print('Transferring XML')               
                         for Spotobject in self.xml_root.iter('Spot'):
                                 cell_id = int(Spotobject.get(self.spotid_key))
                                 
@@ -626,24 +627,25 @@ class TrackMate(object):
                                 track_id = self.unique_spot_properties[int(cell_id)][self.trackid_key]
                                 channel_filtered_tracks.append(track_id)
 
-                        for Trackobject in root.iter('Track'):
+                        for Trackobject in self.xml_root.iter('Track'):
                               track_id = Trackobject.get(self.trackid_key)
                               if track_id not in channel_filtered_tracks:
-                                      root.remove(Trackobject)   
-                        for Edgeobject in root.iter('Edge'):
+                                      self.xml_root.remove(Trackobject)   
+                        for Edgeobject in self.xml_root.iter('Edge'):
                                 spot_source_id = int(float(Edgeobject.get(self.spot_source_id_key)))  
                                 spot_target_id = int(float(Edgeobject.get(self.spot_target_id_key)))      
                                 if spot_source_id not in self.channel_unique_spot_properties.keys() and spot_target_id not in self.channel_unique_spot_properties.keys():
-                                      root.remove(Edgeobject)
+                                      self.xml_root.remove(Edgeobject)
 
-                        for Filterobject in root.iter('TrackID'):
+                        for Filterobject in self.xml_root.iter('TrackID'):
                               filter_track_id = int(float(Filterobject.get(self.trackid_key)))  
                               if filter_track_id not in channel_filtered_tracks:
-                                    root.remove(Filterobject)                
+                                    self.xml_root.remove(Filterobject)                
 
                 self.xml_tree.write(os.path.join(self.channel_xml_path, self.channel_xml_name))
                 
                 if self.fourier:
+                   print('computing Fourier')
                    self._compute_fourier()
 
                 for (k,v) in self.graph_split.items():
