@@ -393,12 +393,8 @@ class TrackMate(object):
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
 
                             self._iterate_split_down(root_leaf, root_splits)
-                            futures = [] 
-                            with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
-                                
-                                for edge in track.findall('Edge'):
-                                        futures.append(executor.submit(self._edge_computer, edge, current_tracklets, current_tracklets_properties,  root_splits, all_source_ids, all_target_ids, unique_tracklet_ids, current_cell_ids, track_id))
-                                [r.result() for r in futures]
+                            for edge in track.findall('Edge'):
+                                self._edge_computer(edge, current_tracklets, current_tracklets_properties,  root_splits, all_source_ids, all_target_ids, unique_tracklet_ids, current_cell_ids, track_id)
                             
 
     def _edge_computer(self, edge, current_tracklets, current_tracklets_properties, root_splits, all_source_ids, all_target_ids, unique_tracklet_ids, current_cell_ids, track_id):
