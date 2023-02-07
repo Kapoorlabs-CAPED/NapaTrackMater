@@ -379,9 +379,11 @@ class TrackMate(object):
            
             
            track_id = int(track.get(self.trackid_key))
-           self.count = self.count + 1
+           
            
            if track_id in self.filtered_track_ids:
+
+                            self.count = self.count + 1 
                         
                             current_cell_ids = []
                             unique_tracklet_ids = []
