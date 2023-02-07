@@ -148,7 +148,7 @@ class TrackMate(object):
           self._timed_channel_seg_image = {}
           
           futures = []
-          with concurrent.futures.ProcessPoolExecutor(max_workers = os.cpu_count()) as executor:
+          with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                     for i in range(self.channel_seg_image.shape[0]):
                         futures.append(executor.submit(self._channel_computer, i))
                     [r.result() for r in futures]
@@ -587,7 +587,7 @@ class TrackMate(object):
                 print('Iterating over spots in frame')
                 futures = []
 
-                with concurrent.futures.ProcessPoolExecutor(max_workers = os.cpu_count()) as executor:
+                with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                     
                     for frame in self.Spotobjects.findall('SpotsInFrame'):
                              futures.append(executor.submit(self._spot_computer, frame))
@@ -596,7 +596,7 @@ class TrackMate(object):
 
                 print('Iterating over tracks')  
                 futures = []
-                with concurrent.futures.ProcessPoolExecutor(max_workers = os.cpu_count()) as executor:
+                with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                     
                     for track in self.tracks.findall('Track'):
                             futures.append(executor.submit(self._track_computer, track))
