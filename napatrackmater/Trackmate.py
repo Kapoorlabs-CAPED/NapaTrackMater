@@ -433,8 +433,9 @@ class TrackMate(object):
                             
                             
 
-                            for k in range(len(current_cell_ids)):
+                            for i in range(len(current_cell_ids)):
                                         
+                                    k = int(current_cell_ids[i])    
                                     all_dict_values = self.unique_spot_properties[k]
                                     unique_id = str(all_dict_values[self.uniqueid_key])
                                     current_track_id = str(all_dict_values[self.trackid_key])
