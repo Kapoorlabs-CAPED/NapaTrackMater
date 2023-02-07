@@ -359,132 +359,13 @@ class TrackMate(object):
 
         return distance_cell_mask        
          
-    
 
-    def _get_xml_data(self):
-
-
-                
-
-                self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
-                
-                if self.channel_seg_image is not None:
-                      self.channel_xml_content = self.xml_content
-                      self.xml_tree = et.parse(self.xml_path)
-                      self.xml_root = self.xml_tree.getroot()
-                      self.channel_xml_name = 'second_channel_' + os.path.splitext(os.path.basename(self.xml_path))[0] + '.xml'
-                      self.channel_xml_path = os.path.dirname(self.xml_path)
-                      self._create_channel_tree()
-                       
-                self.unique_objects = {}
-                self.unique_properties = {}
-                self.AllTrackIds = []
-                self.DividingTrackIds = []
-                self.NormalTrackIds = []
-                self.all_track_properties = []
-                self.split_points_times = []
-
-                self.filtered_track_ids = [
-                    int(track.get(self.trackid_key))
-                    for track in self.xml_content.find("Model")
-                    .find("FilteredTracks")
-                    .findall("TrackID")
-                ]
-                
-                self.AllTrackIds.append(None)
-                self.DividingTrackIds.append(None)
-                self.NormalTrackIds.append(None)
-                
-                self.AllTrackIds.append(self.TrackidBox)
-                self.DividingTrackIds.append(self.TrackidBox)
-                self.NormalTrackIds.append(self.TrackidBox)
-                
-                
-                self.Spotobjects = self.xml_content.find('Model').find('AllSpots')
-                # Extract the tracks from xml
-                self.tracks = self.xml_content.find("Model").find("AllTracks")
-                self.settings = self.xml_content.find("Settings").find("ImageData")
-                self.xcalibration = float(self.settings.get("pixelwidth"))
-                self.ycalibration = float(self.settings.get("pixelheight"))
-                self.zcalibration = float(self.settings.get("voxeldepth"))
-                self.tcalibration = int(float(self.settings.get("timeinterval")))
-                self._get_boundary_points()
-
-                for frame in self.Spotobjects.findall('SpotsInFrame'):
-
-                    for Spotobject in frame.findall('Spot'):
-                        # Create object with unique cell ID
-                        cell_id = int(Spotobject.get(self.spotid_key))
-                        # Get the TZYX location of the cells in that frame
-                        TOTAL_INTENSITY_CH1 = Spotobject.get(self.total_intensity_ch1_key)
-                        MEAN_INTENSITY_CH1 = Spotobject.get(self.mean_intensity_ch1_key)
-                        TOTAL_INTENSITY_CH2 = Spotobject.get(self.total_intensity_ch2_key)
-                        MEAN_INTENSITY_CH2 = Spotobject.get(self.mean_intensity_ch2_key)
-                        RADIUS = Spotobject.get(self.radius_key)
-                        QUALITY = Spotobject.get(self.quality_key)
-                        testlocation = (Spotobject.get(self.zposid_key), Spotobject.get(self.yposid_key),  Spotobject.get(self.xposid_key))
-                        frame = Spotobject.get(self.frameid_key)
-                        distance_cell_mask = self._get_boundary_dist(frame, testlocation, RADIUS)
-                        
-                        self.unique_spot_properties[cell_id] = {
-                            self.cellid_key: int(cell_id), 
-                            self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
-                            self.zposid_key : round(float(Spotobject.get(self.zposid_key)), 3),
-                            self.yposid_key : round(float(Spotobject.get(self.yposid_key)), 3),
-                            self.xposid_key : round(float(Spotobject.get(self.xposid_key)), 3),
-                            self.total_intensity_ch1_key : round(float(TOTAL_INTENSITY_CH1)),
-                            self.mean_intensity_ch1_key : round(float(MEAN_INTENSITY_CH1)),
-                            self.total_intensity_ch2_key : round(float(TOTAL_INTENSITY_CH2)),
-                            self.mean_intensity_ch2_key : round(float(MEAN_INTENSITY_CH2)),
-                            self.radius_key : round(float(RADIUS)),
-                            self.quality_key : round(float(QUALITY)),
-                            self.distance_cell_mask_key: round(float(distance_cell_mask),2)
-                        }
+    def _track_computer(self, track):
+           
             
-                        if self.channel_seg_image is not None:
-                                    tree, centroids, labels, volume, intensity_mean, intensity_total, bounding_boxes = self._timed_channel_seg_image[str(int(float(frame)))]
-                                    dist, index = tree.query(testlocation)
+           track_id = int(track.get(self.trackid_key))
 
-
-                                    bbox = bounding_boxes[index]
-                                    sizez = abs(bbox[0] - bbox[3])
-                                    sizey = abs(bbox[1] - bbox[4])
-                                    sizex = abs(bbox[2] - bbox[5]) 
-                                    veto_volume = sizex * sizey * sizez
-                                    veto_radius = math.pow(3 * veto_volume / (4 * math.pi), 1.0 / 3.0)
-    
-                                    if dist < veto_radius:
-                                            location = (int(centroids[index][0]), int(centroids[index][1]), int(centroids[index][2]))
-                                            QUALITY = volume[index]
-                                            RADIUS = math.pow(QUALITY, 1.0/3.0) * self.xcalibration * self.ycalibration * self.zcalibration
-                                            distance_cell_mask = self._get_boundary_dist(frame, location, RADIUS)
-                                            self.channel_unique_spot_properties[cell_id] = {
-                                                    self.cellid_key: int(cell_id), 
-                                                    self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
-                                                    self.zposid_key : round(float(centroids[index][0]), 3),
-                                                    self.yposid_key : round(float(centroids[index][1]), 3),
-                                                    self.xposid_key : round(float(centroids[index][2]), 3),
-
-                                                    self.total_intensity_ch1_key : round(float(intensity_total[index])),
-                                                    self.mean_intensity_ch1_key : round(float(intensity_mean[index])),
-                                                    self.total_intensity_ch2_key : round(float(intensity_total[index])),
-                                                    self.mean_intensity_ch2_key : round(float(intensity_mean[index])),
-
-                                                    self.radius_key : round(float(RADIUS)),
-                                                    self.quality_key : round(float(QUALITY)),
-                                                    self.distance_cell_mask_key: round(float(distance_cell_mask),2)
-
-                                            } 
-
-                
-
-
-
-                for track in self.tracks.findall('Track'):
-
-                    track_id = int(track.get(self.trackid_key))
-
-                    if track_id in self.filtered_track_ids:
+           if track_id in self.filtered_track_ids:
                         
                             current_cell_ids = []
                             unique_tracklet_ids = []
@@ -499,7 +380,6 @@ class TrackMate(object):
 
                                 source_id = edge.get(self.spot_source_id_key)
                                 target_id = edge.get(self.spot_target_id_key)
-
                                 
                                 #Root 
                                 if int(source_id) not in all_target_ids:
@@ -581,6 +461,133 @@ class TrackMate(object):
                             self.unique_tracks[track_id] = current_tracklets     
                             self.unique_track_properties[track_id] = current_tracklets_properties
 
+    def _spot_computer(self, frame):
+          for Spotobject in frame.findall('Spot'):
+                        # Create object with unique cell ID
+                        cell_id = int(Spotobject.get(self.spotid_key))
+                        # Get the TZYX location of the cells in that frame
+                        TOTAL_INTENSITY_CH1 = Spotobject.get(self.total_intensity_ch1_key)
+                        MEAN_INTENSITY_CH1 = Spotobject.get(self.mean_intensity_ch1_key)
+                        TOTAL_INTENSITY_CH2 = Spotobject.get(self.total_intensity_ch2_key)
+                        MEAN_INTENSITY_CH2 = Spotobject.get(self.mean_intensity_ch2_key)
+                        RADIUS = Spotobject.get(self.radius_key)
+                        QUALITY = Spotobject.get(self.quality_key)
+                        testlocation = (Spotobject.get(self.zposid_key), Spotobject.get(self.yposid_key),  Spotobject.get(self.xposid_key))
+                        frame = Spotobject.get(self.frameid_key)
+                        distance_cell_mask = self._get_boundary_dist(frame, testlocation, RADIUS)
+                        
+                        self.unique_spot_properties[cell_id] = {
+                            self.cellid_key: int(cell_id), 
+                            self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
+                            self.zposid_key : round(float(Spotobject.get(self.zposid_key)), 3),
+                            self.yposid_key : round(float(Spotobject.get(self.yposid_key)), 3),
+                            self.xposid_key : round(float(Spotobject.get(self.xposid_key)), 3),
+                            self.total_intensity_ch1_key : round(float(TOTAL_INTENSITY_CH1)),
+                            self.mean_intensity_ch1_key : round(float(MEAN_INTENSITY_CH1)),
+                            self.total_intensity_ch2_key : round(float(TOTAL_INTENSITY_CH2)),
+                            self.mean_intensity_ch2_key : round(float(MEAN_INTENSITY_CH2)),
+                            self.radius_key : round(float(RADIUS)),
+                            self.quality_key : round(float(QUALITY)),
+                            self.distance_cell_mask_key: round(float(distance_cell_mask),2)
+                        }
+            
+                        if self.channel_seg_image is not None:
+                                    tree, centroids, labels, volume, intensity_mean, intensity_total, bounding_boxes = self._timed_channel_seg_image[str(int(float(frame)))]
+                                    dist, index = tree.query(testlocation)
+
+
+                                    bbox = bounding_boxes[index]
+                                    sizez = abs(bbox[0] - bbox[3])
+                                    sizey = abs(bbox[1] - bbox[4])
+                                    sizex = abs(bbox[2] - bbox[5]) 
+                                    veto_volume = sizex * sizey * sizez
+                                    veto_radius = math.pow(3 * veto_volume / (4 * math.pi), 1.0 / 3.0)
+    
+                                    if dist < veto_radius:
+                                            location = (int(centroids[index][0]), int(centroids[index][1]), int(centroids[index][2]))
+                                            QUALITY = volume[index]
+                                            RADIUS = math.pow(QUALITY, 1.0/3.0) * self.xcalibration * self.ycalibration * self.zcalibration
+                                            distance_cell_mask = self._get_boundary_dist(frame, location, RADIUS)
+                                            self.channel_unique_spot_properties[cell_id] = {
+                                                    self.cellid_key: int(cell_id), 
+                                                    self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
+                                                    self.zposid_key : round(float(centroids[index][0]), 3),
+                                                    self.yposid_key : round(float(centroids[index][1]), 3),
+                                                    self.xposid_key : round(float(centroids[index][2]), 3),
+
+                                                    self.total_intensity_ch1_key : round(float(intensity_total[index])),
+                                                    self.mean_intensity_ch1_key : round(float(intensity_mean[index])),
+                                                    self.total_intensity_ch2_key : round(float(intensity_total[index])),
+                                                    self.mean_intensity_ch2_key : round(float(intensity_mean[index])),
+
+                                                    self.radius_key : round(float(RADIUS)),
+                                                    self.quality_key : round(float(QUALITY)),
+                                                    self.distance_cell_mask_key: round(float(distance_cell_mask),2)
+
+                                            } 
+
+
+    def _get_xml_data(self):
+
+
+                
+
+                self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
+                
+                if self.channel_seg_image is not None:
+                      self.channel_xml_content = self.xml_content
+                      self.xml_tree = et.parse(self.xml_path)
+                      self.xml_root = self.xml_tree.getroot()
+                      self.channel_xml_name = 'second_channel_' + os.path.splitext(os.path.basename(self.xml_path))[0] + '.xml'
+                      self.channel_xml_path = os.path.dirname(self.xml_path)
+                      self._create_channel_tree()
+                       
+                self.unique_objects = {}
+                self.unique_properties = {}
+                self.AllTrackIds = []
+                self.DividingTrackIds = []
+                self.NormalTrackIds = []
+                self.all_track_properties = []
+                self.split_points_times = []
+
+                self.filtered_track_ids = [
+                    int(track.get(self.trackid_key))
+                    for track in self.xml_content.find("Model")
+                    .find("FilteredTracks")
+                    .findall("TrackID")
+                ]
+                
+                self.AllTrackIds.append(None)
+                self.DividingTrackIds.append(None)
+                self.NormalTrackIds.append(None)
+                
+                self.AllTrackIds.append(self.TrackidBox)
+                self.DividingTrackIds.append(self.TrackidBox)
+                self.NormalTrackIds.append(self.TrackidBox)
+                
+                nthreads = os.cpu_count() - 1 
+                self.Spotobjects = self.xml_content.find('Model').find('AllSpots')
+                # Extract the tracks from xml
+                self.tracks = self.xml_content.find("Model").find("AllTracks")
+                self.settings = self.xml_content.find("Settings").find("ImageData")
+                self.xcalibration = float(self.settings.get("pixelwidth"))
+                self.ycalibration = float(self.settings.get("pixelheight"))
+                self.zcalibration = float(self.settings.get("voxeldepth"))
+                self.tcalibration = int(float(self.settings.get("timeinterval")))
+                self._get_boundary_points()
+                with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
+                    futures = []
+                    for frame in self.Spotobjects.findall('SpotsInFrame'):
+                             futures.append(executor.submit(self._spot_computer, frame))
+
+                [r.result() for r in futures]
+
+                with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
+                    futures = []         
+                    for track in self.tracks.findall('Track'):
+                        futures.append(executor.submit(self._track_computer, track))
+
+                [r.result() for r in futures]
 
                 if self.channel_seg_image is not None:  
 
