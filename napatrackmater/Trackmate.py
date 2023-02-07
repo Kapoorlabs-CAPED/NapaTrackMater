@@ -477,6 +477,8 @@ class TrackMate(object):
                             self.unique_tracks[track_id] = current_tracklets     
                             self.unique_track_properties[track_id] = current_tracklets_properties
 
+           return self.count                
+
     def _spot_computer(self, frame):
           for Spotobject in frame.findall('Spot'):
                         # Create object with unique cell ID
@@ -593,15 +595,18 @@ class TrackMate(object):
                              futures.append(executor.submit(self._spot_computer, frame))
 
                 [r.result() for r in futures]
+
                 print('Iterating over tracks')  
                 with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
-                    futures = []         
+                    futures = []
                     for track in self.tracks.findall('Track'):
-                        self._track_computer(track)
-                        yield self.count
+                            futures.append(executor.submit(self._track_computer, track))
+                            self._track_computer(track)
+                            
 
-               
-                
+                self.count = [r.result() for r in futures]
+                yield self.count
+
                 if self.channel_seg_image is not None:  
 
                         channel_filtered_tracks = []    
