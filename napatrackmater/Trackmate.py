@@ -601,7 +601,6 @@ class TrackMate(object):
                     futures = []
                     for track in self.tracks.findall('Track'):
                             futures.append(executor.submit(self._track_computer, track))
-                            self._track_computer(track)
                             
 
                 self.count = [r.result() for r in futures]
