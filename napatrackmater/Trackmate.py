@@ -398,8 +398,8 @@ class TrackMate(object):
                                 futures = []
                                 for edge in track.findall('Edge'):
                                         futures.append(executor.submit(self._edge_computer, edge, current_tracklets, current_tracklets_properties,  root_splits, all_source_ids, all_target_ids, unique_tracklet_ids, current_cell_ids, track_id))
-
-
+                            [r.result() for r in futures]
+                            
 
     def _edge_computer(self, edge, current_tracklets, current_tracklets_properties, root_splits, all_source_ids, all_target_ids, unique_tracklet_ids, current_cell_ids, track_id):
             
