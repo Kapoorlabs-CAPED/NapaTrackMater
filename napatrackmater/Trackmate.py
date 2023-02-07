@@ -546,10 +546,6 @@ class TrackMate(object):
     @thread_worker
     def _get_xml_data(self):
 
-
-                
-                
-                
                 
                 if self.channel_seg_image is not None:
                       self.channel_xml_content = self.xml_content
