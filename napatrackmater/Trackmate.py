@@ -379,7 +379,7 @@ class TrackMate(object):
             
            track_id = int(track.get(self.trackid_key))
            self.count = self.count + 1
-           yield self.count
+           
            if track_id in self.filtered_track_ids:
                         
                             current_cell_ids = []
@@ -547,7 +547,7 @@ class TrackMate(object):
 
                 
                 self.count = 0
-                
+                yield self.count
                 
                 if self.channel_seg_image is not None:
                       self.channel_xml_content = self.xml_content
