@@ -627,7 +627,7 @@ class TrackMate(object):
 
                         for Trackobject in root.iter('Track'):
                               track_id = Trackobject.get(self.trackid_key)
-                              if track_id not int channel_filtered_tracks:
+                              if track_id not in channel_filtered_tracks:
                                       root.remove(Trackobject)   
                         for Edgeobject in root.iter('Edge'):
                                 spot_source_id = int(float(Edgeobject.get(self.spot_source_id_key)))  
