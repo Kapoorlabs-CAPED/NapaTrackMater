@@ -393,12 +393,12 @@ class TrackMate(object):
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
 
                             self._iterate_split_down(root_leaf, root_splits)
-                
+                            futures = [] 
                             with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
-                                futures = []
+                                
                                 for edge in track.findall('Edge'):
                                         futures.append(executor.submit(self._edge_computer, edge, current_tracklets, current_tracklets_properties,  root_splits, all_source_ids, all_target_ids, unique_tracklet_ids, current_cell_ids, track_id))
-                            [r.result() for r in futures]
+                                [r.result() for r in futures]
                             
 
     def _edge_computer(self, edge, current_tracklets, current_tracklets_properties, root_splits, all_source_ids, all_target_ids, unique_tracklet_ids, current_cell_ids, track_id):
@@ -594,21 +594,24 @@ class TrackMate(object):
                 self.tcalibration = int(float(self.settings.get("timeinterval")))
                 self._get_boundary_points()
                 print('Iterating over spots in frame')
+                futures = []
+
                 with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
-                    futures = []
+                    
                     for frame in self.Spotobjects.findall('SpotsInFrame'):
                              futures.append(executor.submit(self._spot_computer, frame))
 
-                [r.result() for r in futures]
+                    [r.result() for r in futures]
 
                 print('Iterating over tracks')  
+                futures = []
                 with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
-                    futures = []
+                    
                     for track in self.tracks.findall('Track'):
                             futures.append(executor.submit(self._track_computer, track))
                             yield self.count
 
-                [r.result() for r in futures]
+                    [r.result() for r in futures]
                 
 
                 if self.channel_seg_image is not None:  
