@@ -12,6 +12,7 @@ import dask as da
 from typing import List
 from scipy.fftpack import fft, fftfreq, fftshift, ifft
 import os
+from napari.qt.threading import thread_worker
 import concurrent
 class TrackMate(object):
     
@@ -132,12 +133,6 @@ class TrackMate(object):
         self.graph_split = {}
         self.graph_tracks = {}
 
-
-        self._get_xml_data()
-        self._get_attributes()
-        self._temporal_plots_trackmate()
-        
-              
 
 
     def _create_channel_tree(self):
@@ -376,7 +371,7 @@ class TrackMate(object):
             
            track_id = int(track.get(self.trackid_key))
            self.count = self.count + 1
-           print(self.count)
+           yield self.count
            if track_id in self.filtered_track_ids:
                         
                             current_cell_ids = []
@@ -538,7 +533,7 @@ class TrackMate(object):
 
                                             } 
 
-
+    @thread_worker
     def _get_xml_data(self):
 
 
@@ -587,20 +582,21 @@ class TrackMate(object):
                 self.zcalibration = float(self.settings.get("voxeldepth"))
                 self.tcalibration = int(float(self.settings.get("timeinterval")))
                 self._get_boundary_points()
+                print('Iterating over spots in frame')
                 with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
                     futures = []
                     for frame in self.Spotobjects.findall('SpotsInFrame'):
                              futures.append(executor.submit(self._spot_computer, frame))
 
                 [r.result() for r in futures]
-                print('Iterating over spots in frame')  
+                print('Iterating over tracks')  
                 with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
                     futures = []         
                     for track in self.tracks.findall('Track'):
                         futures.append(executor.submit(self._track_computer, track))
 
                 [r.result() for r in futures]
-                print('Iterating over tracks')
+                
                 if self.channel_seg_image is not None:  
 
                         channel_filtered_tracks = []    
