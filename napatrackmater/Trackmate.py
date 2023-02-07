@@ -548,7 +548,7 @@ class TrackMate(object):
 
                 
                 
-                yield self.count
+                
                 
                 if self.channel_seg_image is not None:
                       self.channel_xml_content = self.xml_content
@@ -597,9 +597,10 @@ class TrackMate(object):
                 with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
                     futures = []         
                     for track in self.tracks.findall('Track'):
-                        futures.append(executor.submit(self._track_computer, track))
+                        self._track_computer(track)
+                        yield self.count
 
-                [r.result() for r in futures]
+               
                 
                 if self.channel_seg_image is not None:  
 
