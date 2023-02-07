@@ -384,11 +384,14 @@ class TrackMate(object):
                             unique_tracklet_ids = []
                             current_tracklets = {}
                             current_tracklets_properties = {}
+                            print('create generations')
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
+                            print('done creating generations')
 
                             self._iterate_split_down(root_leaf, root_splits)
                             for edge in track.findall('Edge'):
+                                print('last edge loop')
                                 self._edge_computer(edge, current_tracklets, current_tracklets_properties,  root_splits, all_source_ids, all_target_ids, unique_tracklet_ids, current_cell_ids, track_id)
                             
 
@@ -437,6 +440,7 @@ class TrackMate(object):
     
 
         for (k,v) in self.unique_spot_properties.items():
+            print('loop of unique spot properties')
             if int(k) in current_cell_ids:
                 all_dict_values = self.unique_spot_properties[k]
                 unique_id = str(all_dict_values[self.uniqueid_key])
@@ -702,6 +706,8 @@ class TrackMate(object):
                                  
     def _dict_update(self, unique_tracklet_ids: List, current_cell_ids: List, edge, cell_id, track_id, source_id, target_id):
 
+ 
+        print('dict update') 
         generation_id = self.generation_dict[cell_id]
         tracklet_id = self.tracklet_dict[cell_id]
 
