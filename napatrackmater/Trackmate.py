@@ -826,8 +826,19 @@ class TrackMate(object):
                       if self.trackid_key in all_spots:
                           all_spots_tracks[k] = all_spots
                 
-                for i in tqdm(range(starttime, endtime), total=endtime - starttime):
+
+                
+                futures = []
+                with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                       
+                    for i in tqdm(range(starttime, endtime), total=endtime - starttime):
+                      
+                        futures.append(executor.submit(self._compute_temporal, i, all_spots_tracks))
+ 
+                    [r.result() for r in futures]
+
+
+    def _compute_temporal(self, i, all_spots_tracks):                
                     mitotic_disp_z = []
                     mitotic_disp_y = []
                     mitotic_disp_x = []
