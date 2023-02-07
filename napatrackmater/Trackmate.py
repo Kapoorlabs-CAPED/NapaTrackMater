@@ -656,7 +656,7 @@ class TrackMate(object):
                               if filter_track_id not in channel_filtered_tracks:
                                     self.xml_root.remove(Filterobject)                
 
-                self.xml_tree.write(os.path.join(self.channel_xml_path, self.channel_xml_name))
+                        self.xml_tree.write(os.path.join(self.channel_xml_path, self.channel_xml_name))
                 
                 if self.fourier:
                    print('computing Fourier')
