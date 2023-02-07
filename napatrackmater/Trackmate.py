@@ -132,7 +132,15 @@ class TrackMate(object):
         self.tracklet_dict = {}
         self.graph_split = {}
         self.graph_tracks = {}
-
+       
+        print('Reading XML')
+        self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
+        self.filtered_track_ids = [
+                    int(track.get(self.trackid_key))
+                    for track in self.xml_content.find("Model")
+                    .find("FilteredTracks")
+                    .findall("TrackID")
+                ] 
 
 
     def _create_channel_tree(self):
@@ -539,7 +547,7 @@ class TrackMate(object):
 
                 
                 self.count = 0
-                self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
+                
                 
                 if self.channel_seg_image is not None:
                       self.channel_xml_content = self.xml_content
@@ -557,12 +565,7 @@ class TrackMate(object):
                 self.all_track_properties = []
                 self.split_points_times = []
 
-                self.filtered_track_ids = [
-                    int(track.get(self.trackid_key))
-                    for track in self.xml_content.find("Model")
-                    .find("FilteredTracks")
-                    .findall("TrackID")
-                ]
+                
                 
                 self.AllTrackIds.append(None)
                 self.DividingTrackIds.append(None)
