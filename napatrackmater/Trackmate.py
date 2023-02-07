@@ -132,6 +132,7 @@ class TrackMate(object):
         self.tracklet_dict = {}
         self.graph_split = {}
         self.graph_tracks = {}
+        self.count = 0
        
         print('Reading XML')
         self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
@@ -546,7 +547,7 @@ class TrackMate(object):
 
 
                 
-                self.count = 0
+                
                 yield self.count
                 
                 if self.channel_seg_image is not None:
