@@ -147,7 +147,7 @@ class TrackMate(object):
     def _create_channel_tree(self):
           self._timed_channel_seg_image = {}
           
-          nthreads = os.cpu_count()
+          nthreads = os.cpu_count() * 2
           with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
                     futures = []         
                     for i in range(self.channel_seg_image.shape[0]):
@@ -575,7 +575,7 @@ class TrackMate(object):
                 self.DividingTrackIds.append(self.TrackidBox)
                 self.NormalTrackIds.append(self.TrackidBox)
                 
-                nthreads = os.cpu_count() - 1 
+                nthreads = os.cpu_count() * 2
                 self.Spotobjects = self.xml_content.find('Model').find('AllSpots')
                 # Extract the tracks from xml
                 self.tracks = self.xml_content.find("Model").find("AllTracks")
