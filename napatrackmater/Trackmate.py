@@ -663,7 +663,8 @@ class TrackMate(object):
                             daughter_track_id =  int(float(str(self.unique_spot_properties[int(float(k))][self.uniqueid_key])))
                             parent_track_id = int(float(str(self.unique_spot_properties[int(float(v))][self.uniqueid_key])))
                             self.graph_tracks[daughter_track_id] = parent_track_id
-                            
+                self._get_attributes()
+                self._temporal_plots_trackmate()            
                 
     def _compute_fourier(self):
 
