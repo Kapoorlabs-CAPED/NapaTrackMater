@@ -147,12 +147,11 @@ class TrackMate(object):
     def _create_channel_tree(self):
           self._timed_channel_seg_image = {}
           
-          nthreads = os.cpu_count()
-          with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
-                    futures = []         
+          futures = []
+          with concurrent.futures.ThreadPoolExecutor() as executor:
                     for i in range(self.channel_seg_image.shape[0]):
                         futures.append(executor.submit(self._channel_computer, i))
-          [r.result() for r in futures]
+                    [r.result() for r in futures]
           
           
     def _channel_computer(self, i):
@@ -231,8 +230,6 @@ class TrackMate(object):
                                self.edge_target_lookup[source_id].append(target_id)
                             else:      
                                self.edge_target_lookup[source_id] = [target_id]
-
-                            
                             self.edge_source_lookup[target_id] = source_id 
 
         return all_source_ids, all_target_ids 
@@ -380,11 +377,9 @@ class TrackMate(object):
             
            track_id = int(track.get(self.trackid_key))
            
-           nthreads = os.cpu_count()
            if track_id in self.filtered_track_ids:
 
                             self.count = self.count + 1 
-                        
                             current_cell_ids = []
                             unique_tracklet_ids = []
                             current_tracklets = {}
@@ -579,7 +574,7 @@ class TrackMate(object):
                 self.DividingTrackIds.append(self.TrackidBox)
                 self.NormalTrackIds.append(self.TrackidBox)
                 
-                nthreads = os.cpu_count()
+                
                 self.Spotobjects = self.xml_content.find('Model').find('AllSpots')
                 # Extract the tracks from xml
                 self.tracks = self.xml_content.find("Model").find("AllTracks")
@@ -592,7 +587,7 @@ class TrackMate(object):
                 print('Iterating over spots in frame')
                 futures = []
 
-                with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
                     
                     for frame in self.Spotobjects.findall('SpotsInFrame'):
                              futures.append(executor.submit(self._spot_computer, frame))
@@ -601,7 +596,7 @@ class TrackMate(object):
 
                 print('Iterating over tracks')  
                 futures = []
-                with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
                     
                     for track in self.tracks.findall('Track'):
                             futures.append(executor.submit(self._track_computer, track))
