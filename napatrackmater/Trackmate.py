@@ -142,12 +142,21 @@ class TrackMate(object):
 
     def _create_channel_tree(self):
           self._timed_channel_seg_image = {}
-          if self.image is not None:
-                intensity_image = self.image
-          else:
-                intensity_image = self.channel_seg_image
-
-          for i in range(self.channel_seg_image.shape[0]):
+          
+          nthreads = os.cpu_count()
+          with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
+                    futures = []         
+                    for i in range(self.channel_seg_image.shape[0]):
+                        futures.append(executor.submit(self._channel_computer, i))
+          [r.result() for r in futures]
+          
+          
+    def _channel_computer(self, i):
+                
+                if self.image is not None:
+                        intensity_image = self.image
+                else:
+                        intensity_image = self.channel_seg_image
                 
                 properties = regionprops(self.channel_seg_image[i,:], intensity_image[i,:])
                 centroids = [prop.centroid for prop in properties]
@@ -366,7 +375,8 @@ class TrackMate(object):
            
             
            track_id = int(track.get(self.trackid_key))
-
+           self.count = self.count + 1
+           print(self.count)
            if track_id in self.filtered_track_ids:
                         
                             current_cell_ids = []
