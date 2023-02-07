@@ -477,7 +477,6 @@ class TrackMate(object):
                             self.unique_tracks[track_id] = current_tracklets     
                             self.unique_track_properties[track_id] = current_tracklets_properties
 
-           return self.count                
 
     def _spot_computer(self, frame):
           for Spotobject in frame.findall('Spot'):
@@ -601,10 +600,10 @@ class TrackMate(object):
                     futures = []
                     for track in self.tracks.findall('Track'):
                             futures.append(executor.submit(self._track_computer, track))
-                            
+                            yield self.count
 
-                self.count = [r.result() for r in futures]
-                yield self.count
+                [r.result() for r in futures]
+                
 
                 if self.channel_seg_image is not None:  
 
