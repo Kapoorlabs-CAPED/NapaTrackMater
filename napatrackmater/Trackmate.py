@@ -124,6 +124,7 @@ class TrackMate(object):
         self.unique_track_properties = {}
         self.unique_fft_properties = {}
         self.unique_spot_properties = {}
+        self.root_spots = {}
         self.channel_unique_spot_properties = {}
         self.edge_target_lookup = {}
         self.edge_source_lookup = {}
@@ -751,6 +752,7 @@ class TrackMate(object):
                     self.unique_spot_properties[int(cell_id)].update({self.acceleration_key : round(acc, 3)})
         else:
             self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : None}) 
+            self.root_spots[int(cell_id)] = self.unique_spot_properties[int(cell_id)]
 
         if target_id is not None:       
             self.unique_spot_properties[int(cell_id)].update({self.afterid_key : int(target_id)}) 
