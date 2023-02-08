@@ -610,7 +610,7 @@ class TrackMate(object):
                             
                     for r in futures:
                            self.count = self.count + 1
-                            if self.progress_bar is not None:
+                           if self.progress_bar is not None:
                                    self.progress_bar.value = self.count
                            r.result()
                 
