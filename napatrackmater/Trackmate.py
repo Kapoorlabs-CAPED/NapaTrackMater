@@ -389,7 +389,7 @@ class TrackMate(object):
                             
                             
                             self.count = self.count + 1 
-                            yield self.count
+                            
                             current_cell_ids = []
                             unique_tracklet_ids = []
                             current_tracklets = {}
@@ -485,7 +485,7 @@ class TrackMate(object):
                             
                             self.unique_tracks[track_id] = current_tracklets     
                             self.unique_track_properties[track_id] = current_tracklets_properties
-
+                            yield self.count
         
 
 
@@ -610,6 +610,7 @@ class TrackMate(object):
                 with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                     
                     for track in self.tracks.findall('Track'):
+                            
                             
                             futures.append(executor.submit(self._track_computer, track))
                             
