@@ -553,7 +553,9 @@ class TrackMate(object):
 
     def _get_xml_data(self):
 
-                
+                if self.progress_bar is not None:
+                                self.progress_bar.value =  self.count
+                                
                 if self.channel_seg_image is not None:
                       self.channel_xml_content = self.xml_content
                       self.xml_tree = et.parse(self.xml_path)
@@ -605,8 +607,7 @@ class TrackMate(object):
                 with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                     
                     for track in self.tracks.findall('Track'):
-                            if self.progress_bar is not None:
-                                self.progress_bar.value =  self.count
+                            
                             futures.append(executor.submit(self._track_computer, track))
                             
 
