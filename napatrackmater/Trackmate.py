@@ -388,7 +388,7 @@ class TrackMate(object):
            if track_id in self.filtered_track_ids:
                             
                             
-                            self.count = self.count + 1 
+                             
                             
                             current_cell_ids = []
                             unique_tracklet_ids = []
@@ -485,7 +485,7 @@ class TrackMate(object):
                             
                             self.unique_tracks[track_id] = current_tracklets     
                             self.unique_track_properties[track_id] = current_tracklets_properties
-                            yield self.count
+                            
         
 
 
@@ -611,7 +611,9 @@ class TrackMate(object):
                     
                     for track in self.tracks.findall('Track'):
                             
-                            
+                            self.count = self.count + 1
+                            if self.progress_bar is not None:
+                                   self.progress_bar.value = self.count
                             futures.append(executor.submit(self._track_computer, track))
                             
 
