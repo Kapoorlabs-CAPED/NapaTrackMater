@@ -146,7 +146,7 @@ class TrackMate(object):
                     self.progress_bar.label = "Collecting Tracks"
                     self.progress_bar.range = (
                         0,
-                        len(self.filtered_track_ids) + 1,
+                        len(self.filtered_track_ids),
                     )
                     self.progress_bar.value =  self.count
                     self.progress_bar.show()
@@ -380,14 +380,7 @@ class TrackMate(object):
         return distance_cell_mask        
          
 
-    def _track_computer(self, track):
-           
-            
-           track_id = int(track.get(self.trackid_key))
-           
-           if track_id in self.filtered_track_ids:
-                            
-                            
+    def _track_computer(self, track, track_id):
                              
                             
                             current_cell_ids = []
@@ -611,8 +604,9 @@ class TrackMate(object):
                     
                     for track in self.tracks.findall('Track'):
                             
-                            
-                            futures.append(executor.submit(self._track_computer, track))
+                            track_id = int(track.get(self.trackid_key))
+                            if track_id in self.filtered_track_ids:
+                                  futures.append(executor.submit(self._track_computer, track, track_id))
                             
                     for r in futures:
                            self.count = self.count + 1
