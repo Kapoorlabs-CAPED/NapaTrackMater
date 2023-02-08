@@ -544,7 +544,6 @@ class TrackMate(object):
 
                                             } 
 
-    @thread_worker
     def _get_xml_data(self):
 
                 
@@ -828,10 +827,14 @@ class TrackMate(object):
                 
 
                 
-                for i in tqdm(range(starttime, endtime), total=endtime - starttime):
+                futures = []
+                with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                       
-                        self._compute_temporal(i, all_spots_tracks)
+                    for i in tqdm(range(starttime, endtime), total=endtime - starttime):
+                      
+                        futures.append(executor.submit(self._compute_temporal, i, all_spots_tracks))
  
+                    [r.result() for r in futures]
 
 
     def _compute_temporal(self, i, all_spots_tracks):                
