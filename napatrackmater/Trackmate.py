@@ -384,8 +384,8 @@ class TrackMate(object):
            
            if track_id in self.filtered_track_ids:
                             
-                            if self.progress_bar is not None:
-                                self.progress_bar.value =  self.count
+                            #if self.progress_bar is not None:
+                                #self.progress_bar.value =  self.count
                             self.count = self.count + 1 
                             
                             current_cell_ids = []
