@@ -146,7 +146,7 @@ class TrackMate(object):
                     self.progress_bar.label = "Collecting Tracks"
                     self.progress_bar.range = (
                         0,
-                        len(self.filtered_track_ids),
+                        len(self.filtered_track_ids) + 1,
                     )
                     self.progress_bar.value =  self.count
                     self.progress_bar.show()
