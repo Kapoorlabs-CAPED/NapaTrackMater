@@ -371,14 +371,16 @@ class TrackMate(object):
         return distance_cell_mask        
          
 
-    def _track_computer(self, track):
+    def _track_computer(self, track, progress_bar):
            
             
            track_id = int(track.get(self.trackid_key))
            
            if track_id in self.filtered_track_ids:
 
+                            progress_bar.value =  self.count
                             self.count = self.count + 1 
+                            
                             current_cell_ids = []
                             unique_tracklet_ids = []
                             current_tracklets = {}
@@ -597,8 +599,8 @@ class TrackMate(object):
                 with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                     
                     for track in self.tracks.findall('Track'):
-                            futures.append(executor.submit(self._track_computer, track))
-                            progress_bar.value =  self.count
+                            futures.append(executor.submit(self._track_computer, track, progress_bar))
+                            
 
                     [r.result() for r in futures]
                 
