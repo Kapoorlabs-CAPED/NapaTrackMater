@@ -752,12 +752,13 @@ class TrackMate(object):
                     self.unique_spot_properties[int(cell_id)].update({self.acceleration_key : round(acc, 3)})
         else:
             self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : None}) 
-            self.root_spots[int(cell_id)] = self.unique_spot_properties[int(cell_id)]
+            
 
         if target_id is not None:       
             self.unique_spot_properties[int(cell_id)].update({self.afterid_key : int(target_id)}) 
         else:
             self.unique_spot_properties[int(cell_id)].update({self.afterid_key : None})
+            self.root_spots[int(cell_id)] = self.unique_spot_properties[int(cell_id)]
                  
                                     
                 
