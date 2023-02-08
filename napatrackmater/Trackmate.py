@@ -12,7 +12,6 @@ import dask as da
 from typing import List
 from scipy.fftpack import fft, fftfreq, fftshift, ifft
 import os
-from napari.qt.threading import thread_worker
 import concurrent
 class TrackMate(object):
     
