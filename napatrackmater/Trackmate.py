@@ -144,7 +144,7 @@ class TrackMate(object):
         self.progress_bar.label = "Collecting Tracks"
         self.progress_bar.range = (
             0,
-            len(_trackmate_objects.filtered_track_ids),
+            len(self.filtered_track_ids),
         )
         self.progress_bar.show()
         self._get_xml_data()
