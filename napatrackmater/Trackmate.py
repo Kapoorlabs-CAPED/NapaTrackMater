@@ -384,8 +384,7 @@ class TrackMate(object):
            
            if track_id in self.filtered_track_ids:
                             
-                            #if self.progress_bar is not None:
-                                #self.progress_bar.value =  self.count
+                            
                             self.count = self.count + 1 
                             
                             current_cell_ids = []
@@ -606,6 +605,8 @@ class TrackMate(object):
                 with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                     
                     for track in self.tracks.findall('Track'):
+                            if self.progress_bar is not None:
+                                self.progress_bar.value =  self.count
                             futures.append(executor.submit(self._track_computer, track))
                             
 
