@@ -543,7 +543,7 @@ class TrackMate(object):
 
                                             } 
 
-    def _get_xml_data(self):
+    def _get_xml_data(self, progress_bar):
 
                 
                 if self.channel_seg_image is not None:
@@ -598,7 +598,7 @@ class TrackMate(object):
                     
                     for track in self.tracks.findall('Track'):
                             futures.append(executor.submit(self._track_computer, track))
-                            yield self.count
+                            progress_bar.value =  self.count
 
                     [r.result() for r in futures]
                 
