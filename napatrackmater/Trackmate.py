@@ -140,13 +140,16 @@ class TrackMate(object):
                     for track in self.xml_content.find("Model")
                     .find("FilteredTracks")
                     .findall("TrackID")
-                ] 
-        self.progress_bar.label = "Collecting Tracks"
-        self.progress_bar.range = (
-            0,
-            len(self.filtered_track_ids),
-        )
-        self.progress_bar.show()
+                ]
+        if self.progress_bar is not None:
+                                 
+                    self.progress_bar.label = "Collecting Tracks"
+                    self.progress_bar.range = (
+                        0,
+                        len(self.filtered_track_ids),
+                    )
+                    self.progress_bar.value =  self.count
+                    self.progress_bar.show()
         self._get_xml_data()
 
     def _create_channel_tree(self):
@@ -386,7 +389,7 @@ class TrackMate(object):
                             
                             
                             self.count = self.count + 1 
-                            
+                            yield self.count
                             current_cell_ids = []
                             unique_tracklet_ids = []
                             current_tracklets = {}
@@ -555,7 +558,7 @@ class TrackMate(object):
 
                 if self.progress_bar is not None:
                                 self.progress_bar.value =  self.count
-                                
+
                 if self.channel_seg_image is not None:
                       self.channel_xml_content = self.xml_content
                       self.xml_tree = et.parse(self.xml_path)
