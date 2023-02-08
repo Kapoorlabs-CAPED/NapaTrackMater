@@ -15,7 +15,7 @@ import os
 import concurrent
 class TrackMate(object):
     
-    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, channel_seg_image = None, image = None, mask = None, fourier = False):
+    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, progress_bar = None, channel_seg_image = None, image = None, mask = None, fourier = False):
         
         
         self.xml_path = xml_path
@@ -32,7 +32,7 @@ class TrackMate(object):
         self.spot_dataset, self.spot_dataset_index = get_csv_data(self.spot_csv_path)
         self.track_dataset, self.track_dataset_index = get_csv_data(self.track_csv_path)
         self.edges_dataset, self.edges_dataset_index = get_csv_data(self.edges_csv_path)
-       
+        self.progress_bar = progress_bar
                                                         
         self.track_analysis_spot_keys = dict(
                 spot_id="ID",
@@ -141,7 +141,13 @@ class TrackMate(object):
                     .find("FilteredTracks")
                     .findall("TrackID")
                 ] 
-
+        self.progress_bar.label = "Collecting Tracks"
+        self.progress_bar.range = (
+            0,
+            len(_trackmate_objects.filtered_track_ids),
+        )
+        self.progress_bar.show()
+        self._get_xml_data()
 
     def _create_channel_tree(self):
           self._timed_channel_seg_image = {}
@@ -371,14 +377,15 @@ class TrackMate(object):
         return distance_cell_mask        
          
 
-    def _track_computer(self, track, progress_bar):
+    def _track_computer(self, track):
            
             
            track_id = int(track.get(self.trackid_key))
            
            if track_id in self.filtered_track_ids:
-
-                            progress_bar.value =  self.count
+                            
+                            if self.progress_bar is not None:
+                                self.progress_bar.value =  self.count
                             self.count = self.count + 1 
                             
                             current_cell_ids = []
@@ -545,7 +552,7 @@ class TrackMate(object):
 
                                             } 
 
-    def _get_xml_data(self, progress_bar):
+    def _get_xml_data(self):
 
                 
                 if self.channel_seg_image is not None:
@@ -599,7 +606,7 @@ class TrackMate(object):
                 with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                     
                     for track in self.tracks.findall('Track'):
-                            futures.append(executor.submit(self._track_computer, track, progress_bar))
+                            futures.append(executor.submit(self._track_computer, track))
                             
 
                     [r.result() for r in futures]
