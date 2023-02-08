@@ -828,14 +828,10 @@ class TrackMate(object):
                 
 
                 
-                futures = []
-                with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
+                for i in tqdm(range(starttime, endtime), total=endtime - starttime):
                       
-                    for i in tqdm(range(starttime, endtime), total=endtime - starttime):
-                      
-                        futures.append(executor.submit(self._compute_temporal, i, all_spots_tracks))
+                        self._compute_temporal(i, all_spots_tracks)
  
-                    [r.result() for r in futures]
 
 
     def _compute_temporal(self, i, all_spots_tracks):                
