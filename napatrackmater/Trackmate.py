@@ -611,13 +611,14 @@ class TrackMate(object):
                     
                     for track in self.tracks.findall('Track'):
                             
-                            self.count = self.count + 1
-                            if self.progress_bar is not None:
-                                   self.progress_bar.value = self.count
+                            
                             futures.append(executor.submit(self._track_computer, track))
                             
-
-                    [r.result() for r in futures]
+                    for r in futures:
+                           self.count = self.count + 1
+                            if self.progress_bar is not None:
+                                   self.progress_bar.value = self.count
+                           r.result()
                 
 
                 if self.channel_seg_image is not None:  
