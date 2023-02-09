@@ -235,10 +235,10 @@ class TrackMate(object):
 
         for edge in track.findall('Edge'):
 
-                            source_id = edge.get(self.spot_source_id_key)
-                            target_id = edge.get(self.spot_target_id_key)
-                            all_source_ids.append(int(source_id))
-                            all_target_ids.append(int(target_id))
+                            source_id = int(edge.get(self.spot_source_id_key))
+                            target_id = int(edge.get(self.spot_target_id_key))
+                            all_source_ids.append(source_id)
+                            all_target_ids.append(target_id)
                             
                             if source_id in self.edge_target_lookup.keys():
                                self.edge_target_lookup[source_id].append(target_id)
