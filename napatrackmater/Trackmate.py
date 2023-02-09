@@ -1124,7 +1124,7 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
                            value = track_analysis_spot_keys["total_intensity"]
                            AllValues[value] = spot_dataset[v].astype("float")       
 
-                if k !="mean_intensity_ch1" or k!="mean_intensity_ch2" or k!="total_intensity_ch1" or k!="total_intensity_ch2":
+                if k !="mean_intensity_ch1" and k!="mean_intensity_ch2" and k!="total_intensity_ch1" and k!="total_intensity_ch2":
                     AllValues[v] = spot_dataset[v].astype("float")
 
         AllValues[posix] = round(LocationX,3)
