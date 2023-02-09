@@ -459,10 +459,7 @@ class TrackMate(object):
                                     dcr = float(all_dict_values[self.directional_change_rate_key])
                                     dcr = scale_value(float(dcr))
                                     speed = scale_value(float(speed))
-                                    if self.detectorchannel == 1:
-                                       total_intensity =  float(all_dict_values[self.total_intensity_ch2_key])
-                                    else:  
-                                       total_intensity =  float(all_dict_values[self.total_intensity_ch1_key])
+                                    total_intensity =  float(all_dict_values[self.total_intensity_key])
                                     volume_pixels = int(float(all_dict_values[self.quality_key]))
                                     if current_track_id in current_tracklets:
                                         tracklet_array = current_tracklets[current_track_id]
