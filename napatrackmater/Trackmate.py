@@ -147,15 +147,7 @@ class TrackMate(object):
                     .find("FilteredTracks")
                     .findall("TrackID")
                 ]
-        if self.progress_bar is not None:
-                                 
-                    self.progress_bar.label = "Collecting Tracks"
-                    self.progress_bar.range = (
-                        0,
-                        len(self.filtered_track_ids),
-                    )
-                    self.progress_bar.value =  self.count
-                    self.progress_bar.show()
+        
         self._get_xml_data()
 
     def _create_channel_tree(self):
@@ -602,10 +594,24 @@ class TrackMate(object):
                     
                     for frame in self.Spotobjects.findall('SpotsInFrame'):
                              futures.append(executor.submit(self._spot_computer, frame))
+                    if self.progress_bar is not None:
+                                 
+                                    self.progress_bar.label = "Collecting Spots"
+                                    self.progress_bar.range = (
+                                        0,
+                                        len(futures),
+                                    )
+                                    self.progress_bar.show()
 
-                    [r.result() for r in futures]
+                    for r in futures:
+                           self.count = self.count + 1
+                           
+                                    self.progress_bar.value =  self.count
+                                    
+                           r.result()
 
                 print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
+                self.count = 0
                 futures = []
                 with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                     
@@ -614,21 +620,31 @@ class TrackMate(object):
                             track_id = int(track.get(self.trackid_key))
                             if track_id in self.filtered_track_ids:
                                   futures.append(executor.submit(self._track_computer, track, track_id))
-                            
+                    if self.progress_bar is not None:
+                                 
+                                    self.progress_bar.label = "Collecting Tracks"
+                                    self.progress_bar.range = (
+                                        0,
+                                        len(self.filtered_track_ids),
+                                    )
+                                    self.progress_bar.show()
+
+
                     for r in futures:
                            self.count = self.count + 1
-                           if self.progress_bar is not None:
-                                   self.progress_bar.value = self.count
+                           
+                                    
+                                    self.progress_bar.value = self.count
                            r.result()
                 
                 if self.channel_seg_image is not None:  
 
                         channel_filtered_tracks = []    
                         print('Transferring XML')               
-                        for Spotobject in self.xml_root.iter('Spot'):
-                                cell_id = int(Spotobject.get(self.spotid_key))
+                        for (k,v) in self.channel_unique_spot_properties.items():
                                 
- 
+                                cell_id = int(k)
+                                
                                 new_positionx =  self.channel_unique_spot_properties[cell_id][self.xposid_key]
                                 new_positiony =  self.channel_unique_spot_properties[cell_id][self.yposid_key]
                                 new_positionz =  self.channel_unique_spot_properties[cell_id][self.zposid_key]
