@@ -15,7 +15,7 @@ import os
 import concurrent
 class TrackMate(object):
     
-    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, progress_bar = None, channel_seg_image = None, image = None, mask = None, fourier = False):
+    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, progress_bar = None, channel_seg_image = None, image = None, mask = None, fourier = True):
         
         
         self.xml_path = xml_path
@@ -48,6 +48,8 @@ class TrackMate(object):
                 total_intensity_ch1="TOTAL_INTENSITY_CH1",
                 mean_intensity_ch2="MEAN_INTENSITY_CH2",
                 total_intensity_ch2="TOTAL_INTENSITY_CH2",
+                mean_intensity="MEAN_INTENSITY",
+                total_intensity="TOTAL_INTENSITY"
             )
         self.track_analysis_edges_keys = dict(
                 
@@ -109,6 +111,9 @@ class TrackMate(object):
         self.mean_intensity_ch2_key = self.track_analysis_spot_keys["mean_intensity_ch2"]
         self.total_intensity_ch1_key = self.track_analysis_spot_keys["total_intensity_ch1"]
         self.total_intensity_ch2_key = self.track_analysis_spot_keys["total_intensity_ch2"]
+
+        self.mean_intensity_key = self.track_analysis_spot_keys["mean_intensity"]
+        self.total_intensity_key = self.track_analysis_spot_keys["total_intensity"]
 
         self.spot_source_id_key = self.track_analysis_edges_keys["spot_source_id"]
         self.spot_target_id_key = self.track_analysis_edges_keys["spot_target_id"]
@@ -232,8 +237,8 @@ class TrackMate(object):
 
                             source_id = edge.get(self.spot_source_id_key)
                             target_id = edge.get(self.spot_target_id_key)
-                            all_source_ids.append(source_id)
-                            all_target_ids.append(target_id)
+                            all_source_ids.append(int(source_id))
+                            all_target_ids.append(int(target_id))
                             
                             if source_id in self.edge_target_lookup.keys():
                                self.edge_target_lookup[source_id].append(target_id)
@@ -454,8 +459,10 @@ class TrackMate(object):
                                     dcr = float(all_dict_values[self.directional_change_rate_key])
                                     dcr = scale_value(float(dcr))
                                     speed = scale_value(float(speed))
-                                    total_intensity_ch1 =  float(all_dict_values[self.total_intensity_ch1_key])
-                                    total_intensity_ch2 =  float(all_dict_values[self.total_intensity_ch2_key])
+                                    if self.detectorchannel == 1:
+                                       total_intensity =  float(all_dict_values[self.total_intensity_ch2_key])
+                                    else:  
+                                       total_intensity =  float(all_dict_values[self.total_intensity_ch1_key])
                                     volume_pixels = int(float(all_dict_values[self.quality_key]))
                                     if current_track_id in current_tracklets:
                                         tracklet_array = current_tracklets[current_track_id]
@@ -463,14 +470,14 @@ class TrackMate(object):
                                         current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
 
                                         value_array = current_tracklets_properties[current_track_id]
-                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity_ch1, total_intensity_ch2, volume_pixels])
+                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity, volume_pixels])
                                         current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
 
                                     else:
                                         current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
                                         current_tracklets[current_track_id] = current_tracklet_array 
 
-                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity_ch1, total_intensity_ch2, volume_pixels])
+                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity, volume_pixels])
                                         current_tracklets_properties[current_track_id] = current_value_array
                                             
 
@@ -490,10 +497,12 @@ class TrackMate(object):
                         # Create object with unique cell ID
                         cell_id = int(Spotobject.get(self.spotid_key))
                         # Get the TZYX location of the cells in that frame
-                        TOTAL_INTENSITY_CH1 = Spotobject.get(self.total_intensity_ch1_key)
-                        MEAN_INTENSITY_CH1 = Spotobject.get(self.mean_intensity_ch1_key)
-                        TOTAL_INTENSITY_CH2 = Spotobject.get(self.total_intensity_ch2_key)
-                        MEAN_INTENSITY_CH2 = Spotobject.get(self.mean_intensity_ch2_key)
+                        if self.detectorchannel == 1:
+                                TOTAL_INTENSITY = Spotobject.get(self.total_intensity_ch2_key)
+                                MEAN_INTENSITY = Spotobject.get(self.mean_intensity_ch2_key)
+                        else:        
+                                TOTAL_INTENSITY = Spotobject.get(self.total_intensity_ch1_key)
+                                MEAN_INTENSITY = Spotobject.get(self.mean_intensity_ch1_key)
                         RADIUS = Spotobject.get(self.radius_key)
                         QUALITY = Spotobject.get(self.quality_key)
                         testlocation = (Spotobject.get(self.zposid_key), Spotobject.get(self.yposid_key),  Spotobject.get(self.xposid_key))
@@ -506,10 +515,8 @@ class TrackMate(object):
                             self.zposid_key : round(float(Spotobject.get(self.zposid_key)), 3),
                             self.yposid_key : round(float(Spotobject.get(self.yposid_key)), 3),
                             self.xposid_key : round(float(Spotobject.get(self.xposid_key)), 3),
-                            self.total_intensity_ch1_key : round(float(TOTAL_INTENSITY_CH1)),
-                            self.mean_intensity_ch1_key : round(float(MEAN_INTENSITY_CH1)),
-                            self.total_intensity_ch2_key : round(float(TOTAL_INTENSITY_CH2)),
-                            self.mean_intensity_ch2_key : round(float(MEAN_INTENSITY_CH2)),
+                            self.total_intensity_key : round(float(TOTAL_INTENSITY)),
+                            self.mean_intensity_key : round(float(MEAN_INTENSITY)),
                             self.radius_key : round(float(RADIUS)),
                             self.quality_key : round(float(QUALITY)),
                             self.distance_cell_mask_key: round(float(distance_cell_mask),2)
@@ -539,10 +546,8 @@ class TrackMate(object):
                                                     self.yposid_key : round(float(centroids[index][1]), 3),
                                                     self.xposid_key : round(float(centroids[index][2]), 3),
 
-                                                    self.total_intensity_ch1_key : round(float(intensity_total[index])),
-                                                    self.mean_intensity_ch1_key : round(float(intensity_mean[index])),
-                                                    self.total_intensity_ch2_key : round(float(intensity_total[index])),
-                                                    self.mean_intensity_ch2_key : round(float(intensity_mean[index])),
+                                                    self.total_intensity_key : round(float(intensity_total[index])),
+                                                    self.mean_intensity_key : round(float(intensity_mean[index])),
 
                                                     self.radius_key : round(float(RADIUS)),
                                                     self.quality_key : round(float(QUALITY)),
@@ -590,6 +595,8 @@ class TrackMate(object):
                 self.ycalibration = float(self.settings.get("pixelheight"))
                 self.zcalibration = float(self.settings.get("voxeldepth"))
                 self.tcalibration = int(float(self.settings.get("timeinterval")))
+                self.detectorsettings = self.xml_content.find("Settings").find("DetectorSettings")
+                self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
                 self._get_boundary_points()
                 print('Iterating over spots in frame')
                 futures = []
@@ -630,10 +637,8 @@ class TrackMate(object):
                                 new_positiony =  self.channel_unique_spot_properties[cell_id][self.yposid_key]
                                 new_positionz =  self.channel_unique_spot_properties[cell_id][self.zposid_key]
 
-                                new_total_intensity_ch1 = self.channel_unique_spot_properties[cell_id][self.total_intensity_ch1_key]
-                                new_mean_intensity_ch1 = self.channel_unique_spot_properties[cell_id][self.mean_intensity_ch1_key]
-                                new_total_intensity_ch2 = self.channel_unique_spot_properties[cell_id][self.total_intensity_ch2_key]
-                                new_mean_intensity_ch2 = self.channel_unique_spot_properties[cell_id][self.mean_intensity_ch2_key]
+                                new_total_intensity = self.channel_unique_spot_properties[cell_id][self.total_intensity_key]
+                                new_mean_intensity = self.channel_unique_spot_properties[cell_id][self.mean_intensity_key]
 
                                 new_radius = self.channel_unique_spot_properties[cell_id][self.radius_key]
                                 new_quality = self.channel_unique_spot_properties[cell_id][self.quality_key]
@@ -643,10 +648,8 @@ class TrackMate(object):
                                 Spotobject.set(self.yposid_key, str(new_positiony))
                                 Spotobject.set(self.zposid_key, str(new_positionz))
 
-                                Spotobject.set(self.total_intensity_ch1_key, str(new_total_intensity_ch1))     
-                                Spotobject.set(self.mean_intensity_ch1_key, str(new_mean_intensity_ch1))
-                                Spotobject.set(self.total_intensity_ch2_key, str(new_total_intensity_ch2))
-                                Spotobject.set(self.mean_intensity_ch2_key, str(new_mean_intensity_ch2))
+                                Spotobject.set(self.total_intensity_key, str(new_total_intensity))     
+                                Spotobject.set(self.mean_intensity_key, str(new_mean_intensity))
 
                                 Spotobject.set(self.radius_key, str(new_radius))     
                                 Spotobject.set(self.quality_key, str(new_quality))
@@ -688,29 +691,21 @@ class TrackMate(object):
           for (k,v) in self.unique_tracks.items():
                 
                 track_id = k
-                tracklets = v 
                 tracklet_properties = self.unique_track_properties[k] 
-                intensity_ch1 = tracklet_properties[:,-4:-3]
-                intensity_ch2 = tracklet_properties[:,-3:-2]
+                intensity = tracklet_properties[:,-3:-2]
                 time = tracklet_properties[:,0:1]
 
-                point_sample_ch1 = intensity_ch1.shape[0]
-                if point_sample_ch1 > 0:
-                            xf_sample_ch1 = fftfreq(point_sample_ch1, self.tcalibration)
-                            fftstrip_sample_ch1 = fft(intensity_ch1)
-                            ffttotal_sample_ch1 = np.abs(fftstrip_sample_ch1)
-                            xf_sample_ch1 = xf_sample_ch1[0 : len(xf_sample_ch1) // 2]
-                            ffttotal_sample_ch1 = ffttotal_sample_ch1[0 : len(ffttotal_sample_ch1) // 2]
+                point_sample = intensity.shape[0]
+                if point_sample > 0:
+                            xf_sample = fftfreq(point_sample, self.tcalibration)
+                            fftstrip_sample = fft(intensity)
+                            ffttotal_sample = np.abs(fftstrip_sample)
+                            xf_sample = xf_sample[0 : len(xf_sample) // 2]
+                            ffttotal_sample = ffttotal_sample[0 : len(ffttotal_sample) // 2]
 
-                point_sample_ch2 = intensity_ch2.shape[0]
-                if point_sample_ch2 > 0:
-                            xf_sample_ch2 = fftfreq(point_sample_ch2, self.tcalibration)
-                            fftstrip_sample_ch2 = fft(intensity_ch2)
-                            ffttotal_sample_ch2 = np.abs(fftstrip_sample_ch2)
-                            xf_sample_ch2 = xf_sample_ch2[0 : len(xf_sample_ch2) // 2]
-                            ffttotal_sample_ch2 = ffttotal_sample_ch2[0 : len(ffttotal_sample_ch2) // 2] 
+               
 
-                self.unique_fft_properties[track_id] = time, xf_sample_ch1, ffttotal_sample_ch1, xf_sample_ch2, ffttotal_sample_ch2
+                self.unique_fft_properties[track_id] = time, xf_sample, ffttotal_sample
 
                                  
     def _dict_update(self, unique_tracklet_ids: List,  cell_id, track_id, source_id, target_id):
