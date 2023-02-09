@@ -557,7 +557,6 @@ class TrackMate(object):
 
                                             } 
    
-    @thread_worker
     def _get_xml_data(self):
 
              
