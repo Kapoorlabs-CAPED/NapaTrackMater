@@ -524,7 +524,7 @@ class TrackMate(object):
                         }
             
                         if self.channel_seg_image is not None:
-                                    pixeltestlocation = (Spotobject.get(self.zposid_key)/self.zcalibration, Spotobject.get(self.yposid_key)/self.ycalibration,  Spotobject.get(self.xposid_key)/ self.xcalibration)
+                                    pixeltestlocation = (Spotobject.get(self.zposid_key)/float(self.zcalibration), Spotobject.get(self.yposid_key)/float(self.ycalibration),  Spotobject.get(self.xposid_key)/ float(self.xcalibration))
                                     tree, centroids, labels, volume, intensity_mean, intensity_total, bounding_boxes = self._timed_channel_seg_image[str(int(float(frame)))]
                                     dist, index = tree.query(testlocation)
 
