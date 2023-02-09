@@ -431,8 +431,9 @@ class TrackMate(object):
                                                    self.unique_spot_properties[target_id].update({self.dividing_key : DividingTrajectory})
                                         else:
                                               #Normal        
+                                              source_source_id = self.edge_source_lookup[source_id]
                                               for target_id in target_ids:
-                                                    self._dict_update(unique_tracklet_ids, source_id, track_id, source_id, target_id) 
+                                                    self._dict_update(unique_tracklet_ids, source_id, track_id, source_source_id, target_id) 
                                                     self.unique_spot_properties[target_id].update({self.dividing_key : DividingTrajectory}) 
                                         
 
