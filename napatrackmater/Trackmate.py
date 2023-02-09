@@ -679,7 +679,7 @@ class TrackMate(object):
                                            
                                            track_id = self.unique_spot_properties[int(cell_id)][self.trackid_key]
                                            channel_filtered_tracks.append(track_id)
-                        for parent in xml_root.findall('Model'):
+                        for parent in self.xml_root.findall('Model'):
                             for firstchild in parent.findall('AllTracks'):
                                 for secondchild in firstchild.findall('Track'):
                                     track_id = int(secondchild.get(self.trackid_key))
@@ -687,7 +687,7 @@ class TrackMate(object):
                                         firstchild.remove(secondchild)
                                    
                        
-                        for parent in xml_root.findall('Model'):
+                        for parent in self.xml_root.findall('Model'):
                             for firstchild in parent.findall('AllTracks'):
                                 for secondchild in firstchild.findall('Track'):
                                     for Edgeobject in secondchild.findall('Edge'):
@@ -696,7 +696,7 @@ class TrackMate(object):
                                             if spot_source_id not in self.channel_unique_spot_properties.keys() and spot_target_id not in self.channel_unique_spot_properties.keys():     
                                                               secondchild.remove(Edgeobject)  
 
-                        for parent in xml_root.findall('Model'):
+                        for parent in self.xml_root.findall('Model'):
                             for firstchild in parent.findall('FilteredTracks'):
                                 for secondchild in firstchild.findall('TrackID'): 
                                        filter_track_id = int(secondchild.get(self.trackid_key))  
