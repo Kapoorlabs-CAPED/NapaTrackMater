@@ -607,7 +607,7 @@ class TrackMate(object):
                                     self.count = self.count + 1
                                     self.progress_bar.value =  self.count
                                     
-                           r.result()
+                                    r.result()
 
                 print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
                 self.count = 0
@@ -632,7 +632,7 @@ class TrackMate(object):
                     for r in futures:
                                     self.count = self.count + 1
                                     self.progress_bar.value = self.count
-                           r.result()
+                                    r.result()
                 
                 if self.channel_seg_image is not None:  
 
