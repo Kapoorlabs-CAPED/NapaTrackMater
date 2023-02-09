@@ -390,7 +390,10 @@ class TrackMate(object):
                             current_tracklets_properties = {}
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
-
+                            print('total tracks', len(root_root))
+                            for current_root in root_root:
+                                   self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
+                                   
                             self._iterate_split_down(root_leaf, root_splits)
                             for edge in track.findall('Edge'):
                                 source_id = edge.get(self.spot_source_id_key)
@@ -752,7 +755,7 @@ class TrackMate(object):
                     self.unique_spot_properties[int(cell_id)].update({self.acceleration_key : round(acc, 3)})
         elif source_id is None:
             self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : None}) 
-            self.root_spots[int(cell_id)] = self.unique_spot_properties[int(cell_id)]
+            
 
         if target_id is not None:       
             self.unique_spot_properties[int(cell_id)].update({self.afterid_key : int(target_id)}) 
