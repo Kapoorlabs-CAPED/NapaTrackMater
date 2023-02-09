@@ -523,6 +523,7 @@ class TrackMate(object):
                         }
             
                         if self.channel_seg_image is not None:
+                                    pixeltestlocation = (Spotobject.get(self.zposid_key)/self.zcalibration, Spotobject.get(self.yposid_key)/self.ycalibration,  Spotobject.get(self.xposid_key)/ self.xcalibration)
                                     tree, centroids, labels, volume, intensity_mean, intensity_total, bounding_boxes = self._timed_channel_seg_image[str(int(float(frame)))]
                                     dist, index = tree.query(testlocation)
 
@@ -617,7 +618,6 @@ class TrackMate(object):
                     for r in futures:
                                     self.count = self.count + 1
                                     self.progress_bar.value =  self.count
-                                    
                                     r.result()
 
                 print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
@@ -674,8 +674,11 @@ class TrackMate(object):
                                         Spotobject.set(self.radius_key, str(new_radius))     
                                         Spotobject.set(self.quality_key, str(new_quality))
                                         Spotobject.set(self.distance_cell_mask_key, str(new_distance_cell_mask))
-                                        track_id = self.unique_spot_properties[int(cell_id)][self.trackid_key]
-                                        channel_filtered_tracks.append(track_id)
+                                        if self.trackid_key in self.unique_spot_properties[int(cell_id)]:
+                                           
+                                           track_id = self.unique_spot_properties[int(cell_id)][self.trackid_key]
+                                           print(track_id)
+                                           channel_filtered_tracks.append(track_id)
 
                         for Trackobject in self.xml_root.iter('Track'):
                               track_id = Trackobject.get(self.trackid_key)
