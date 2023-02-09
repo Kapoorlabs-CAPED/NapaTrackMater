@@ -441,7 +441,7 @@ class TrackMate(object):
                             
                             for current_root in root_root:
                                    self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
-                            print(self.unique_spot_properties[532444])
+                            print(self.unique_spot_properties[532444], 532444 in all_target_ids, 532444 in all_source_ids )
                             for i in range(len(current_cell_ids)):
                                         
                                     k = int(current_cell_ids[i])    
