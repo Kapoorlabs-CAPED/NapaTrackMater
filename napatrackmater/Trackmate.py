@@ -408,7 +408,7 @@ class TrackMate(object):
                                         #Root
                                         if source_id not in all_target_ids:
                                                 
-                                                for target_id in target_ids
+                                                for target_id in target_ids:
                                                    self._dict_update(unique_tracklet_ids, source_id, track_id, None, target_id)
                                         #Normal        
                                         for target_id in target_ids:
