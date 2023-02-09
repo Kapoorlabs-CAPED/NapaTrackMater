@@ -396,44 +396,47 @@ class TrackMate(object):
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
                             self._iterate_split_down(root_leaf, root_splits)
+                            
+                            
+                            # Determine if a track has divisions or none
+                            if len(root_splits) > 0:
+                                DividingTrajectory = True
+                                if str(track_id) not in self.AllTrackIds:
+                                    self.AllTrackIds.append(str(track_id))
+                                if str(track_id) not in self.DividingTrackIds:     
+                                    self.DividingTrackIds.append(str(track_id))
+                                        
+                            else:
+                                DividingTrajectory = False
+                                if str(track_id) not in self.AllTrackIds:
+                                    self.AllTrackIds.append(str(track_id))
+                                if str(track_id) not in self.NormalTrackIds:    
+                                    self.NormalTrackIds.append(str(track_id))
+
                             for leaf in root_leaf:
                                    source_leaf = self.edge_source_lookup[leaf]
                                    current_cell_ids.append(leaf) 
                                    self._dict_update(unique_tracklet_ids, leaf, track_id, source_leaf, None)
-                            
+                                   self.unique_spot_properties[leaf].update({self.dividing_key : DividingTrajectory})
 
                             for source_id in all_source_ids:
                                         target_ids = self.edge_target_lookup[source_id]
                                         current_cell_ids.append(source_id)
                                         #Root
+                                        self.unique_spot_properties[source_id].update({self.dividing_key : DividingTrajectory})
                                         if source_id not in all_target_ids:
                                                 
                                                 for target_id in target_ids:
                                                    self._dict_update(unique_tracklet_ids, source_id, track_id, None, target_id)
-                                        #Normal        
-                                        for target_id in target_ids:
-                                                    self._dict_update(unique_tracklet_ids, source_id, track_id, source_id, target_id) 
-
-                                                  
-                                        # Determine if a track has divisions or none
-                                        if len(root_splits) > 0:
-                                            DividingTrajectory = True
-                                            if str(track_id) not in self.AllTrackIds:
-                                                self.AllTrackIds.append(str(track_id))
-                                            if str(track_id) not in self.DividingTrackIds:     
-                                                self.DividingTrackIds.append(str(track_id))
-                                                    
+                                                   self.unique_spot_properties[target_id].update({self.dividing_key : DividingTrajectory})
                                         else:
-                                            DividingTrajectory = False
-                                            if str(track_id) not in self.AllTrackIds:
-                                                self.AllTrackIds.append(str(track_id))
-                                            if str(track_id) not in self.NormalTrackIds:    
-                                                self.NormalTrackIds.append(str(track_id))
+                                              #Normal        
+                                              for target_id in target_ids:
+                                                    self._dict_update(unique_tracklet_ids, source_id, track_id, source_id, target_id) 
+                                                    self.unique_spot_properties[target_id].update({self.dividing_key : DividingTrajectory}) 
+                                        
 
-                                        if int(source_id) not in all_target_ids:
-                                                self.unique_spot_properties[int(source_id)].update({self.dividing_key : DividingTrajectory})
-                                        if int(target_id) not in all_source_ids:
-                                                self.unique_spot_properties[int(target_id)].update({self.dividing_key : DividingTrajectory})       
+                                           
                             
                             for current_root in root_root:
                                    self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
