@@ -390,7 +390,6 @@ class TrackMate(object):
                             current_tracklets_properties = {}
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
-                            print('total tracks', len(root_root))
                             for current_root in root_root:
                                    self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
                                    
@@ -602,7 +601,7 @@ class TrackMate(object):
 
                     [r.result() for r in futures]
 
-                print('Iterating over tracks')  
+                print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
                 futures = []
                 with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                     
