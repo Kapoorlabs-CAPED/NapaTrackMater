@@ -615,7 +615,6 @@ class TrackMate(object):
                                    self.progress_bar.value = self.count
                            r.result()
                 
-                print(self.unique_spot_properties[532444], self.graph_split.items() )
                 if self.channel_seg_image is not None:  
 
                         channel_filtered_tracks = []    
@@ -1125,7 +1124,7 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
                            value = track_analysis_spot_keys["total_intensity"]
                            AllValues[value] = spot_dataset[v].astype("float")       
 
-                if v !="mean_intensity_ch1" or v!="mean_intensity_ch2" or v!="total_intensity_ch1" or v!="total_intensity_ch2":
+                if k !="mean_intensity_ch1" or k!="mean_intensity_ch2" or k!="total_intensity_ch1" or k!="total_intensity_ch2":
                     AllValues[v] = spot_dataset[v].astype("float")
 
         AllValues[posix] = round(LocationX,3)
