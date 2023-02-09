@@ -679,27 +679,29 @@ class TrackMate(object):
                                            
                                            track_id = self.unique_spot_properties[int(cell_id)][self.trackid_key]
                                            channel_filtered_tracks.append(track_id)
+                        for parent in xml_root.findall('Model'):
+                            for firstchild in parent.findall('AllTracks'):
+                                for secondchild in firstchild.findall('Track'):
+                                    track_id = int(secondchild.get(self.trackid_key)):
+                                    if track_id not in channel_filtered_tracks:    
+                                        firstchild.remove(secondchild)
+                                   
+                       
+                        for parent in xml_root.findall('Model'):
+                            for firstchild in parent.findall('AllTracks'):
+                                for secondchild in firstchild.findall('Track'):
+                                    for Edgeobject in secondchild.findall('Edge'):
+                                            spot_source_id = int(float(Edgeobject.get(self.spot_source_id_key)))  
+                                            spot_target_id = int(float(Edgeobject.get(self.spot_target_id_key)))      
+                                            if spot_source_id not in self.channel_unique_spot_properties.keys() and spot_target_id not in self.channel_unique_spot_properties.keys():     
+                                                              secondchild.remove(Edgeobject)  
 
-                        for Trackobject in self.xml_root.iter('Track'):
-                              track_id = Trackobject.get(self.trackid_key)
-                              if track_id not in channel_filtered_tracks:
-                                      if Trackobject in self.xml_root:
-                                        print('popping Track object')
-                                        self.xml_root.remove(Trackobject)   
-                        for Edgeobject in self.xml_root.iter('Edge'):
-                                spot_source_id = int(float(Edgeobject.get(self.spot_source_id_key)))  
-                                spot_target_id = int(float(Edgeobject.get(self.spot_target_id_key)))      
-                                if spot_source_id not in self.channel_unique_spot_properties.keys() and spot_target_id not in self.channel_unique_spot_properties.keys():
-                                      if Edgeobject in self.xml_root:
-                                        print('popping Edge object')
-                                        self.xml_root.remove(Edgeobject)
-
-                        for Filterobject in self.xml_root.iter('TrackID'):
-                              filter_track_id = int(float(Filterobject.get(self.trackid_key)))  
-                              if filter_track_id not in channel_filtered_tracks:
-                                    if Filterobject in self.xml_root:
-                                        print('popping filter object')
-                                        self.xml_root.remove(Filterobject)                
+                        for parent in xml_root.findall('Model'):
+                            for firstchild in parent.findall('FilteredTracks'):
+                                for secondchild in firstchild.findall('TrackID'): 
+                                       filter_track_id = int(secondchild.get(self.trackid_key))  
+                                       if filter_track_id not in channel_filtered_tracks:
+                                              firstchild.remove(secondchild)                             
 
                         self.xml_tree.write(os.path.join(self.channel_xml_path, self.channel_xml_name))
                 
