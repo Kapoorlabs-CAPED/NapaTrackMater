@@ -675,7 +675,7 @@ class TrackMate(object):
                                         Spotobject.set(self.radius_key, str(new_radius))     
                                         Spotobject.set(self.quality_key, str(new_quality))
                                         Spotobject.set(self.distance_cell_mask_key, str(new_distance_cell_mask))
-                                        if self.trackid_key in self.unique_spot_properties[int(cell_id)]:
+                                        if self.trackid_key in self.unique_spot_properties[int(cell_id)].keys():
                                            
                                            track_id = self.unique_spot_properties[int(cell_id)][self.trackid_key]
                                            print(track_id)
