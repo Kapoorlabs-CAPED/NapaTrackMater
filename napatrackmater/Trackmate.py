@@ -1126,6 +1126,7 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
 
                 for ignore_value in ignore_values:
                     if v!=ignore_value:
+                       print(v, ignore_value)
                        AllValues[v] = spot_dataset[v].astype("float")
 
         AllValues[posix] = round(LocationX,3)
