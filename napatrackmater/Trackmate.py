@@ -398,16 +398,20 @@ class TrackMate(object):
                             self._iterate_split_down(root_leaf, root_splits)
                             
                             for source_id in all_source_ids:
-                                   target_id = self.edge_target_lookup[source_id]
+                                   target_ids = self.edge_target_lookup[source_id]
                                    if source_id not in all_target_ids:
                                         current_cell_ids.append(int(source_id))
                                         self._dict_update(unique_tracklet_ids, source_id, track_id, None, target_id)
-                                   if target_id is not None and target_id not in all_source_ids:
-                                        current_cell_ids.append(int(target_id))
-                                        self._dict_update(unique_tracklet_ids, target_id, track_id, source_id, None)
-                                   if target_id is not None and target_id in all_source_ids:
-                                        current_cell_ids.append(int(source_id)) 
-                                        self._dict_update(unique_tracklet_ids, source_id, track_id, source_id, target_id)          
+                                   if target_ids is not None and target_ids not in all_source_ids:
+                                        for target_id in target_ids:
+                                               if target_id not in all_source_ids:
+                                                    current_cell_ids.append(int(target_id))
+                                                    self._dict_update(unique_tracklet_ids, target_id, track_id, source_id, None)
+                                               else:
+                                                    current_cell_ids.append(int(source_id)) 
+                                                    self._dict_update(unique_tracklet_ids, source_id, track_id, source_id, target_id)  
+                                                           
+                                                  
                                    # Determine if a track has divisions or none
                                    if len(root_splits) > 0:
                                         DividingTrajectory = True
