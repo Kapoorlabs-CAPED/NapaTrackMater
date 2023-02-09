@@ -604,8 +604,7 @@ class TrackMate(object):
                                     self.progress_bar.show()
 
                     for r in futures:
-                           self.count = self.count + 1
-                           
+                                    self.count = self.count + 1
                                     self.progress_bar.value =  self.count
                                     
                            r.result()
@@ -631,9 +630,7 @@ class TrackMate(object):
 
 
                     for r in futures:
-                           self.count = self.count + 1
-                           
-                                    
+                                    self.count = self.count + 1
                                     self.progress_bar.value = self.count
                            r.result()
                 
