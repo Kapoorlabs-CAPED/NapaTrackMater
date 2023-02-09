@@ -400,8 +400,8 @@ class TrackMate(object):
                                    
                             self._iterate_split_down(root_leaf, root_splits)
                             for edge in track.findall('Edge'):
-                                source_id = edge.get(self.spot_source_id_key)
-                                target_id = edge.get(self.spot_target_id_key)
+                                source_id = int(edge.get(self.spot_source_id_key))
+                                target_id = int(edge.get(self.spot_target_id_key))
                                 
                                 #Root 
                                 if int(source_id) not in all_target_ids:
