@@ -682,7 +682,7 @@ class TrackMate(object):
                         for parent in xml_root.findall('Model'):
                             for firstchild in parent.findall('AllTracks'):
                                 for secondchild in firstchild.findall('Track'):
-                                    track_id = int(secondchild.get(self.trackid_key)):
+                                    track_id = int(secondchild.get(self.trackid_key))
                                     if track_id not in channel_filtered_tracks:    
                                         firstchild.remove(secondchild)
                                    
