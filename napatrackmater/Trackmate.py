@@ -395,9 +395,40 @@ class TrackMate(object):
                             current_tracklets_properties = {}
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
-                            
-                                   
                             self._iterate_split_down(root_leaf, root_splits)
+                            
+                            for source_id in all_source_ids:
+                                   target_id = self.edge_target_lookup[source_id]
+                                   if source_id not in all_target_ids:
+                                        current_cell_ids.append(int(source_id))
+                                        self._dict_update(unique_tracklet_ids, source_id, track_id, None, target_id)
+                                   if target_id is not None and target_id not in all_source_ids:
+                                        current_cell_ids.append(int(target_id))
+                                        self._dict_update(unique_tracklet_ids, target_id, track_id, source_id, None)
+                                   if target_id is not None and target_id in all_source_ids:
+                                        current_cell_ids.append(int(source_id)) 
+                                        self._dict_update(unique_tracklet_ids, source_id, track_id, source_id, target_id)          
+                                   # Determine if a track has divisions or none
+                                   if len(root_splits) > 0:
+                                        DividingTrajectory = True
+                                        if str(track_id) not in self.AllTrackIds:
+                                            self.AllTrackIds.append(str(track_id))
+                                        if str(track_id) not in self.DividingTrackIds:     
+                                            self.DividingTrackIds.append(str(track_id))
+                                                
+                                   else:
+                                        DividingTrajectory = False
+                                        if str(track_id) not in self.AllTrackIds:
+                                            self.AllTrackIds.append(str(track_id))
+                                        if str(track_id) not in self.NormalTrackIds:    
+                                            self.NormalTrackIds.append(str(track_id))
+
+                                   if int(source_id) not in all_target_ids:
+                                            self.unique_spot_properties[int(source_id)].update({self.dividing_key : DividingTrajectory})
+                                   if int(target_id) not in all_source_ids:
+                                            self.unique_spot_properties[int(target_id)].update({self.dividing_key : DividingTrajectory})       
+                                   
+
                             for edge in track.findall('Edge'):
                                 source_id = int(edge.get(self.spot_source_id_key))
                                 target_id = int(edge.get(self.spot_target_id_key))
@@ -418,25 +449,7 @@ class TrackMate(object):
                                         current_cell_ids.append(int(source_id)) 
                                         self._dict_update(unique_tracklet_ids, source_id, track_id, source_id, target_id)
                                         
-                                # Determine if a track has divisions or none
-                                if len(root_splits) > 0:
-                                    DividingTrajectory = True
-                                    if str(track_id) not in self.AllTrackIds:
-                                        self.AllTrackIds.append(str(track_id))
-                                    if str(track_id) not in self.DividingTrackIds:     
-                                        self.DividingTrackIds.append(str(track_id))
-                                            
-                                else:
-                                    DividingTrajectory = False
-                                    if str(track_id) not in self.AllTrackIds:
-                                        self.AllTrackIds.append(str(track_id))
-                                    if str(track_id) not in self.NormalTrackIds:    
-                                        self.NormalTrackIds.append(str(track_id))
-
-                                if int(source_id) not in all_target_ids:
-                                        self.unique_spot_properties[int(source_id)].update({self.dividing_key : DividingTrajectory})
-                                if int(target_id) not in all_source_ids:
-                                        self.unique_spot_properties[int(target_id)].update({self.dividing_key : DividingTrajectory})    
+                                    
                             
                             
                             for current_root in root_root:
@@ -673,7 +686,13 @@ class TrackMate(object):
                    print('computing Fourier')
                    self._compute_fourier()
 
-                         
+                for (k,v) in self.graph_split.items():
+                           
+                            daughter_track_id =  int(float(str(self.unique_spot_properties[int(float(k))][self.uniqueid_key])))
+                            parent_track_id = int(float(str(self.unique_spot_properties[int(float(v))][self.uniqueid_key])))
+                            self.graph_tracks[daughter_track_id] = parent_track_id
+                self._get_attributes()
+                self._temporal_plots_trackmate()            
                 
     def _compute_fourier(self):
 
