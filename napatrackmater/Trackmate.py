@@ -190,7 +190,7 @@ class TrackMate(object):
 
     def _get_attributes(self):
             
-             self.Attributeids, self.AllValues =  get_spot_dataset(self.spot_dataset, self.track_analysis_spot_keys, self.xcalibration, self.ycalibration, self.zcalibration, self.AttributeBoxname)
+             self.Attributeids, self.AllValues =  get_spot_dataset(self.spot_dataset, self.track_analysis_spot_keys, self.xcalibration, self.ycalibration, self.zcalibration, self.AttributeBoxname, self.detectorchannel)
         
              self.TrackAttributeids, self.AllTrackValues = get_track_dataset(self.track_dataset,  self.track_analysis_spot_keys, self.track_analysis_track_keys, self.TrackAttributeBoxname)
              
@@ -1095,7 +1095,7 @@ def get_csv_data(csv):
         dataset_index = dataset.index
         return dataset, dataset_index
     
-def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycalibration, zcalibration, AttributeBoxname):
+def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycalibration, zcalibration, AttributeBoxname, detectionchannel):
         AllValues = {}
         posix = track_analysis_spot_keys["posix"]
         posiy = track_analysis_spot_keys["posiy"]
@@ -1114,10 +1114,19 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
         LocationT = (spot_dataset[frame].astype("float")).astype("int")
         
 
-        for (k,v) in track_analysis_spot_keys.items():
-            
 
-                AllValues[v] = spot_dataset[v].astype("float")
+        for (k,v) in track_analysis_spot_keys.items():
+
+                if detectionchannel == 1:
+                     if k == "mean_intensity_ch2":
+                           value = track_analysis_spot_keys["mean_intensity"]
+                           AllValues[value] = spot_dataset[v].astype("float")
+                     if k == "total_intensity_ch2":
+                           value = track_analysis_spot_keys["total_intensity"]
+                           AllValues[value] = spot_dataset[v].astype("float")       
+
+                if v !="mean_intensity_ch1" or v!="mean_intensity_ch2" or v!="total_intensity_ch1" or v!="total_intensity_ch2":
+                    AllValues[v] = spot_dataset[v].astype("float")
 
         AllValues[posix] = round(LocationX,3)
         AllValues[posiy] = round(LocationY,3)
@@ -1125,7 +1134,7 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
         AllValues[frame] = round(LocationT,3)
         Attributeids = []
         Attributeids.append(AttributeBoxname)
-        for attributename in track_analysis_spot_keys.values():
+        for attributename in AllValues.keys():
               Attributeids.append(attributename)    
             
         
