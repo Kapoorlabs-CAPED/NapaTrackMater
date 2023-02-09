@@ -678,23 +678,28 @@ class TrackMate(object):
                                         if self.trackid_key in self.unique_spot_properties[int(cell_id)].keys():
                                            
                                            track_id = self.unique_spot_properties[int(cell_id)][self.trackid_key]
-                                           print(track_id)
                                            channel_filtered_tracks.append(track_id)
 
                         for Trackobject in self.xml_root.iter('Track'):
                               track_id = Trackobject.get(self.trackid_key)
                               if track_id not in channel_filtered_tracks:
-                                      self.xml_root.remove(Trackobject)   
+                                      if Trackobject in self.xml_root:
+                                        print('popping Track object')
+                                        self.xml_root.remove(Trackobject)   
                         for Edgeobject in self.xml_root.iter('Edge'):
                                 spot_source_id = int(float(Edgeobject.get(self.spot_source_id_key)))  
                                 spot_target_id = int(float(Edgeobject.get(self.spot_target_id_key)))      
                                 if spot_source_id not in self.channel_unique_spot_properties.keys() and spot_target_id not in self.channel_unique_spot_properties.keys():
-                                      self.xml_root.remove(Edgeobject)
+                                      if Edgeobject in self.xml_root:
+                                        print('popping Edge object')
+                                        self.xml_root.remove(Edgeobject)
 
                         for Filterobject in self.xml_root.iter('TrackID'):
                               filter_track_id = int(float(Filterobject.get(self.trackid_key)))  
                               if filter_track_id not in channel_filtered_tracks:
-                                    self.xml_root.remove(Filterobject)                
+                                    if Filterobject in self.xml_root:
+                                        print('popping filter object')
+                                        self.xml_root.remove(Filterobject)                
 
                         self.xml_tree.write(os.path.join(self.channel_xml_path, self.channel_xml_name))
                 
