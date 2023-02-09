@@ -152,14 +152,25 @@ class TrackMate(object):
 
     def _create_channel_tree(self):
           self._timed_channel_seg_image = {}
-          
+          self.count = 0
           futures = []
           with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                     for i in range(self.channel_seg_image.shape[0]):
                         futures.append(executor.submit(self._channel_computer, i))
-                    [r.result() for r in futures]
           
-          
+                    if self.progress_bar is not None:
+                                 
+                                    self.progress_bar.label = "Doing channel computation"
+                                    self.progress_bar.range = (
+                                        0,
+                                        len(futures),
+                                    )
+                                    self.progress_bar.show()
+
+                    for r in futures:
+                                    self.count = self.count + 1
+                                    self.progress_bar.value =  self.count
+                                    r.result()
     def _channel_computer(self, i):
                 
                 if self.image is not None:
@@ -546,8 +557,7 @@ class TrackMate(object):
 
     def _get_xml_data(self):
 
-                if self.progress_bar is not None:
-                                self.progress_bar.value =  self.count
+             
 
                 if self.channel_seg_image is not None:
                       self.channel_xml_content = self.xml_content
@@ -588,6 +598,7 @@ class TrackMate(object):
                 self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
                 self._get_boundary_points()
                 print('Iterating over spots in frame')
+                self.count = 0
                 futures = []
 
                 with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
@@ -638,33 +649,33 @@ class TrackMate(object):
 
                         channel_filtered_tracks = []    
                         print('Transferring XML')               
-                        for (k,v) in self.channel_unique_spot_properties.items():
+                        for Spotobject in self.xml_root.iter('Spot'):
+                                cell_id = int(Spotobject.get(self.spotid_key))
+                                if cell_id in self.channel_unique_spot_properties.keys():        
                                 
-                                cell_id = int(k)
-                                
-                                new_positionx =  self.channel_unique_spot_properties[cell_id][self.xposid_key]
-                                new_positiony =  self.channel_unique_spot_properties[cell_id][self.yposid_key]
-                                new_positionz =  self.channel_unique_spot_properties[cell_id][self.zposid_key]
+                                        new_positionx =  self.channel_unique_spot_properties[cell_id][self.xposid_key]
+                                        new_positiony =  self.channel_unique_spot_properties[cell_id][self.yposid_key]
+                                        new_positionz =  self.channel_unique_spot_properties[cell_id][self.zposid_key]
 
-                                new_total_intensity = self.channel_unique_spot_properties[cell_id][self.total_intensity_key]
-                                new_mean_intensity = self.channel_unique_spot_properties[cell_id][self.mean_intensity_key]
+                                        new_total_intensity = self.channel_unique_spot_properties[cell_id][self.total_intensity_key]
+                                        new_mean_intensity = self.channel_unique_spot_properties[cell_id][self.mean_intensity_key]
 
-                                new_radius = self.channel_unique_spot_properties[cell_id][self.radius_key]
-                                new_quality = self.channel_unique_spot_properties[cell_id][self.quality_key]
-                                new_distance_cell_mask = self.channel_unique_spot_properties[cell_id][self.distance_cell_mask_key]
+                                        new_radius = self.channel_unique_spot_properties[cell_id][self.radius_key]
+                                        new_quality = self.channel_unique_spot_properties[cell_id][self.quality_key]
+                                        new_distance_cell_mask = self.channel_unique_spot_properties[cell_id][self.distance_cell_mask_key]
 
-                                Spotobject.set(self.xposid_key, str(new_positionx))     
-                                Spotobject.set(self.yposid_key, str(new_positiony))
-                                Spotobject.set(self.zposid_key, str(new_positionz))
+                                        Spotobject.set(self.xposid_key, str(new_positionx))     
+                                        Spotobject.set(self.yposid_key, str(new_positiony))
+                                        Spotobject.set(self.zposid_key, str(new_positionz))
 
-                                Spotobject.set(self.total_intensity_key, str(new_total_intensity))     
-                                Spotobject.set(self.mean_intensity_key, str(new_mean_intensity))
+                                        Spotobject.set(self.total_intensity_key, str(new_total_intensity))     
+                                        Spotobject.set(self.mean_intensity_key, str(new_mean_intensity))
 
-                                Spotobject.set(self.radius_key, str(new_radius))     
-                                Spotobject.set(self.quality_key, str(new_quality))
-                                Spotobject.set(self.distance_cell_mask_key, str(new_distance_cell_mask))
-                                track_id = self.unique_spot_properties[int(cell_id)][self.trackid_key]
-                                channel_filtered_tracks.append(track_id)
+                                        Spotobject.set(self.radius_key, str(new_radius))     
+                                        Spotobject.set(self.quality_key, str(new_quality))
+                                        Spotobject.set(self.distance_cell_mask_key, str(new_distance_cell_mask))
+                                        track_id = self.unique_spot_properties[int(cell_id)][self.trackid_key]
+                                        channel_filtered_tracks.append(track_id)
 
                         for Trackobject in self.xml_root.iter('Track'):
                               track_id = Trackobject.get(self.trackid_key)
