@@ -314,17 +314,17 @@ class TrackMate(object):
         
          #Generation 0
          root_cell_id = root_root[0]    
-         self.generation_dict[root_cell_id] = '0'
+         self.generation_dict[root_cell_id] = 0
          max_generation = len(root_splits)
          #Generation > 1
          for pre_leaf in root_leaf:
               if pre_leaf == root_cell_id:
-                   self.generation_dict[pre_leaf] = '0'
+                   self.generation_dict[pre_leaf] = 0
               else:
-                   self.generation_dict[pre_leaf] = str(max_generation) 
+                   self.generation_dict[pre_leaf] = int(max_generation) 
                    source_id = self.edge_source_lookup[pre_leaf]
                    if source_id in root_splits:
-                         self.generation_dict[source_id] = str(max_generation - 1)
+                         self.generation_dict[source_id] = int(max_generation - 1)
                    if source_id not in root_splits and source_id not in root_root:                         
                          source_id = self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = int(max_generation))
 
@@ -338,13 +338,13 @@ class TrackMate(object):
         if source_id not in root_root:  
             if source_id not in root_splits:
                             
-                            self.generation_dict[source_id] = str(gen_count)
+                            self.generation_dict[source_id] = int(gen_count)
                             source_id = self.edge_source_lookup[source_id]
                             self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = gen_count)
             if source_id in root_splits:
                                     
                                     gen_count = gen_count - 1
-                                    self.generation_dict[source_id] = str(gen_count)
+                                    self.generation_dict[source_id] = int(gen_count)
                                     source_id = self.edge_source_lookup[source_id]
                                    
                                     self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = int(gen_count))
@@ -401,17 +401,17 @@ class TrackMate(object):
                             # Determine if a track has divisions or none
                             if len(root_splits) > 0:
                                 DividingTrajectory = True
-                                if str(track_id) not in self.AllTrackIds:
-                                    self.AllTrackIds.append(str(track_id))
-                                if str(track_id) not in self.DividingTrackIds:     
-                                    self.DividingTrackIds.append(str(track_id))
+                                if int(track_id) not in self.AllTrackIds:
+                                    self.AllTrackIds.append(int(track_id))
+                                if int(track_id) not in self.DividingTrackIds:     
+                                    self.DividingTrackIds.append(int(track_id))
                                         
                             else:
                                 DividingTrajectory = False
-                                if str(track_id) not in self.AllTrackIds:
-                                    self.AllTrackIds.append(str(track_id))
-                                if str(track_id) not in self.NormalTrackIds:    
-                                    self.NormalTrackIds.append(str(track_id))
+                                if int(track_id) not in self.AllTrackIds:
+                                    self.AllTrackIds.append(int(track_id))
+                                if int(track_id) not in self.NormalTrackIds:    
+                                    self.NormalTrackIds.append(int(track_id))
 
                             for leaf in root_leaf:
                                    source_leaf = self.edge_source_lookup[leaf]
@@ -454,9 +454,11 @@ class TrackMate(object):
                                     x = float(all_dict_values[self.xposid_key])
                                     gen_id = int(float(all_dict_values[self.generationid_key]))
                                     speed = float(all_dict_values[self.speed_key])
+                                    acceleration = float(all_dict_values[self.acceleration_key])
                                     dcr = float(all_dict_values[self.directional_change_rate_key])
                                     dcr = scale_value(float(dcr))
                                     speed = scale_value(float(speed))
+                                    acceleration = scale_value(acceleration)
                                     total_intensity =  float(all_dict_values[self.total_intensity_key])
                                     volume_pixels = int(float(all_dict_values[self.quality_key]))
                                     if current_track_id in current_tracklets:
@@ -465,14 +467,14 @@ class TrackMate(object):
                                         current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
 
                                         value_array = current_tracklets_properties[current_track_id]
-                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity, volume_pixels])
+                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity, volume_pixels, acceleration])
                                         current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
 
                                     else:
                                         current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
                                         current_tracklets[current_track_id] = current_tracklet_array 
 
-                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity, volume_pixels])
+                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity, volume_pixels, acceleration])
                                         current_tracklets_properties[current_track_id] = current_value_array
                                             
 
@@ -727,8 +729,8 @@ class TrackMate(object):
                             float(self.unique_spot_properties[int(cell_id)][self.zposid_key]) -  float(self.unique_spot_properties[int(source_id)][self.zposid_key])]
             speed = np.sqrt(np.dot(vec_1, vec_1))/self.tcalibration
             self.unique_spot_properties[int(cell_id)].update({self.speed_key : round(speed, 3)})
-            if str(source_id) in self.edge_source_lookup:
-                    pre_source_id = self.edge_source_lookup[str(source_id)]
+            if source_id in self.edge_source_lookup:
+                    pre_source_id = self.edge_source_lookup[source_id]
                     
                     vec_0 = [float(self.unique_spot_properties[int(source_id)][self.xposid_key]) - float(self.unique_spot_properties[int(pre_source_id)][self.xposid_key]), 
                             float(self.unique_spot_properties[int(source_id)][self.yposid_key]) - float(self.unique_spot_properties[int(pre_source_id)][self.yposid_key]), 
@@ -758,10 +760,6 @@ class TrackMate(object):
     
     
                 self.Attr = {}
-                sourceid_key = self.track_analysis_edges_keys["spot_source_id"]
-                dcr_key = self.track_analysis_edges_keys["directional_change_rate"]
-                speed_key = self.track_analysis_edges_keys["speed"]
-                disp_key = self.track_analysis_edges_keys["displacement"]
                 starttime = int(min(self.AllValues[self.frameid_key]))
                 endtime = int(max(self.AllValues[self.frameid_key]))
                  
