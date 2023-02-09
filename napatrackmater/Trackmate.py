@@ -750,13 +750,13 @@ class TrackMate(object):
                     angle = angular_change(vec_0, vec_1)
                     self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : round(angle, 3)})
                     self.unique_spot_properties[int(cell_id)].update({self.acceleration_key : round(acc, 3)})
-        else:
+        elif source_id is None:
             self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : None}) 
             self.root_spots[int(cell_id)] = self.unique_spot_properties[int(cell_id)]
 
         if target_id is not None:       
             self.unique_spot_properties[int(cell_id)].update({self.afterid_key : int(target_id)}) 
-        else:
+        elif target_id is None:
             self.unique_spot_properties[int(cell_id)].update({self.afterid_key : None})
             
                  
