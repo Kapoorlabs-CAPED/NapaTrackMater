@@ -506,7 +506,7 @@ class TrackMate(object):
                                 MEAN_INTENSITY = Spotobject.get(self.mean_intensity_ch1_key)
                         RADIUS = Spotobject.get(self.radius_key)
                         QUALITY = Spotobject.get(self.quality_key)
-                        testlocation = (Spotobject.get(self.zposid_key), Spotobject.get(self.yposid_key),  Spotobject.get(self.xposid_key))
+                        testlocation = (float(Spotobject.get(self.zposid_key)), float(Spotobject.get(self.yposid_key)),  float(Spotobject.get(self.xposid_key)))
                         frame = Spotobject.get(self.frameid_key)
                         distance_cell_mask = self._get_boundary_dist(frame, testlocation, RADIUS)
                         
@@ -524,7 +524,7 @@ class TrackMate(object):
                         }
             
                         if self.channel_seg_image is not None:
-                                    pixeltestlocation = (Spotobject.get(self.zposid_key)/float(self.zcalibration), Spotobject.get(self.yposid_key)/float(self.ycalibration),  Spotobject.get(self.xposid_key)/ float(self.xcalibration))
+                                    pixeltestlocation = (float(Spotobject.get(self.zposid_key))/float(self.zcalibration), float(Spotobject.get(self.yposid_key))/float(self.ycalibration),  float(Spotobject.get(self.xposid_key))/ float(self.xcalibration))
                                     tree, centroids, labels, volume, intensity_mean, intensity_total, bounding_boxes = self._timed_channel_seg_image[str(int(float(frame)))]
                                     dist, index = tree.query(testlocation)
 
