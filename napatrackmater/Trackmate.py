@@ -395,8 +395,7 @@ class TrackMate(object):
                             current_tracklets_properties = {}
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
-                            for current_root in root_root:
-                                   self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
+                            
                                    
                             self._iterate_split_down(root_leaf, root_splits)
                             for edge in track.findall('Edge'):
@@ -419,9 +418,6 @@ class TrackMate(object):
                                         current_cell_ids.append(int(source_id)) 
                                         self._dict_update(unique_tracklet_ids, source_id, track_id, source_id, target_id)
                                         
-                                        
-                                                    
-
                                 # Determine if a track has divisions or none
                                 if len(root_splits) > 0:
                                     DividingTrajectory = True
@@ -443,7 +439,9 @@ class TrackMate(object):
                                         self.unique_spot_properties[int(target_id)].update({self.dividing_key : DividingTrajectory})    
                             
                             
-
+                             for current_root in root_root:
+                                   self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
+                            print(self.unique_spot_properties[532444])
                             for i in range(len(current_cell_ids)):
                                         
                                     k = int(current_cell_ids[i])    
