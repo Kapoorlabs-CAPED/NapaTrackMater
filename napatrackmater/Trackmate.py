@@ -10,6 +10,7 @@ from skimage.segmentation import find_boundaries
 from scipy import spatial
 import dask as da
 from typing import List
+from napari.qt import thread_worker
 from scipy.fftpack import fft, fftfreq, fftshift, ifft
 import os
 import concurrent
@@ -555,7 +556,8 @@ class TrackMate(object):
                                                     self.distance_cell_mask_key: round(float(distance_cell_mask),2)
 
                                             } 
-
+   
+    @thread_worker
     def _get_xml_data(self):
 
              
