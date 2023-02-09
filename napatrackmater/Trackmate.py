@@ -396,20 +396,25 @@ class TrackMate(object):
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
                             self._iterate_split_down(root_leaf, root_splits)
+                            for leaf in root_leaf:
+                                   source_leaf = self.edge_source_lookup[leaf]
+                                   current_cell_ids.append(leaf) 
+                                   self._dict_update(unique_tracklet_ids, leaf, track_id, source_leaf, None)
                             
+
                             for source_id in all_source_ids:
-                                   target_ids = self.edge_target_lookup[source_id]
-                                   if source_id not in all_target_ids:
-                                        current_cell_ids.append(int(source_id))
-                                        self._dict_update(unique_tracklet_ids, source_id, track_id, None, target_id)
-                                   if target_ids is not None and target_ids not in all_source_ids:
+                                        target_ids = self.edge_target_lookup[source_id]
+                                        current_cell_ids.append(source_id)
+                                        #Root
+                                        if source_id not in all_target_ids:
+                                                
+                                                for target_id in target_ids
+                                                   self._dict_update(unique_tracklet_ids, source_id, track_id, None, target_id)
+                                        #Normal        
                                         for target_id in target_ids:
-                                               if target_id not in all_source_ids:
-                                                    current_cell_ids.append(int(target_id))
-                                                    self._dict_update(unique_tracklet_ids, target_id, track_id, source_id, None)
-                                               else:
-                                                    current_cell_ids.append(int(source_id)) 
-                                                    self._dict_update(unique_tracklet_ids, source_id, track_id, source_id, target_id)  
+                                                    self._dict_update(unique_tracklet_ids, source_id, track_id, source_id, target_id) 
+
+                                                          
                                                            
                                                   
                                    # Determine if a track has divisions or none
@@ -433,26 +438,7 @@ class TrackMate(object):
                                             self.unique_spot_properties[int(target_id)].update({self.dividing_key : DividingTrajectory})       
                                    
 
-                            for edge in track.findall('Edge'):
-                                source_id = int(edge.get(self.spot_source_id_key))
-                                target_id = int(edge.get(self.spot_target_id_key))
-                                
-                                #Root 
-                                if int(source_id) not in all_target_ids:
-                                        current_cell_ids.append(int(source_id))
-                                        self._dict_update(unique_tracklet_ids, source_id, track_id, None, target_id)
-
-                                #Leaf
-                                if int(target_id) not in all_source_ids:
-                                        current_cell_ids.append(int(target_id))
-                                        self._dict_update(unique_tracklet_ids, target_id, track_id, source_id, None)
-
-                                        
-                                #All other types
-                                else:
-                                        current_cell_ids.append(int(source_id)) 
-                                        self._dict_update(unique_tracklet_ids, source_id, track_id, source_id, target_id)
-                                        
+                           
                                     
                             
                             
