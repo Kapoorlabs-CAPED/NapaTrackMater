@@ -295,7 +295,7 @@ class TrackMate(object):
                    target_cell_id = target_cells[i]
                    self.graph_split[target_cell_id] = root_split 
 
-                   target_cell_tracklet_id = i + 1 + tracklet_before
+                   target_cell_tracklet_id = i +  tracklet_before
                    tracklet_before = tracklet_before + 1
                    self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
 
