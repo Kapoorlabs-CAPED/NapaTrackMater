@@ -148,6 +148,7 @@ class TrackMate(object):
                     .find("FilteredTracks")
                     .findall("TrackID")
                 ]
+        self.max_track_id = max(self.filtered_track_ids)        
         
         self._get_xml_data()
 
@@ -745,10 +746,9 @@ class TrackMate(object):
         generation_id = self.generation_dict[cell_id]
         tracklet_id = self.tracklet_dict[cell_id]
 
-        unique_id = str(track_id) + str(generation_id) + str(tracklet_id)
-        unique_tracklet_ids.append(str(unique_id))
-    
+        unique_id = str(track_id) + str(self.max_track_id) + str(generation_id) + str(tracklet_id)
         
+        unique_tracklet_ids.append(str(unique_id))
         self.unique_spot_properties[int(cell_id)].update({self.uniqueid_key : str(unique_id)})
         self.unique_spot_properties[int(cell_id)].update({self.trackletid_key : str(tracklet_id)}) 
         self.unique_spot_properties[int(cell_id)].update({self.generationid_key : str(generation_id)}) 
