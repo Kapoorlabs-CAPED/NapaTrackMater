@@ -25,6 +25,8 @@ setup(
         "napari",
         "natsort",
         "seaborn",
+        "cellshape-cloud",
+        "cellshape-cluster",
     ],
     entry_points = {
         'console_scripts': [

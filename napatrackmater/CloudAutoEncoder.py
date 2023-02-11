@@ -1,8 +1,7 @@
-
-
 from cellshape_cloud import CloudAutoEncoder
 import sys
 from .pretrained import get_autoencoder_instance, get_model_details, get_registered_models
+
 
 class CloudAutoEncoder(CloudAutoEncoder):
     def __init__(
