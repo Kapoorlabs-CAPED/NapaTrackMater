@@ -14,28 +14,17 @@ setup(
 
     version=__version__,
 
-    author='Varun Kapoor,Claudia Carabana Garcia, Mari Tolonen',
+    author='Varun Kapoor, Mari Tolonen',
     author_email='randomaccessiblekapoor@gmail.com',
     url='https://github.com/kapoorlab/NapaTrackMater/',
     description='Import Trackmate XML files for Track Visualization and analysis in Napari.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     install_requires=[
-        "numpy",
-        "pandas",
+        "vollseg",
         "napari",
-        "pyqt5",
         "natsort",
-        "scikit-image",
-        "scipy",
-        "tifffile",
-        "matplotlib",
-        "ffmpeg-python",
-        "imageio_ffmpeg",
-        "dask",
-        "lmfit",
         "seaborn",
-        "perfmetrics",
     ],
     entry_points = {
         'console_scripts': [
