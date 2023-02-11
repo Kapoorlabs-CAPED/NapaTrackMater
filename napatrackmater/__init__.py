@@ -2,7 +2,7 @@ from .bTrackmate import *
 from .Trackmate import *
 from .napari_animation import *
 from .version import __version__
-from .pretrained import register_model, register_aliases, clear_models_and_aliases
+from .pretrained import register_model, register_aliases, clear_models_and_aliases, get_registered_models, get_model_folder
 from cellshape_cluster import DeepEmbeddedClustering
 from cellshape_cloud import CloudAutoEncoder
 from importlib import import_module
