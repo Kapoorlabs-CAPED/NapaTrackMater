@@ -12,20 +12,7 @@ from collections import OrderedDict
 from warnings import warn
 
 from pathlib import Path
-from importlib import import_module
-import tensorflow
-
-def keras_import(sub=None, *names):
-    if sub is None:
-        return import_module(tensorflow.keras)
-    else:
-        mod = import_module('{_KERAS}.{sub}'.format(_KERAS=tensorflow.keras,sub=sub))
-        if len(names) == 0:
-            return mod
-        elif len(names) == 1:
-            return getattr(mod, names[0])
-        return tuple(getattr(mod, name) for name in names)
-get_file = keras_import('utils', 'get_file')
+from tensorflow.keras.utils import get_file
 
 
 def _raise(e):
