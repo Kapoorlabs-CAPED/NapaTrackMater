@@ -10,10 +10,11 @@ from __future__ import print_function, unicode_literals, absolute_import, divisi
 
 from collections import OrderedDict
 from warnings import warn
-
+import torch
 from pathlib import Path
 from tensorflow.keras.utils import get_file
-
+import os 
+import json
 
 def _raise(e):
     if isinstance(e, BaseException):
@@ -107,11 +108,48 @@ def get_model_folder(cls, key_or_alias):
     path = Path(get_file(fname=key+'.zip', origin=m['url'], file_hash=m['hash'],
                          cache_subdir=target, extract=True))
     assert path.exists() and path.parent.exists()
-    return path.parent
+    return path.parent, key
 
+def load_json(fpath):
+    with open(fpath) as f:
 
-def get_model_instance(cls, key_or_alias):
-    path = get_model_folder(cls, key_or_alias)
-    model = cls(config=None, name=path.stem, basedir=path.parent)
-    model.basedir = None # make read-only
+        return json.load(f)
+    
+def get_autoencoder_instance(cls, key_or_alias):
+    path, key = get_model_folder(cls, key_or_alias)
+    json_file = path.parent + key + '.json'
+    checkpoint = torch.load(os.path.join(path.parent, path.stem))
+    try: 
+        Path(json_file).is_file()
+
+        config = load_json(json_file)
+        autoencoder = cls(
+        num_features=config['num_features'],
+        k=config['k_nearest_neighbours'],
+        encoder_type=config['encoder_type'],
+        decoder_type=config['decoder_type'],
+        )
+        autoencoder.load_state_dict(checkpoint["model_state_dict"])
+        return autoencoder
+    except FileNotFoundError: f'Expected a json file of model attributes with name {key}.json in the folder {path.parent}' 
+
+def get_cluster_instance(cls, key_or_alias, auto_cls, auto_key_or_alias):
+
+    autoencoder = get_autoencoder_instance(auto_cls, auto_key_or_alias)
+
+    path, key = get_model_folder(cls, key_or_alias)
+    
+    checkpoint = torch.load(os.path.join(path.parent, path.stem))
+    num_clusters = checkpoint["model_state_dict"]["clustering_layer.weight"].shape[
+        0
+    ]
+
+    print(f"The number of clusters in the loaded model is: {num_clusters}")
+
+    model = cls(
+        autoencoder=autoencoder, num_clusters=num_clusters
+    )
+
+    model.load_state_dict(checkpoint["model_state_dict"])
+
     return model
