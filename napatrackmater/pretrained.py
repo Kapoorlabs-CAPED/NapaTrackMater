@@ -119,19 +119,18 @@ def get_autoencoder_instance(cls, key_or_alias):
     path, key = get_model_folder(cls, key_or_alias)
     json_file = path.parent + key + '.json'
     checkpoint = torch.load(os.path.join(path.parent, path.stem))
-    try: 
-        Path(json_file).is_file()
+    if Path(json_file).is_file():
 
-        config = load_json(json_file)
-        autoencoder = cls(
-        num_features=config['num_features'],
-        k=config['k_nearest_neighbours'],
-        encoder_type=config['encoder_type'],
-        decoder_type=config['decoder_type'],
-        )
-        autoencoder.load_state_dict(checkpoint["model_state_dict"])
-        return autoencoder
-    except FileNotFoundError: f'Expected a json file of model attributes with name {key}.json in the folder {path.parent}' 
+                config = load_json(json_file)
+                autoencoder = cls(
+                num_features=config['num_features'],
+                k=config['k_nearest_neighbours'],
+                encoder_type=config['encoder_type'],
+                decoder_type=config['decoder_type'],
+                )
+                autoencoder.load_state_dict(checkpoint["model_state_dict"])
+                return autoencoder
+    else:  print(f'Expected a json file of model attributes with name {key}.json in the folder {path.parent}' )
 
 def get_cluster_instance(cls, key_or_alias, auto_cls, auto_key_or_alias):
 
@@ -143,13 +142,10 @@ def get_cluster_instance(cls, key_or_alias, auto_cls, auto_key_or_alias):
     num_clusters = checkpoint["model_state_dict"]["clustering_layer.weight"].shape[
         0
     ]
-
     print(f"The number of clusters in the loaded model is: {num_clusters}")
 
     model = cls(
         autoencoder=autoencoder, num_clusters=num_clusters
     )
-
     model.load_state_dict(checkpoint["model_state_dict"])
-
     return model
