@@ -69,7 +69,7 @@ class Clustering:
            for data in dataloader:
                  inputs = data[0]
                  label_inputs = data[1]
-                 output, features, clusters = self.model(inputs)
+                 output, features, clusters = self.model(inputs.cuda())
                  
                  input_labels.append(label_inputs)
                  cluster_labels.append(clusters)
@@ -88,7 +88,7 @@ class Clustering:
                 for data in dataloader:
                         inputs = data[0]
                         label_inputs = data[1]
-                        output, features, clusters = self.model(inputs)
+                        output, features, clusters = self.model(inputs.cuda())
                         
                         input_labels.append(label_inputs)
                         cluster_labels.append(clusters)
@@ -107,7 +107,7 @@ class Clustering:
                             for data in dataloader:
                                     inputs = data[0]
                                     label_inputs = data[1]
-                                    output, features, clusters = self.model(inputs)
+                                    output, features, clusters = self.model(inputs.cuda())
                                     
                                     input_labels.append(label_inputs)
                                     cluster_labels.append(clusters)
@@ -125,7 +125,7 @@ class Clustering:
                             for data in dataloader:
                                     inputs = data[0]
                                     label_inputs = data[1]
-                                    output, features, clusters = self.model(inputs)
+                                    output, features, clusters = self.model(inputs.cuda())
                                     
                                     input_labels.append(label_inputs)
                                     cluster_labels.append(clusters)
