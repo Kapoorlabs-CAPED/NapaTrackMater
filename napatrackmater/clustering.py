@@ -78,7 +78,7 @@ def label_cluster(label_image, model, mesh_dir, num_points, ndim):
                                cloud = get_panda_cloud_xy(points)
                             if ndim == 3:
                                cloud = get_panda_cloud_xyz(points)        
-                            output, features, clusters = model(cloud.cuda())
+                            output, features, clusters = model(cloud)
                             labels.append(label)
                             cluster_labels.append(clusters)
 
