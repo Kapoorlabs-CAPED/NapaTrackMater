@@ -33,7 +33,7 @@ class PointCloudDataset(Dataset):
         point_label = self.labels[idx]
         mean = 0
         point_cloud = torch.tensor(point_cloud.points.values)
-        point_label = torch.mean(point_label,0)
+       
         if self.centre:
             mean = torch.mean(point_cloud, 0)
 
@@ -174,7 +174,7 @@ def label_cluster(label_image,  mesh_dir, num_points, min_size, ndim):
                                       cloud = get_panda_cloud_xyz(points)  
 
                                     clouds.append(cloud)  
-                                    labels.append(labels)       
+                                    labels.append(label)       
 
        return labels, clouds
 
