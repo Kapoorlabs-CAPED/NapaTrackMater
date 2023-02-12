@@ -43,13 +43,14 @@ class PointCloudDataset(Dataset):
 
 class Clustering:
 
-    def __init__(self, label_image: np.ndarray, axes, mesh_dir: str, num_points: int, model: DeepEmbeddedClustering):
+    def __init__(self, label_image: np.ndarray, axes, mesh_dir: str, num_points: int, model: DeepEmbeddedClustering, min_size:tuple = (2,2,2)):
 
         self.label_image = label_image 
         self.model = model
         self.axes = axes
         self.num_points = num_points
         self.mesh_dir = mesh_dir 
+        self.min_size = min_size
         self.timed_cluster_label = {}
         Path(self.mesh_dir).mkdir(exist_ok=True)
 
@@ -60,7 +61,7 @@ class Clustering:
         #YX image  
         if ndim == 2:
            
-           labels, clouds = label_cluster(self.label_image, self.model, self.mesh_dir, self.num_points, ndim)
+           labels, clouds = label_cluster(self.label_image, self.model, self.mesh_dir, self.num_points, self.min_size, ndim)
            dataset = PointCloudDataset(clouds, labels)
            dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
            input_labels = []
@@ -78,7 +79,7 @@ class Clustering:
         #ZYX image
         if ndim == 3 and 'T' not in self.axes:
                
-           labels, clouds = label_cluster(self.label_image,  self.mesh_dir, self.num_points, ndim)
+           labels, clouds = label_cluster(self.label_image,  self.mesh_dir, self.num_points, self.min_size, ndim)
            dataset = PointCloudDataset(clouds, labels)
            dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
            input_labels = []
@@ -96,7 +97,7 @@ class Clustering:
         if ndim == 3 and 'T' in self.axes:
                for i in range(self.label_image.shape[0]):
                       xy_label_image = self.label_image[i,:]
-                      labels, clouds = label_cluster(xy_label_image, self.mesh_dir, self.num_points, ndim - 1)
+                      labels, clouds = label_cluster(xy_label_image, self.mesh_dir, self.num_points, self.min_size, ndim - 1)
                       dataset = PointCloudDataset(clouds, labels)
                       dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
                       input_labels = []
@@ -113,7 +114,7 @@ class Clustering:
         if ndim == 4:
                for i in range(self.label_image.shape[0]):
                       xyz_label_image = self.label_image[i,:]
-                      labels, clouds = label_cluster(xyz_label_image,  self.mesh_dir, self.num_points, ndim)
+                      labels, clouds = label_cluster(xyz_label_image,  self.mesh_dir, self.num_points, self.min_size, ndim)
                       dataset = PointCloudDataset(clouds, labels)
                       dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
                       input_labels = []
@@ -128,7 +129,7 @@ class Clustering:
                       self.timed_cluster_label[str(i)] = [input_labels, cluster_labels]
 
 
-def label_cluster(label_image,  mesh_dir, num_points, ndim):
+def label_cluster(label_image,  mesh_dir, num_points, min_size, ndim):
        
        labels = []
        clouds = []
@@ -140,24 +141,37 @@ def label_cluster(label_image,  mesh_dir, num_points, ndim):
                             futures.append(executor.submit(get_current_label_binary, prop))
                     for future in concurrent.futures.as_completed(futures):
                             binary_image, label = future.result()
-                            #Apply the model prediction for getting clusters
-                            vertices, faces, normals, values = marching_cubes(binary_image)
-                            mesh_obj = trimesh.Trimesh(
-                                vertices=vertices, faces=faces, process=False
-                            )
-                            mesh_file = str(label) 
-                            
-                            save_mesh_file = os.path.join(mesh_dir, mesh_file) + ".off"
-                            mesh_obj.export(save_mesh_file) 
-                            data = read_off(os.path.join(mesh_dir, save_mesh_file))
-                            points = sample_points(data=data, num=num_points).numpy()
-                            if ndim == 2:
-                               cloud = get_panda_cloud_xy(points)
-                            if ndim == 3:
-                               cloud = get_panda_cloud_xyz(points)  
+                            valid = []  
+                              
+                            if min_size is not None:
+                                  for j in range(len(min_size)):
+                                        if binary_image.shape[j] >= min_size[j]:
+                                              valid.append(True)
+                                        else:
+                                              valid.append(False)      
+                            else:
+                                  for j in range(len(binary_image.shape)):
+                                              valid.append(True)
+                                                    
+                            if False not in valid:
+                                    #Apply the model prediction for getting clusters
+                                    vertices, faces, normals, values = marching_cubes(binary_image)
+                                    mesh_obj = trimesh.Trimesh(
+                                        vertices=vertices, faces=faces, process=False
+                                    )
+                                    mesh_file = str(label) 
+                                    
+                                    save_mesh_file = os.path.join(mesh_dir, mesh_file) + ".off"
+                                    mesh_obj.export(save_mesh_file) 
+                                    data = read_off(os.path.join(mesh_dir, save_mesh_file))
+                                    points = sample_points(data=data, num=num_points).numpy()
+                                    if ndim == 2:
+                                      cloud = get_panda_cloud_xy(points)
+                                    if ndim == 3:
+                                      cloud = get_panda_cloud_xyz(points)  
 
-                            clouds.append(cloud)  
-                            labels.append(labels)       
+                                    clouds.append(cloud)  
+                                    labels.append(labels)       
 
        return labels, clouds
 
