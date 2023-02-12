@@ -80,17 +80,20 @@ class Clustering:
         if ndim == 3 and 'T' not in self.axes:
                
            labels, clouds = label_cluster(self.label_image,  self.mesh_dir, self.num_points, self.min_size, ndim)
-           dataset = PointCloudDataset(clouds, labels)
-           dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-           input_labels = []
-           cluster_labels = []
-           for data in dataloader:
-                 inputs = data[0]
-                 label_inputs = data[1]
-                 output, features, clusters = self.model(inputs)
-                 
-                 input_labels.append(label_inputs)
-                 cluster_labels.append(clusters)
+           if len(labels) > 1:
+                dataset = PointCloudDataset(clouds, labels)
+                print(dataset)
+                dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
+                print(dataloader)
+                input_labels = []
+                cluster_labels = []
+                for data in dataloader:
+                        inputs = data[0]
+                        label_inputs = data[1]
+                        output, features, clusters = self.model(inputs)
+                        
+                        input_labels.append(label_inputs)
+                        cluster_labels.append(clusters)
 
 
         #TYX
@@ -98,35 +101,37 @@ class Clustering:
                for i in range(self.label_image.shape[0]):
                       xy_label_image = self.label_image[i,:]
                       labels, clouds = label_cluster(xy_label_image, self.mesh_dir, self.num_points, self.min_size, ndim - 1)
-                      dataset = PointCloudDataset(clouds, labels)
-                      dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-                      input_labels = []
-                      cluster_labels = []
-                      for data in dataloader:
-                            inputs = data[0]
-                            label_inputs = data[1]
-                            output, features, clusters = self.model(inputs)
-                            
-                            input_labels.append(label_inputs)
-                            cluster_labels.append(clusters)
-                      self.timed_cluster_label[str(i)] = [input_labels, cluster_labels]
+                      if len(labels) > 1:
+                            dataset = PointCloudDataset(clouds, labels)
+                            dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
+                            input_labels = []
+                            cluster_labels = []
+                            for data in dataloader:
+                                    inputs = data[0]
+                                    label_inputs = data[1]
+                                    output, features, clusters = self.model(inputs)
+                                    
+                                    input_labels.append(label_inputs)
+                                    cluster_labels.append(clusters)
+                            self.timed_cluster_label[str(i)] = [input_labels, cluster_labels]
         #TZYX image        
         if ndim == 4:
                for i in range(self.label_image.shape[0]):
                       xyz_label_image = self.label_image[i,:]
                       labels, clouds = label_cluster(xyz_label_image,  self.mesh_dir, self.num_points, self.min_size, ndim)
-                      dataset = PointCloudDataset(clouds, labels)
-                      dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-                      input_labels = []
-                      cluster_labels = []
-                      for data in dataloader:
-                            inputs = data[0]
-                            label_inputs = data[1]
-                            output, features, clusters = self.model(inputs)
-                            
-                            input_labels.append(label_inputs)
-                            cluster_labels.append(clusters)
-                      self.timed_cluster_label[str(i)] = [input_labels, cluster_labels]
+                      if len(labels) > 1:
+                            dataset = PointCloudDataset(clouds, labels)
+                            dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
+                            input_labels = []
+                            cluster_labels = []
+                            for data in dataloader:
+                                    inputs = data[0]
+                                    label_inputs = data[1]
+                                    output, features, clusters = self.model(inputs)
+                                    
+                                    input_labels.append(label_inputs)
+                                    cluster_labels.append(clusters)
+                            self.timed_cluster_label[str(i)] = [input_labels, cluster_labels]
 
 
 def label_cluster(label_image,  mesh_dir, num_points, min_size, ndim):
