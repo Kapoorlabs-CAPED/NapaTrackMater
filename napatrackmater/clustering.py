@@ -33,12 +33,12 @@ class PointCloudDataset(Dataset):
         point_label = self.labels[idx]
         mean = 0
         point_cloud = torch.tensor(point_cloud.points.values)
+        point_label = torch.tensor(point_label.points.values)
         if self.centre:
             mean = torch.mean(point_cloud, 0)
 
         scale = torch.tensor([[self.scale, self.scale, self.scale]])
         point_cloud = (point_cloud - mean) / scale
-        print(point_cloud, point_label)
         return point_cloud, point_label
 
 class Clustering:
