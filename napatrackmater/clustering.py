@@ -33,7 +33,7 @@ class PointCloudDataset(Dataset):
         point_label = self.labels[idx]
         mean = 0
         point_cloud = torch.tensor(point_cloud.points.values)
-        point_label = torch.tensor(point_label.points.values)
+        point_label = torch.mean(point_label,0)
         if self.centre:
             mean = torch.mean(point_cloud, 0)
 
