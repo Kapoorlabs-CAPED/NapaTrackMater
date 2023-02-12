@@ -38,7 +38,7 @@ class PointCloudDataset(Dataset):
 
         scale = torch.tensor([[self.scale, self.scale, self.scale]])
         point_cloud = (point_cloud - mean) / scale
-
+        print(point_cloud, point_label)
         return point_cloud, point_label
 
 class Clustering:
@@ -82,9 +82,7 @@ class Clustering:
            labels, clouds = label_cluster(self.label_image,  self.mesh_dir, self.num_points, self.min_size, ndim)
            if len(labels) > 1:
                 dataset = PointCloudDataset(clouds, labels)
-                print(dataset)
                 dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-                print(dataloader)
                 input_labels = []
                 cluster_labels = []
                 for data in dataloader:
