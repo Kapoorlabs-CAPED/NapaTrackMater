@@ -66,8 +66,8 @@ class Clustering:
            labels, centroids, clouds = _label_cluster(self.label_image, self.model, self.mesh_dir, self.num_points, self.min_size, ndim)
            dataset = PointCloudDataset(clouds, labels, centroids)
            dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-           output_labels, output_cluster_score, output_cluster_index = _model_output(self.model, dataloader)
-           self.timed_cluster_label[str(0)] = [output_labels, output_cluster_score, output_cluster_index]     
+           output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid = _model_output(self.model, dataloader)
+           self.timed_cluster_label[str(0)] = [output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid]     
  
         #ZYX image
         if ndim == 3 and 'T' not in self.axes:
@@ -76,8 +76,8 @@ class Clustering:
            if len(labels) > 1:
                 dataset = PointCloudDataset(clouds, labels, centroids)
                 dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-                output_labels, output_cluster_score, output_cluster_index = _model_output(self.model, dataloader)
-                self.timed_cluster_label[str(0)] = [output_labels, output_cluster_score, output_cluster_index]
+                output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid = _model_output(self.model, dataloader)
+                self.timed_cluster_label[str(0)] = [output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid]
 
 
         #TYX
@@ -88,8 +88,8 @@ class Clustering:
                       if len(labels) > 1:
                             dataset = PointCloudDataset(clouds, labels)
                             dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-                            output_labels, output_cluster_score, output_cluster_index = _model_output(self.model, dataloader)
-                            self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_index]
+                            output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid = _model_output(self.model, dataloader)
+                            self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid]
         #TZYX image        
         if ndim == 4:
                for i in range(self.label_image.shape[0]):
@@ -98,30 +98,35 @@ class Clustering:
                       if len(labels) > 1:
                             dataset = PointCloudDataset(clouds, labels)
                             dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-                            output_labels, output_cluster_score, output_cluster_index = _model_output(self.model, dataloader)
-                            self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_index]
+                            output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid = _model_output(self.model, dataloader)
+                            self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid]
 
 def _model_output(model, dataloader):
        
        output_labels = []
        output_cluster_score = []
        output_cluster_index = []
+       output_cluster_centroid = []
        for data in dataloader:
                     inputs = data[0]
                     label_inputs = data[1]
+                    centroid_inputs = data[2]
                     try:
                         output, features, clusters = model(inputs.cuda())
                     except ValueError:
                         output, features, clusters = model(inputs.cpu())      
                     clusters = torch.squeeze(clusters).detach().cpu().numpy()
-                    label_inputs = torch.squeeze(label_inputs).detach().cpu().numpy()[0]
+                    label_inputs = int(float(torch.squeeze(label_inputs).detach().cpu().numpy()))
+                    centroid_inputs = tuple(map(tuple, torch.squeeze(centroid_inputs).detach().cpu().numpy()))
                     max_score = max(clusters)
                     cluster_index = np.argmax(max_score)
                     output_labels.append(label_inputs)
                     output_cluster_score.append(max_score)
                     output_cluster_index.append(cluster_index)
+                    output_cluster_centroid.append(centroid_inputs)
 
-       return output_labels, output_cluster_score, output_cluster_index              
+
+       return output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid              
 
 
        
