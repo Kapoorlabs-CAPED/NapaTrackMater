@@ -85,14 +85,14 @@ class Clustering:
                 dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
                 input_labels = []
                 cluster_labels = []
-                for data in tqdm(dataloader):
+                for data in dataloader:
                         inputs = data[0]
                         label_inputs = data[1]
                         
                         output, features, clusters = self.model(inputs.cuda())
                         clusters = torch.squeeze(clusters).detach().cpu().numpy()
                         label_inputs = torch.squeeze(label_inputs).detach().cpu().numpy()
-                        print('Score, predicted cluster', max(clusters), np.argmax(clusters))
+                        print('Score, predicted cluster, Image label', max(clusters), np.argmax(clusters), label_inputs)
                         input_labels.append(label_inputs)
                         cluster_labels.append(clusters)
 
