@@ -115,7 +115,7 @@ def _model_output(model, clouds, labels, centroids):
                         output, features, clusters = model(inputs.cpu())      
                     clusters = torch.squeeze(clusters).detach().cpu().numpy()
                     label_inputs = int(float(torch.squeeze(label_inputs).detach().cpu().numpy()))
-                    centroid_inputs = torch.squeeze(centroid_inputs).detach().cpu().numpy()
+                    centroid_inputs = tuple(torch.squeeze(centroid_inputs).detach().cpu().numpy())
                     max_score = max(clusters)
                     cluster_index = np.argmax(max_score)
                     output_labels.append(label_inputs)
