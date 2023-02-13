@@ -16,9 +16,10 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 class PointCloudDataset(Dataset):
-    def __init__(self, clouds, labels, centre=True, scale=20.0):
+    def __init__(self, clouds, labels, centroids, centre=True, scale=20.0):
         self.clouds = clouds
         self.labels = labels 
+        self.centroids = centroids 
         self.centre = centre
         self.scale = scale
       
@@ -31,6 +32,7 @@ class PointCloudDataset(Dataset):
         # read the image
         point_cloud = self.clouds[idx]
         point_label = self.labels[idx]
+        point_centroid = self.centroids[idx]
         mean = 0
         point_cloud = torch.tensor(point_cloud.points.values)
        
@@ -39,7 +41,7 @@ class PointCloudDataset(Dataset):
 
         scale = torch.tensor([[self.scale, self.scale, self.scale]])
         point_cloud = (point_cloud - mean) / scale
-        return point_cloud, point_label
+        return point_cloud, point_label, point_centroid 
 
 class Clustering:
 
@@ -61,94 +63,73 @@ class Clustering:
         #YX image  
         if ndim == 2:
            
-           labels, clouds = label_cluster(self.label_image, self.model, self.mesh_dir, self.num_points, self.min_size, ndim)
-           dataset = PointCloudDataset(clouds, labels)
+           labels, centroids, clouds = _label_cluster(self.label_image, self.model, self.mesh_dir, self.num_points, self.min_size, ndim)
+           dataset = PointCloudDataset(clouds, labels, centroids)
            dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-           input_labels = []
-           cluster_labels = []
-           for data in dataloader:
-                 inputs = data[0]
-                 label_inputs = data[1]
-                 output, features, clusters = self.model(inputs.cuda())
-                 
-                 input_labels.append(label_inputs)
-                 cluster_labels.append(clusters)
-
-           self.timed_cluster_label[str(0)] = [input_labels, cluster_labels]     
+           output_labels, output_cluster_score, output_cluster_index = _model_output(self.model, dataloader)
+           self.timed_cluster_label[str(0)] = [output_labels, output_cluster_score, output_cluster_index]     
  
         #ZYX image
         if ndim == 3 and 'T' not in self.axes:
                
-           labels, clouds = label_cluster(self.label_image,  self.mesh_dir, self.num_points, self.min_size, ndim)
+           labels, centroids, clouds = _label_cluster(self.label_image,  self.mesh_dir, self.num_points, self.min_size, ndim)
            if len(labels) > 1:
-                dataset = PointCloudDataset(clouds, labels)
+                dataset = PointCloudDataset(clouds, labels, centroids)
                 dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-                input_labels = []
-                cluster_labels = []
-                for data in dataloader:
-                        inputs = data[0]
-                        label_inputs = data[1]
-                        try:
-                            output, features, clusters = self.model(inputs.cuda())
-                        except ValueError:
-                            output, features, clusters = self.model(inputs.cpu())      
-                        clusters = torch.squeeze(clusters).detach().cpu().numpy()
-                        label_inputs = torch.squeeze(label_inputs).detach().cpu().numpy()
-                        input_labels.append(label_inputs)
-                        cluster_labels.append(clusters)
-                self.timed_cluster_label[str(0)] = [input_labels, cluster_labels]        
+                output_labels, output_cluster_score, output_cluster_index = _model_output(self.model, dataloader)
+                self.timed_cluster_label[str(0)] = [output_labels, output_cluster_score, output_cluster_index]
 
 
         #TYX
         if ndim == 3 and 'T' in self.axes:
                for i in range(self.label_image.shape[0]):
                       xy_label_image = self.label_image[i,:]
-                      labels, clouds = label_cluster(xy_label_image, self.mesh_dir, self.num_points, self.min_size, ndim - 1)
+                      labels, centroids, clouds = _label_cluster(xy_label_image, self.mesh_dir, self.num_points, self.min_size, ndim - 1)
                       if len(labels) > 1:
                             dataset = PointCloudDataset(clouds, labels)
                             dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-                            input_labels = []
-                            cluster_labels = []
-                            for data in dataloader:
-                                    inputs = data[0]
-                                    label_inputs = data[1]
-                                    try:
-                                        output, features, clusters = self.model(inputs.cuda())
-                                    except ValueError:
-                                        output, features, clusters = self.model(inputs.cpu())      
-                                    clusters = torch.squeeze(clusters).detach().cpu().numpy()
-                                    label_inputs = torch.squeeze(label_inputs).detach().cpu().numpy()
-                                    input_labels.append(label_inputs)
-                                    cluster_labels.append(clusters)
-                            self.timed_cluster_label[str(i)] = [input_labels, cluster_labels]
+                            output_labels, output_cluster_score, output_cluster_index = _model_output(self.model, dataloader)
+                            self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_index]
         #TZYX image        
         if ndim == 4:
                for i in range(self.label_image.shape[0]):
                       xyz_label_image = self.label_image[i,:]
-                      labels, clouds = label_cluster(xyz_label_image,  self.mesh_dir, self.num_points, self.min_size, ndim)
+                      labels, centroids, clouds = _label_cluster(xyz_label_image,  self.mesh_dir, self.num_points, self.min_size, ndim)
                       if len(labels) > 1:
                             dataset = PointCloudDataset(clouds, labels)
                             dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-                            input_labels = []
-                            cluster_labels = []
-                            for data in dataloader:
-                                    inputs = data[0]
-                                    label_inputs = data[1]
-                                    try:
-                                        output, features, clusters = self.model(inputs.cuda())
-                                    except ValueError:
-                                        output, features, clusters = self.model(inputs.cpu())      
-                                    clusters = torch.squeeze(clusters).detach().cpu().numpy()
-                                    label_inputs = torch.squeeze(label_inputs).detach().cpu().numpy()
-                                    
-                                    input_labels.append(label_inputs)
-                                    cluster_labels.append(clusters)
-                            self.timed_cluster_label[str(i)] = [input_labels, cluster_labels]
+                            output_labels, output_cluster_score, output_cluster_index = _model_output(self.model, dataloader)
+                            self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_index]
+
+def _model_output(model, dataloader):
+       
+       output_labels = []
+       output_cluster_score = []
+       output_cluster_index = []
+       for data in dataloader:
+                    inputs = data[0]
+                    label_inputs = data[1]
+                    try:
+                        output, features, clusters = model(inputs.cuda())
+                    except ValueError:
+                        output, features, clusters = model(inputs.cpu())      
+                    clusters = torch.squeeze(clusters).detach().cpu().numpy()
+                    label_inputs = torch.squeeze(label_inputs).detach().cpu().numpy()[0]
+                    max_score = max(clusters)
+                    cluster_index = np.argmax(max_score)
+                    output_labels.append(label_inputs)
+                    output_cluster_score.append(max_score)
+                    output_cluster_index.append(cluster_index)
+
+       return output_labels, output_cluster_score, output_cluster_index              
 
 
-def label_cluster(label_image,  mesh_dir, num_points, min_size, ndim):
+       
+
+def _label_cluster(label_image,  mesh_dir, num_points, min_size, ndim):
        
        labels = []
+       centroids = []
        clouds = []
        nthreads = os.cpu_count() - 1
        properties = regionprops(label_image)
@@ -157,7 +138,7 @@ def label_cluster(label_image,  mesh_dir, num_points, min_size, ndim):
                     for prop in properties:
                             futures.append(executor.submit(get_current_label_binary, prop))
                     for future in concurrent.futures.as_completed(futures):
-                            binary_image, label = future.result()
+                            binary_image, label, centroid = future.result()
                             valid = []  
                               
                             if min_size is not None:
@@ -188,9 +169,10 @@ def label_cluster(label_image,  mesh_dir, num_points, min_size, ndim):
                                       cloud = get_panda_cloud_xyz(points)  
 
                                     clouds.append(cloud)  
-                                    labels.append(label)       
+                                    labels.append(label)   
+                                    centroids.append(centroid)    
 
-       return labels, clouds
+       return labels, centroids, clouds
 
 def get_panda_cloud_xy(points):
         
@@ -210,6 +192,7 @@ def get_panda_cloud_xyz(points):
 def get_current_label_binary(prop):
                       
                 binary_image = prop.image
-                label = prop.label  
+                label = prop.label 
+                centroid = prop.centroid 
 
-                return binary_image , label
+                return binary_image , label, centroid
