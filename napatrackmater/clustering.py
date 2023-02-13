@@ -88,11 +88,13 @@ class Clustering:
                 for data in tqdm(dataloader):
                         inputs = data[0]
                         label_inputs = data[1]
-                        print(inputs.shape, label_inputs)
+                        
                         output, features, clusters = self.model(inputs.cuda())
-                        print(clusters)
-                        input_labels.append(torch.squeeze(label_inputs).detach().cpu().numpy())
-                        cluster_labels.append(torch.squeeze(clusters).detach().cpu().numpy())
+                        clusters = torch.squeeze(clusters).detach().cpu().numpy()
+                        label_inputs = torch.squeeze(label_inputs).detach().cpu().numpy()
+                        print(clusters, max(clusters), clusters.index(max(clusters)))
+                        input_labels.append(label_inputs)
+                        cluster_labels.append(clusters)
 
 
         #TYX
