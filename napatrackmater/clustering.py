@@ -196,6 +196,6 @@ def get_current_label_binary(prop):
                       
                 binary_image = prop.image
                 label = prop.label 
-                centroid = prop.centroid 
+                centroid = np.asarray(prop.centroid) 
 
                 return binary_image , label, centroid
