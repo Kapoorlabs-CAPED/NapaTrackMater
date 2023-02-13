@@ -92,7 +92,7 @@ class Clustering:
                         output, features, clusters = self.model(inputs.cuda())
                         clusters = torch.squeeze(clusters).detach().cpu().numpy()
                         label_inputs = torch.squeeze(label_inputs).detach().cpu().numpy()
-                        print(clusters, max(clusters), clusters.index(max(clusters)))
+                        print(clusters, max(clusters), np.argmax(clusters))
                         input_labels.append(label_inputs)
                         cluster_labels.append(clusters)
 
