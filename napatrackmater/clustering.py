@@ -88,6 +88,7 @@ class Clustering:
                 for data in dataloader:
                         inputs = data[0]
                         label_inputs = data[1]
+                        print(inputs.shape, label_inputs)
                         output, features, clusters = self.model(inputs.cuda())
                         
                         input_labels.append(label_inputs)
