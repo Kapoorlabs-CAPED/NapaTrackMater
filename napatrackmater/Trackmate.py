@@ -13,10 +13,12 @@ from typing import List
 from napari.qt import thread_worker
 from scipy.fftpack import fft, fftfreq, fftshift, ifft
 import os
+from pathlib import Path 
 import concurrent
+from .clustering import Clustering
 class TrackMate(object):
     
-    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, progress_bar = None, channel_seg_image = None, image = None, mask = None, fourier = True):
+    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes, progress_bar = None, seg_image = None, channel_seg_image = None, image = None, mask = None, fourier = True, cluster_model = None, num_points = 2048, save_dir = None):
         
         
         self.xml_path = xml_path
@@ -25,16 +27,25 @@ class TrackMate(object):
         self.edges_csv_path = edges_csv_path
         self.image = image 
         self.mask = mask
-        self.fourier = fourier 
+        self.fourier = fourier
+        self.cluster_model = cluster_model 
         self.channel_seg_image = channel_seg_image
+        self.seg_image = seg_image
         self.AttributeBoxname = AttributeBoxname
         self.TrackAttributeBoxname = TrackAttributeBoxname
         self.TrackidBox = TrackidBox
+        self.num_points = num_points
         self.spot_dataset, self.spot_dataset_index = get_csv_data(self.spot_csv_path)
         self.track_dataset, self.track_dataset_index = get_csv_data(self.track_csv_path)
         self.edges_dataset, self.edges_dataset_index = get_csv_data(self.edges_csv_path)
         self.progress_bar = progress_bar
-                                                        
+        self.axes = axes                
+        self.save_dir = save_dir 
+        if self.save_dir is None:
+               self.save_dir = __file__ 
+        Path(self.save_dir).mkdir(exist_ok=True)
+        self.mesh_dir = os.path.join(self.save_dir,'mesh')
+        Path(self.mesh_dir).mkdir(exist_ok=True)                                       
         self.track_analysis_spot_keys = dict(
                 spot_id="ID",
                 track_id="TRACK_ID",
@@ -107,6 +118,9 @@ class TrackMate(object):
         self.distance_cell_mask_key = 'distance_cell_mask'
         self.cellid_key = 'cell_id'
         self.acceleration_key = 'acceleration'
+        self.centroid_key = 'centroid'
+        self.clusterclass_key = 'cluster_class'
+        self.clusterscore_key = 'cluster_score'
 
         self.mean_intensity_ch1_key = self.track_analysis_spot_keys["mean_intensity_ch1"]
         self.mean_intensity_ch2_key = self.track_analysis_spot_keys["mean_intensity_ch2"]
@@ -130,6 +144,7 @@ class TrackMate(object):
         self.unique_track_properties = {}
         self.unique_fft_properties = {}
         self.unique_spot_properties = {}
+        self.unique_spot_centroid = {}
         self.root_spots = {}
         self.channel_unique_spot_properties = {}
         self.edge_target_lookup = {}
@@ -138,6 +153,7 @@ class TrackMate(object):
         self.tracklet_dict = {}
         self.graph_split = {}
         self.graph_tracks = {}
+        self._timed_centroid = {}
         self.count = 0
        
         print('Reading XML')
@@ -151,6 +167,9 @@ class TrackMate(object):
         self.max_track_id = max(self.filtered_track_ids)        
         
         self._get_xml_data()
+
+     
+
 
     def _create_channel_tree(self):
           self._timed_channel_seg_image = {}
@@ -173,6 +192,9 @@ class TrackMate(object):
                                     self.count = self.count + 1
                                     self.progress_bar.value =  self.count
                                     r.result()
+
+ 
+
     def _channel_computer(self, i):
                 
                 if self.image is not None:
@@ -495,6 +517,9 @@ class TrackMate(object):
 
 
     def _spot_computer(self, frame):
+          
+          spot_centroids = []
+          
           for Spotobject in frame.findall('Spot'):
                         # Create object with unique cell ID
                         cell_id = int(Spotobject.get(self.spotid_key))
@@ -523,11 +548,18 @@ class TrackMate(object):
                             self.quality_key : round(float(QUALITY)),
                             self.distance_cell_mask_key: round(float(distance_cell_mask),2)
                         }
+       
+                        spot_centroid = (round(float(Spotobject.get(self.zposid_key)), 3)/self.zcalibration, round(float(Spotobject.get(self.yposid_key)), 3)/self.ycalibration, round(float(Spotobject.get(self.xposid_key)), 3)/self.xcalibration)
+                        spot_centroids.append(spot_centroid)
+                        self.unique_spot_centroid[spot_centroid] = {
+                               
+                               self.cellid_key: int(cell_id) 
+                        }
             
                         if self.channel_seg_image is not None:
                                     pixeltestlocation = (float(Spotobject.get(self.zposid_key))/float(self.zcalibration), float(Spotobject.get(self.yposid_key))/float(self.ycalibration),  float(Spotobject.get(self.xposid_key))/ float(self.xcalibration))
                                     tree, centroids, labels, volume, intensity_mean, intensity_total, bounding_boxes = self._timed_channel_seg_image[str(int(float(frame)))]
-                                    dist, index = tree.query(testlocation)
+                                    dist, index = tree.query(pixeltestlocation)
 
 
                                     bbox = bounding_boxes[index]
@@ -557,10 +589,13 @@ class TrackMate(object):
                                                     self.distance_cell_mask_key: round(float(distance_cell_mask),2)
 
                                             } 
+
+          tree = spatial.cKDTree(spot_centroids)
+          self._timed_centroid[str(frame)] = tree, spot_centroids                                   
    
     def _get_xml_data(self):
 
-             
+                
 
                 if self.channel_seg_image is not None:
                       self.channel_xml_content = self.xml_content
@@ -716,7 +751,31 @@ class TrackMate(object):
                             parent_track_id = int(float(str(self.unique_spot_properties[int(float(v))][self.uniqueid_key])))
                             self.graph_tracks[daughter_track_id] = parent_track_id
                 self._get_attributes()
-                self._temporal_plots_trackmate()            
+                self._temporal_plots_trackmate()
+                if self.cluster_model and self.seg_image is not None:
+                       self._assign_cluster_class()
+
+
+    def _assign_cluster_class(self):
+           
+           
+                   
+                    cluster_eval = Clustering(self.seg_image, self.axes,self.mesh_dir, self.num_points, self.cluster_model)
+                    cluster_eval._create_cluster_labels()
+                    timed_cluster_label = cluster_eval.timed_cluster_label 
+                    for time_key in timed_cluster_label.keys():
+                        output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = timed_cluster_label[time_key]
+                        tree, spot_centroids = self._timed_centroid[time_key]
+                        for i in len(output_cluster_centroid):
+                            centroid = output_cluster_centroid[i]
+                            cluster_class = output_cluster_class[i]
+                            cluster_score = output_cluster_score[i]
+                            dist, index = tree.query(centroid)
+                            closest_centroid = spot_centroids[index]
+                            closest_cell_id = self.unique_spot_centroid[closest_centroid]
+                            self.unique_spot_properties[int(closest_cell_id)].update({self.clusterclass_key : cluster_class})
+                            self.unique_spot_properties[int(closest_cell_id)].update({self.clusterscore_key : cluster_score})
+                            
                 
     def _compute_fourier(self):
 
