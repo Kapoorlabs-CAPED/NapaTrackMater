@@ -88,13 +88,15 @@ class Clustering:
                 for data in dataloader:
                         inputs = data[0]
                         label_inputs = data[1]
-                        
-                        output, features, clusters = self.model(inputs.cuda())
+                        try:
+                            output, features, clusters = self.model(inputs.cuda())
+                        except ValueError:
+                            output, features, clusters = self.model(inputs.cpu())      
                         clusters = torch.squeeze(clusters).detach().cpu().numpy()
                         label_inputs = torch.squeeze(label_inputs).detach().cpu().numpy()
-                        print('Score, predicted cluster, Image label', max(clusters), np.argmax(clusters), label_inputs)
                         input_labels.append(label_inputs)
                         cluster_labels.append(clusters)
+                self.timed_cluster_label[str(0)] = [input_labels, cluster_labels]        
 
 
         #TYX
@@ -110,8 +112,12 @@ class Clustering:
                             for data in dataloader:
                                     inputs = data[0]
                                     label_inputs = data[1]
-                                    output, features, clusters = self.model(inputs.cuda())
-                                    
+                                    try:
+                                        output, features, clusters = self.model(inputs.cuda())
+                                    except ValueError:
+                                        output, features, clusters = self.model(inputs.cpu())      
+                                    clusters = torch.squeeze(clusters).detach().cpu().numpy()
+                                    label_inputs = torch.squeeze(label_inputs).detach().cpu().numpy()
                                     input_labels.append(label_inputs)
                                     cluster_labels.append(clusters)
                             self.timed_cluster_label[str(i)] = [input_labels, cluster_labels]
@@ -128,7 +134,12 @@ class Clustering:
                             for data in dataloader:
                                     inputs = data[0]
                                     label_inputs = data[1]
-                                    output, features, clusters = self.model(inputs.cuda())
+                                    try:
+                                        output, features, clusters = self.model(inputs.cuda())
+                                    except ValueError:
+                                        output, features, clusters = self.model(inputs.cpu())      
+                                    clusters = torch.squeeze(clusters).detach().cpu().numpy()
+                                    label_inputs = torch.squeeze(label_inputs).detach().cpu().numpy()
                                     
                                     input_labels.append(label_inputs)
                                     cluster_labels.append(clusters)
