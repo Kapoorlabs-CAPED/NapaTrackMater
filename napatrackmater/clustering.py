@@ -13,7 +13,7 @@ import torch
 from torch.utils.data import Dataset
 from pyntcloud import PyntCloud
 from torch.utils.data import DataLoader
-
+from tqdm import tqdm
 
 class PointCloudDataset(Dataset):
     def __init__(self, clouds, labels, centre=True, scale=20.0):
@@ -85,14 +85,14 @@ class Clustering:
                 dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
                 input_labels = []
                 cluster_labels = []
-                for data in dataloader:
+                for data in tqdm(dataloader):
                         inputs = data[0]
                         label_inputs = data[1]
                         print(inputs.shape, label_inputs)
                         output, features, clusters = self.model(inputs.cuda())
-                        
-                        input_labels.append(label_inputs)
-                        cluster_labels.append(clusters)
+                        print(clusters)
+                        input_labels.append(torch.squeeze(label_inputs).detach().cpu().numpy())
+                        cluster_labels.append(torch.squeeze(clusters).detach().cpu().numpy())
 
 
         #TYX
