@@ -64,9 +64,8 @@ class Clustering:
         if ndim == 2:
            
            labels, centroids, clouds = _label_cluster(self.label_image, self.model, self.mesh_dir, self.num_points, self.min_size, ndim)
-           dataset = PointCloudDataset(clouds, labels, centroids)
-           dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-           output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid = _model_output(self.model, dataloader)
+           
+           output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
            self.timed_cluster_label[str(0)] = [output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid]     
  
         #ZYX image
@@ -74,9 +73,8 @@ class Clustering:
                
            labels, centroids, clouds = _label_cluster(self.label_image,  self.mesh_dir, self.num_points, self.min_size, ndim)
            if len(labels) > 1:
-                dataset = PointCloudDataset(clouds, labels, centroids)
-                dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-                output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid = _model_output(self.model, dataloader)
+                
+                output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
                 self.timed_cluster_label[str(0)] = [output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid]
 
 
@@ -86,9 +84,8 @@ class Clustering:
                       xy_label_image = self.label_image[i,:]
                       labels, centroids, clouds = _label_cluster(xy_label_image, self.mesh_dir, self.num_points, self.min_size, ndim - 1)
                       if len(labels) > 1:
-                            dataset = PointCloudDataset(clouds, labels)
-                            dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-                            output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid = _model_output(self.model, dataloader)
+                            
+                            output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
                             self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid]
         #TZYX image        
         if ndim == 4:
@@ -96,17 +93,18 @@ class Clustering:
                       xyz_label_image = self.label_image[i,:]
                       labels, centroids, clouds = _label_cluster(xyz_label_image,  self.mesh_dir, self.num_points, self.min_size, ndim)
                       if len(labels) > 1:
-                            dataset = PointCloudDataset(clouds, labels)
-                            dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-                            output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid = _model_output(self.model, dataloader)
+                            
+                            output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
                             self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_index, output_cluster_centroid]
 
-def _model_output(model, dataloader):
+def _model_output(model, clouds, labels, centroids):
        
        output_labels = []
        output_cluster_score = []
        output_cluster_index = []
        output_cluster_centroid = []
+       dataset = PointCloudDataset(clouds, labels, centroids)
+       dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
        for data in dataloader:
                     inputs = data[0]
                     label_inputs = data[1]
