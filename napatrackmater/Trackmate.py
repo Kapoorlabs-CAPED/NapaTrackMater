@@ -945,20 +945,21 @@ class TrackMate(object):
                     mitotic_radius = []
                     mitotic_speed = []
                     mitotic_directional_change = []
-
+                    mitotic_cluster_class = []
                     non_mitotic_disp_z = []
                     non_mitotic_disp_y = []
                     non_mitotic_disp_x = []
                     non_mitotic_radius = []
                     non_mitotic_speed = []
                     non_mitotic_directional_change = []
- 
+                    non_mitotic_cluster_class = []
                     all_disp_z = []
                     all_disp_y = []
                     all_disp_x = []
                     all_radius = []
                     all_speed = []
                     all_directional_change = []
+                    all_cluster_class = []
 
 
 
@@ -976,7 +977,7 @@ class TrackMate(object):
                                         mitotic_speed.append(all_spots_tracks[k][self.speed_key])
                                         mitotic_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])
                                         if self.cluster_model and self.seg_image is not None:
-                                               self.mitotic_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])
+                                               mitotic_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])
                                   if not mitotic:
                                         non_mitotic_disp_z.append(all_spots_tracks[k][self.zposid_key])
                                         non_mitotic_disp_y.append(all_spots_tracks[k][self.yposid_key])
@@ -985,7 +986,7 @@ class TrackMate(object):
                                         non_mitotic_speed.append(all_spots_tracks[k][self.speed_key])
                                         non_mitotic_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])
                                         if self.cluster_model and self.seg_image is not None:
-                                               self.non_mitotic_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])
+                                               non_mitotic_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])
 
                                   all_disp_z.append(all_spots_tracks[k][self.zposid_key])
                                   all_disp_y.append(all_spots_tracks[k][self.yposid_key])
@@ -994,7 +995,7 @@ class TrackMate(object):
                                   all_speed.append(all_spots_tracks[k][self.speed_key])
                                   all_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])   
                                   if self.cluster_model and self.seg_image is not None:
-                                               self.all_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])    
+                                               all_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])    
                                               
 
                     mitotic_disp_z = np.abs(np.diff(mitotic_disp_z))
@@ -1013,7 +1014,9 @@ class TrackMate(object):
                                         
                     self.time.append(i * self.tcalibration)
 
-                    
+                    self.mitotic_cluster_class.append(np.asarray(mitotic_cluster_class))
+                    self.non_mitotic_cluster_class.append(np.asarray(non_mitotic_cluster_class))
+                    self.all_cluster_class.append(np.asarray(all_cluster_class))
 
                     self.mitotic_mean_disp_z.append(np.mean(mitotic_disp_z))
                     self.mitotic_var_disp_z.append(np.std(mitotic_disp_z))

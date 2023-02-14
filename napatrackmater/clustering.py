@@ -170,6 +170,8 @@ def _label_cluster(label_image,  mesh_dir, num_points, min_size, ndim):
                                       cloud = get_panda_cloud_xy(points)
                                     if ndim == 3:
                                       cloud = get_panda_cloud_xyz(points)  
+                                    else:
+                                      cloud = get_panda_cloud_xyz(points)      
 
                                     clouds.append(cloud)  
                                     labels.append(label)   
