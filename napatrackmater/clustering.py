@@ -184,18 +184,14 @@ def _label_cluster(label_image,  mesh_dir, num_points, min_size, ndim, spot_labe
        clouds = []
        nthreads = os.cpu_count() - 1
        properties = regionprops(label_image)
-       with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
-                    futures = []
-                    for prop in properties:
-                            futures.append(executor.submit(get_current_label_binary, prop))
-                    for future in concurrent.futures.as_completed(futures):
-                        binary_image, label, centroid = future.result()
-                        if spot_labels is not None:
-                            if label in spot_labels:
-                                   labels, centroids, clouds = get_label_centroid_cloud(binary_image, mesh_dir, ndim, num_points, label, centroid, labels, centroids, clouds, min_size)
-                        if spot_labels is None:
-                                   labels, centroids, clouds = get_label_centroid_cloud(binary_image, mesh_dir, ndim, num_points, label, centroid, labels, centroids, clouds, min_size)
-      
+       for prop in properties:
+                          binary_image, label, centroid = get_current_label_binary(prop)
+                          if spot_labels is not None:
+                                if label in spot_labels:
+                                    labels, centroids, clouds = get_label_centroid_cloud(binary_image, mesh_dir, ndim, num_points, label, centroid, labels, centroids, clouds, min_size)
+                          if spot_labels is None:
+                                    labels, centroids, clouds = get_label_centroid_cloud(binary_image, mesh_dir, ndim, num_points, label, centroid, labels, centroids, clouds, min_size)
+        
 
        return labels, centroids, clouds
 
@@ -219,10 +215,15 @@ def get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, ce
                                     mesh_obj = trimesh.Trimesh(
                                         vertices=vertices, faces=faces, process=False
                                     )
+                                    point_obj = trimesh.PointCloud(vertices=vertices)
+                                    pos = point_obj.centroid
+                                    data = {"pos": pos, "face": face} 
+
                                     mesh_file = str(label) 
                                     
                                     save_mesh_file = os.path.join(mesh_dir, mesh_file) + ".off"
                                     mesh_obj.export(save_mesh_file) 
+                                    print(f'reading file {save_mesh_file}')
                                     data = read_off(os.path.join(mesh_dir, save_mesh_file))
                                     points = sample_points(data=data, num=num_points).numpy()
                                     if ndim == 2:
