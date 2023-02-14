@@ -520,6 +520,7 @@ class TrackMate(object):
     def _spot_computer(self, frame):
           
           spot_centroids = []
+          spot_labels = []
           
           for Spotobject in frame.findall('Spot'):
                         # Create object with unique cell ID
@@ -551,6 +552,9 @@ class TrackMate(object):
                         }
        
                         spot_centroid = (round(float(Spotobject.get(self.zposid_key)), 3)/self.zcalibration, round(float(Spotobject.get(self.yposid_key)), 3)/self.ycalibration, round(float(Spotobject.get(self.xposid_key)), 3)/self.xcalibration)
+                        if self.seg_image is not None:
+                               spot_label = self.seg_image[frame, int(round(float(Spotobject.get(self.zposid_key)), 3)/self.zcalibration), int(round(float(Spotobject.get(self.yposid_key)), 3)/self.ycalibration), int(round(float(Spotobject.get(self.xposid_key)), 3)/self.xcalibration)   ]
+                               spot_labels.append(spot_label) 
                         spot_centroids.append(spot_centroid)
                         self.unique_spot_centroid[spot_centroid] = {
                                
@@ -592,7 +596,7 @@ class TrackMate(object):
                                             } 
 
           tree = spatial.cKDTree(spot_centroids)
-          self._timed_centroid[str(frame)] = tree, spot_centroids                                   
+          self._timed_centroid[str(frame)] = tree, spot_centroids , spot_labels                                  
    
     def _get_xml_data(self):
 
@@ -761,13 +765,14 @@ class TrackMate(object):
     def _assign_cluster_class(self):
            
            
-                   
-                    cluster_eval = Clustering(self.seg_image, self.axes,self.mesh_dir, self.num_points, self.cluster_model, progress_bar=self.progress_bar)
-                    cluster_eval._create_cluster_labels()
-                    timed_cluster_label = cluster_eval.timed_cluster_label 
-                    for time_key in timed_cluster_label.keys():
-                        output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = timed_cluster_label[time_key]
-                        tree, spot_centroids = self._timed_centroid[time_key]
+                    for time_key in self._timed_centroid.keys():
+                           
+                           tree, spot_centroids, spot_labels = self._timed_centroid[time_key]
+                           cluster_eval = Clustering(self.seg_image,  self.axes,self.mesh_dir, self.num_points, self.cluster_model, spot_labels = spot_labels, progress_bar=self.progress_bar)       
+                           cluster_eval._create_cluster_labels()
+                           timed_cluster_label = cluster_eval.timed_cluster_label 
+                           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = timed_cluster_label[time_key]
+                        
                         for i in len(output_cluster_centroid):
                             centroid = output_cluster_centroid[i]
                             cluster_class = output_cluster_class[i]

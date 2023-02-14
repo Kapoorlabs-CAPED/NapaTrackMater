@@ -45,7 +45,7 @@ class PointCloudDataset(Dataset):
 
 class Clustering:
 
-    def __init__(self, label_image: np.ndarray, axes, mesh_dir: str, num_points: int, model: DeepEmbeddedClustering, min_size:tuple = (2,2,2), progress_bar = None):
+    def __init__(self, label_image: np.ndarray, axes, mesh_dir: str, num_points: int, model: DeepEmbeddedClustering, spot_labels = None,  min_size:tuple = (2,2,2), progress_bar = None):
 
         self.label_image = label_image 
         self.model = model
@@ -53,6 +53,7 @@ class Clustering:
         self.num_points = num_points
         self.mesh_dir = mesh_dir 
         self.min_size = min_size
+        self.spot_labels = spot_labels
         self.progress_bar = progress_bar
         self.timed_cluster_label = {}
         Path(self.mesh_dir).mkdir(exist_ok=True)
@@ -65,7 +66,7 @@ class Clustering:
         #YX image  
         if ndim == 2:
            
-           labels, centroids, clouds = _label_cluster(self.label_image, self.model, self.mesh_dir, self.num_points, self.min_size, ndim)
+           labels, centroids, clouds = _label_cluster(self.label_image, self.model, self.mesh_dir, self.num_points, self.min_size, ndim, self.spot_labels)
            
            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
            self.timed_cluster_label[str(0)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]     
@@ -73,7 +74,7 @@ class Clustering:
         #ZYX image
         if ndim == 3 and 'T' not in self.axes:
                
-           labels, centroids, clouds = _label_cluster(self.label_image,  self.mesh_dir, self.num_points, self.min_size, ndim)
+           labels, centroids, clouds = _label_cluster(self.label_image,  self.mesh_dir, self.num_points, self.min_size, ndim, self.spot_labels)
            if len(labels) > 1:
                 
                 output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
@@ -137,7 +138,7 @@ class Clustering:
     def _label_computer(self, i, dim):
         
             xyz_label_image = self.label_image[i,:]
-            labels, centroids, clouds = _label_cluster(xyz_label_image,  self.mesh_dir, self.num_points, self.min_size, dim)
+            labels, centroids, clouds = _label_cluster(xyz_label_image,  self.mesh_dir, self.num_points, self.min_size, dim, self.spot_labels)
             if len(labels) > 1:
                 
                 output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
@@ -176,7 +177,7 @@ def _model_output(model, clouds, labels, centroids):
 
        
 
-def _label_cluster(label_image,  mesh_dir, num_points, min_size, ndim):
+def _label_cluster(label_image,  mesh_dir, num_points, min_size, ndim, spot_labels):
        
        labels = []
        centroids = []
@@ -188,7 +189,18 @@ def _label_cluster(label_image,  mesh_dir, num_points, min_size, ndim):
                     for prop in properties:
                             futures.append(executor.submit(get_current_label_binary, prop))
                     for future in concurrent.futures.as_completed(futures):
-                            binary_image, label, centroid = future.result()
+                        binary_image, label, centroid = future.result()
+                        if spot_labels is not None:
+                            if label in spot_labels:
+                                   labels, centroids, clouds = get_label_centroid_cloud(binary_image, label, centroid, labels, centroids, clouds, min_size)
+                        if spot_labels is None:
+                                   labels, centroids, clouds = get_label_centroid_cloud(binary_image, label, centroid, labels, centroids, clouds, min_size)
+      
+
+       return labels, centroids, clouds
+
+def get_label_centroid_cloud(binary_image, label, centroid, labels, centroids, clouds, min_size):
+                            
                             valid = []  
                               
                             if min_size is not None:
@@ -222,9 +234,9 @@ def _label_cluster(label_image,  mesh_dir, num_points, min_size, ndim):
 
                                     clouds.append(cloud)  
                                     labels.append(label)   
-                                    centroids.append(centroid)    
-
-       return labels, centroids, clouds
+                                    centroids.append(centroid) 
+                            return  labels, centroids, clouds       
+       
 
 def get_panda_cloud_xy(points):
         
