@@ -45,7 +45,7 @@ class PointCloudDataset(Dataset):
 
 class Clustering:
 
-    def __init__(self, label_image: np.ndarray, axes, mesh_dir: str, num_points: int, model: DeepEmbeddedClustering, min_size:tuple = (2,2,2)):
+    def __init__(self, label_image: np.ndarray, axes, mesh_dir: str, num_points: int, model: DeepEmbeddedClustering, min_size:tuple = (2,2,2), progress_bar = None):
 
         self.label_image = label_image 
         self.model = model
@@ -53,6 +53,7 @@ class Clustering:
         self.num_points = num_points
         self.mesh_dir = mesh_dir 
         self.min_size = min_size
+        self.progress_bar = progerss_bar
         self.timed_cluster_label = {}
         Path(self.mesh_dir).mkdir(exist_ok=True)
 
@@ -80,22 +81,62 @@ class Clustering:
 
         #TYX
         if ndim == 3 and 'T' in self.axes:
-               for i in range(self.label_image.shape[0]):
-                      xy_label_image = self.label_image[i,:]
-                      labels, centroids, clouds = _label_cluster(xy_label_image, self.mesh_dir, self.num_points, self.min_size, ndim - 1)
-                      if len(labels) > 1:
-                            
-                            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
-                            self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]
+               with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
+                    for i in range(self.label_image.shape[0]):
+                        futures.append(executor.submit(self._label_computer, i, ndim - 1))
+          
+                    if self.progress_bar is not None:
+                                 
+                                    self.progress_bar.label = "Computing clustering classes"
+                                    self.progress_bar.range = (
+                                        0,
+                                        len(futures),
+                                    )
+                                    self.progress_bar.show()
+
+                    for r in futures:
+                                    self.count = self.count + 1
+                                    self.progress_bar.value =  self.count
+                                    results = r.result()
+                                    if results is not None:
+                                           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = results
+                                           self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]
+               
         #TZYX image        
         if ndim == 4:
-               for i in range(self.label_image.shape[0]):
-                      xyz_label_image = self.label_image[i,:]
-                      labels, centroids, clouds = _label_cluster(xyz_label_image,  self.mesh_dir, self.num_points, self.min_size, ndim)
-                      if len(labels) > 1:
+               with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
+                    for i in range(self.label_image.shape[0]):
+                        futures.append(executor.submit(self._label_computer, i, ndim))
+          
+                    if self.progress_bar is not None:
+                                 
+                                    self.progress_bar.label = "Computing clustering classes"
+                                    self.progress_bar.range = (
+                                        0,
+                                        len(futures),
+                                    )
+                                    self.progress_bar.show()
+
+                    for r in futures:
+                                    self.count = self.count + 1
+                                    self.progress_bar.value =  self.count
+                                    results = r.result()
+                                    if results is not None:
+                                           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = results
+                                           self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]
+               
+                      
                             
-                            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
-                            self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]
+
+def _label_computer(self, i, dim):
+       
+        xyz_label_image = self.label_image[i,:]
+        labels, centroids, clouds = _label_cluster(xyz_label_image,  self.mesh_dir, self.num_points, self.min_size, dim)
+        if len(labels) > 1:
+            
+            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
+          
+            return  output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid
 
 def _model_output(model, clouds, labels, centroids):
        
