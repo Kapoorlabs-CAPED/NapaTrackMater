@@ -122,7 +122,7 @@ class Clustering:
                                     )
                                     self.progress_bar.show()
 
-                    for r in tqdm(futures):
+                    for r in futures:
                                     self.count = self.count + 1
                                    
                                     if self.progress_bar is not None:
@@ -153,7 +153,7 @@ def _model_output(model, clouds, labels, centroids):
        output_cluster_centroid = []
        dataset = PointCloudDataset(clouds, labels, centroids)
        dataloader = DataLoader(dataset)
-       for data in tqdm(dataloader):
+       for data in dataloader:
                     inputs = data[0]
                     label_inputs = data[1]
                     centroid_inputs = data[2]

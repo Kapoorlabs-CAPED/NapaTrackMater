@@ -420,6 +420,7 @@ class TrackMate(object):
                             current_cell_ids = []
                             unique_tracklet_ids = []
                             current_tracklets = {}
+                            
                             current_tracklets_properties = {}
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
@@ -489,6 +490,33 @@ class TrackMate(object):
                                     acceleration = scale_value(acceleration)
                                     total_intensity =  float(all_dict_values[self.total_intensity_key])
                                     volume_pixels = int(float(all_dict_values[self.quality_key]))
+
+                                    spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
+                                    if self.seg_image is not None:
+                                        spot_label = self.seg_image[t, int(round(float(Spotobject.get(self.zposid_key)), 3)/self.zcalibration), int(round(float(Spotobject.get(self.yposid_key)), 3)/self.ycalibration), int(round(float(Spotobject.get(self.xposid_key)), 3)/self.xcalibration)   ]
+                                    else:
+                                        spot_label = 0    
+
+                                    self.unique_spot_centroid[spot_centroid] = {
+                                        
+                                        self.cellid_key: k 
+                                    }
+
+                                    if str(t) in self._timed_centroid:
+                                           tree, spot_centroids, spot_labels = self._timed_centroid[str(t)]
+                                           spot_centroids.append(spot_centroid)
+                                           spot_labels.append(spot_label)
+                                           tree = spatial.cKDTree(spot_centroids)
+                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
+                                    else:
+                                           spot_centroids = []
+                                           spot_labels = [] 
+                                           spot_centroids.append(spot_centroid)
+                                           spot_labels.append(spot_label)
+                                           tree = spatial.cKDTree(spot_centroids)
+                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
+
+
                                     if current_track_id in current_tracklets:
                                         tracklet_array = current_tracklets[current_track_id]
                                         current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
@@ -519,8 +547,7 @@ class TrackMate(object):
 
     def _spot_computer(self, frame):
           
-          spot_centroids = []
-          spot_labels = []
+          
           
           for Spotobject in frame.findall('Spot'):
                         # Create object with unique cell ID
@@ -551,16 +578,7 @@ class TrackMate(object):
                             self.distance_cell_mask_key: round(float(distance_cell_mask),2)
                         }
        
-                        spot_centroid = (round(float(Spotobject.get(self.zposid_key)), 3)/self.zcalibration, round(float(Spotobject.get(self.yposid_key)), 3)/self.ycalibration, round(float(Spotobject.get(self.xposid_key)), 3)/self.xcalibration)
-                        if self.seg_image is not None:
-                               spot_label = self.seg_image[int(frame), int(round(float(Spotobject.get(self.zposid_key)), 3)/self.zcalibration), int(round(float(Spotobject.get(self.yposid_key)), 3)/self.ycalibration), int(round(float(Spotobject.get(self.xposid_key)), 3)/self.xcalibration)   ]
-                               spot_labels.append(spot_label) 
-
-                        spot_centroids.append(spot_centroid)
-                        self.unique_spot_centroid[spot_centroid] = {
-                               
-                               self.cellid_key: int(cell_id) 
-                        }
+                        
             
                         if self.channel_seg_image is not None:
                                     pixeltestlocation = (float(Spotobject.get(self.zposid_key))/float(self.zcalibration), float(Spotobject.get(self.yposid_key))/float(self.ycalibration),  float(Spotobject.get(self.xposid_key))/ float(self.xcalibration))
@@ -596,8 +614,7 @@ class TrackMate(object):
 
                                             } 
 
-          tree = spatial.cKDTree(spot_centroids)
-          self._timed_centroid[str(frame)] = tree, spot_centroids , spot_labels                                  
+                                            
    
     def _get_xml_data(self):
 
