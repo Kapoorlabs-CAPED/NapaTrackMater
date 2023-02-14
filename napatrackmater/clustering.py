@@ -192,14 +192,14 @@ def _label_cluster(label_image,  mesh_dir, num_points, min_size, ndim, spot_labe
                         binary_image, label, centroid = future.result()
                         if spot_labels is not None:
                             if label in spot_labels:
-                                   labels, centroids, clouds = get_label_centroid_cloud(binary_image, label, centroid, labels, centroids, clouds, min_size)
+                                   labels, centroids, clouds = get_label_centroid_cloud(binary_image, mesh_dir, num_points, label, centroid, labels, centroids, clouds, min_size)
                         if spot_labels is None:
-                                   labels, centroids, clouds = get_label_centroid_cloud(binary_image, label, centroid, labels, centroids, clouds, min_size)
+                                   labels, centroids, clouds = get_label_centroid_cloud(binary_image, mesh_dir, num_points, label, centroid, labels, centroids, clouds, min_size)
       
 
        return labels, centroids, clouds
 
-def get_label_centroid_cloud(binary_image, label, centroid, labels, centroids, clouds, min_size):
+def get_label_centroid_cloud(binary_image, mesh_dir, num_points, label, centroid, labels, centroids, clouds, min_size):
                             
                             valid = []  
                               
