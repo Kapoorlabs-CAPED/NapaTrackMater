@@ -53,7 +53,7 @@ class Clustering:
         self.num_points = num_points
         self.mesh_dir = mesh_dir 
         self.min_size = min_size
-        self.progress_bar = progerss_bar
+        self.progress_bar = progress_bar
         self.timed_cluster_label = {}
         Path(self.mesh_dir).mkdir(exist_ok=True)
 
