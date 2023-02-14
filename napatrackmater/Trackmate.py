@@ -493,7 +493,7 @@ class TrackMate(object):
 
                                     spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
                                     if self.seg_image is not None:
-                                        spot_label = self.seg_image[t, int(round(float(Spotobject.get(self.zposid_key)), 3)/self.zcalibration), int(round(float(Spotobject.get(self.yposid_key)), 3)/self.ycalibration), int(round(float(Spotobject.get(self.xposid_key)), 3)/self.xcalibration)   ]
+                                        spot_label = self.seg_image[t,spot_centroid[0],spot_centroid[1], spot_centroid[2]]
                                     else:
                                         spot_label = 0    
 
