@@ -96,7 +96,8 @@ class Clustering:
 
                     for r in futures:
                                     self.count = self.count + 1
-                                    self.progress_bar.value =  self.count
+                                    if self.progress_bar is not None:
+                                      self.progress_bar.value =  self.count
                                     results = r.result()
                                     if results is not None:
                                            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = results
@@ -119,7 +120,8 @@ class Clustering:
 
                     for r in futures:
                                     self.count = self.count + 1
-                                    self.progress_bar.value =  self.count
+                                    if self.progress_bar is not None:
+                                      self.progress_bar.value =  self.count
                                     results = r.result()
                                     if results is not None:
                                            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = results

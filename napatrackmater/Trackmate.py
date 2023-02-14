@@ -190,7 +190,8 @@ class TrackMate(object):
 
                     for r in futures:
                                     self.count = self.count + 1
-                                    self.progress_bar.value =  self.count
+                                    if self.progress_bar is not None:
+                                      self.progress_bar.value =  self.count
                                     r.result()
 
  
@@ -654,7 +655,8 @@ class TrackMate(object):
 
                     for r in futures:
                                     self.count = self.count + 1
-                                    self.progress_bar.value =  self.count
+                                    if self.progress_bar is not None:
+                                      self.progress_bar.value =  self.count
                                     r.result()
 
                 print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
@@ -679,7 +681,8 @@ class TrackMate(object):
 
                     for r in futures:
                                     self.count = self.count + 1
-                                    self.progress_bar.value = self.count
+                                    if self.progress_bar is not None:
+                                       self.progress_bar.value = self.count
                                     r.result()
                 
                 if self.channel_seg_image is not None:  
@@ -759,7 +762,7 @@ class TrackMate(object):
            
            
                    
-                    cluster_eval = Clustering(self.seg_image, self.axes,self.mesh_dir, self.num_points, self.cluster_model)
+                    cluster_eval = Clustering(self.seg_image, self.axes,self.mesh_dir, self.num_points, self.cluster_model, progress_bar=self.progress_bar)
                     cluster_eval._create_cluster_labels()
                     timed_cluster_label = cluster_eval.timed_cluster_label 
                     for time_key in timed_cluster_label.keys():
