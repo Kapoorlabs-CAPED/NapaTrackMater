@@ -553,7 +553,7 @@ class TrackMate(object):
        
                         spot_centroid = (round(float(Spotobject.get(self.zposid_key)), 3)/self.zcalibration, round(float(Spotobject.get(self.yposid_key)), 3)/self.ycalibration, round(float(Spotobject.get(self.xposid_key)), 3)/self.xcalibration)
                         if self.seg_image is not None:
-                               spot_label = self.seg_image[frame, int(round(float(Spotobject.get(self.zposid_key)), 3)/self.zcalibration), int(round(float(Spotobject.get(self.yposid_key)), 3)/self.ycalibration), int(round(float(Spotobject.get(self.xposid_key)), 3)/self.xcalibration)   ]
+                               spot_label = self.seg_image[int(frame), int(round(float(Spotobject.get(self.zposid_key)), 3)/self.zcalibration), int(round(float(Spotobject.get(self.yposid_key)), 3)/self.ycalibration), int(round(float(Spotobject.get(self.xposid_key)), 3)/self.xcalibration)   ]
                                spot_labels.append(spot_label) 
 
                         spot_centroids.append(spot_centroid)
