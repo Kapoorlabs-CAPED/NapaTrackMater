@@ -132,15 +132,15 @@ class Clustering:
                       
                             
 
-def _label_computer(self, i, dim):
-       
-        xyz_label_image = self.label_image[i,:]
-        labels, centroids, clouds = _label_cluster(xyz_label_image,  self.mesh_dir, self.num_points, self.min_size, dim)
-        if len(labels) > 1:
+    def _label_computer(self, i, dim):
+        
+            xyz_label_image = self.label_image[i,:]
+            labels, centroids, clouds = _label_cluster(xyz_label_image,  self.mesh_dir, self.num_points, self.min_size, dim)
+            if len(labels) > 1:
+                
+                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
             
-            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
-          
-            return  output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid
+                return  output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid
 
 def _model_output(model, clouds, labels, centroids):
        
