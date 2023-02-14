@@ -555,6 +555,7 @@ class TrackMate(object):
                         if self.seg_image is not None:
                                spot_label = self.seg_image[frame, int(round(float(Spotobject.get(self.zposid_key)), 3)/self.zcalibration), int(round(float(Spotobject.get(self.yposid_key)), 3)/self.ycalibration), int(round(float(Spotobject.get(self.xposid_key)), 3)/self.xcalibration)   ]
                                spot_labels.append(spot_label) 
+
                         spot_centroids.append(spot_centroid)
                         self.unique_spot_centroid[spot_centroid] = {
                                
@@ -773,16 +774,16 @@ class TrackMate(object):
                            timed_cluster_label = cluster_eval.timed_cluster_label 
                            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = timed_cluster_label[time_key]
                         
-                        for i in len(output_cluster_centroid):
-                            centroid = output_cluster_centroid[i]
-                            cluster_class = output_cluster_class[i]
-                            cluster_score = output_cluster_score[i]
-                            dist, index = tree.query(centroid)
-                            closest_centroid = spot_centroids[index]
-                            closest_cell_id = self.unique_spot_centroid[closest_centroid]
-                            self.unique_spot_properties[int(closest_cell_id)].update({self.clusterclass_key : cluster_class})
-                            self.unique_spot_properties[int(closest_cell_id)].update({self.clusterscore_key : cluster_score})
-                            
+                           for i in len(output_cluster_centroid):
+                                    centroid = output_cluster_centroid[i]
+                                    cluster_class = output_cluster_class[i]
+                                    cluster_score = output_cluster_score[i]
+                                    dist, index = tree.query(centroid)
+                                    closest_centroid = spot_centroids[index]
+                                    closest_cell_id = self.unique_spot_centroid[closest_centroid]
+                                    self.unique_spot_properties[int(closest_cell_id)].update({self.clusterclass_key : cluster_class})
+                                    self.unique_spot_properties[int(closest_cell_id)].update({self.clusterscore_key : cluster_score})
+                                    
                 
     def _compute_fourier(self):
 
