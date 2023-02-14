@@ -123,6 +123,7 @@ class Clustering:
 
                     for r in futures:
                                     self.count = self.count + 1
+                                    print(self.count)
                                     if self.progress_bar is not None:
                                       self.progress_bar.value =  self.count
                                     results = r.result()
