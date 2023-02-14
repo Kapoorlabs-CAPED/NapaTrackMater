@@ -56,6 +56,7 @@ class Clustering:
         self.progress_bar = progress_bar
         self.timed_cluster_label = {}
         Path(self.mesh_dir).mkdir(exist_ok=True)
+        self.count = 0
 
     def _create_cluster_labels(self):
 
