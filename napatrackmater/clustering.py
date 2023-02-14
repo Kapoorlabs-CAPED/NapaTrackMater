@@ -215,16 +215,15 @@ def get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, ce
                                     mesh_obj = trimesh.Trimesh(
                                         vertices=vertices, faces=faces, process=False
                                     )
-                                    point_obj = trimesh.PointCloud(vertices=vertices)
-                                    pos = point_obj.centroid
-                                    data = {"pos": pos, "face": face} 
+                                   
 
                                     mesh_file = str(label) 
                                     
                                     save_mesh_file = os.path.join(mesh_dir, mesh_file) + ".off"
                                     mesh_obj.export(save_mesh_file) 
                                     print(f'reading file {save_mesh_file}')
-                                    data = read_off(os.path.join(mesh_dir, save_mesh_file))
+                                    data = read_off( save_mesh_file)
+                                    os.remove(save_mesh_file)
                                     points = sample_points(data=data, num=num_points).numpy()
                                     if ndim == 2:
                                       cloud = get_panda_cloud_xy(points)
