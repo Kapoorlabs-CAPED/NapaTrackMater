@@ -152,8 +152,8 @@ def _model_output(model, clouds, labels, centroids):
        output_cluster_class = []
        output_cluster_centroid = []
        dataset = PointCloudDataset(clouds, labels, centroids)
-       dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-       for data in dataloader:
+       dataloader = DataLoader(dataset)
+       for data in tqdm(dataloader):
                     inputs = data[0]
                     label_inputs = data[1]
                     centroid_inputs = data[2]
