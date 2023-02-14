@@ -122,9 +122,9 @@ class Clustering:
                                     )
                                     self.progress_bar.show()
 
-                    for r in futures:
+                    for r in tqdm(futures):
                                     self.count = self.count + 1
-                                    print(self.count)
+                                   
                                     if self.progress_bar is not None:
                                       self.progress_bar.value =  self.count
                                     results = r.result()
@@ -188,7 +188,7 @@ def _label_cluster(label_image,  mesh_dir, num_points, min_size, ndim, spot_labe
                     futures = []
                     for prop in properties:
                             futures.append(executor.submit(get_current_label_binary, prop))
-                    for future in tqdm(concurrent.futures.as_completed(futures)):
+                    for future in concurrent.futures.as_completed(futures):
                         binary_image, label, centroid = future.result()
                         if spot_labels is not None:
                             if label in spot_labels:
