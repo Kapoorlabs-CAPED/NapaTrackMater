@@ -786,6 +786,7 @@ class TrackMate(object):
                     for time_key in self._timed_centroid.keys():
                            
                            tree, spot_centroids, spot_labels = self._timed_centroid[time_key]
+                           print(f'Applying prediction over {len(spot_labels)} in frame {time_key}')
                            cluster_eval = Clustering(self.seg_image,  self.axes,self.mesh_dir, self.num_points, self.cluster_model, spot_labels = spot_labels, progress_bar=self.progress_bar)       
                            cluster_eval._create_cluster_labels()
                            timed_cluster_label = cluster_eval.timed_cluster_label 
