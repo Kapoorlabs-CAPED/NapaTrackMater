@@ -188,7 +188,7 @@ def _label_cluster(label_image,  mesh_dir, num_points, min_size, ndim, spot_labe
                     futures = []
                     for prop in properties:
                             futures.append(executor.submit(get_current_label_binary, prop))
-                    for future in concurrent.futures.as_completed(futures):
+                    for future in tqdm(concurrent.futures.as_completed(futures)):
                         binary_image, label, centroid = future.result()
                         if spot_labels is not None:
                             if label in spot_labels:
@@ -202,7 +202,7 @@ def _label_cluster(label_image,  mesh_dir, num_points, min_size, ndim, spot_labe
 def get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, centroid, labels, centroids, clouds, min_size):
                             
                             valid = []  
-                            print(binary_image.shape)  
+                             
                             if min_size is not None:
                                   for j in range(len(min_size)):
                                         if binary_image.shape[j] >= min_size[j]:
