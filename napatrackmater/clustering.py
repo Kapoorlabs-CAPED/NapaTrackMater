@@ -81,6 +81,7 @@ class Clustering:
 
         #TYX
         if ndim == 3 and 'T' in self.axes:
+               futures = []
                with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                     for i in range(self.label_image.shape[0]):
                         futures.append(executor.submit(self._label_computer, i, ndim - 1))
@@ -105,6 +106,7 @@ class Clustering:
                
         #TZYX image        
         if ndim == 4:
+               futures = []
                with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                     for i in range(self.label_image.shape[0]):
                         futures.append(executor.submit(self._label_computer, i, ndim))
