@@ -499,7 +499,7 @@ class TrackMate(object):
 
                                     self.unique_spot_centroid[spot_centroid] = {
                                         
-                                        self.cellid_key: k 
+                                        k 
                                     }
 
                                     if str(t) in self._timed_centroid:
