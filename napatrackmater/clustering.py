@@ -126,7 +126,7 @@ def _model_output(model, clouds, labels, centroids):
        output_cluster_class = []
        output_cluster_centroid = []
        dataset = PointCloudDataset(clouds, labels, centroids)
-       dataloader = DataLoader(dataset)
+       dataloader = DataLoader(dataset, batch_size = 8)
        for data in dataloader:
                     inputs = data[0]
                     label_inputs = data[1]
@@ -168,14 +168,16 @@ def _label_cluster(label_image,  mesh_dir, num_points, min_size, ndim, spot_labe
                           
                           if spot_labels is not None:
                                 if label in spot_labels:
-                                    labels, centroids, clouds = get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, centroid, labels, centroids, clouds, min_size)
+                                    label, centroid, cloud = get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, centroid,  min_size)
                           if spot_labels is None:
-                                    labels, centroids, clouds = get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, centroid, labels, centroids, clouds, min_size)
-        
+                                    label, centroid, cloud = get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, centroid,  min_size)
+                          clouds.append(cloud)  
+                          labels.append(label)   
+                          centroids.append(centroid)
 
        return labels, centroids, clouds
 
-def get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, centroid, labels, centroids, clouds, min_size):
+def get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, centroid, min_size):
                             
                             valid = []  
                              
@@ -214,10 +216,8 @@ def get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, ce
                                      
                                     os.remove(save_mesh_file)    
 
-                                    clouds.append(cloud)  
-                                    labels.append(label)   
-                                    centroids.append(centroid) 
-                            return  labels, centroids, clouds       
+                                     
+                            return  label, centroid, cloud       
        
 
 def get_panda_cloud_xy(points):
