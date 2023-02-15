@@ -139,11 +139,12 @@ def _model_output(model, clouds, labels, centroids):
        output_cluster_class = []
        output_cluster_centroid = []
        dataset = PointCloudDataset(clouds, labels, centroids)
-       dataloader = DataLoader(dataset)
+       dataloader = DataLoader(dataset,, batch_size=1, shuffle=False)
        for data in dataloader:
                     inputs = data[0]
                     label_inputs = data[1]
                     centroid_inputs = data[2]
+                    print(inputs.shape)
                     try:
                         output, features, clusters = model(inputs.cuda())
                     except ValueError:
@@ -217,7 +218,7 @@ def get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, ce
                                       cloud = get_panda_cloud_xyz(points)  
                                     else:
                                       cloud = get_panda_cloud_xyz(points)    
-                                    print(binary_image.shape)
+                                   
                                     os.remove(save_mesh_file)    
 
                                     clouds.append(cloud)  
