@@ -128,18 +128,19 @@ def _model_output(model, clouds, labels, centroids):
        dataset = PointCloudDataset(clouds, labels, centroids)
        dataloader = DataLoader(dataset, batch_size = 8)
        model.eval()
-       data = iter(dataloader)
-       inputs, label_inputs, centroid_inputs = next(data)
+       for data in dataloader:
+            
+            inputs, label_inputs, centroid_inputs = data
 
-       try:
-            output, features, clusters = model(inputs.cuda())
-       except ValueError:
-            output, features, clusters = model(inputs.cpu())      
-                    
-       output_cluster_score = [max(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
-       output_cluster_centroid = [tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in centroid_inputs]
-       output_labels = [int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in label_inputs]
-       output_cluster_class = [np.argmax(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
+            try:
+                    output, features, clusters = model(inputs.cuda())
+            except ValueError:
+                    output, features, clusters = model(inputs.cpu())      
+                            
+            output_cluster_score = output_cluster_score + [max(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
+            output_cluster_centroid = output_cluster_centroid +  [tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in centroid_inputs]
+            output_labels = output_labels + [int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in label_inputs]
+            output_cluster_class = output_cluster_clas + [np.argmax(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
 
        return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid              
 

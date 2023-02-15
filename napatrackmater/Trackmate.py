@@ -797,10 +797,9 @@ class TrackMate(object):
                            cluster_eval._create_cluster_labels()
                            timed_cluster_label = cluster_eval.timed_cluster_label 
                            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = timed_cluster_label[time_key]
-                        
+                           print(len(output_cluster_centroid))
                            for i in range(len(output_cluster_centroid)):
                                     centroid = output_cluster_centroid[i]
-                                    print(centroid, type(centroid))
                                     cluster_class = output_cluster_class[i]
                                     cluster_score = output_cluster_score[i]
                                     dist, index = tree.query(centroid)
