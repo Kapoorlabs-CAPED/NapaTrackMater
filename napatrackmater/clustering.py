@@ -128,25 +128,21 @@ def _model_output(model, clouds, labels, centroids):
        dataset = PointCloudDataset(clouds, labels, centroids)
        dataloader = DataLoader(dataset, batch_size = 8)
        model.eval()
-       for data in dataloader:
-                
-                      
-                    inputs = data[0]
-                    label_inputs.append(next(data[1]))
-                    centroid_inputs.append(next(data[2]))
+       data = iter(dataloader)
+       inputs, label_inputs, centroid_inputs = next(data)
+
+       try:
+            output, features, clusters = model(inputs.cuda())
+       except ValueError:
+            output, features, clusters = model(inputs.cpu())      
                     
-                    try:
-                        output, features, clusters = model(inputs.cuda())
-                    except ValueError:
-                        output, features, clusters = model(inputs.cpu())      
-                    
-                    max_score = [max(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
-                    
-                    cluster_class = [np.argmax(score) for score in max_score]
-                    output_labels.append(int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in label_inputs)
-                    output_cluster_score.append(sscore for sscore in max_score)
-                    output_cluster_class.append(cclass for cclass in cluster_class)
-                    output_cluster_centroid.append(tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in centroid_inputs)
+        max_score = [max(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
+        print(max_score)
+        cluster_class = [np.argmax(score) for score in max_score]
+        output_labels.append(int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in label_inputs)
+        output_cluster_score.append(sscore for sscore in max_score)
+        output_cluster_class.append(cclass for cclass in cluster_class)
+        output_cluster_centroid.append(tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in centroid_inputs)
 
 
 
