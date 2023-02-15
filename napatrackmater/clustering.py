@@ -51,17 +51,13 @@ class Clustering:
         self.model = model
         self.axes = axes
         self.num_points = num_points
-        Path(mesh_dir).mkdir(exist_ok=True)
         self.mesh_dir = mesh_dir 
         self.min_size = min_size
         self.spot_labels = spot_labels
         self.progress_bar = progress_bar
         self.key = key
-        self.mesh_dir = os.path.join(mesh_dir, self.key)
-        Path(self.mesh_dir).mkdir(exist_ok=True)
         self.timed_cluster_label = {}
-        
-
+        Path(self.mesh_dir).mkdir(exist_ok=True)
         self.count = 0
 
     def _create_cluster_labels(self):
@@ -227,7 +223,7 @@ def get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, ce
                                       cloud = get_panda_cloud_xyz(points)    
 
                                      
-                                        
+                                    os.remove(save_mesh_file)    
 
                                     clouds.append(cloud)  
                                     labels.append(label)   
