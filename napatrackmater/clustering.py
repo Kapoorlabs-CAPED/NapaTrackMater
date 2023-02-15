@@ -128,7 +128,8 @@ def _model_output(model, clouds, labels, centroids):
        dataset = PointCloudDataset(clouds, labels, centroids)
        dataloader = DataLoader(dataset, batch_size = 8)
        for datas in dataloader:
-                for data in datas:    
+                for i in range(datas.shape[0]): 
+                    data = datas[i,:]   
                     inputs = data[0]
                     label_inputs = data[1]
                     centroid_inputs = data[2]
