@@ -146,7 +146,7 @@ def _model_output(model, clouds, labels, centroids):
                     output_cluster_score.append(sscore for sscore in max_score)
                     output_cluster_class.append(cclass for cclass in cluster_class)
                     output_cluster_centroid.append(tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in list(centroid_inputs))
-)
+
 
 
        return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid              
