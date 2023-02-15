@@ -132,8 +132,8 @@ def _model_output(model, clouds, labels, centroids):
                 
                       
                     inputs = data[0]
-                    label_inputs = data[1]
-                    centroid_inputs = data[2]
+                    label_inputs.append(next(data[1]))
+                    centroid_inputs.append(next(data[2]))
                     
                     try:
                         output, features, clusters = model(inputs.cuda())
@@ -141,12 +141,12 @@ def _model_output(model, clouds, labels, centroids):
                         output, features, clusters = model(inputs.cpu())      
                     
                     max_score = [max(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
-                    print(max_score)
+                    
                     cluster_class = [np.argmax(score) for score in max_score]
-                    output_labels.append(int(float(torch.squeeze(next(label_input)).detach().cpu().numpy())) for label_input in label_inputs)
+                    output_labels.append(int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in label_inputs)
                     output_cluster_score.append(sscore for sscore in max_score)
                     output_cluster_class.append(cclass for cclass in cluster_class)
-                    output_cluster_centroid.append(tuple(torch.squeeze(next(centroid_input)).detach().cpu().numpy()) for centroid_input in centroid_inputs)
+                    output_cluster_centroid.append(tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in centroid_inputs)
 
 
 
