@@ -51,13 +51,17 @@ class Clustering:
         self.model = model
         self.axes = axes
         self.num_points = num_points
+        Path(mesh_dir).mkdir(exist_ok=True)
         self.mesh_dir = mesh_dir 
         self.min_size = min_size
         self.spot_labels = spot_labels
         self.progress_bar = progress_bar
         self.key = key
-        self.timed_cluster_label = {}
+        self.mesh_dir = os.path.join(mesh_dir, self.key)
         Path(self.mesh_dir).mkdir(exist_ok=True)
+        self.timed_cluster_label = {}
+        
+
         self.count = 0
 
     def _create_cluster_labels(self):

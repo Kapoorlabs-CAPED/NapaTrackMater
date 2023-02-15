@@ -802,8 +802,6 @@ class TrackMate(object):
                                     if self.progress_bar is not None:
                                        self.progress_bar.value = self.count
                                     output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = r.result()
-                           
-                           
                                     for i in range(len(output_cluster_centroid)):
                                             centroid = output_cluster_centroid[i]
                                             cluster_class = output_cluster_class[i]
