@@ -144,7 +144,7 @@ def _model_output(model, clouds, labels, centroids):
                     inputs = data[0]
                     label_inputs = data[1]
                     centroid_inputs = data[2]
-                    print(inputs.shape)
+                    
                     try:
                         output, features, clusters = model(inputs.cuda())
                     except ValueError:
