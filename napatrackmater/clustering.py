@@ -126,7 +126,7 @@ def _model_output(model, clouds, labels, centroids):
        output_cluster_class = []
        output_cluster_centroid = []
        dataset = PointCloudDataset(clouds, labels, centroids)
-       dataloader = DataLoader(dataset, batch_size = 8)
+       dataloader = DataLoader(dataset)
        for data in dataloader:
                 
                       
@@ -138,13 +138,15 @@ def _model_output(model, clouds, labels, centroids):
                         output, features, clusters = model(inputs.cuda())
                     except ValueError:
                         output, features, clusters = model(inputs.cpu())      
-                    
-                    max_score = [max(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
-                    cluster_class = [np.argmax(score) for score in max_score]
-                    output_labels.append(int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in label_inputs)
-                    output_cluster_score.append(sscore for sscore in max_score)
-                    output_cluster_class.append(cclass for cclass in cluster_class)
-                    output_cluster_centroid.append(tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in centroid_inputs)
+                    clusters = torch.squeeze(clusters).detach().cpu().numpy()
+                    label_inputs = int(float(torch.squeeze(label_inputs).detach().cpu().numpy()))
+                    centroid_inputs = tuple(torch.squeeze(centroid_inputs).detach().cpu().numpy())
+                    max_score = max(clusters)
+                    cluster_class = np.argmax(max_score)
+                    output_labels.append(label_inputs)
+                    output_cluster_score.append(max_score)
+                    output_cluster_class.append(cluster_class)
+                    output_cluster_centroid.append(centroid_inputs)
 
 
        return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid              
