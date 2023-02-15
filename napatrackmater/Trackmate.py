@@ -782,12 +782,20 @@ class TrackMate(object):
                 
     def _assign_cluster_class(self):
            
-           
-                    for time_key in self._timed_centroid.keys():
+                    self.axes = self.axes.replace("T", "")
+                    for count, time_key in enumerate(self._timed_centroid.keys()):
                            
                            tree, spot_centroids, spot_labels = self._timed_centroid[time_key]
                            print(f'Applying clustering prediction over {len(spot_labels)} spots in frame {time_key}')
-                           cluster_eval = Clustering(self.seg_image,  self.axes,self.mesh_dir, self.num_points, self.cluster_model, spot_labels = spot_labels, progress_bar=self.progress_bar)       
+                           plugin.progress_bar.label = "Computing clustering classes"
+                           plugin.progress_bar.range = (
+                                                        0,
+                                                        len(self._timed_centroid.keys()) + 1,
+                                                    )
+                           plugin.progress_bar.value =  count
+                           plugin.progress_bar.show()
+                           
+                           cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.mesh_dir, self.num_points, self.cluster_model, spot_labels = spot_labels, progress_bar=self.progress_bar)       
                            cluster_eval._create_cluster_labels()
                            timed_cluster_label = cluster_eval.timed_cluster_label 
                            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = timed_cluster_label[time_key]

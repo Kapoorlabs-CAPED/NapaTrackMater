@@ -89,6 +89,7 @@ class Clustering:
                                                 0,
                                                 len(self.label_image.shape[0] + 1),
                                             )
+                        self.progress_bar.value =  self.count
                         self.progress_bar.show()
 
                for i in range(self.label_image.shape[0]):
@@ -108,6 +109,7 @@ class Clustering:
                                                 0,
                                                 self.label_image.shape[0] + 1,
                                             )
+                        self.progress_bar.value =  self.count
                         self.progress_bar.show()
 
                 for i in range(self.label_image.shape[0]):
