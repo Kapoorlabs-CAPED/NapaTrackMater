@@ -45,7 +45,7 @@ class PointCloudDataset(Dataset):
 
 class Clustering:
 
-    def __init__(self, label_image: np.ndarray, axes, mesh_dir: str, num_points: int, model: DeepEmbeddedClustering, spot_labels = None,  min_size:tuple = (2,2,2), progress_bar = None):
+    def __init__(self, label_image: np.ndarray, axes, mesh_dir: str, num_points: int, model: DeepEmbeddedClustering, spot_labels = None,  min_size:tuple = (4,8,8), progress_bar = None):
 
         self.label_image = label_image 
         self.model = model
@@ -144,7 +144,7 @@ def _model_output(model, clouds, labels, centroids):
                     inputs = data[0]
                     label_inputs = data[1]
                     centroid_inputs = data[2]
-                    print(inputs.shape)
+                    
                     try:
                         output, features, clusters = model(inputs.cuda())
                     except ValueError:
