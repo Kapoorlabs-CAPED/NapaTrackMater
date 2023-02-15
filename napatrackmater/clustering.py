@@ -45,7 +45,7 @@ class PointCloudDataset(Dataset):
 
 class Clustering:
 
-    def __init__(self, label_image: np.ndarray, axes, mesh_dir: str, num_points: int, model: DeepEmbeddedClustering, spot_labels = None,  min_size:tuple = (2,2,2), progress_bar = None):
+    def __init__(self, label_image: np.ndarray, axes, mesh_dir: str, num_points: int, model: DeepEmbeddedClustering, spot_labels = None, key = 0,  min_size:tuple = (2,2,2), progress_bar = None):
 
         self.label_image = label_image 
         self.model = model
@@ -55,6 +55,7 @@ class Clustering:
         self.min_size = min_size
         self.spot_labels = spot_labels
         self.progress_bar = progress_bar
+        self.key = key
         self.timed_cluster_label = {}
         Path(self.mesh_dir).mkdir(exist_ok=True)
         self.count = 0
@@ -69,7 +70,7 @@ class Clustering:
            labels, centroids, clouds = _label_cluster(self.label_image, self.model, self.mesh_dir, self.num_points, self.min_size, ndim, self.spot_labels)
            
            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
-           self.timed_cluster_label[str(0)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]     
+           self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]     
  
         #ZYX image
         if ndim == 3 and 'T' not in self.axes:
@@ -78,7 +79,7 @@ class Clustering:
            if len(labels) > 1:
                 
                 output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
-                self.timed_cluster_label[str(0)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]
+                self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]
 
 
         #TYX
