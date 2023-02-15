@@ -212,14 +212,15 @@ def get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, ce
                                     data = read_off(save_mesh_file)
                                     
                                     points = sample_points(data=data, num=num_points).numpy()
-                                    print(points)
+                                    print(points.shape)
                                     if ndim == 2:
                                       cloud = get_panda_cloud_xy(points)
                                     if ndim == 3:
                                       cloud = get_panda_cloud_xyz(points)  
                                     else:
                                       cloud = get_panda_cloud_xyz(points)    
-                                   
+
+                                    print(cloud)  
                                     os.remove(save_mesh_file)    
 
                                     clouds.append(cloud)  
