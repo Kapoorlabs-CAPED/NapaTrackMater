@@ -87,7 +87,7 @@ class Clustering:
                         self.progress_bar.label = "Computing clustering classes"
                         self.progress_bar.range = (
                                                 0,
-                                                len(futures),
+                                                len(self.label_image.shape[0] + 1),
                                             )
                         self.progress_bar.show()
 
@@ -106,7 +106,7 @@ class Clustering:
                         self.progress_bar.label = "Computing clustering classes"
                         self.progress_bar.range = (
                                                 0,
-                                                len(futures),
+                                                self.label_image.shape[0] + 1,
                                             )
                         self.progress_bar.show()
 
