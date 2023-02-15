@@ -126,7 +126,7 @@ def _model_output(model, clouds, labels, centroids):
        output_cluster_class = []
        output_cluster_centroid = []
        dataset = PointCloudDataset(clouds, labels, centroids)
-       dataloader = DataLoader(dataset, batch_size = 128 )
+       dataloader = DataLoader(dataset, batch_size = 64 )
        for data in dataloader:
                     inputs = data[0]
                     label_inputs = data[1]
@@ -159,8 +159,14 @@ def _label_cluster(label_image,  mesh_dir, num_points, min_size, ndim, spot_labe
        clouds = []
        nthreads = os.cpu_count() - 1
        properties = regionprops(label_image)
-       for prop in properties:
-                          binary_image, label, centroid = get_current_label_binary(prop)
+       self.count = 0
+       futures = []
+       with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
+             for prop in properties:
+                          futures.append(executor.submit(get_current_label_binary, prop))
+             for r in futures:
+                          binary_image, label, centroid = r.result()             
+                          
                           if spot_labels is not None:
                                 if label in spot_labels:
                                     labels, centroids, clouds = get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, centroid, labels, centroids, clouds, min_size)
