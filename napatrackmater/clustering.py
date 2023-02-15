@@ -223,7 +223,7 @@ def get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, ce
                                       cloud = get_panda_cloud_xyz(points)    
 
                                      
-                                    os.remove(save_mesh_file)    
+                                        
 
                                     clouds.append(cloud)  
                                     labels.append(label)   
