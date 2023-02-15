@@ -176,9 +176,9 @@ def _label_cluster(label_image,  mesh_dir, num_points, min_size, ndim, spot_labe
                           binary_image, label, centroid = get_current_label_binary(prop)
                           if spot_labels is not None:
                                 if label in spot_labels:
-                                    labels, centroids, clouds = get_label_centroid_cloud(binary_image, mesh_dir, ndim, num_points, label, centroid, labels, centroids, clouds, min_size)
+                                    labels, centroids, clouds = get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, centroid, labels, centroids, clouds, min_size)
                           if spot_labels is None:
-                                    labels, centroids, clouds = get_label_centroid_cloud(binary_image, mesh_dir, ndim, num_points, label, centroid, labels, centroids, clouds, min_size)
+                                    labels, centroids, clouds = get_label_centroid_cloud(binary_image, mesh_dir, num_points, ndim, label, centroid, labels, centroids, clouds, min_size)
         
 
        return labels, centroids, clouds
