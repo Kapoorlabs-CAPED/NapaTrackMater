@@ -142,10 +142,10 @@ def _model_output(model, clouds, labels, centroids):
                     
                     max_score = [max(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in list(clusters)]
                     cluster_class = [np.argmax(score) for score in max_score]
-                    output_labels.append(int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in list(label_inputs))
+                    output_labels.append(int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in next(label_inputs))
                     output_cluster_score.append(sscore for sscore in max_score)
                     output_cluster_class.append(cclass for cclass in cluster_class)
-                    output_cluster_centroid.append(tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in list(centroid_inputs))
+                    output_cluster_centroid.append(tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in next(centroid_inputs))
 
 
 
