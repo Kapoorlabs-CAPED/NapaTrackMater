@@ -91,7 +91,7 @@ class Clustering:
                                             )
                         self.progress_bar.show()
 
-                for i in range(self.label_image.shape[0]):
+               for i in range(self.label_image.shape[0]):
                         self.count = self.count + 1
                         output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid  = self._label_computer(i, ndim - 1)
           
