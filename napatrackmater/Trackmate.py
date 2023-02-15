@@ -786,7 +786,7 @@ class TrackMate(object):
                     with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                              
                              for time_key in self._timed_centroid.keys():
-                                   futures.append(executor.submit(_clusters, time_key))
+                                   futures.append(executor.submit(self._clusters, time_key))
                              if self.progress_bar is not None:
                                  
                                     self.progress_bar.label = "Computing clustering classes"
