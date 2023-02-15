@@ -159,12 +159,11 @@ def _label_cluster(label_image,  mesh_dir, num_points, min_size, ndim, spot_labe
        clouds = []
        nthreads = os.cpu_count() - 1
        properties = regionprops(label_image)
-       self.count = 0
        futures = []
        with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
              for prop in properties:
                           futures.append(executor.submit(get_current_label_binary, prop))
-             for r in futures:
+             for r in concurrent.futures.as_completed(futures):
                           binary_image, label, centroid = r.result()             
                           
                           if spot_labels is not None:

@@ -188,7 +188,7 @@ class TrackMate(object):
                                     )
                                     self.progress_bar.show()
 
-                    for r in futures:
+                    for r in concurrent.futures.as_completed(futures):
                                     self.count = self.count + 1
                                     if self.progress_bar is not None:
                                       self.progress_bar.value =  self.count
@@ -672,7 +672,7 @@ class TrackMate(object):
                                     )
                                     self.progress_bar.show()
 
-                    for r in futures:
+                    for r in concurrent.futures.as_completed(futures):
                                     self.count = self.count + 1
                                     if self.progress_bar is not None:
                                       self.progress_bar.value =  self.count
@@ -698,7 +698,7 @@ class TrackMate(object):
                                     self.progress_bar.show()
 
 
-                    for r in futures:
+                    for r in concurrent.futures.as_completed(futures):
                                     self.count = self.count + 1
                                     if self.progress_bar is not None:
                                        self.progress_bar.value = self.count
@@ -968,7 +968,7 @@ class TrackMate(object):
                       
                         futures.append(executor.submit(self._compute_temporal, i, all_spots_tracks))
  
-                    [r.result() for r in futures]
+                    [r.result() for r in concurrent.futures.as_completed(futures)]
 
 
     def _compute_temporal(self, i, all_spots_tracks):                
