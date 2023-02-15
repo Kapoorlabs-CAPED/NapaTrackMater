@@ -780,34 +780,50 @@ class TrackMate(object):
     def _assign_cluster_class(self):
            
                     self.axes = self.axes.replace("T", "")
-                    for count, time_key in enumerate(self._timed_centroid.keys()):
-                           
-                           tree, spot_centroids, spot_labels = self._timed_centroid[time_key]
-                           print(f'Applying clustering prediction over {len(spot_labels)} spots in frame {time_key}')
-                           self.progress_bar.label = "Computing clustering classes"
-                           self.progress_bar.range = (
-                                                        0,
-                                                        len(self._timed_centroid.keys()) + 1,
-                                                    )
-                           self.progress_bar.value =  count
-                           self.progress_bar.show()
+                    
+                    self.count = 0
+                    futures = []
+                    with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
+                             
+                             for time_key in self._timed_centroid.keys():
+                                   futures.append(executor.submit(_clusters, time_key))
+                             if self.progress_bar is not None:
+                                 
+                                    self.progress_bar.label = "Computing clustering classes"
+                                    self.progress_bar.range = (
+                                        0,
+                                        len(self._timed_centroid.keys()) + 1,
+                                    )
+                                    self.progress_bar.show()
 
-                           cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.mesh_dir, self.num_points, self.cluster_model, key = time_key,spot_labels = spot_labels, progress_bar=self.progress_bar)       
-                           cluster_eval._create_cluster_labels()
-                           timed_cluster_label = cluster_eval.timed_cluster_label 
-                           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = timed_cluster_label[time_key]
-                        
-                           for i in range(len(output_cluster_centroid)):
-                                    centroid = output_cluster_centroid[i]
-                                    cluster_class = output_cluster_class[i]
-                                    cluster_score = output_cluster_score[i]
-                                    dist, index = tree.query(centroid)
-                                    closest_centroid = spot_centroids[index]
-                                    closest_cell_id = self.unique_spot_centroid[closest_centroid]
-                                    self.unique_spot_properties[int(closest_cell_id)].update({self.clusterclass_key : cluster_class})
-                                    self.unique_spot_properties[int(closest_cell_id)].update({self.clusterscore_key : cluster_score})
-                                    
-                
+
+                             for r in futures:
+                                    self.count = self.count + 1
+                                    if self.progress_bar is not None:
+                                       self.progress_bar.value = self.count
+                                    output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = r.result()
+                           
+                           
+                                    for i in range(len(output_cluster_centroid)):
+                                            centroid = output_cluster_centroid[i]
+                                            cluster_class = output_cluster_class[i]
+                                            cluster_score = output_cluster_score[i]
+                                            dist, index = tree.query(centroid)
+                                            closest_centroid = spot_centroids[index]
+                                            closest_cell_id = self.unique_spot_centroid[closest_centroid]
+                                            self.unique_spot_properties[int(closest_cell_id)].update({self.clusterclass_key : cluster_class})
+                                            self.unique_spot_properties[int(closest_cell_id)].update({self.clusterscore_key : cluster_score})
+                                            
+
+    def _clusters(self, time_key):
+           
+           tree, spot_centroids, spot_labels = self._timed_centroid[time_key]
+           cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.mesh_dir, self.num_points, self.cluster_model, key = time_key,spot_labels = spot_labels, progress_bar=self.progress_bar)       
+           cluster_eval._create_cluster_labels()
+           timed_cluster_label = cluster_eval.timed_cluster_label 
+           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = timed_cluster_label[time_key]
+           return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid
+    
     def _compute_fourier(self):
 
           for (k,v) in self.unique_tracks.items():
