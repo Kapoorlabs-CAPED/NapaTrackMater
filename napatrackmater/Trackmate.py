@@ -497,10 +497,7 @@ class TrackMate(object):
                                     else:
                                         spot_label = 0    
 
-                                    self.unique_spot_centroid[spot_centroid] = {
-                                        
-                                        k 
-                                    }
+                                    self.unique_spot_centroid[spot_centroid] = k
 
                                     if str(t) in self._timed_centroid:
                                            tree, spot_centroids, spot_labels = self._timed_centroid[str(t)]
