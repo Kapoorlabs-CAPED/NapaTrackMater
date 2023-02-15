@@ -790,7 +790,7 @@ class TrackMate(object):
                                                         0,
                                                         len(self._timed_centroid.keys()) + 1,
                                                     )
-                           self.progress_bar.value =  count
+                           self.progress_bar.value =  count + 1
                            self.progress_bar.show()
 
                            cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.mesh_dir, self.num_points, self.cluster_model, key = time_key,spot_labels = spot_labels, progress_bar=self.progress_bar)       

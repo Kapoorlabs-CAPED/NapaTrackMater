@@ -84,41 +84,25 @@ class Clustering:
 
         #TYX
         if ndim == 3 and 'T' in self.axes:
-               if self.progress_bar is not None:
-                        self.progress_bar.label = "Computing clustering classes"
-                        self.progress_bar.range = (
-                                                0,
-                                                len(self.label_image.shape[0] + 1),
-                                            )
-                        self.progress_bar.value =  self.count
-                        self.progress_bar.show()
+             
 
                for i in range(self.label_image.shape[0]):
                         self.count = self.count + 1
                         output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid  = self._label_computer(i, ndim - 1)
           
-                        if self.progress_bar is not None:
-                                    self.progress_bar.value =  self.count
+                      
                                         
                         self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]
                 
         #TZYX image        
         if ndim == 4:
-                if self.progress_bar is not None:
-                        self.progress_bar.label = "Computing clustering classes"
-                        self.progress_bar.range = (
-                                                0,
-                                                self.label_image.shape[0] + 1,
-                                            )
-                        self.progress_bar.value =  self.count
-                        self.progress_bar.show()
+               
 
                 for i in range(self.label_image.shape[0]):
                         self.count = self.count + 1
                         output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid  = self._label_computer(i, ndim)
           
-                        if self.progress_bar is not None:
-                                    self.progress_bar.value =  self.count
+                       
                                         
                         self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]
                 
@@ -142,7 +126,7 @@ def _model_output(model, clouds, labels, centroids):
        output_cluster_class = []
        output_cluster_centroid = []
        dataset = PointCloudDataset(clouds, labels, centroids)
-       dataloader = DataLoader(dataset)
+       dataloader = DataLoader(dataset, batch_size = 128 )
        for data in dataloader:
                     inputs = data[0]
                     label_inputs = data[1]
