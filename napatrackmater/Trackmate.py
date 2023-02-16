@@ -822,7 +822,12 @@ class TrackMate(object):
                 intensity = tracklet_properties[:,-3:-2]
                 time = tracklet_properties[:,0:1]
                 expanded_intensity = np.arange(self.tend - self.tstart + 1)
+
                 expanded_time = np.arange(self.tend - self.tstart + 1)
+
+                expanded_intensity = expanded_intensity[:, np.newaxis]  
+                expanded_time = expanded_time[:, np.newaxis]
+
                 for i in range(expanded_intensity.shape[0]):
                        if expanded_time[i] in time:
                               expanded_intensity[i] = intensity[i]
