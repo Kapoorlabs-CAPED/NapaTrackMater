@@ -654,9 +654,10 @@ class TrackMate(object):
                 self.zcalibration = float(self.settings.get("voxeldepth"))
                 self.tcalibration = int(float(self.settings.get("timeinterval")))
                 self.detectorsettings = self.xml_content.find("Settings").find("DetectorSettings")
+                self.basicsettings = self.xml_content.find("Settings").find("BasicSettings")
                 self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
-                self.tstart = int(float(self.detectorsettings.get("tstart")))
-                self.tend = int(float(self.detectorsettings.get("tend")))
+                self.tstart = int(float(self.basicsettings.get("tstart")))
+                self.tend = int(float(self.basicsettings.get("tend")))
                 self._get_boundary_points()
                 print('Iterating over spots in frame')
                 self.count = 0
