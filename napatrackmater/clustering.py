@@ -129,7 +129,7 @@ def _model_output(model, clouds, labels, centroids, batch_size):
         dataset = PointCloudDataset(clouds, labels, centroids)
         dataloader = DataLoader(dataset, batch_size = batch_size)
         model.eval()
-        
+
         inputs, label_inputs, centroid_inputs = dataloader
         
         try:
@@ -142,7 +142,7 @@ def _model_output(model, clouds, labels, centroids, batch_size):
         output_labels = output_labels + [int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in label_inputs]
         output_cluster_class = output_cluster_class + [np.argmax(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
 
-       return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid              
+        return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid              
 
 
        
