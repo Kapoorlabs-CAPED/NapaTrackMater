@@ -130,8 +130,9 @@ def _model_output(model, clouds, labels, centroids, batch_size):
        dataloader = DataLoader(dataset, batch_size = batch_size)
        model.eval()
        iterator = iter(dataloader)
-       for element in iterator:
-            data = next(element)
+       
+       for data in iterator:
+           
                 
             inputs, label_inputs, centroid_inputs = data
              
