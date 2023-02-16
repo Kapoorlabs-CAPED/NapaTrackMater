@@ -130,7 +130,7 @@ def _model_output(model, clouds, labels, centroids, batch_size):
         dataloader = DataLoader(dataset, batch_size = batch_size)
         model.eval()
 
-        inputs, label_inputs, centroid_inputs = iter(dataloader)
+        inputs, label_inputs, centroid_inputs = next(dataloader)
         
         try:
                 output, features, clusters = model(inputs.cuda())
