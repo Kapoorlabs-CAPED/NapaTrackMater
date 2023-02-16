@@ -655,6 +655,8 @@ class TrackMate(object):
                 self.tcalibration = int(float(self.settings.get("timeinterval")))
                 self.detectorsettings = self.xml_content.find("Settings").find("DetectorSettings")
                 self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
+                self.tstart = int(float(self.detectorsettings.get("tstart")))
+                self.tend = int(float(self.detectorsettings.get("tend")))
                 self._get_boundary_points()
                 print('Iterating over spots in frame')
                 self.count = 0
@@ -807,7 +809,8 @@ class TrackMate(object):
                                     closest_cell_id = self.unique_spot_centroid[closest_centroid]
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.clusterclass_key : cluster_class})
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.clusterscore_key : cluster_score})
-                                    
+                           for (k,v) in self.root_spots.items():
+                                  self.root_spots[k] = self.unique_spot_properties[k]         
                 
     def _compute_fourier(self):
 
@@ -817,18 +820,22 @@ class TrackMate(object):
                 tracklet_properties = self.unique_track_properties[k] 
                 intensity = tracklet_properties[:,-3:-2]
                 time = tracklet_properties[:,0:1]
-
+                expanded_intensity = np.arange(self.tend - self.tstart)
+                expanded_time = np.arange(self.tend - self.tstart)
+                for i in range(expanded_intensity.shape[0]):
+                       if expanded_time[i] in time:
+                              expanded_intensity[i] = intensity[i]
                 point_sample = intensity.shape[0]
                 if point_sample > 0:
                             xf_sample = fftfreq(point_sample, self.tcalibration)
-                            fftstrip_sample = fft(intensity)
+                            fftstrip_sample = fft(expanded_intensity)
                             ffttotal_sample = np.abs(fftstrip_sample)
                             xf_sample = xf_sample[0 : len(xf_sample) // 2]
                             ffttotal_sample = ffttotal_sample[0 : len(ffttotal_sample) // 2]
 
                
 
-                self.unique_fft_properties[track_id] = time, xf_sample, ffttotal_sample
+                self.unique_fft_properties[track_id] = time, expanded_intensity, xf_sample, ffttotal_sample
 
                                  
     def _dict_update(self, unique_tracklet_ids: List,  cell_id, track_id, source_id, target_id):
@@ -1013,6 +1020,7 @@ class TrackMate(object):
                                         mitotic_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])
                                         if self.cluster_model is not None and self.seg_image is not None and self.clusterclass_key in all_spots_tracks[k].keys() :
                                                mitotic_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])
+
 
                                   if not mitotic:
                                         non_mitotic_disp_z.append(all_spots_tracks[k][self.zposid_key])
