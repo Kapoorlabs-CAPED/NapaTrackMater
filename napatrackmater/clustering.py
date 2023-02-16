@@ -70,7 +70,7 @@ class Clustering:
            
            labels, centroids, clouds = _label_cluster(self.label_image, self.model, self.mesh_dir, self.num_points, self.min_size, ndim, self.spot_labels)
            
-           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
+           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids, self.batch_size)
            self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]     
  
         #ZYX image
@@ -79,7 +79,7 @@ class Clustering:
            labels, centroids, clouds = _label_cluster(self.label_image,  self.mesh_dir, self.num_points, self.min_size, ndim, self.spot_labels)
            if len(labels) > 1:
                 
-                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
+                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids, self.batch_size)
                 self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]
 
 
@@ -116,18 +116,18 @@ class Clustering:
             labels, centroids, clouds = _label_cluster(xyz_label_image,  self.mesh_dir, self.num_points, self.min_size, dim, self.spot_labels)
             if len(labels) > 1:
                 
-                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids)
+                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids, self.batch_size)
             
                 return  output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid
 
-def _model_output(model, clouds, labels, centroids):
+def _model_output(model, clouds, labels, centroids, batch_size):
        
        output_labels = []
        output_cluster_score = []
        output_cluster_class = []
        output_cluster_centroid = []
        dataset = PointCloudDataset(clouds, labels, centroids)
-       dataloader = DataLoader(dataset, batch_size = self.batch_size)
+       dataloader = DataLoader(dataset, batch_size = batch_size)
        model.eval()
        for data in dataloader:
             
