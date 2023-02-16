@@ -131,9 +131,9 @@ def _model_output(model, clouds, labels, centroids, batch_size):
        model.eval()
        
        for data in dataloader:
-            print(len(data))     
+                
             inputs, label_inputs, centroid_inputs = data
-
+            print(len(inputs)) 
             try:
                     output, features, clusters = model(inputs.cuda())
             except ValueError:
