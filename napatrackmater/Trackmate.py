@@ -18,7 +18,7 @@ import concurrent
 from .clustering import Clustering
 class TrackMate(object):
     
-    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes, progress_bar = None, seg_image = None, channel_seg_image = None, image = None, mask = None, fourier = True, cluster_model = None, num_points = 2048, save_dir = None):
+    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes, progress_bar = None, seg_image = None, channel_seg_image = None, image = None, mask = None, fourier = True, cluster_model = None, num_points = 2048, save_dir = None, batch_size = 1):
         
         
         self.xml_path = xml_path
@@ -40,7 +40,8 @@ class TrackMate(object):
         self.edges_dataset, self.edges_dataset_index = get_csv_data(self.edges_csv_path)
         self.progress_bar = progress_bar
         self.axes = axes                
-        self.save_dir = save_dir 
+        self.save_dir = save_dir
+        self.batch_size = batch_size 
         if self.save_dir is None:
                self.save_dir = __file__ 
         Path(self.save_dir).mkdir(exist_ok=True)
@@ -790,7 +791,7 @@ class TrackMate(object):
                                                         0,
                                                         len(self._timed_centroid.keys()) + 1,
                                                     )
-                           self.progress_bar.value =  count + 1
+                           self.progress_bar.value =  count 
                            self.progress_bar.show()
 
                            cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.mesh_dir, self.num_points, self.cluster_model, key = time_key,spot_labels = spot_labels, progress_bar=self.progress_bar)       

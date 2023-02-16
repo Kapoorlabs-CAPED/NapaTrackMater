@@ -45,7 +45,7 @@ class PointCloudDataset(Dataset):
 
 class Clustering:
 
-    def __init__(self, label_image: np.ndarray, axes, mesh_dir: str, num_points: int, model: DeepEmbeddedClustering, spot_labels = None, key = 0,  min_size:tuple = (2,2,2), progress_bar = None):
+    def __init__(self, label_image: np.ndarray, axes, mesh_dir: str, num_points: int, model: DeepEmbeddedClustering, spot_labels = None, key = 0,  min_size:tuple = (2,2,2), progress_bar = None, batch_size = 1):
 
         self.label_image = label_image 
         self.model = model
@@ -56,6 +56,7 @@ class Clustering:
         self.spot_labels = spot_labels
         self.progress_bar = progress_bar
         self.key = key
+        self.batch_size = batch_size
         self.timed_cluster_label = {}
         Path(self.mesh_dir).mkdir(exist_ok=True)
         self.count = 0
@@ -126,7 +127,7 @@ def _model_output(model, clouds, labels, centroids):
        output_cluster_class = []
        output_cluster_centroid = []
        dataset = PointCloudDataset(clouds, labels, centroids)
-       dataloader = DataLoader(dataset, batch_size = 8)
+       dataloader = DataLoader(dataset, batch_size = self.batch_size)
        model.eval()
        for data in dataloader:
             
