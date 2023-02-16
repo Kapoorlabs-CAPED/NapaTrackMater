@@ -129,10 +129,10 @@ def _model_output(model, clouds, labels, centroids, batch_size):
         dataset = PointCloudDataset(clouds, labels, centroids)
         dataloader = DataLoader(dataset, batch_size = batch_size)
         model.eval()
-        print(dataloader)
+      
         for data in dataloader:
                 inputs, label_inputs, centroid_inputs = data
-                
+                print(inputs.shape)
                 try:
                         output, features, clusters = model(inputs.cuda())
                 except ValueError:
