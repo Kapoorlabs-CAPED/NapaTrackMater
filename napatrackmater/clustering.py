@@ -129,7 +129,8 @@ def _model_output(model, clouds, labels, centroids, batch_size):
        dataset = PointCloudDataset(clouds, labels, centroids)
        dataloader = DataLoader(dataset, batch_size = batch_size)
        model.eval()
-       for data in dataloader:
+       
+       for data in tqdm(dataloader):
             
             inputs, label_inputs, centroid_inputs = data
 
