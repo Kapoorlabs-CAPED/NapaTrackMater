@@ -843,7 +843,7 @@ class TrackMate(object):
 
                
 
-                self.unique_fft_properties[track_id] = expanded_time[0], expanded_intensity[0], xf_sample, ffttotal_sample
+                self.unique_fft_properties[track_id] = expanded_time[:,0], expanded_intensity[:,0], xf_sample, ffttotal_sample
 
                                  
     def _dict_update(self, unique_tracklet_ids: List,  cell_id, track_id, source_id, target_id):
