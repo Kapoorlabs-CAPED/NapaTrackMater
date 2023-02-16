@@ -840,6 +840,8 @@ class TrackMate(object):
         unique_id = str(track_id) + str(self.max_track_id) + str(generation_id) + str(tracklet_id)
         
         unique_tracklet_ids.append(str(unique_id))
+        self.unique_spot_properties[int(closest_cell_id)].update({self.clusterclass_key : None})
+        self.unique_spot_properties[int(closest_cell_id)].update({self.clusterscore_key : None})
         self.unique_spot_properties[int(cell_id)].update({self.uniqueid_key : str(unique_id)})
         self.unique_spot_properties[int(cell_id)].update({self.trackletid_key : str(tracklet_id)}) 
         self.unique_spot_properties[int(cell_id)].update({self.generationid_key : str(generation_id)}) 
@@ -1011,6 +1013,7 @@ class TrackMate(object):
                                         mitotic_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])
                                         if self.cluster_model is not None and self.seg_image is not None and self.clusterclass_key in all_spots_tracks[k].keys() :
                                                mitotic_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])
+
                                   if not mitotic:
                                         non_mitotic_disp_z.append(all_spots_tracks[k][self.zposid_key])
                                         non_mitotic_disp_y.append(all_spots_tracks[k][self.yposid_key])
