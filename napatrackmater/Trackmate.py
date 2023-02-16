@@ -827,10 +827,12 @@ class TrackMate(object):
 
                 expanded_intensity = expanded_intensity[:, np.newaxis]  
                 expanded_time = expanded_time[:, np.newaxis]
-                print(time, intensity)
+                
+                time_count = 0
                 for i in range(expanded_intensity.shape[0]):
                        if expanded_time[i] in time:
-                              expanded_intensity[i] = intensity[i]
+                              expanded_intensity[time_count] = intensity[time_count]
+                              time_count = time_count + 1
                 point_sample = expanded_intensity.shape[0]
                 if point_sample > 0:
                             xf_sample = fftfreq(point_sample, self.tcalibration)
