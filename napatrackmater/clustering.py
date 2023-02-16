@@ -129,9 +129,9 @@ def _model_output(model, clouds, labels, centroids, batch_size):
        dataset = PointCloudDataset(clouds, labels, centroids)
        dataloader = DataLoader(dataset, batch_size = batch_size)
        model.eval()
-       print(len(dataloader))
+       
        for data in dataloader:
-            
+            print(len(data))     
             inputs, label_inputs, centroid_inputs = data
 
             try:
