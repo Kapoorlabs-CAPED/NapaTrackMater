@@ -141,7 +141,7 @@ def _model_output(model, clouds, labels, centroids, batch_size):
                 output_cluster_centroid = output_cluster_centroid +  [tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in centroid_inputs]
                 output_labels = output_labels + [int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in label_inputs]
                 output_cluster_class = output_cluster_class + [np.argmax(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
-
+                print(output_cluster_score, output_cluster_class)
         return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid              
 
 

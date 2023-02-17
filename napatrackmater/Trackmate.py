@@ -694,6 +694,9 @@ class TrackMate(object):
                                       self.progress_bar.value =  self.count
                                     r.result()
 
+
+                if self.cluster_model and self.seg_image is not None:
+                       self._assign_cluster_class()
                 print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
                 self.count = 0
                 futures = []
@@ -789,8 +792,7 @@ class TrackMate(object):
                             parent_track_id = int(float(str(self.unique_spot_properties[int(float(v))][self.uniqueid_key])))
                             self.graph_tracks[daughter_track_id] = parent_track_id
                 self._get_attributes()
-                if self.cluster_model and self.seg_image is not None:
-                       self._assign_cluster_class()
+                
                 self._temporal_plots_trackmate()
                 
     def _assign_cluster_class(self):
@@ -822,8 +824,7 @@ class TrackMate(object):
                                     closest_cell_id = self.unique_spot_centroid[closest_centroid]
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.clusterclass_key : cluster_class})
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.clusterscore_key : cluster_score})
-                           for (k,v) in self.root_spots.items():
-                                  self.root_spots[k] = self.unique_spot_properties[k]         
+                                    
                 
     def _compute_phenotypes(self):
 
