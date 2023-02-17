@@ -497,6 +497,9 @@ class TrackMate(object):
                                            if all_dict_values[self.clusterclass_key] is not None:
                                                 cluster_class = int(float(all_dict_values[self.clusterclass_key]))
                                                 cluster_class_score = float(all_dict_values[self.clusterscore_key])
+                                           else:
+                                                cluster_class = None
+                                                cluster_class_score = 0     
                                     else:
                                            cluster_class = None
                                            cluster_class_score = 0       
