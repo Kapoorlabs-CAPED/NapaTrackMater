@@ -144,6 +144,7 @@ class TrackMate(object):
         self.unique_tracks = {}
         self.unique_track_properties = {}
         self.unique_fft_properties = {}
+        self.unique_cluster_properties = {}
         self.unique_spot_properties = {}
         self.unique_spot_centroid = {}
         self.root_spots = {}
@@ -491,6 +492,12 @@ class TrackMate(object):
                                     acceleration = scale_value(acceleration)
                                     total_intensity =  float(all_dict_values[self.total_intensity_key])
                                     volume_pixels = int(float(all_dict_values[self.quality_key]))
+                                    if self.clusterclass_key in all_dict_values.keys():
+                                           cluster_class = int(float(all_dict_values[self.clusterclass_key]))
+                                           cluster_class_score = float(all_dict_values[self.clusterscore_key])
+                                    else:
+                                           cluster_class = None 
+                                           cluster_class_score = 0       
 
                                     spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
                                     if self.seg_image is not None:
@@ -521,14 +528,14 @@ class TrackMate(object):
                                         current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
 
                                         value_array = current_tracklets_properties[current_track_id]
-                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity, volume_pixels, acceleration])
+                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
                                         current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
 
                                     else:
                                         current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
                                         current_tracklets[current_track_id] = current_tracklet_array 
 
-                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity, volume_pixels, acceleration])
+                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
                                         current_tracklets_properties[current_track_id] = current_value_array
                                             
 
@@ -769,7 +776,7 @@ class TrackMate(object):
                 
                 if self.fourier:
                    print('computing Fourier')
-                   self._compute_fourier()
+                   self._compute_phenotypes()
 
                 for (k,v) in self.graph_split.items():
                            
@@ -813,14 +820,16 @@ class TrackMate(object):
                            for (k,v) in self.root_spots.items():
                                   self.root_spots[k] = self.unique_spot_properties[k]         
                 
-    def _compute_fourier(self):
+    def _compute_phenotypes(self):
 
           for (k,v) in self.unique_tracks.items():
                 
                 track_id = k
                 tracklet_properties = self.unique_track_properties[k] 
-                intensity = tracklet_properties[:,-3:-2]
-                time = tracklet_properties[:,0:1]
+                intensity = tracklet_properties[:,4]
+                time = tracklet_properties[:,0]
+                cluster_class_score = tracklet_properties[:,8]
+                cluster_class = tracklet_properties[:,7]
                 expanded_intensity = np.arange(self.tend - self.tstart + 1)
 
                 expanded_time = np.arange(self.tend - self.tstart + 1)
@@ -844,6 +853,7 @@ class TrackMate(object):
                
 
                 self.unique_fft_properties[track_id] = expanded_time[:,0], expanded_intensity[:,0], xf_sample, ffttotal_sample
+                self.unique_cluster_properties[track_id] = time, cluster_class, cluster_class_score
 
                                  
     def _dict_update(self, unique_tracklet_ids: List,  cell_id, track_id, source_id, target_id):
