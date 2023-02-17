@@ -148,6 +148,7 @@ class TrackMate(object):
         self.unique_spot_properties = {}
         self.unique_spot_centroid = {}
         self.root_spots = {}
+        self.all_current_cell_ids = {}
         self.channel_unique_spot_properties = {}
         self.edge_target_lookup = {}
         self.edge_source_lookup = {}
@@ -421,9 +422,7 @@ class TrackMate(object):
                             
                             current_cell_ids = []
                             unique_tracklet_ids = []
-                            current_tracklets = {}
                             
-                            current_tracklets_properties = {}
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
                             self._iterate_split_down(root_leaf, root_splits)
@@ -472,42 +471,18 @@ class TrackMate(object):
                             
                             for current_root in root_root:
                                    self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
-                            for i in range(len(current_cell_ids)):
-                                    
-                                    k = int(current_cell_ids[i])    
-                                    all_dict_values = self.unique_spot_properties[k]
-                                    unique_id = str(all_dict_values[self.uniqueid_key])
-                                    current_track_id = str(all_dict_values[self.trackid_key])
-                                    t = int(float(all_dict_values[self.frameid_key]))
-                                    z = float(all_dict_values[self.zposid_key])
-                                    y = float(all_dict_values[self.yposid_key])
-                                    x = float(all_dict_values[self.xposid_key])
-                                    spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
-                                    if self.seg_image is not None:
-                                        spot_label = self.seg_image[t,int(spot_centroid[0]),int(spot_centroid[1]), int(spot_centroid[2])]
-                                    else:
-                                        spot_label = 0    
+                            
+                            self.all_current_cell_ids[int(track_id)] = current_cell_ids
 
-                                    self.unique_spot_centroid[spot_centroid] = k
+                            
+                            
+        
+    def _final_tracks(self, track_id):
 
-                                    if str(t) in self._timed_centroid:
-                                           tree, spot_centroids, spot_labels = self._timed_centroid[str(t)]
-                                           spot_centroids.append(spot_centroid)
-                                           spot_labels.append(spot_label)
-                                           tree = spatial.cKDTree(spot_centroids)
-                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
-                                    else:
-                                           spot_centroids = []
-                                           spot_labels = [] 
-                                           spot_centroids.append(spot_centroid)
-                                           spot_labels.append(spot_label)
-                                           tree = spatial.cKDTree(spot_centroids)
-                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
-                                   
+                            current_cell_ids = self.all_current_cell_ids[int(track_id)]
+                            current_tracklets = {}
+                            current_tracklets_properties = {}
 
-                            if self.cluster_model and self.seg_image is not None:
-                                 self._assign_cluster_class()
-           
                             for i in range(len(current_cell_ids)):
                                         
                                     k = int(current_cell_ids[i])    
@@ -539,6 +514,29 @@ class TrackMate(object):
                                            cluster_class = None
                                            cluster_class_score = 0       
 
+                                    spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
+                                    if self.seg_image is not None:
+                                        spot_label = self.seg_image[t,int(spot_centroid[0]),int(spot_centroid[1]), int(spot_centroid[2])]
+                                    else:
+                                        spot_label = 0    
+
+                                    self.unique_spot_centroid[spot_centroid] = k
+
+                                    if str(t) in self._timed_centroid:
+                                           tree, spot_centroids, spot_labels = self._timed_centroid[str(t)]
+                                           spot_centroids.append(spot_centroid)
+                                           spot_labels.append(spot_label)
+                                           tree = spatial.cKDTree(spot_centroids)
+                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
+                                    else:
+                                           spot_centroids = []
+                                           spot_labels = [] 
+                                           spot_centroids.append(spot_centroid)
+                                           spot_labels.append(spot_label)
+                                           tree = spatial.cKDTree(spot_centroids)
+                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
+
+
                                     if current_track_id in current_tracklets:
                                         tracklet_array = current_tracklets[current_track_id]
                                         current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
@@ -555,16 +553,11 @@ class TrackMate(object):
                                         current_value_array = np.array([t, gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
                                         current_tracklets_properties[current_track_id] = current_value_array
                                             
-
-                                
-                                
                             current_tracklets = np.asarray(current_tracklets[str(track_id)])
                             current_tracklets_properties = np.asarray(current_tracklets_properties[str(track_id)])
                             
                             self.unique_tracks[track_id] = current_tracklets     
-                            self.unique_track_properties[track_id] = current_tracklets_properties
-                            
-        
+                            self.unique_track_properties[track_id] = current_tracklets_properties    
 
 
     def _spot_computer(self, frame):
@@ -706,8 +699,6 @@ class TrackMate(object):
                                       self.progress_bar.value =  self.count
                                     r.result()
 
-
-                
                 print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
                 self.count = 0
                 futures = []
@@ -803,7 +794,15 @@ class TrackMate(object):
                             parent_track_id = int(float(str(self.unique_spot_properties[int(float(v))][self.uniqueid_key])))
                             self.graph_tracks[daughter_track_id] = parent_track_id
                 self._get_attributes()
-                
+                if self.cluster_model and self.seg_image is not None:
+                       self._assign_cluster_class()
+
+                for track in self.tracks.findall('Track'):
+                            track_id = int(track.get(self.trackid_key))
+                            if track_id in self.filtered_track_ids:
+                                  self._final_tracks(track_id)       
+
+                                  
                 self._temporal_plots_trackmate()
                 
     def _assign_cluster_class(self):
@@ -813,7 +812,14 @@ class TrackMate(object):
                     for count, time_key in enumerate(self._timed_centroid.keys()):
                            
                            tree, spot_centroids, spot_labels = self._timed_centroid[time_key]
-                          
+                           print(f'Applying clustering prediction over {len(spot_labels)} spots in frame {time_key}')
+                           self.progress_bar.label = "Computing clustering classes"
+                           self.progress_bar.range = (
+                                                        0,
+                                                        len(self._timed_centroid.keys()) + 1,
+                                                    )
+                           self.progress_bar.value =  count 
+                           self.progress_bar.show()
 
                            cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.mesh_dir, self.num_points, self.cluster_model, key = time_key,spot_labels = spot_labels, progress_bar=self.progress_bar, batch_size = self.batch_size)       
                            cluster_eval._create_cluster_labels()
@@ -828,7 +834,8 @@ class TrackMate(object):
                                     closest_cell_id = self.unique_spot_centroid[closest_centroid]
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.clusterclass_key : cluster_class})
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.clusterscore_key : cluster_score})
-                                    
+                           for (k,v) in self.root_spots.items():
+                                  self.root_spots[k] = self.unique_spot_properties[k]         
                 
     def _compute_phenotypes(self):
 
