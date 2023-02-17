@@ -825,9 +825,7 @@ class TrackMate(object):
 
                         self.xml_tree.write(os.path.join(self.channel_xml_path, self.channel_xml_name))
                 
-                if self.fourier:
-                   print('computing Fourier')
-                   self._compute_phenotypes()
+                
 
                 for (k,v) in self.graph_split.items():
                            
@@ -841,7 +839,11 @@ class TrackMate(object):
                 for track in self.tracks.findall('Track'):
                             track_id = int(track.get(self.trackid_key))
                             if track_id in self.filtered_track_ids:
-                                  self._final_tracks(track_id)       
+                                  self._final_tracks(track_id) 
+
+                if self.fourier:
+                   print('computing Fourier')
+                   self._compute_phenotypes()                        
 
 
                 self._temporal_plots_trackmate()
@@ -853,7 +855,6 @@ class TrackMate(object):
                     for count, time_key in enumerate(self._timed_centroid.keys()):
                            
                            tree, spot_centroids, spot_labels = self._timed_centroid[time_key]
-                           print(f'Applying clustering prediction over {len(spot_labels)} spots in frame {time_key}')
                            self.progress_bar.label = "Computing clustering classes"
                            self.progress_bar.range = (
                                                         0,
