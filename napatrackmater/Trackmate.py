@@ -473,7 +473,48 @@ class TrackMate(object):
                                    self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
                             
                             self.all_current_cell_ids[int(track_id)] = current_cell_ids
+                            for i in range(len(current_cell_ids)):
+                                        
+                                    k = int(current_cell_ids[i])    
+                                    all_dict_values = self.unique_spot_properties[k]
+                                    unique_id = str(all_dict_values[self.uniqueid_key])
+                                    t = int(float(all_dict_values[self.frameid_key]))
+                                    z = float(all_dict_values[self.zposid_key])
+                                    y = float(all_dict_values[self.yposid_key])
+                                    x = float(all_dict_values[self.xposid_key])
+                                    if self.clusterclass_key in all_dict_values.keys():
+                                           
+                                           if all_dict_values[self.clusterclass_key] is not None:
+                                                cluster_class = int(float(all_dict_values[self.clusterclass_key]))
+                                                cluster_class_score = float(all_dict_values[self.clusterscore_key])
+                                           else:
+                                                cluster_class = None
+                                                cluster_class_score = 0     
+                                    else:
+                                           cluster_class = None
+                                           cluster_class_score = 0       
 
+                                    spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
+                                    if self.seg_image is not None:
+                                        spot_label = self.seg_image[t,int(spot_centroid[0]),int(spot_centroid[1]), int(spot_centroid[2])]
+                                    else:
+                                        spot_label = 0    
+
+                                    self.unique_spot_centroid[spot_centroid] = k
+
+                                    if str(t) in self._timed_centroid:
+                                           tree, spot_centroids, spot_labels = self._timed_centroid[str(t)]
+                                           spot_centroids.append(spot_centroid)
+                                           spot_labels.append(spot_label)
+                                           tree = spatial.cKDTree(spot_centroids)
+                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
+                                    else:
+                                           spot_centroids = []
+                                           spot_labels = [] 
+                                           spot_centroids.append(spot_centroid)
+                                           spot_labels.append(spot_label)
+                                           tree = spatial.cKDTree(spot_centroids)
+                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
                             
                             
         
@@ -802,7 +843,7 @@ class TrackMate(object):
                             if track_id in self.filtered_track_ids:
                                   self._final_tracks(track_id)       
 
-                                  
+
                 self._temporal_plots_trackmate()
                 
     def _assign_cluster_class(self):
