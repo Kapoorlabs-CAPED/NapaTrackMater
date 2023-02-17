@@ -496,7 +496,7 @@ class TrackMate(object):
                                            cluster_class = int(float(all_dict_values[self.clusterclass_key]))
                                            cluster_class_score = float(all_dict_values[self.clusterscore_key])
                                     else:
-                                           cluster_class = None 
+                                           cluster_class = 0 
                                            cluster_class_score = 0       
 
                                     spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
@@ -865,8 +865,8 @@ class TrackMate(object):
         unique_id = str(track_id) + str(self.max_track_id) + str(generation_id) + str(tracklet_id)
         
         unique_tracklet_ids.append(str(unique_id))
-        self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : None})
-        self.unique_spot_properties[int(cell_id)].update({self.clusterscore_key : None})
+        self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : 0})
+        self.unique_spot_properties[int(cell_id)].update({self.clusterscore_key : 0})
         self.unique_spot_properties[int(cell_id)].update({self.uniqueid_key : str(unique_id)})
         self.unique_spot_properties[int(cell_id)].update({self.trackletid_key : str(tracklet_id)}) 
         self.unique_spot_properties[int(cell_id)].update({self.generationid_key : str(generation_id)}) 
