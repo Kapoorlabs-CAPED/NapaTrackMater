@@ -897,7 +897,7 @@ class TrackMate(object):
                 unique_cluster_properties_tracklet = {}
                 self.unique_fft_properties[track_id] = {}
                 self.unique_cluster_properties[track_id] = {}
-                time_count = 0
+                
                 for current_unique_id in unique_ids_set:
                    
                    expanded_intensity = np.arange(self.tend - self.tstart + 1)
@@ -908,6 +908,7 @@ class TrackMate(object):
                    current_intensity = []
                    current_cluster_class = []
                    current_cluster_class_score = []
+                   time_count = 0
                    for i in range(time.shape[0]):
                           if current_unique_id == unique_ids[i]:
                                  current_time.append(time[i])
