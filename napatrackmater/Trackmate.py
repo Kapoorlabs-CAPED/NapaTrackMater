@@ -895,6 +895,8 @@ class TrackMate(object):
                 
                 unique_fft_properties_tracklet = {}
                 unique_cluster_properties_tracklet = {}
+                self.unique_fft_properties[track_id] = {}
+                self.unique_cluster_properties[track_id] = {}
                 time_count = 0
                 for current_unique_id in unique_ids_set:
                    
