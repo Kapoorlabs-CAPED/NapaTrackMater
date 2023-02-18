@@ -891,19 +891,35 @@ class TrackMate(object):
                 unique_ids_set = set(unique_ids)
                 cluster_class_score = tracklet_properties[:,9]
                 cluster_class = tracklet_properties[:,8]
-                expanded_intensity = np.arange(self.tend - self.tstart + 1)
-                expanded_time = np.arange(self.tend - self.tstart + 1)
-                expanded_intensity = expanded_intensity[:, np.newaxis]  
-                expanded_time = expanded_time[:, np.newaxis]
+                
                 
                 unique_fft_properties_tracklet = {}
                 unique_cluster_properties_tracklet = {}
                 time_count = 0
                 for current_unique_id in unique_ids_set:
+                   
+                   expanded_intensity = np.arange(self.tend - self.tstart + 1)
+                   expanded_time = np.arange(self.tend - self.tstart + 1)
+                   expanded_intensity = expanded_intensity[:, np.newaxis]  
+                   expanded_time = expanded_time[:, np.newaxis]
+                   current_time = []
+                   current_intensity = []
+                   current_cluster_class = []
+                   current_cluster_class_score = []
+                   for i in range(time.shape[0]):
+                          if current_unique_id == unique_ids[i]:
+                                 current_time.append(time[i])
+                                 current_intensity.append(intensity[i])
+                                 current_cluster_class.append(cluster_class[i])
+                                 current_cluster_class_score.append(cluster_class_score[i])
+                   current_time = np.asarray(current_time)
+                   current_intensity = np.asarray(current_intensity)
+                   current_cluster_class = np.asarray(current_cluster_class)
+                   current_cluster_class_score = np.asarray(current_cluster_class_score)               
                    for i in range(expanded_intensity.shape[0]):
                        
-                       if current_unique_id == unique_ids[i] and expanded_time[i] in time:
-                              expanded_intensity[time_count] = intensity[time_count]
+                       if expanded_time[i] in current_time:
+                              expanded_intensity[time_count] = current_intensity[time_count]
                               time_count = time_count + 1
                    point_sample = expanded_intensity.shape[0]
                    if point_sample > 0:
@@ -915,7 +931,7 @@ class TrackMate(object):
 
                
                    unique_fft_properties_tracklet[current_unique_id] = expanded_time[:,0], expanded_intensity[:,0], xf_sample, ffttotal_sample
-                   unique_cluster_properties_tracklet[current_unique_id] =  time, cluster_class, cluster_class_score
+                   unique_cluster_properties_tracklet[current_unique_id] =  current_time, current_cluster_class, current_cluster_class_score
                    self.unique_fft_properties[track_id].update({current_unique_id:unique_fft_properties_tracklet[current_unique_id]})
                    self.unique_cluster_properties[track_id].update({current_unique_id:unique_cluster_properties_tracklet[current_unique_id]})
 
