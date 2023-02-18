@@ -584,14 +584,14 @@ class TrackMate(object):
                                         current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
 
                                         value_array = current_tracklets_properties[current_track_id]
-                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
+                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
                                         current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
 
                                     else:
                                         current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
                                         current_tracklets[current_track_id] = current_tracklet_array 
 
-                                        current_value_array = np.array([t, gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
+                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
                                         current_tracklets_properties[current_track_id] = current_value_array
                                             
                             current_tracklets = np.asarray(current_tracklets[str(track_id)])
@@ -885,34 +885,39 @@ class TrackMate(object):
                 
                 track_id = k
                 tracklet_properties = self.unique_track_properties[k] 
-                intensity = tracklet_properties[:,4]
+                intensity = tracklet_properties[:,5]
                 time = tracklet_properties[:,0]
-                cluster_class_score = tracklet_properties[:,8]
-                cluster_class = tracklet_properties[:,7]
+                unique_ids = tracklet_properties[:,1]
+                unique_ids_set = set(unique_ids)
+                cluster_class_score = tracklet_properties[:,9]
+                cluster_class = tracklet_properties[:,8]
                 expanded_intensity = np.arange(self.tend - self.tstart + 1)
-
                 expanded_time = np.arange(self.tend - self.tstart + 1)
-
                 expanded_intensity = expanded_intensity[:, np.newaxis]  
                 expanded_time = expanded_time[:, np.newaxis]
                 
+                unique_fft_properties_tracklet = {}
+                unique_cluster_properties_tracklet = {}
                 time_count = 0
-                for i in range(expanded_intensity.shape[0]):
-                       if expanded_time[i] in time:
+                for current_unique_id in unique_ids_set:
+                   for i in range(expanded_intensity.shape[0]):
+                       
+                       if current_unique_id == unique_ids[i] and expanded_time[i] in time:
                               expanded_intensity[time_count] = intensity[time_count]
                               time_count = time_count + 1
-                point_sample = expanded_intensity.shape[0]
-                if point_sample > 0:
-                            xf_sample = fftfreq(point_sample, self.tcalibration)
-                            fftstrip_sample = fft(expanded_intensity)
-                            ffttotal_sample = np.abs(fftstrip_sample)
-                            xf_sample = xf_sample[0 : len(xf_sample) // 2]
-                            ffttotal_sample = ffttotal_sample[0 : len(ffttotal_sample) // 2]
+                   point_sample = expanded_intensity.shape[0]
+                   if point_sample > 0:
+                                xf_sample = fftfreq(point_sample, self.tcalibration)
+                                fftstrip_sample = fft(expanded_intensity)
+                                ffttotal_sample = np.abs(fftstrip_sample)
+                                xf_sample = xf_sample[0 : len(xf_sample) // 2]
+                                ffttotal_sample = ffttotal_sample[0 : len(ffttotal_sample) // 2]
 
                
-
-                self.unique_fft_properties[track_id] = expanded_time[:,0], expanded_intensity[:,0], xf_sample, ffttotal_sample
-                self.unique_cluster_properties[track_id] = time, cluster_class, cluster_class_score
+                   unique_fft_properties_tracklet[current_unique_id] = expanded_time[:,0], expanded_intensity[:,0], xf_sample, ffttotal_sample
+                   unique_cluster_properties_tracklet[current_unique_id] =  time, cluster_class, cluster_class_score
+                   self.unique_fft_properties[track_id].update({current_unique_id:unique_fft_properties_tracklet[current_unique_id]})
+                   self.unique_cluster_properties[track_id].update({current_unique_id:unique_cluster_properties_tracklet[current_unique_id]})
 
                                  
     def _dict_update(self, unique_tracklet_ids: List,  cell_id, track_id, source_id, target_id):
