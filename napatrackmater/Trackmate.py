@@ -18,10 +18,11 @@ import concurrent
 from .clustering import Clustering
 class TrackMate(object):
     
-    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes, progress_bar = None, seg_image = None, channel_seg_image = None, image = None, mask = None, fourier = True, cluster_model = None, num_points = 2048, save_dir = None, batch_size = 1):
+    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes, progress_bar = None, master_xml_path = None, seg_image = None, channel_seg_image = None, image = None, mask = None, fourier = True, cluster_model = None, num_points = 2048, save_dir = None, batch_size = 1):
         
         
         self.xml_path = xml_path
+        self.master_xml_path = master_xml_path
         self.spot_csv_path = spot_csv_path
         self.track_csv_path = track_csv_path 
         self.edges_csv_path = edges_csv_path
@@ -159,17 +160,32 @@ class TrackMate(object):
         self._timed_centroid = {}
         self.count = 0
        
-        print('Reading XML')
-        self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
-        self.filtered_track_ids = [
-                    int(track.get(self.trackid_key))
-                    for track in self.xml_content.find("Model")
-                    .find("FilteredTracks")
-                    .findall("TrackID")
-                ]
-        self.max_track_id = max(self.filtered_track_ids)        
         
-        self._get_xml_data()
+        if self.master_xml_path is None:
+                print('Reading XML')
+                self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
+                self.filtered_track_ids = [
+                            int(track.get(self.trackid_key))
+                            for track in self.xml_content.find("Model")
+                            .find("FilteredTracks")
+                            .findall("TrackID")
+                        ]
+                self.max_track_id = max(self.filtered_track_ids)        
+                
+                self._get_xml_data()
+        if self.master_xml_path is not None:
+               print('Reading XML')
+               self.xml_content = et.fromstring(codecs.open(self.master_xml_path, "r", "utf8").read())
+               self.filtered_track_ids = [
+                            int(track.get(self.trackid_key))
+                            for track in self.xml_content.find("Model")
+                            .find("FilteredTracks")
+                            .findall("TrackID")
+                        ]
+               self.max_track_id = max(self.filtered_track_ids)        
+                
+               self._get_master_xml_data()
+                       
 
      
 
@@ -516,7 +532,103 @@ class TrackMate(object):
                                            tree = spatial.cKDTree(spot_centroids)
                                            self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
                             
+
+    def _master_track_computer(self, track, track_id):
+                             
                             
+                            current_cell_ids = []
+                            unique_tracklet_ids = []
+                            
+                            all_source_ids, all_target_ids =  self._generate_generations(track)
+                            root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
+                            self._iterate_split_down(root_leaf, root_splits)
+                            
+                            
+                            # Determine if a track has divisions or none
+                            if len(root_splits) > 0:
+                                DividingTrajectory = True
+                                if int(track_id) not in self.AllTrackIds:
+                                    self.AllTrackIds.append(int(track_id))
+                                if int(track_id) not in self.DividingTrackIds:     
+                                    self.DividingTrackIds.append(int(track_id))
+                                        
+                            else:
+                                DividingTrajectory = False
+                                if int(track_id) not in self.AllTrackIds:
+                                    self.AllTrackIds.append(int(track_id))
+                                if int(track_id) not in self.NormalTrackIds:    
+                                    self.NormalTrackIds.append(int(track_id))
+
+                            for leaf in root_leaf:
+                                   source_leaf = self.edge_source_lookup[leaf]
+                                   current_cell_ids.append(leaf) 
+                                   self.unique_spot_properties[leaf].update({self.dividing_key : DividingTrajectory})
+
+                            for source_id in all_source_ids:
+                                        target_ids = self.edge_target_lookup[source_id]
+                                        current_cell_ids.append(source_id)
+                                        #Root
+                                        self.unique_spot_properties[source_id].update({self.dividing_key : DividingTrajectory})
+                                        if source_id not in all_target_ids:
+                                                
+                                                for target_id in target_ids:
+                                                   self.unique_spot_properties[target_id].update({self.dividing_key : DividingTrajectory})
+                                        else:
+                                              #Normal        
+                                              source_source_id = self.edge_source_lookup[source_id]
+                                              for target_id in target_ids:
+                                                    self.unique_spot_properties[target_id].update({self.dividing_key : DividingTrajectory}) 
+                                        
+
+                                           
+                            
+                            for current_root in root_root:
+                                   self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
+                            
+                            self.all_current_cell_ids[int(track_id)] = current_cell_ids
+                            for i in range(len(current_cell_ids)):
+                                        
+                                    k = int(current_cell_ids[i])    
+                                    all_dict_values = self.unique_spot_properties[k]
+                                    unique_id = str(all_dict_values[self.uniqueid_key])
+                                    t = int(float(all_dict_values[self.frameid_key]))
+                                    z = float(all_dict_values[self.zposid_key])
+                                    y = float(all_dict_values[self.yposid_key])
+                                    x = float(all_dict_values[self.xposid_key])
+                                    if self.clusterclass_key in all_dict_values.keys():
+                                           
+                                           if all_dict_values[self.clusterclass_key] is not None:
+                                                cluster_class = int(float(all_dict_values[self.clusterclass_key]))
+                                                cluster_class_score = float(all_dict_values[self.clusterscore_key])
+                                           else:
+                                                cluster_class = None
+                                                cluster_class_score = 0     
+                                    else:
+                                           cluster_class = None
+                                           cluster_class_score = 0       
+
+                                    spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
+                                    if self.seg_image is not None:
+                                        spot_label = self.seg_image[t,int(spot_centroid[0]),int(spot_centroid[1]), int(spot_centroid[2])]
+                                    else:
+                                        spot_label = 0    
+
+                                    self.unique_spot_centroid[spot_centroid] = k
+
+                                    if str(t) in self._timed_centroid:
+                                           tree, spot_centroids, spot_labels = self._timed_centroid[str(t)]
+                                           spot_centroids.append(spot_centroid)
+                                           spot_labels.append(spot_label)
+                                           tree = spatial.cKDTree(spot_centroids)
+                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
+                                    else:
+                                           spot_centroids = []
+                                           spot_labels = [] 
+                                           spot_centroids.append(spot_centroid)
+                                           spot_labels.append(spot_label)
+                                           tree = spatial.cKDTree(spot_centroids)
+                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
+
         
     def _final_tracks(self, track_id):
 
@@ -601,6 +713,78 @@ class TrackMate(object):
                             self.unique_track_properties[track_id] = current_tracklets_properties    
 
 
+    def _master_spot_computer(self, frame):
+          
+          
+          
+          for Spotobject in frame.findall('Spot'):
+                       
+                        cell_id = int(Spotobject.get(self.spotid_key))
+
+                        if self.uniqueid_key in Spotobject:
+                        
+                                self.unique_spot_properties[cell_id] = {
+                                    self.cellid_key: int(float(Spotobject.get(self.spotid_key))), 
+                                    self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
+                                    self.zposid_key : round(float(Spotobject.get(self.zposid_key)), 3),
+                                    self.yposid_key : round(float(Spotobject.get(self.yposid_key)), 3),
+                                    self.xposid_key : round(float(Spotobject.get(self.xposid_key)), 3),
+                                    self.total_intensity_key : round(float(Spotobject.set(self.total_intensity_key))),
+                                    self.mean_intensity_key : round(float(Spotobject.set(self.mean_intensity_key))),
+                                    self.radius_key : round(float(Spotobject.get(self.radius_key))),
+                                    self.quality_key : round(float(Spotobject.get(self.quality_key))),
+                                    self.distance_cell_mask_key: round(float(distance_cell_mask),2),
+                                    self.uniqueid_key : int(float(Spotobject.get(self.uniqueid_key))),
+                                    self.trackletid_key : int(float(Spotobject.get(self.trackletid_key))),
+                                    self.generationid_key : int(float(Spotobject.get(self.generationid_key))),
+                                    self.trackid_key : int(float(Spotobject.get(self.trackid_key))),
+                                    self.directional_change_rate_key : int(float(Spotobject.get(self.directional_change_rate_key))),
+                                    self.speed_key : int(float(Spotobject.get(self.speed_key))),
+                                    self.acceleration_key : int(float(Spotobject.get(self.acceleration_key))),
+                                    self.distance_cell_mask_key : int(float(Spotobject.get(self.distance_cell_mask_key))),
+
+                                }
+                        if self.clusterclass_key in Spotobject:
+                               self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : int(float(Spotobject.get(self.clusterclass_key)))})
+                               self.unique_spot_properties[int(cell_id)].update({self.clusterscore_key : float(Spotobject.get(self.clusterclass_key))})
+                                       
+       
+                        
+            
+                        if self.channel_seg_image is not None:
+                                    pixeltestlocation = (float(Spotobject.get(self.zposid_key))/float(self.zcalibration), float(Spotobject.get(self.yposid_key))/float(self.ycalibration),  float(Spotobject.get(self.xposid_key))/ float(self.xcalibration))
+                                    tree, centroids, labels, volume, intensity_mean, intensity_total, bounding_boxes = self._timed_channel_seg_image[str(int(float(frame)))]
+                                    dist, index = tree.query(pixeltestlocation)
+
+
+                                    bbox = bounding_boxes[index]
+                                    sizez = abs(bbox[0] - bbox[3])
+                                    sizey = abs(bbox[1] - bbox[4])
+                                    sizex = abs(bbox[2] - bbox[5]) 
+                                    veto_volume = sizex * sizey * sizez
+                                    veto_radius = math.pow(3 * veto_volume / (4 * math.pi), 1.0 / 3.0)
+    
+                                    if dist < veto_radius:
+                                            location = (int(centroids[index][0]), int(centroids[index][1]), int(centroids[index][2]))
+                                            QUALITY = volume[index]
+                                            RADIUS = math.pow(QUALITY, 1.0/3.0) * self.xcalibration * self.ycalibration * self.zcalibration
+                                            distance_cell_mask = self._get_boundary_dist(frame, location, RADIUS)
+                                            self.channel_unique_spot_properties[cell_id] = {
+                                                    self.cellid_key: int(cell_id), 
+                                                    self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
+                                                    self.zposid_key : round(float(centroids[index][0]), 3),
+                                                    self.yposid_key : round(float(centroids[index][1]), 3),
+                                                    self.xposid_key : round(float(centroids[index][2]), 3),
+
+                                                    self.total_intensity_key : round(float(intensity_total[index])),
+                                                    self.mean_intensity_key : round(float(intensity_mean[index])),
+
+                                                    self.radius_key : round(float(RADIUS)),
+                                                    self.quality_key : round(float(QUALITY)),
+                                                    self.distance_cell_mask_key: round(float(distance_cell_mask),2)
+
+                                            } 
+
     def _spot_computer(self, frame):
           
           
@@ -671,7 +855,177 @@ class TrackMate(object):
                                             } 
 
                                             
-   
+    def _get_master_xml_data(self):
+            if self.channel_seg_image is not None:
+                      self.channel_xml_content = self.xml_content
+                      self.xml_tree = et.parse(self.xml_path)
+                      self.xml_root = self.xml_tree.getroot()
+                      self.channel_xml_name = 'second_channel_' + os.path.splitext(os.path.basename(self.xml_path))[0] + '.xml'
+                      self.channel_xml_path = os.path.dirname(self.xml_path)
+                      self._create_channel_tree()
+
+            self.unique_objects = {}
+            self.unique_properties = {}
+            self.AllTrackIds = []
+            self.DividingTrackIds = []
+            self.NormalTrackIds = []
+            self.all_track_properties = []
+            self.split_points_times = []
+
+            
+            
+            self.AllTrackIds.append(None)
+            self.DividingTrackIds.append(None)
+            self.NormalTrackIds.append(None)
+            
+            self.AllTrackIds.append(self.TrackidBox)
+            self.DividingTrackIds.append(self.TrackidBox)
+            self.NormalTrackIds.append(self.TrackidBox)
+            
+            
+            self.Spotobjects = self.xml_content.find('Model').find('AllSpots')
+            # Extract the tracks from xml
+            self.tracks = self.xml_content.find("Model").find("AllTracks")
+            self.settings = self.xml_content.find("Settings").find("ImageData")
+            self.xcalibration = float(self.settings.get("pixelwidth"))
+            self.ycalibration = float(self.settings.get("pixelheight"))
+            self.zcalibration = float(self.settings.get("voxeldepth"))
+            self.tcalibration = int(float(self.settings.get("timeinterval")))
+            self.detectorsettings = self.xml_content.find("Settings").find("DetectorSettings")
+            self.basicsettings = self.xml_content.find("Settings").find("BasicSettings")
+            self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
+            self.tstart = int(float(self.basicsettings.get("tstart")))
+            self.tend = int(float(self.basicsettings.get("tend")))      
+
+            print('Iterating over spots in frame')
+            self.count = 0
+            futures = []
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
+                
+                for frame in self.Spotobjects.findall('SpotsInFrame'):
+                            futures.append(executor.submit(self._master_spot_computer, frame))
+                if self.progress_bar is not None:
+                                
+                                self.progress_bar.label = "Collecting Spots"
+                                self.progress_bar.range = (
+                                    0,
+                                    len(futures),
+                                )
+                                self.progress_bar.show()
+
+                for r in concurrent.futures.as_completed(futures):
+                                self.count = self.count + 1
+                                if self.progress_bar is not None:
+                                    self.progress_bar.value =  self.count
+                                r.result()    
+
+            print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
+            self.count = 0
+            futures = []
+            with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
+                
+                for track in self.tracks.findall('Track'):
+                        
+                        track_id = int(track.get(self.trackid_key))
+                        if track_id in self.filtered_track_ids:
+                                futures.append(executor.submit(self._master_track_computer, track, track_id))
+                if self.progress_bar is not None:
+                                
+                                self.progress_bar.label = "Collecting Tracks"
+                                self.progress_bar.range = (
+                                    0,
+                                    len(self.filtered_track_ids),
+                                )
+                                self.progress_bar.show()
+
+
+                for r in concurrent.futures.as_completed(futures):
+                                self.count = self.count + 1
+                                if self.progress_bar is not None:
+                                    self.progress_bar.value = self.count
+                                r.result()
+            
+            if self.channel_seg_image is not None:  
+
+                    channel_filtered_tracks = []    
+                    print('Transferring XML')               
+                    for Spotobject in self.xml_root.iter('Spot'):
+                            cell_id = int(Spotobject.get(self.spotid_key))
+                            if cell_id in self.channel_unique_spot_properties.keys():        
+                            
+                                    new_positionx =  self.channel_unique_spot_properties[cell_id][self.xposid_key]
+                                    new_positiony =  self.channel_unique_spot_properties[cell_id][self.yposid_key]
+                                    new_positionz =  self.channel_unique_spot_properties[cell_id][self.zposid_key]
+
+                                    new_total_intensity = self.channel_unique_spot_properties[cell_id][self.total_intensity_key]
+                                    new_mean_intensity = self.channel_unique_spot_properties[cell_id][self.mean_intensity_key]
+
+                                    new_radius = self.channel_unique_spot_properties[cell_id][self.radius_key]
+                                    new_quality = self.channel_unique_spot_properties[cell_id][self.quality_key]
+                                    new_distance_cell_mask = self.channel_unique_spot_properties[cell_id][self.distance_cell_mask_key]
+
+                                    Spotobject.set(self.xposid_key, str(new_positionx))     
+                                    Spotobject.set(self.yposid_key, str(new_positiony))
+                                    Spotobject.set(self.zposid_key, str(new_positionz))
+
+                                    Spotobject.set(self.total_intensity_key, str(new_total_intensity))     
+                                    Spotobject.set(self.mean_intensity_key, str(new_mean_intensity))
+
+                                    Spotobject.set(self.radius_key, str(new_radius))     
+                                    Spotobject.set(self.quality_key, str(new_quality))
+                                    Spotobject.set(self.distance_cell_mask_key, str(new_distance_cell_mask))
+                                    if self.trackid_key in self.unique_spot_properties[int(cell_id)].keys():
+                                        
+                                        track_id = self.unique_spot_properties[int(cell_id)][self.trackid_key]
+                                        channel_filtered_tracks.append(track_id)
+                    for parent in self.xml_root.findall('Model'):
+                        for firstchild in parent.findall('AllTracks'):
+                            for secondchild in firstchild.findall('Track'):
+                                track_id = int(secondchild.get(self.trackid_key))
+                                if track_id not in channel_filtered_tracks:    
+                                    firstchild.remove(secondchild)
+                                
+                    
+                    for parent in self.xml_root.findall('Model'):
+                        for firstchild in parent.findall('AllTracks'):
+                            for secondchild in firstchild.findall('Track'):
+                                for Edgeobject in secondchild.findall('Edge'):
+                                        spot_source_id = int(float(Edgeobject.get(self.spot_source_id_key)))  
+                                        spot_target_id = int(float(Edgeobject.get(self.spot_target_id_key)))      
+                                        if spot_source_id not in self.channel_unique_spot_properties.keys() and spot_target_id not in self.channel_unique_spot_properties.keys():     
+                                                            secondchild.remove(Edgeobject)  
+
+                    for parent in self.xml_root.findall('Model'):
+                        for firstchild in parent.findall('FilteredTracks'):
+                            for secondchild in firstchild.findall('TrackID'): 
+                                    filter_track_id = int(secondchild.get(self.trackid_key))  
+                                    if filter_track_id not in channel_filtered_tracks:
+                                            firstchild.remove(secondchild)                             
+
+                    self.xml_tree.write(os.path.join(self.channel_xml_path, self.channel_xml_name))       
+
+            for (k,v) in self.graph_split.items():
+                           
+                            daughter_track_id =  int(float(str(self.unique_spot_properties[int(float(k))][self.uniqueid_key])))
+                            parent_track_id = int(float(str(self.unique_spot_properties[int(float(v))][self.uniqueid_key])))
+                            self.graph_tracks[daughter_track_id] = parent_track_id
+                self._get_attributes()
+
+                for track in self.tracks.findall('Track'):
+                            track_id = int(track.get(self.trackid_key))
+                            if track_id in self.filtered_track_ids:
+                                  self._final_tracks(track_id) 
+
+                if self.fourier:
+                   print('computing Fourier')
+                   self._compute_phenotypes()                        
+
+                
+                self._temporal_plots_trackmate()        
+
+
+
     def _get_xml_data(self):
 
                 
@@ -683,6 +1037,12 @@ class TrackMate(object):
                       self.channel_xml_name = 'second_channel_' + os.path.splitext(os.path.basename(self.xml_path))[0] + '.xml'
                       self.channel_xml_path = os.path.dirname(self.xml_path)
                       self._create_channel_tree()
+                if self.cluster_model is not None and self.seg_image is not None and self.master_xml_path is None:
+                       self.master_xml_content = self.xml_content
+                       self.master_xml_tree = et.parse(self.xml_path)
+                       self.master_xml_root = self.master_xml_tree.getroot()
+                       self.master_xml_name = 'master_' + os.path.splitext(os.path.basename(self.xml_path))[0] + '.xml'
+                       self.master_xml_path = os.path.dirname(self.xml_path)      
                        
                 self.unique_objects = {}
                 self.unique_properties = {}
@@ -835,6 +1195,7 @@ class TrackMate(object):
                 self._get_attributes()
                 if self.cluster_model and self.seg_image is not None:
                        self._assign_cluster_class()
+                       self._create_master_xml()
 
                 for track in self.tracks.findall('Track'):
                             track_id = int(track.get(self.trackid_key))
@@ -845,9 +1206,40 @@ class TrackMate(object):
                    print('computing Fourier')
                    self._compute_phenotypes()                        
 
-
+                
                 self._temporal_plots_trackmate()
                 
+
+    def _create_master_xml(self):
+           
+        
+           for Spotobject in self.master_xml_root.iter('Spot'):
+                                cell_id = int(Spotobject.get(self.spotid_key))
+                                if cell_id in self.channel_unique_spot_properties.keys():
+                                       
+                                       if self.clusterclass_key in self.unique_spot_properties[cell_id].keys():
+                                           Spotobject.set(self.clusterclass_key, str(self.unique_spot_properties[cell_id][self.clusterclass_key]))
+                                           Spotobject.set(self.clusterscore_key, str(self.unique_spot_properties[cell_id][self.clusterscore_key]))
+
+                                       if self.uniqueid_key in self.unique_spot_properties[cell_id].keys():
+                                           Spotobject.set(self.uniqueid_key, str(self.unique_spot_properties[cell_id][self.uniqueid_key]))
+                                           Spotobject.set(self.trackletid_key, str(self.unique_spot_properties[cell_id][self.trackletid_key]))
+                                           Spotobject.set(self.generationid_key, str(self.unique_spot_properties[cell_id][self.generationid_key]))
+                                           Spotobject.set(self.trackid_key, str(self.unique_spot_properties[cell_id][self.trackid_key]))
+                                           Spotobject.set(self.directional_change_rate_key, str(self.unique_spot_properties[cell_id][self.directional_change_rate_key]))
+                                           Spotobject.set(self.speed_key, str(self.unique_spot_properties[cell_id][self.speed_key]))
+                                           Spotobject.set(self.acceleration_key, str(self.unique_spot_properties[cell_id][self.acceleration_key]))
+                                           Spotobject.set(self.distance_cell_mask_key, str(self.unique_spot_properties[cell_id][self.distance_cell_mask_key]))
+                                           Spotobject.set(self.total_intensity_key, str(self.unique_spot_properties[cell_id][self.total_intensity_key]))
+                                           Spotobject.set(self.mean_intensity_key, str(self.unique_spot_properties[cell_id][self.mean_intensity_key]))
+                                           Spotobject.set(self.beforeid_key, str(self.unique_spot_properties[cell_id][self.beforeid_key]))
+                                           Spotobject.set(self.afterid_key, str(self.unique_spot_properties[cell_id][self.afterid_key]))
+
+           self.master_xml_tree.write(os.path.join(self.master_xml_path, self.master_xml_name))
+           
+                                       
+                                       
+
     def _assign_cluster_class(self):
            
                     self.axes = self.axes.replace("T", "")
