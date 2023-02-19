@@ -1011,7 +1011,7 @@ class TrackMate(object):
                       self.channel_xml_name = 'second_channel_' + os.path.splitext(os.path.basename(self.xml_path))[0] + '.xml'
                       self.channel_xml_path = os.path.dirname(self.xml_path)
                       self._create_channel_tree()
-                if self.cluster_model is not None and self.seg_image is not None and self.master_xml_path is None:
+                if self.cluster_model is not None and self.seg_image is not None:
                        self.master_xml_content = self.xml_content
                        self.master_xml_tree = et.parse(self.xml_path)
                        self.master_xml_root = self.master_xml_tree.getroot()
