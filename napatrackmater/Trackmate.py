@@ -174,8 +174,8 @@ class TrackMate(object):
                 self.max_track_id = max(self.filtered_track_ids)        
                 
                 self._get_xml_data()
-              
-        if self.master_xml_path.is_file():
+        if not isinstance(self.master_xml_path, str):      
+          if self.master_xml_path.is_file():
                print('Reading Master XML')
                self.xml_content = et.fromstring(codecs.open(self.master_xml_path, "r", "utf8").read())
                self.filtered_track_ids = [
