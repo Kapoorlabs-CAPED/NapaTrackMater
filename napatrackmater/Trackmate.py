@@ -160,8 +160,11 @@ class TrackMate(object):
         self._timed_centroid = {}
         self.count = 0
         
+        print(type(self.master_xml_path))
         if isinstance(self.master_xml_path, str):
+               print('Is str')
                self.master_xml_path = Path(self.master_xml_path)
+               print(type(self.master_xml_path))
         
         if self.master_xml_path.is_dir():
                 print('Reading XML')
@@ -175,6 +178,7 @@ class TrackMate(object):
                 self.max_track_id = max(self.filtered_track_ids)        
                 
                 self._get_xml_data()
+        print(type(self.master_xml_path))        
         if self.master_xml_path.is_file():
                print('Reading Master XML')
                self.xml_content = et.fromstring(codecs.open(self.master_xml_path, "r", "utf8").read())
