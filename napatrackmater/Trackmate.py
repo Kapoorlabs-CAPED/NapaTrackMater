@@ -176,7 +176,7 @@ class TrackMate(object):
                 
                 self._get_xml_data()
         if self.master_xml_path.is_file():
-               print('Reading XML')
+               print('Reading Master XML')
                self.xml_content = et.fromstring(codecs.open(self.master_xml_path, "r", "utf8").read())
                self.filtered_track_ids = [
                             int(track.get(self.trackid_key))
