@@ -18,7 +18,7 @@ import concurrent
 from .clustering import Clustering
 class TrackMate(object):
     
-    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes, progress_bar = None, master_xml_path = None, seg_image = None, channel_seg_image = None, image = None, mask = None, fourier = True, cluster_model = None, num_points = 2048, save_dir = None, batch_size = 1):
+    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes, progress_bar = None, master_xml_path: Path = None, seg_image = None, channel_seg_image = None, image = None, mask = None, fourier = True, cluster_model = None, num_points = 2048, save_dir = None, batch_size = 1):
         
         
         self.xml_path = xml_path
@@ -159,7 +159,9 @@ class TrackMate(object):
         self.graph_tracks = {}
         self._timed_centroid = {}
         self.count = 0
-       
+        
+        if self.master_xml_path.is_dir():
+               self.master_xml_path = None 
         
         if self.master_xml_path is None:
                 print('Reading XML')
