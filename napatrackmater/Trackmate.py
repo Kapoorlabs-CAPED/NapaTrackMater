@@ -1129,7 +1129,7 @@ class TrackMate(object):
         
            for Spotobject in self.master_xml_root.iter('Spot'):
                                 cell_id = int(Spotobject.get(self.spotid_key))
-                                if cell_id in self.channel_unique_spot_properties.keys():
+                                if cell_id in self.unique_spot_properties.keys():
                                        
                                        if self.clusterclass_key in self.unique_spot_properties[cell_id].keys():
                                            Spotobject.set(self.clusterclass_key, str(self.unique_spot_properties[cell_id][self.clusterclass_key]))
