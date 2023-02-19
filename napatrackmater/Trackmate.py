@@ -160,7 +160,8 @@ class TrackMate(object):
         self._timed_centroid = {}
         self.count = 0
         
-     
+        if isinstance(self.master_xml_path, str):
+               self.master_xml_path = Path(self.master_xml_path)
         
         if self.master_xml_path.is_dir():
                 print('Reading XML')
