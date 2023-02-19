@@ -1010,19 +1010,19 @@ class TrackMate(object):
                             daughter_track_id =  int(float(str(self.unique_spot_properties[int(float(k))][self.uniqueid_key])))
                             parent_track_id = int(float(str(self.unique_spot_properties[int(float(v))][self.uniqueid_key])))
                             self.graph_tracks[daughter_track_id] = parent_track_id
-                self._get_attributes()
+            self._get_attributes()
 
-                for track in self.tracks.findall('Track'):
+            for track in self.tracks.findall('Track'):
                             track_id = int(track.get(self.trackid_key))
                             if track_id in self.filtered_track_ids:
                                   self._final_tracks(track_id) 
 
-                if self.fourier:
+            if self.fourier:
                    print('computing Fourier')
                    self._compute_phenotypes()                        
 
                 
-                self._temporal_plots_trackmate()        
+            self._temporal_plots_trackmate()        
 
 
 
