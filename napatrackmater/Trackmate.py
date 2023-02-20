@@ -592,6 +592,7 @@ class TrackMate(object):
                                         
                                     k = int(current_cell_ids[i])    
                                     all_dict_values = self.unique_spot_properties[k]
+                                    print(all_dict_values)
                                     unique_id = str(all_dict_values[self.uniqueid_key])
                                     t = int(float(all_dict_values[self.frameid_key]))
                                     z = float(all_dict_values[self.zposid_key])
@@ -746,7 +747,6 @@ class TrackMate(object):
                                 }
                                 if self.clusterclass_key in Spotobject.keys():
                                     if Spotobject.get(self.clusterclass_key) != 'None':
-                                            print(Spotobject.get(self.clusterclass_key), Spotobject.get(self.clusterscore_key), cell_id)
                                             self.unique_spot_properties[int(cell_id)] = {self.clusterclass_key : int(float(Spotobject.get(self.clusterclass_key))),
                                                                                         self.clusterscore_key : float(Spotobject.get(self.clusterscore_key))
                                                                                             }
@@ -760,7 +760,7 @@ class TrackMate(object):
                    
             
                         if self.channel_seg_image is not None:
-                                    self._transfer_tracks(Spotobject)
+                                    self._transfer_tracks(Spotobject, frame, cell_id)
 
     def _spot_computer(self, frame):
 
@@ -797,10 +797,10 @@ class TrackMate(object):
             
                         if self.channel_seg_image is not None:
                                
-                               self._transfer_tracks(Spotobject)
+                               self._transfer_tracks(Spotobject, frame, cell_id)
                                     
 
-    def _transfer_tracks(self, Spotobject):
+    def _transfer_tracks(self, Spotobject, frame, cell_id):
            
             pixeltestlocation = (float(Spotobject.get(self.zposid_key))/float(self.zcalibration), float(Spotobject.get(self.yposid_key))/float(self.ycalibration),  float(Spotobject.get(self.xposid_key))/ float(self.xcalibration))
             tree, centroids, labels, volume, intensity_mean, intensity_total, bounding_boxes = self._timed_channel_seg_image[str(int(float(frame)))]
