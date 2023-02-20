@@ -535,6 +535,7 @@ class TrackMate(object):
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
                             self._iterate_split_down(root_leaf, root_splits)
                             
+                            print('sids', all_source_ids, all_target_ids)
                             
                             # Determine if a track has divisions or none
                             if len(root_splits) > 0:
@@ -552,7 +553,6 @@ class TrackMate(object):
                                     self.NormalTrackIds.append(int(track_id))
 
                             for leaf in root_leaf:
-                                   source_leaf = self.edge_source_lookup[leaf]
                                    current_cell_ids.append(leaf) 
                                    self.unique_spot_properties[leaf].update({self.dividing_key : DividingTrajectory})
 
@@ -567,7 +567,6 @@ class TrackMate(object):
                                                    self.unique_spot_properties[target_id].update({self.dividing_key : DividingTrajectory})
                                         else:
                                               #Normal        
-                                              source_source_id = self.edge_source_lookup[source_id]
                                               for target_id in target_ids:
                                                     self.unique_spot_properties[target_id].update({self.dividing_key : DividingTrajectory}) 
                                         
@@ -578,11 +577,12 @@ class TrackMate(object):
                                    self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
                             
                             self.all_current_cell_ids[int(track_id)] = current_cell_ids
+                            print(current_cell_ids)
                             for i in range(len(current_cell_ids)):
                                         
                                     k = int(current_cell_ids[i])    
                                     all_dict_values = self.unique_spot_properties[k]
-                                  
+                                   
                                   
                                     t = int(float(all_dict_values[self.frameid_key]))
                                     z = float(all_dict_values[self.zposid_key])
