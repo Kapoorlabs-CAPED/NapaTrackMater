@@ -705,13 +705,13 @@ class TrackMate(object):
                                 }
                                 if self.clusterclass_key in Spotobject.keys():
                                     if Spotobject.get(self.clusterclass_key) != 'None':
-                                            self.unique_spot_properties[int(cell_id)] = {self.clusterclass_key : int(float(Spotobject.get(self.clusterclass_key))),
+                                            self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : int(float(Spotobject.get(self.clusterclass_key))),
                                                                                         self.clusterscore_key : float(Spotobject.get(self.clusterscore_key))
-                                                                                            }
+                                                                                            })
                                     else:
-                                            self.unique_spot_properties[int(cell_id)] = {self.clusterclass_key : None,
+                                            self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : None,
                                                                                         self.clusterscore_key : 0
-                                                                                            } 
+                                                                                            }) 
                         elif self.uniqueid_key not in Spotobject.keys():
                                                           
                                             if self.detectorchannel == 1:
@@ -878,7 +878,7 @@ class TrackMate(object):
                                     self.progress_bar.value =  self.count
                                 r.result()    
 
-            print(self.unique_spot_properties[15807])
+            
             print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
             self.count = 0
             futures = []
