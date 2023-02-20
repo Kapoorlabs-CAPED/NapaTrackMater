@@ -688,6 +688,7 @@ class TrackMate(object):
                       
                         if self.uniqueid_key in Spotobject.keys():
                         
+                                div_key = eval_bool(Spotobject.get(self.dividing_key))           
                                 self.unique_spot_properties[cell_id] = {
                                     self.cellid_key: int(float(Spotobject.get(self.spotid_key))), 
                                     self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
@@ -706,7 +707,7 @@ class TrackMate(object):
                                     self.directional_change_rate_key : round(float(Spotobject.get(self.directional_change_rate_key))),
                                     self.speed_key : round(float(Spotobject.get(self.speed_key))),
                                     self.acceleration_key : round(float(Spotobject.get(self.acceleration_key))),
-                                    self.dividing_key: bool(Spotobject.get(self.dividing_key))
+                                    self.dividing_key: div_key
 
                                 }
                                 if self.clusterclass_key in Spotobject.keys():
@@ -1398,7 +1399,7 @@ class TrackMate(object):
                             
                             current_time = all_spots_tracks[k][self.frameid_key]
                             mitotic = all_spots_tracks[k][self.dividing_key]
-                            print(mitotic)
+                           
                             if i == int(current_time):
                                   if mitotic:
                                         mitotic_disp_z.append(all_spots_tracks[k][self.zposid_key])
@@ -1757,4 +1758,11 @@ def angular_change(vec_0, vec_1):
         return angle
      
 
-           
+def eval_bool(value):
+                  
+        if value  == 'True': 
+                div_key = True
+        else:
+                div_key = False 
+
+        return div_key                
