@@ -535,7 +535,7 @@ class TrackMate(object):
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
                             self._iterate_split_down(root_leaf, root_splits)
                             
-                            print('sids', all_source_ids, all_target_ids)
+                          
                             
                             # Determine if a track has divisions or none
                             if len(root_splits) > 0:
@@ -577,12 +577,12 @@ class TrackMate(object):
                                    self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
                             
                             self.all_current_cell_ids[int(track_id)] = current_cell_ids
-                            print(current_cell_ids)
+                           
                             for i in range(len(current_cell_ids)):
                                         
                                     k = int(current_cell_ids[i])    
                                     all_dict_values = self.unique_spot_properties[k]
-                                   
+                                    print(all_dict_values)
                                   
                                     t = int(float(all_dict_values[self.frameid_key]))
                                     z = float(all_dict_values[self.zposid_key])
@@ -734,8 +734,27 @@ class TrackMate(object):
                                             self.unique_spot_properties[int(cell_id)] = {self.clusterclass_key : None,
                                                                                         self.clusterscore_key : 0
                                                                                             } 
-                                                   
-                                            
+                        elif self.uniqueid_key not in Spotobject.keys():
+                                                          
+                                            if self.detectorchannel == 1:
+                                                    TOTAL_INTENSITY = Spotobject.get(self.total_intensity_ch2_key)
+                                                    MEAN_INTENSITY = Spotobject.get(self.mean_intensity_ch2_key)
+                                            else:        
+                                                    TOTAL_INTENSITY = Spotobject.get(self.total_intensity_ch1_key)
+                                                    MEAN_INTENSITY = Spotobject.get(self.mean_intensity_ch1_key)
+                                            RADIUS = Spotobject.get(self.radius_key)
+                                            QUALITY = Spotobject.get(self.quality_key)              
+                                            self.unique_spot_properties[cell_id] = {
+                                            self.cellid_key: int(cell_id), 
+                                            self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
+                                            self.zposid_key : round(float(Spotobject.get(self.zposid_key)), 3),
+                                            self.yposid_key : round(float(Spotobject.get(self.yposid_key)), 3),
+                                            self.xposid_key : round(float(Spotobject.get(self.xposid_key)), 3),
+                                            self.total_intensity_key : round(float(TOTAL_INTENSITY)),
+                                            self.mean_intensity_key : round(float(MEAN_INTENSITY)),
+                                            self.radius_key : round(float(RADIUS)),
+                                            self.quality_key : round(float(QUALITY))
+                                        }
        
                    
             
