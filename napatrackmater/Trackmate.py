@@ -721,7 +721,7 @@ class TrackMate(object):
                        
                         cell_id = int(Spotobject.get(self.spotid_key))
 
-                        if self.uniqueid_key in Spotobject:
+                        if self.uniqueid_key in Spotobject.keys():
                         
                                 self.unique_spot_properties[cell_id] = {
                                     self.cellid_key: int(float(Spotobject.get(self.spotid_key))), 
@@ -744,12 +744,12 @@ class TrackMate(object):
                                     self.distance_cell_mask_key : int(float(Spotobject.get(self.distance_cell_mask_key))),
 
                                 }
-                        if self.clusterclass_key in Spotobject:
+                        if self.clusterclass_key in Spotobject.keys():
                                self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : int(float(Spotobject.get(self.clusterclass_key)))})
                                self.unique_spot_properties[int(cell_id)].update({self.clusterscore_key : float(Spotobject.get(self.clusterclass_key))})
                                        
        
-                        
+                        print(self.unique_spot_properties) 
             
                         if self.channel_seg_image is not None:
                                     self._transfer_tracks(Spotobject)
