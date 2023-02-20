@@ -1140,23 +1140,11 @@ class TrackMate(object):
                                 cell_id = int(Spotobject.get(self.spotid_key))
                                 if cell_id in self.unique_spot_properties.keys():
                                        
-                                       if self.clusterclass_key in self.unique_spot_properties[cell_id].keys():
-                                           Spotobject.set(self.clusterclass_key, str(self.unique_spot_properties[cell_id][self.clusterclass_key]))
-                                           Spotobject.set(self.clusterscore_key, str(self.unique_spot_properties[cell_id][self.clusterscore_key]))
+                                       for (k,v) in self.unique_spot_properties[cell_id].keys():
 
-                                       if self.uniqueid_key in self.unique_spot_properties[cell_id].keys():
-                                           Spotobject.set(self.uniqueid_key, str(self.unique_spot_properties[cell_id][self.uniqueid_key]))
-                                           Spotobject.set(self.trackletid_key, str(self.unique_spot_properties[cell_id][self.trackletid_key]))
-                                           Spotobject.set(self.generationid_key, str(self.unique_spot_properties[cell_id][self.generationid_key]))
-                                           Spotobject.set(self.trackid_key, str(self.unique_spot_properties[cell_id][self.trackid_key]))
-                                           Spotobject.set(self.directional_change_rate_key, str(self.unique_spot_properties[cell_id][self.directional_change_rate_key]))
-                                           Spotobject.set(self.speed_key, str(self.unique_spot_properties[cell_id][self.speed_key]))
-                                           Spotobject.set(self.acceleration_key, str(self.unique_spot_properties[cell_id][self.acceleration_key]))
-                                           Spotobject.set(self.distance_cell_mask_key, str(self.unique_spot_properties[cell_id][self.distance_cell_mask_key]))
-                                           Spotobject.set(self.total_intensity_key, str(self.unique_spot_properties[cell_id][self.total_intensity_key]))
-                                           Spotobject.set(self.mean_intensity_key, str(self.unique_spot_properties[cell_id][self.mean_intensity_key]))
-                                           Spotobject.set(self.beforeid_key, str(self.unique_spot_properties[cell_id][self.beforeid_key]))
-                                           Spotobject.set(self.afterid_key, str(self.unique_spot_properties[cell_id][self.afterid_key]))
+                                           Spotobject.set(k, str(self.unique_spot_properties[cell_id][k]))   
+
+                                      
 
            self.master_xml_tree.write(os.path.join(self.master_xml_path, self.master_xml_name))
            
