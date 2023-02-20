@@ -744,11 +744,11 @@ class TrackMate(object):
                                     self.distance_cell_mask_key : int(float(Spotobject.get(self.distance_cell_mask_key))),
 
                                 }
-                        if self.clusterclass_key in Spotobject.keys():
-                               self.unique_spot_properties[int(cell_id)] = {self.clusterclass_key : int(float(Spotobject.get(self.clusterclass_key))),
-                                                                           self.clusterscore_key : float(Spotobject.get(self.clusterscore_key))
-                                                                            }
-                                       
+                                if self.clusterclass_key in Spotobject.keys():
+                                    self.unique_spot_properties[int(cell_id)] = {self.clusterclass_key : int(float(Spotobject.get(self.clusterclass_key))),
+                                                                                self.clusterscore_key : float(Spotobject.get(self.clusterscore_key))
+                                                                                    }
+                                            
        
                    
             
