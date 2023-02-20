@@ -535,44 +535,21 @@ class TrackMate(object):
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
                             self._iterate_split_down(root_leaf, root_splits)
                             
-                          
-                            
                             # Determine if a track has divisions or none
                             if len(root_splits) > 0:
-                                DividingTrajectory = True
+                               
                                 if int(track_id) not in self.AllTrackIds:
                                     self.AllTrackIds.append(int(track_id))
                                 if int(track_id) not in self.DividingTrackIds:     
                                     self.DividingTrackIds.append(int(track_id))
                                         
                             else:
-                                DividingTrajectory = False
+                               
                                 if int(track_id) not in self.AllTrackIds:
                                     self.AllTrackIds.append(int(track_id))
                                 if int(track_id) not in self.NormalTrackIds:    
                                     self.NormalTrackIds.append(int(track_id))
 
-                            for leaf in root_leaf:
-                                   current_cell_ids.append(leaf) 
-                                   self.unique_spot_properties[leaf].update({self.dividing_key : DividingTrajectory})
-
-                            for source_id in all_source_ids:
-                                        target_ids = self.edge_target_lookup[source_id]
-                                        current_cell_ids.append(source_id)
-                                        #Root
-                                        self.unique_spot_properties[source_id].update({self.dividing_key : DividingTrajectory})
-                                        if source_id not in all_target_ids:
-                                                
-                                                for target_id in target_ids:
-                                                   self.unique_spot_properties[target_id].update({self.dividing_key : DividingTrajectory})
-                                        else:
-                                              #Normal        
-                                              for target_id in target_ids:
-                                                    self.unique_spot_properties[target_id].update({self.dividing_key : DividingTrajectory}) 
-                                        
-
-                                           
-                            
                             for current_root in root_root:
                                    self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
                             
@@ -580,9 +557,10 @@ class TrackMate(object):
                            
                             for i in range(len(current_cell_ids)):
                                         
-                                    k = int(current_cell_ids[i])    
+                                    k = int(current_cell_ids[i])   
+                                    print(self.unique_spot_properties[k]) 
                                     all_dict_values = self.unique_spot_properties[k]
-                                    print(all_dict_values)
+                                    
                                   
                                     t = int(float(all_dict_values[self.frameid_key]))
                                     z = float(all_dict_values[self.zposid_key])
@@ -719,10 +697,10 @@ class TrackMate(object):
                                     self.trackletid_key : int(float(Spotobject.get(self.trackletid_key))),
                                     self.generationid_key : int(float(Spotobject.get(self.generationid_key))),
                                     self.trackid_key : int(float(Spotobject.get(self.trackid_key))),
-                                    self.directional_change_rate_key : int(float(Spotobject.get(self.directional_change_rate_key))),
-                                    self.speed_key : int(float(Spotobject.get(self.speed_key))),
-                                    self.acceleration_key : int(float(Spotobject.get(self.acceleration_key))),
-                                    self.distance_cell_mask_key : int(float(Spotobject.get(self.distance_cell_mask_key))),
+                                    self.directional_change_rate_key : round(float(Spotobject.get(self.directional_change_rate_key))),
+                                    self.speed_key : round(float(Spotobject.get(self.speed_key))),
+                                    self.acceleration_key : round(float(Spotobject.get(self.acceleration_key))),
+                                    self.dividing_key: Spotobject.get(self.dividing_key)
 
                                 }
                                 if self.clusterclass_key in Spotobject.keys():
