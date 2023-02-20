@@ -721,7 +721,6 @@ class TrackMate(object):
                        
                         cell_id = int(Spotobject.get(self.spotid_key))
                       
-                        print(Spotobject.keys())
                         if self.uniqueid_key in Spotobject.keys():
                         
                                 self.unique_spot_properties[cell_id] = {
@@ -746,7 +745,7 @@ class TrackMate(object):
 
                                 }
                                 if self.clusterclass_key in Spotobject.keys():
-                                    if Spotobject.get(self.clusterclass_key) is not None:
+                                    if Spotobject.get(self.clusterclass_key) is not 'None':
                                             self.unique_spot_properties[int(cell_id)] = {self.clusterclass_key : int(float(Spotobject.get(self.clusterclass_key))),
                                                                                         self.clusterscore_key : float(Spotobject.get(self.clusterscore_key))
                                                                                             }
