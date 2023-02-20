@@ -749,7 +749,7 @@ class TrackMate(object):
                                self.unique_spot_properties[int(cell_id)].update({self.clusterscore_key : float(Spotobject.get(self.clusterclass_key))})
                                        
        
-                        print(self.unique_spot_properties) 
+                   
             
                         if self.channel_seg_image is not None:
                                     self._transfer_tracks(Spotobject)
