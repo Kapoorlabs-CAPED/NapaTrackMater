@@ -550,6 +550,12 @@ class TrackMate(object):
                                 if int(track_id) not in self.NormalTrackIds:    
                                     self.NormalTrackIds.append(int(track_id))
 
+                            for leaf in root_leaf:
+                                   current_cell_ids.append(leaf) 
+                            for source_id in all_source_ids:
+                                   current_cell_ids.append(source_id)
+                                                
+
                             for current_root in root_root:
                                    self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
                             
