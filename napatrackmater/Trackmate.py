@@ -707,7 +707,7 @@ class TrackMate(object):
                                     self.directional_change_rate_key : round(float(Spotobject.get(self.directional_change_rate_key))),
                                     self.speed_key : round(float(Spotobject.get(self.speed_key))),
                                     self.acceleration_key : round(float(Spotobject.get(self.acceleration_key))),
-                                    self.dividing_key: Spotobject.get(self.dividing_key)
+                                    self.dividing_key: bool(Spotobject.get(self.dividing_key))
 
                                 }
                                 if self.clusterclass_key in Spotobject.keys():
