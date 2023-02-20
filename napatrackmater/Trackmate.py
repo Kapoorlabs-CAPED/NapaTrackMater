@@ -733,7 +733,7 @@ class TrackMate(object):
                                     self.mean_intensity_key : round(float(Spotobject.get(self.mean_intensity_key))),
                                     self.radius_key : round(float(Spotobject.get(self.radius_key))),
                                     self.quality_key : round(float(Spotobject.get(self.quality_key))),
-                                    self.distance_cell_mask_key: round(float(Spotobject.get(self.distance_cell_mask_key),2)),
+                                    self.distance_cell_mask_key: round(float(Spotobject.get(self.distance_cell_mask_key))),
                                     self.uniqueid_key : int(float(Spotobject.get(self.uniqueid_key))),
                                     self.trackletid_key : int(float(Spotobject.get(self.trackletid_key))),
                                     self.generationid_key : int(float(Spotobject.get(self.generationid_key))),
