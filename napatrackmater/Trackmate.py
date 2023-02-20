@@ -495,22 +495,12 @@ class TrackMate(object):
                                         
                                     k = int(current_cell_ids[i])    
                                     all_dict_values = self.unique_spot_properties[k]
-                                    unique_id = str(all_dict_values[self.uniqueid_key])
+                                   
                                     t = int(float(all_dict_values[self.frameid_key]))
                                     z = float(all_dict_values[self.zposid_key])
                                     y = float(all_dict_values[self.yposid_key])
                                     x = float(all_dict_values[self.xposid_key])
-                                    if self.clusterclass_key in all_dict_values.keys():
-                                           
-                                           if all_dict_values[self.clusterclass_key] is not None:
-                                                cluster_class = int(float(all_dict_values[self.clusterclass_key]))
-                                                cluster_class_score = float(all_dict_values[self.clusterscore_key])
-                                           else:
-                                                cluster_class = None
-                                                cluster_class_score = 0     
-                                    else:
-                                           cluster_class = None
-                                           cluster_class_score = 0       
+                                         
 
                                     spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
                                     if self.seg_image is not None:
@@ -539,7 +529,7 @@ class TrackMate(object):
                              
                             
                             current_cell_ids = []
-                            unique_tracklet_ids = []
+                           
                             
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
@@ -592,23 +582,13 @@ class TrackMate(object):
                                         
                                     k = int(current_cell_ids[i])    
                                     all_dict_values = self.unique_spot_properties[k]
-                                    print(all_dict_values)
-                                    unique_id = str(all_dict_values[self.uniqueid_key])
+                                  
+                                  
                                     t = int(float(all_dict_values[self.frameid_key]))
                                     z = float(all_dict_values[self.zposid_key])
                                     y = float(all_dict_values[self.yposid_key])
                                     x = float(all_dict_values[self.xposid_key])
-                                    if self.clusterclass_key in all_dict_values.keys():
-                                           
-                                           if all_dict_values[self.clusterclass_key] is not None:
-                                                cluster_class = int(float(all_dict_values[self.clusterclass_key]))
-                                                cluster_class_score = float(all_dict_values[self.clusterscore_key])
-                                           else:
-                                                cluster_class = None
-                                                cluster_class_score = 0     
-                                    else:
-                                           cluster_class = None
-                                           cluster_class_score = 0       
+                                    
 
                                     spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
                                     if self.seg_image is not None:
@@ -1140,7 +1120,7 @@ class TrackMate(object):
                                 cell_id = int(Spotobject.get(self.spotid_key))
                                 if cell_id in self.unique_spot_properties.keys():
                                        
-                                       for (k,v) in self.unique_spot_properties[cell_id].keys():
+                                       for k in self.unique_spot_properties[cell_id].keys():
 
                                            Spotobject.set(k, str(self.unique_spot_properties[cell_id][k]))   
 
