@@ -558,7 +558,7 @@ class TrackMate(object):
                             for i in range(len(current_cell_ids)):
                                         
                                     k = int(current_cell_ids[i])   
-                                    print(self.unique_spot_properties[k]) 
+                                    
                                     all_dict_values = self.unique_spot_properties[k]
                                     
                                   
@@ -735,7 +735,7 @@ class TrackMate(object):
                                         }
        
                    
-            
+                       
                         if self.channel_seg_image is not None:
                                     self._transfer_tracks(Spotobject, frame, cell_id)
 
@@ -878,6 +878,7 @@ class TrackMate(object):
                                     self.progress_bar.value =  self.count
                                 r.result()    
 
+            print(self.unique_spot_properties[15807])
             print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
             self.count = 0
             futures = []
