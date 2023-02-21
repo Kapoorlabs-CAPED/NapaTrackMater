@@ -161,9 +161,10 @@ class TrackMate(object):
         self._timed_centroid = {}
         self.count = 0
         
-    
+        if self.master_xml_path is None:
+               self.master_xml_path = Path('.')
         
-        if self.master_xml_path.is_dir() or self.master_xml_path is None:
+        if self.master_xml_path.is_dir():
                 print('Reading XML')
                 self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
                 self.filtered_track_ids = [
