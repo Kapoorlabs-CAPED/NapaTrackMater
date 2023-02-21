@@ -148,6 +148,7 @@ class TrackMate(object):
         self.unique_cluster_properties = {}
         self.unique_spot_properties = {}
         self.unique_spot_centroid = {}
+        self.unique_track_centroid = {}
         self.root_spots = {}
         self.all_current_cell_ids = {}
         self.channel_unique_spot_properties = {}
@@ -162,7 +163,7 @@ class TrackMate(object):
         
     
         
-        if self.master_xml_path.is_dir():
+        if self.master_xml_path.is_dir() or self.master_xml_path is None:
                 print('Reading XML')
                 self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
                 self.filtered_track_ids = [
@@ -509,6 +510,7 @@ class TrackMate(object):
                                         spot_label = 0    
 
                                     self.unique_spot_centroid[spot_centroid] = k
+                                    self.unique_track_centroid[(t,int(spot_centroid[0]),int(spot_centroid[1]), int(spot_centroid[2]))] = track_id
 
                                     if str(t) in self._timed_centroid:
                                            tree, spot_centroids, spot_labels = self._timed_centroid[str(t)]
