@@ -1146,13 +1146,14 @@ class TrackMate(object):
                     for count, time_key in enumerate(self._timed_centroid.keys()):
                            
                            tree, spot_centroids, spot_labels = self._timed_centroid[time_key]
-                           self.progress_bar.label = "Computing clustering classes"
-                           self.progress_bar.range = (
-                                                        0,
-                                                        len(self._timed_centroid.keys()) + 1,
-                                                    )
-                           self.progress_bar.value =  count 
-                           self.progress_bar.show()
+                           if self.progress_bar is not None:
+                                self.progress_bar.label = "Computing clustering classes"
+                                self.progress_bar.range = (
+                                                                0,
+                                                                len(self._timed_centroid.keys()) + 1,
+                                                            )
+                                self.progress_bar.value =  count 
+                                self.progress_bar.show()
 
                            cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.mesh_dir, self.num_points, self.cluster_model, key = time_key,spot_labels = spot_labels, progress_bar=self.progress_bar, batch_size = self.batch_size)       
                            cluster_eval._create_cluster_labels()
