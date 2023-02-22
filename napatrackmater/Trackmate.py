@@ -1412,7 +1412,7 @@ class TrackMate(object):
                                         mitotic_radius.append(all_spots_tracks[k][self.radius_key])
                                         mitotic_speed.append(all_spots_tracks[k][self.speed_key])
                                         mitotic_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])
-                                        if self.cluster_model is not None and self.seg_image is not None and self.clusterclass_key in all_spots_tracks[k].keys() :
+                                        if self.clusterclass_key in all_spots_tracks[k].keys() :
                                                mitotic_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])
 
 
@@ -1423,7 +1423,7 @@ class TrackMate(object):
                                         non_mitotic_radius.append(all_spots_tracks[k][self.radius_key])
                                         non_mitotic_speed.append(all_spots_tracks[k][self.speed_key])
                                         non_mitotic_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])
-                                        if self.cluster_model is not None and self.seg_image is not None and self.clusterclass_key in all_spots_tracks[k].keys() :
+                                        if self.clusterclass_key in all_spots_tracks[k].keys() :
                                                non_mitotic_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])
 
                                   all_disp_z.append(all_spots_tracks[k][self.zposid_key])
@@ -1432,7 +1432,7 @@ class TrackMate(object):
                                   all_radius.append(all_spots_tracks[k][self.radius_key])
                                   all_speed.append(all_spots_tracks[k][self.speed_key])
                                   all_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])   
-                                  if self.cluster_model is not None and self.seg_image is not None and self.clusterclass_key in all_spots_tracks[k].keys() :
+                                  if self.clusterclass_key in all_spots_tracks[k].keys() :
                                                all_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])    
                                               
 
