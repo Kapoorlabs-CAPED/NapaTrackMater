@@ -620,9 +620,9 @@ class TrackMate(object):
                                     speed = float(all_dict_values[self.speed_key])
                                     acceleration = float(all_dict_values[self.acceleration_key])
                                     dcr = float(all_dict_values[self.directional_change_rate_key])
-                                    dcr = scale_value(float(dcr))
-                                    speed = scale_value(float(speed))
-                                    acceleration = scale_value(acceleration)
+                                    dcr = (float(dcr))
+                                    speed = (float(speed))
+                                    acceleration = (acceleration)
                                     total_intensity =  float(all_dict_values[self.total_intensity_key])
                                     volume_pixels = int(float(all_dict_values[self.quality_key]))
                                     if self.clusterclass_key in all_dict_values.keys():
@@ -1307,6 +1307,9 @@ class TrackMate(object):
                 self.mitotic_mean_speed = []
                 self.mitotic_var_speed = []
 
+                self.mitotic_mean_acc = []
+                self.mitotic_var_acc = []
+
                 self.mitotic_mean_directional_change = []
                 self.mitotic_var_directional_change = []
 
@@ -1325,6 +1328,9 @@ class TrackMate(object):
                 self.non_mitotic_mean_speed = []
                 self.non_mitotic_var_speed = []
 
+                self.non_mitotic_mean_acc = []
+                self.non_mitotic_var_acc = []
+
                 self.non_mitotic_mean_directional_change = []
                 self.non_mitotic_var_directional_change = []
 
@@ -1342,6 +1348,9 @@ class TrackMate(object):
 
                 self.all_mean_speed = []
                 self.all_var_speed = []
+
+                self.all_mean_acc = []
+                self.all_var_acc = []
 
                 self.all_mean_directional_change = []
                 self.all_var_directional_change = []
@@ -1379,6 +1388,7 @@ class TrackMate(object):
                     mitotic_disp_x = []
                     mitotic_radius = []
                     mitotic_speed = []
+                    mitotic_acc = []
                     mitotic_directional_change = []
                     mitotic_cluster_class = []
                     non_mitotic_disp_z = []
@@ -1386,6 +1396,7 @@ class TrackMate(object):
                     non_mitotic_disp_x = []
                     non_mitotic_radius = []
                     non_mitotic_speed = []
+                    non_mitotic_acc = []
                     non_mitotic_directional_change = []
                     non_mitotic_cluster_class = []
                     all_disp_z = []
@@ -1393,6 +1404,7 @@ class TrackMate(object):
                     all_disp_x = []
                     all_radius = []
                     all_speed = []
+                    all_acc = []
                     all_directional_change = []
                     all_cluster_class = []
 
@@ -1411,6 +1423,7 @@ class TrackMate(object):
                                         mitotic_disp_x.append(all_spots_tracks[k][self.xposid_key])
                                         mitotic_radius.append(all_spots_tracks[k][self.radius_key])
                                         mitotic_speed.append(all_spots_tracks[k][self.speed_key])
+                                        mitotic_acc.append(all_spots_tracks[k][self.acceleration_key])
                                         mitotic_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])
                                         if self.clusterclass_key in all_spots_tracks[k].keys() :
                                                mitotic_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])
@@ -1422,6 +1435,7 @@ class TrackMate(object):
                                         non_mitotic_disp_x.append(all_spots_tracks[k][self.xposid_key])
                                         non_mitotic_radius.append(all_spots_tracks[k][self.radius_key])
                                         non_mitotic_speed.append(all_spots_tracks[k][self.speed_key])
+                                        non_mitotic_acc.append(all_spots_tracks[k][self.acceleration_key])
                                         non_mitotic_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])
                                         if self.clusterclass_key in all_spots_tracks[k].keys() :
                                                non_mitotic_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])
@@ -1431,6 +1445,7 @@ class TrackMate(object):
                                   all_disp_x.append(all_spots_tracks[k][self.xposid_key])
                                   all_radius.append(all_spots_tracks[k][self.radius_key])
                                   all_speed.append(all_spots_tracks[k][self.speed_key])
+                                  all_acc.append(all_spots_tracks[k][self.acceleration_key])
                                   all_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])   
                                   if self.clusterclass_key in all_spots_tracks[k].keys() :
                                                all_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])    
@@ -1471,6 +1486,9 @@ class TrackMate(object):
                     self.mitotic_mean_speed.append(np.mean(mitotic_speed))
                     self.mitotic_var_speed.append(np.std(mitotic_speed))
 
+                    self.mitotic_mean_acc.append(np.mean(mitotic_acc))
+                    self.mitotic_var_acc.append(np.std(mitotic_acc))
+
                     self.mitotic_mean_directional_change.append(np.mean(mitotic_directional_change))
                     self.mitotic_var_directional_change.append(np.std(mitotic_directional_change))
 
@@ -1489,6 +1507,9 @@ class TrackMate(object):
                     self.non_mitotic_mean_speed.append(np.mean(non_mitotic_speed))
                     self.non_mitotic_var_speed.append(np.std(non_mitotic_speed))
 
+                    self.non_mitotic_mean_acc.append(np.mean(non_mitotic_acc))
+                    self.non_mitotic_var_acc.append(np.std(non_mitotic_acc))
+
                     self.non_mitotic_mean_directional_change.append(np.mean(non_mitotic_directional_change))
                     self.non_mitotic_var_directional_change.append(np.std(non_mitotic_directional_change)) 
 
@@ -1506,6 +1527,11 @@ class TrackMate(object):
 
                     self.all_mean_speed.append(np.mean(all_speed))
                     self.all_var_speed.append(np.std(all_speed))
+
+                    self.all_mean_acc.append(np.mean(all_acc))
+                    self.all_var_acc.append(np.std(all_acc))
+
+
 
                     self.all_mean_directional_change.append(np.mean(all_directional_change))
                     self.all_var_directional_change.append(np.std(all_directional_change))
