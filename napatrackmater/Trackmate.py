@@ -738,8 +738,7 @@ class TrackMate(object):
                                             self.zposid_key : float(Spotobject.get(self.zposid_key)),
                                             self.yposid_key : float(Spotobject.get(self.yposid_key)),
                                             self.xposid_key : float(Spotobject.get(self.xposid_key)),
-                                            self.speed_key : float(Spotobject.get(self.speed_key)),
-                                            self.acceleration_key : float(Spotobject.get(self.acceleration_key)),
+                                            
                                             self.total_intensity_key : (float(TOTAL_INTENSITY)),
                                             self.mean_intensity_key : (float(MEAN_INTENSITY)),
                                             self.radius_key : (float(RADIUS)),
