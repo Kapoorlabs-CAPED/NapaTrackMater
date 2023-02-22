@@ -540,14 +540,14 @@ class TrackMate(object):
                             
                             # Determine if a track has divisions or none
                             if len(root_splits) > 0:
-                               
+                                DividingTrajectory = True
                                 if int(track_id) not in self.AllTrackIds:
                                     self.AllTrackIds.append(int(track_id))
                                 if int(track_id) not in self.DividingTrackIds:     
                                     self.DividingTrackIds.append(int(track_id))
                                         
                             else:
-                               
+                                DividingTrajectory = False
                                 if int(track_id) not in self.AllTrackIds:
                                     self.AllTrackIds.append(int(track_id))
                                 if int(track_id) not in self.NormalTrackIds:    
@@ -555,7 +555,9 @@ class TrackMate(object):
 
                             for leaf in root_leaf:
                                    current_cell_ids.append(leaf) 
+                                   self.unique_spot_properties[leaf].update({self.dividing_key : DividingTrajectory})
                             for source_id in all_source_ids:
+                                   self.unique_spot_properties[source_id].update({self.dividing_key : DividingTrajectory})
                                    current_cell_ids.append(source_id)
                                                 
 
@@ -691,7 +693,9 @@ class TrackMate(object):
                       
                         if self.uniqueid_key in Spotobject.keys():
                         
-                                div_key = eval_bool(Spotobject.get(self.dividing_key))           
+                                 
+                               
+                                        
                                 self.unique_spot_properties[cell_id] = {
                                     self.cellid_key: int(float(Spotobject.get(self.spotid_key))), 
                                     self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
@@ -709,8 +713,7 @@ class TrackMate(object):
                                     self.trackid_key : str(Spotobject.get(self.trackid_key)),
                                     self.directional_change_rate_key : (float(Spotobject.get(self.directional_change_rate_key))),
                                     self.speed_key : (float(Spotobject.get(self.speed_key))),
-                                    self.acceleration_key : (float(Spotobject.get(self.acceleration_key))),
-                                    self.dividing_key: div_key
+                                    self.acceleration_key : (float(Spotobject.get(self.acceleration_key)))
 
                                 }
                                 if self.clusterclass_key in Spotobject.keys():
