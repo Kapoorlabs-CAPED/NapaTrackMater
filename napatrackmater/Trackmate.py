@@ -563,6 +563,7 @@ class TrackMate(object):
 
                             for current_root in root_root:
                                    self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
+                                   self.unique_spot_properties[source_id].update({self.dividing_key : DividingTrajectory})
                             
                             self.all_current_cell_ids[int(track_id)] = current_cell_ids
                            
