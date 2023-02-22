@@ -695,21 +695,21 @@ class TrackMate(object):
                                 self.unique_spot_properties[cell_id] = {
                                     self.cellid_key: int(float(Spotobject.get(self.spotid_key))), 
                                     self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
-                                    self.zposid_key : round(float(Spotobject.get(self.zposid_key)), 3),
-                                    self.yposid_key : round(float(Spotobject.get(self.yposid_key)), 3),
-                                    self.xposid_key : round(float(Spotobject.get(self.xposid_key)), 3),
-                                    self.total_intensity_key : round(float(Spotobject.get(self.total_intensity_key))),
-                                    self.mean_intensity_key : round(float(Spotobject.get(self.mean_intensity_key))),
-                                    self.radius_key : round(float(Spotobject.get(self.radius_key))),
-                                    self.quality_key : round(float(Spotobject.get(self.quality_key))),
-                                    self.distance_cell_mask_key: round(float(Spotobject.get(self.distance_cell_mask_key))),
+                                    self.zposid_key : float(Spotobject.get(self.zposid_key)),
+                                    self.yposid_key : float(Spotobject.get(self.yposid_key)),
+                                    self.xposid_key : float(Spotobject.get(self.xposid_key)),
+                                    self.total_intensity_key : (float(Spotobject.get(self.total_intensity_key))),
+                                    self.mean_intensity_key : (float(Spotobject.get(self.mean_intensity_key))),
+                                    self.radius_key : (float(Spotobject.get(self.radius_key))),
+                                    self.quality_key : (float(Spotobject.get(self.quality_key))),
+                                    self.distance_cell_mask_key: (float(Spotobject.get(self.distance_cell_mask_key))),
                                     self.uniqueid_key : str(Spotobject.get(self.uniqueid_key)),
                                     self.trackletid_key : str(Spotobject.get(self.trackletid_key)),
                                     self.generationid_key : str(Spotobject.get(self.generationid_key)),
                                     self.trackid_key : str(Spotobject.get(self.trackid_key)),
-                                    self.directional_change_rate_key : round(float(Spotobject.get(self.directional_change_rate_key))),
-                                    self.speed_key : round(float(Spotobject.get(self.speed_key))),
-                                    self.acceleration_key : round(float(Spotobject.get(self.acceleration_key))),
+                                    self.directional_change_rate_key : (float(Spotobject.get(self.directional_change_rate_key))),
+                                    self.speed_key : (float(Spotobject.get(self.speed_key))),
+                                    self.acceleration_key : (float(Spotobject.get(self.acceleration_key))),
                                     self.dividing_key: div_key
 
                                 }
@@ -735,15 +735,15 @@ class TrackMate(object):
                                             self.unique_spot_properties[cell_id] = {
                                             self.cellid_key: int(cell_id), 
                                             self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
-                                            self.zposid_key : round(float(Spotobject.get(self.zposid_key)), 3),
-                                            self.yposid_key : round(float(Spotobject.get(self.yposid_key)), 3),
-                                            self.xposid_key : round(float(Spotobject.get(self.xposid_key)), 3),
-                                            self.speed_key : round(float(Spotobject.get(self.speed_key)), 5),
-                                            self.acceleration_key : round(float(Spotobject.get(self.acceleration_key)), 5),
-                                            self.total_intensity_key : round(float(TOTAL_INTENSITY)),
-                                            self.mean_intensity_key : round(float(MEAN_INTENSITY)),
-                                            self.radius_key : round(float(RADIUS)),
-                                            self.quality_key : round(float(QUALITY))
+                                            self.zposid_key : float(Spotobject.get(self.zposid_key)),
+                                            self.yposid_key : float(Spotobject.get(self.yposid_key)),
+                                            self.xposid_key : float(Spotobject.get(self.xposid_key)),
+                                            self.speed_key : float(Spotobject.get(self.speed_key)),
+                                            self.acceleration_key : float(Spotobject.get(self.acceleration_key)),
+                                            self.total_intensity_key : (float(TOTAL_INTENSITY)),
+                                            self.mean_intensity_key : (float(MEAN_INTENSITY)),
+                                            self.radius_key : (float(RADIUS)),
+                                            self.quality_key : (float(QUALITY))
                                         }
        
                    
@@ -772,14 +772,14 @@ class TrackMate(object):
                         self.unique_spot_properties[cell_id] = {
                             self.cellid_key: int(cell_id), 
                             self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
-                            self.zposid_key : round(float(Spotobject.get(self.zposid_key)), 3),
-                            self.yposid_key : round(float(Spotobject.get(self.yposid_key)), 3),
-                            self.xposid_key : round(float(Spotobject.get(self.xposid_key)), 3),
-                            self.total_intensity_key : round(float(TOTAL_INTENSITY)),
-                            self.mean_intensity_key : round(float(MEAN_INTENSITY)),
-                            self.radius_key : round(float(RADIUS)),
-                            self.quality_key : round(float(QUALITY)),
-                            self.distance_cell_mask_key: round(float(distance_cell_mask),2)
+                            self.zposid_key : float(Spotobject.get(self.zposid_key)),
+                            self.yposid_key : float(Spotobject.get(self.yposid_key)),
+                            self.xposid_key : float(Spotobject.get(self.xposid_key)),
+                            self.total_intensity_key : (float(TOTAL_INTENSITY)),
+                            self.mean_intensity_key : (float(MEAN_INTENSITY)),
+                            self.radius_key : (float(RADIUS)),
+                            self.quality_key : (float(QUALITY)),
+                            self.distance_cell_mask_key: float(distance_cell_mask)
                         }
        
                         
@@ -811,16 +811,16 @@ class TrackMate(object):
                     self.channel_unique_spot_properties[cell_id] = {
                             self.cellid_key: int(cell_id), 
                             self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
-                            self.zposid_key : round(float(centroids[index][0]), 3),
-                            self.yposid_key : round(float(centroids[index][1]), 3),
-                            self.xposid_key : round(float(centroids[index][2]), 3),
+                            self.zposid_key : float(centroids[index][0]),
+                            self.yposid_key : float(centroids[index][1]),
+                            self.xposid_key : float(centroids[index][2]),
 
-                            self.total_intensity_key : round(float(intensity_total[index])),
-                            self.mean_intensity_key : round(float(intensity_mean[index])),
+                            self.total_intensity_key : (float(intensity_total[index])),
+                            self.mean_intensity_key : (float(intensity_mean[index])),
 
-                            self.radius_key : round(float(RADIUS)),
-                            self.quality_key : round(float(QUALITY)),
-                            self.distance_cell_mask_key: round(float(distance_cell_mask),2)
+                            self.radius_key : (float(RADIUS)),
+                            self.quality_key : (float(QUALITY)),
+                            self.distance_cell_mask_key: float(distance_cell_mask)
 
                     } 
                         
@@ -1258,7 +1258,7 @@ class TrackMate(object):
                             float(self.unique_spot_properties[int(cell_id)][self.yposid_key]) - float(self.unique_spot_properties[int(source_id)][self.yposid_key]), 
                             float(self.unique_spot_properties[int(cell_id)][self.zposid_key]) -  float(self.unique_spot_properties[int(source_id)][self.zposid_key])]
             speed = np.sqrt(np.dot(vec_1, vec_1))/self.tcalibration
-            self.unique_spot_properties[int(cell_id)].update({self.speed_key : round(speed, 3)})
+            self.unique_spot_properties[int(cell_id)].update({self.speed_key : speed})
             if source_id in self.edge_source_lookup:
                     pre_source_id = self.edge_source_lookup[source_id]
                     
@@ -1271,8 +1271,8 @@ class TrackMate(object):
                             float(self.unique_spot_properties[int(cell_id)][self.zposid_key]) -  2 * float(self.unique_spot_properties[int(source_id)][self.zposid_key]) + float(self.unique_spot_properties[int(pre_source_id)][self.zposid_key])]
                     acc = np.sqrt(np.dot(vec_2, vec_2))/self.tcalibration
                     angle = angular_change(vec_0, vec_1)
-                    self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : round(angle, 3)})
-                    self.unique_spot_properties[int(cell_id)].update({self.acceleration_key : round(acc, 3)})
+                    self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : angle})
+                    self.unique_spot_properties[int(cell_id)].update({self.acceleration_key : acc})
         elif source_id is None:
             self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : None}) 
             
