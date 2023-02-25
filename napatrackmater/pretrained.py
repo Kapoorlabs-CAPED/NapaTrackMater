@@ -117,7 +117,7 @@ def load_json(fpath):
     
 def get_autoencoder_instance(cls, key_or_alias):
     path, key = get_model_folder(cls, key_or_alias)
-    json_file = path.parent + key + '.json'
+    json_file = os.path.join(path.parent.as_posix(), key + '.json')
     checkpoint = torch.load(os.path.join(path.parent, path.stem))
     if Path(json_file).is_file():
 
