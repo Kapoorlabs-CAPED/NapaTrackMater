@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+from .bTrackmate import *
+from .napari_animation import *
+from .version import __version__
+=======
 from .bTrackmate import *
 from .Trackmate import *
 from .napari_animation import *
@@ -36,3 +41,4 @@ register_aliases(DeepEmbeddedClustering, 'Nuclei_3D_cluster', 'Nuclei_3D_cluster
 register_aliases(DeepEmbeddedClustering, 'Membrane_3D_cluster', 'Membrane_3D_cluster')
 
 del register_model, register_aliases, clear_models_and_aliases
+>>>>>>> 9b50cfab195b8bd59faf6cf6ec051e876a5b11e3
