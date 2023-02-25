@@ -132,9 +132,7 @@ def get_autoencoder_instance(cls, key_or_alias):
                 return autoencoder
     else:  print(f'Expected a json file of model attributes with name {key}.json in the folder {path.parent}' )
 
-def get_cluster_instance(cls, key_or_alias, auto_cls, auto_key_or_alias):
-
-    autoencoder = get_autoencoder_instance(auto_cls, auto_key_or_alias)
+def get_cluster_instance(cls, key_or_alias, autoencoder):
 
     path, key = get_model_folder(cls, key_or_alias)
     
