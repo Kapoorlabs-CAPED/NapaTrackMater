@@ -1,9 +1,4 @@
-<<<<<<< HEAD
-from .bTrackmate import *
-from .napari_animation import *
-from .version import __version__
-=======
-from .bTrackmate import *
+
 from .Trackmate import *
 from .napari_animation import *
 from .version import __version__
@@ -27,10 +22,10 @@ __all__ = (
 
 clear_models_and_aliases(DeepEmbeddedClustering, CloudAutoEncoder)
 
-register_model(CloudAutoEncoder, 'Nuclei_3D', '.zip', 'hash')
+register_model(CloudAutoEncoder, 'Nuclei_3D', 'https://zenodo.org/record/7677125/files/xenopus_nuclei_dgcnn_foldingnet_knn8.zip', 'fb476f050aacf81b61a3233ae69c6ad4' )
 register_model(CloudAutoEncoder, 'Membrane_3D', '.zip', 'hash')
 
-register_model(DeepEmbeddedClustering, 'Nuclei_3D_cluster', '.zip', 'hash')
+register_model(DeepEmbeddedClustering, 'Nuclei_3D_cluster_3_class', 'https://zenodo.org/record/7677125/files/cluster_xenopus_nuclei_dgcnn_foldingnet_knn8_class3.zip', '26608aba6282788c2d7bf2e7bbf38711')
 register_model(DeepEmbeddedClustering, 'Membrane_3D_cluster', '.zip', 'hash')
 
 
@@ -41,4 +36,4 @@ register_aliases(DeepEmbeddedClustering, 'Nuclei_3D_cluster', 'Nuclei_3D_cluster
 register_aliases(DeepEmbeddedClustering, 'Membrane_3D_cluster', 'Membrane_3D_cluster')
 
 del register_model, register_aliases, clear_models_and_aliases
->>>>>>> 9b50cfab195b8bd59faf6cf6ec051e876a5b11e3
+
