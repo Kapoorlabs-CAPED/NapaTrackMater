@@ -1,6 +1,5 @@
 
 from .Trackmate import *
-
 from .version import __version__
 from .pretrained import register_model, register_aliases, clear_models_and_aliases, get_registered_models, get_model_folder
 from .clustering import Clustering
