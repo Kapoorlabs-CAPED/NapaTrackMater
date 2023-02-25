@@ -118,7 +118,7 @@ def load_json(fpath):
 def get_autoencoder_instance(cls, key_or_alias):
     path, key = get_model_folder(cls, key_or_alias)
     json_file = os.path.join(path.parent.as_posix(), key + '.json')
-    checkpoint = torch.load(os.path.join(path.parent, key + '.pt'))
+    checkpoint = torch.load(os.path.join(path.parent.as_posix(), key + '.pt'))
     if Path(json_file).is_file():
 
                 config = load_json(json_file)
@@ -136,7 +136,7 @@ def get_cluster_instance(cls, key_or_alias, autoencoder):
 
     path, key = get_model_folder(cls, key_or_alias)
     
-    checkpoint = torch.load(os.path.join(path.parent, key + '.pt'))
+    checkpoint = torch.load(os.path.join(path.parent.as_posix(), key + '.pt'))
     num_clusters = checkpoint["model_state_dict"]["clustering_layer.weight"].shape[
         0
     ]
