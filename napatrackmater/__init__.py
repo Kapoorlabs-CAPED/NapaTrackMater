@@ -31,7 +31,7 @@ register_model(DeepEmbeddedClustering, 'Membrane_3D_cluster', '.zip', 'hash')
 register_aliases(CloudAutoEncoder, 'Nuclei_3D', 'Nuclei_3D')
 register_aliases(CloudAutoEncoder, 'Membrane_3D', 'Membrane_3D')
 
-register_aliases(DeepEmbeddedClustering, 'Nuclei_3D_cluster', 'Nuclei_3D_cluster')
+register_aliases(DeepEmbeddedClustering, 'Nuclei_3D_cluster_3_class', 'Nuclei_3D_cluster_3_class')
 register_aliases(DeepEmbeddedClustering, 'Membrane_3D_cluster', 'Membrane_3D_cluster')
 
 del register_model, register_aliases, clear_models_and_aliases
