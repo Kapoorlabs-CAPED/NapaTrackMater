@@ -28,10 +28,10 @@ register_model(DeepEmbeddedClustering, 'Nuclei_3D_cluster_3_class', 'https://zen
 register_model(DeepEmbeddedClustering, 'Membrane_3D_cluster', '.zip', 'hash')
 
 
-register_aliases(CloudAutoEncoder, 'Nuclei_3D', 'xenopus_nuclei_dgcnn_foldingnet_knn20')
+register_aliases(CloudAutoEncoder,  'xenopus_nuclei_dgcnn_foldingnet_knn20', 'Nuclei_3D',)
 register_aliases(CloudAutoEncoder, 'Membrane_3D', 'Membrane_3D')
 
-register_aliases(DeepEmbeddedClustering, 'Nuclei_3D_cluster_3_class', 'cluster_xenopus_nuclei_dgcnn_foldingnet_knn8_class3')
+register_aliases(DeepEmbeddedClustering, 'cluster_xenopus_nuclei_dgcnn_foldingnet_knn8_class3', 'Nuclei_3D_cluster_3_class')
 register_aliases(DeepEmbeddedClustering, 'Membrane_3D_cluster', 'Membrane_3D_cluster')
 
 del register_model, register_aliases, clear_models_and_aliases
