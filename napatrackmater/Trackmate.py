@@ -935,11 +935,23 @@ class TrackMate(object):
 
             print('getting attributes')                
             self._get_attributes()
-
-            for track in self.tracks.findall('Track'):
+           
+            self.count = 0
+            for track in tqdm(self.tracks.findall('Track')):
                             track_id = int(track.get(self.trackid_key))
+                            
+                            
                             if track_id in self.filtered_track_ids:
-                                  self._final_tracks(track_id) 
+                                    if self.progress_bar is not None:
+                                        self.progress_bar.label = "Just one more thing"
+                                        self.progress_bar.range = (
+                                                0,
+                                                len(self.filtered_track_ids),
+                                            )
+                                        self.progress_bar.show()
+                                        self.count = self.count + 1
+                                        self.progress_bar.value = self.count
+                                    self._final_tracks(track_id) 
 
             if self.fourier:
                    print('computing Fourier')
