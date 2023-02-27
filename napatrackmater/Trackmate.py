@@ -937,11 +937,7 @@ class TrackMate(object):
             self._get_attributes()
            
             self.count = 0
-            for track in tqdm(self.tracks.findall('Track')):
-                            track_id = int(track.get(self.trackid_key))
-                            
-                            
-                            if track_id in self.filtered_track_ids:
+            for track_id in self.filtered_track_ids:
                                     if self.progress_bar is not None:
                                         self.progress_bar.label = "Just one more thing"
                                         self.progress_bar.range = (
@@ -1131,10 +1127,17 @@ class TrackMate(object):
                        self._assign_cluster_class()
                        self._create_master_xml()
 
-                for track in self.tracks.findall('Track'):
-                            track_id = int(track.get(self.trackid_key))
-                            if track_id in self.filtered_track_ids:
-                                  self._final_tracks(track_id) 
+                for track_id in self.filtered_track_ids:
+                                    if self.progress_bar is not None:
+                                        self.progress_bar.label = "Just one more thing"
+                                        self.progress_bar.range = (
+                                                0,
+                                                len(self.filtered_track_ids),
+                                            )
+                                        self.progress_bar.show()
+                                        self.count = self.count + 1
+                                        self.progress_bar.value = self.count
+                                    self._final_tracks(track_id) 
 
                 if self.fourier:
                    print('computing Fourier')
