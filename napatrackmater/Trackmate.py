@@ -932,6 +932,8 @@ class TrackMate(object):
                             daughter_track_id =  int(float(str(self.unique_spot_properties[int(float(k))][self.uniqueid_key])))
                             parent_track_id = int(float(str(self.unique_spot_properties[int(float(v))][self.uniqueid_key])))
                             self.graph_tracks[daughter_track_id] = parent_track_id
+
+            print('getting attributes')                
             self._get_attributes()
 
             for track in self.tracks.findall('Track'):
