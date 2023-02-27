@@ -344,7 +344,7 @@ class TrackMate(object):
                    target_cell_id = target_cells[i]
                    self.graph_split[target_cell_id] = root_split 
 
-                   target_cell_tracklet_id = i +  tracklet_before
+                   target_cell_tracklet_id = i +  tracklet_before + 1
                    tracklet_before = tracklet_before + 1
                    self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
 
@@ -590,19 +590,7 @@ class TrackMate(object):
 
                                     self.unique_spot_centroid[spot_centroid] = k
                                     self.unique_track_centroid[(t,int(spot_centroid[0]),int(spot_centroid[1]), int(spot_centroid[2]))] = track_id
-                                    if str(t) in self._timed_centroid:
-                                           tree, spot_centroids, spot_labels = self._timed_centroid[str(t)]
-                                           spot_centroids.append(spot_centroid)
-                                           spot_labels.append(spot_label)
-                                           tree = spatial.cKDTree(spot_centroids)
-                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
-                                    else:
-                                           spot_centroids = []
-                                           spot_labels = [] 
-                                           spot_centroids.append(spot_centroid)
-                                           spot_labels.append(spot_label)
-                                           tree = spatial.cKDTree(spot_centroids)
-                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
+                                    
 
         
     def _final_tracks(self, track_id):
@@ -654,15 +642,15 @@ class TrackMate(object):
                                            tree, spot_centroids, spot_labels = self._timed_centroid[str(t)]
                                            spot_centroids.append(spot_centroid)
                                            spot_labels.append(spot_label)
-                                           tree = spatial.cKDTree(spot_centroids)
-                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
+                                           
+                                           self._timed_centroid[str(t)] = spot_centroids , spot_labels
                                     else:
                                            spot_centroids = []
                                            spot_labels = [] 
                                            spot_centroids.append(spot_centroid)
                                            spot_labels.append(spot_label)
-                                           tree = spatial.cKDTree(spot_centroids)
-                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
+                                           
+                                           self._timed_centroid[str(t)] = spot_centroids , spot_labels
 
 
                                     if current_track_id in current_tracklets:
@@ -680,6 +668,11 @@ class TrackMate(object):
 
                                         current_value_array = np.array([t, int(float(unique_id)), gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
                                         current_tracklets_properties[current_track_id] = current_value_array
+                       
+                            for time_key in self._timed_centroid.keys():
+                                   spot_centroids , spot_labels = self._timed_centroid[time_key]
+                                   tree = spatial.cKDTree(spot_centroids)
+                                   self._timed_centroid[time_key].append(tree)
 
                             current_tracklets = np.asarray(current_tracklets[str(track_id)])
                             current_tracklets_properties = np.asarray(current_tracklets_properties[str(track_id)])
@@ -1169,7 +1162,7 @@ class TrackMate(object):
                     
                     for count, time_key in enumerate(self._timed_centroid.keys()):
                            
-                           tree, spot_centroids, spot_labels = self._timed_centroid[time_key]
+                           spot_centroids, spot_labels, tree = self._timed_centroid[time_key]
                            if self.progress_bar is not None:
                                 self.progress_bar.label = "Computing clustering classes"
                                 self.progress_bar.range = (
