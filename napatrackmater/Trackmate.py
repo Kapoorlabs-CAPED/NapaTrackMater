@@ -15,6 +15,7 @@ from scipy.fftpack import fft, fftfreq, fftshift, ifft
 import os
 from pathlib import Path 
 import concurrent
+
 from .clustering import Clustering
 class TrackMate(object):
     
@@ -48,8 +49,7 @@ class TrackMate(object):
         if self.save_dir is None:
                self.save_dir = __file__ 
         Path(self.save_dir).mkdir(exist_ok=True)
-        self.mesh_dir = os.path.join(self.save_dir,'mesh')
-        Path(self.mesh_dir).mkdir(exist_ok=True)                                       
+                                             
         self.track_analysis_spot_keys = dict(
                 spot_id="ID",
                 track_id="TRACK_ID",
@@ -1149,7 +1149,7 @@ class TrackMate(object):
                                 self.progress_bar.value =  count 
                                 self.progress_bar.show()
 
-                           cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.mesh_dir, self.num_points, self.cluster_model, key = time_key,spot_labels = spot_labels, progress_bar=self.progress_bar, batch_size = self.batch_size)       
+                           cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.num_points, self.cluster_model, key = time_key,spot_labels = spot_labels, progress_bar=self.progress_bar, batch_size = self.batch_size)       
                            cluster_eval._create_cluster_labels()
                            timed_cluster_label = cluster_eval.timed_cluster_label 
                            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = timed_cluster_label[time_key]
