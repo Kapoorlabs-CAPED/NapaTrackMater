@@ -3,7 +3,7 @@ from .pretrained import get_cluster_instance, get_model_details, get_registered_
 import sys
 
 class DeepEmbeddedClustering(DeepEmbeddedClustering):
-    def __init__(slef, autoencoder, num_clusters):
+    def __init__(self, autoencoder, num_clusters):
         super().__init__(autoencoder, num_clusters)
 
     @classmethod   

@@ -1,7 +1,7 @@
 
 from .Trackmate import *
 from .version import __version__
-from .pretrained import register_model, register_aliases, clear_models_and_aliases, get_registered_models, get_model_folder
+from .pretrained import register_model, register_aliases, clear_models_and_aliases
 from .clustering import Clustering
 from .DeepEmbeddedClustering import DeepEmbeddedClustering
 from .CloudAutoEncoder import CloudAutoEncoder
@@ -17,6 +17,7 @@ def load_json(fpath):
 __all__ = (
     "DeepEmbeddedClustering",
     "CloudAutoEncoder",
+    "Clustering",
 )
 
 clear_models_and_aliases(DeepEmbeddedClustering, CloudAutoEncoder)

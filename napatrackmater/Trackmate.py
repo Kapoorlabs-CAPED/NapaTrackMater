@@ -18,7 +18,8 @@ import concurrent
 from .clustering import Clustering
 class TrackMate(object):
     
-    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes, progress_bar = None, master_xml_path: Path = None, seg_image = None, channel_seg_image = None, image = None, mask = None, fourier = True, cluster_model = None, num_points = 2048, save_dir = None, batch_size = 1):
+    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes, progress_bar = None, 
+                 master_xml_path: Path = None, master_extra_name = '', seg_image = None, channel_seg_image = None, image = None, mask = None, fourier = True, cluster_model = None, num_points = 2048, save_dir = None, batch_size = 1):
         
         
         self.xml_path = xml_path
@@ -35,6 +36,7 @@ class TrackMate(object):
         self.AttributeBoxname = AttributeBoxname
         self.TrackAttributeBoxname = TrackAttributeBoxname
         self.TrackidBox = TrackidBox
+        self.master_extra_name = master_extra_name
         self.num_points = num_points
         self.spot_dataset, self.spot_dataset_index = get_csv_data(self.spot_csv_path)
         self.track_dataset, self.track_dataset_index = get_csv_data(self.track_csv_path)
@@ -1017,7 +1019,7 @@ class TrackMate(object):
                        self.master_xml_content = self.xml_content
                        self.master_xml_tree = et.parse(self.xml_path)
                        self.master_xml_root = self.master_xml_tree.getroot()
-                       self.master_xml_name = 'master_' + os.path.splitext(os.path.basename(self.xml_path))[0] + '.xml'
+                       self.master_xml_name = 'master_' + self.master_extra_name  + os.path.splitext(os.path.basename(self.xml_path))[0] + '.xml'
                        self.master_xml_path = os.path.dirname(self.xml_path)      
                        
                 self.unique_objects = {}
