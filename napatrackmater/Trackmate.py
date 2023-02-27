@@ -350,9 +350,9 @@ class TrackMate(object):
                    elif target_cell_tracklet_id == 0 :
                           digits = 1   
                    if digits > 1:
-                          tracklet_before = tracklet_before + self.max_track_id + 1
-                   else:
-                       tracklet_before = tracklet_before + 1
+                          target_cell_tracklet_id = target_cell_tracklet_id + self.max_track_id
+                   
+                   tracklet_before = tracklet_before + 1
                    self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
 
    
