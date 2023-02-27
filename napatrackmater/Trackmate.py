@@ -244,11 +244,11 @@ class TrackMate(object):
     def _get_attributes(self):
             
              self.Attributeids, self.AllValues =  get_spot_dataset(self.spot_dataset, self.track_analysis_spot_keys, self.xcalibration, self.ycalibration, self.zcalibration, self.AttributeBoxname, self.detectorchannel)
-        
+             print('obtianed spot attributes')
              self.TrackAttributeids, self.AllTrackValues = get_track_dataset(self.track_dataset,  self.track_analysis_spot_keys, self.track_analysis_track_keys, self.TrackAttributeBoxname)
-             
+             print('obtained track attributes')
              self.AllEdgesValues = get_edges_dataset(self.edges_dataset, self.edges_dataset_index, self.track_analysis_spot_keys, self.track_analysis_edges_keys)
-        
+             print('obtained edge attributes')
     def _get_boundary_points(self):
          
         print('Computing boundary points') 
