@@ -339,6 +339,7 @@ class TrackMate(object):
          for root_split in root_splits:
               
               target_cells = self.edge_target_lookup[root_split]
+              self.tracklet_dict[root_split] = tracklet_before
               for i in range(len(target_cells)):
                    
                    target_cell_id = target_cells[i]
@@ -1233,7 +1234,7 @@ class TrackMate(object):
         generation_id = self.generation_dict[cell_id]
         tracklet_id = self.tracklet_dict[cell_id]
 
-        unique_id = str(track_id) +  str(generation_id) + str(tracklet_id)
+        unique_id = str(track_id) + str(self.max_track_id) + str(generation_id) + str(tracklet_id)
         
         unique_tracklet_ids.append(str(unique_id))
         self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : None})
