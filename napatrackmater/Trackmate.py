@@ -1197,8 +1197,13 @@ class TrackMate(object):
                 unique_cluster_properties_tracklet = {}
                 self.unique_fft_properties[track_id] = {}
                 self.unique_cluster_properties[track_id] = {}
-                
+                expanded_time = np.zeros(self.tend - self.tstart + 1)
+                point_sample = expanded_time.shape[0]
+                for i in range(len(expanded_time)):
+                       expanded_time[i] = i 
                 for current_unique_id in unique_ids_set:
+                   
+                   expanded_intensity = np.zeros(self.tend - self.tstart + 1)
                    
                    
                    current_time = []
@@ -1216,20 +1221,25 @@ class TrackMate(object):
                    current_intensity = np.asarray(current_intensity)
                    current_cluster_class = np.asarray(current_cluster_class)
                    current_cluster_class_score = np.asarray(current_cluster_class_score)               
-               
-                   point_sample = current_intensity.shape[0]
+                   for i in range(expanded_intensity.shape[0]):
+                       
+                       if expanded_time[i] in current_time:
+                              expanded_intensity[time_count] = current_intensity[time_count]
+                              time_count = time_count + 1
+                   
                    if point_sample > 0:
                                 xf_sample = fftfreq(point_sample, self.tcalibration)
-                                fftstrip_sample = fft(current_intensity)
+                                fftstrip_sample = fft(expanded_intensity)
                                 ffttotal_sample = np.abs(fftstrip_sample)
                                 xf_sample = xf_sample[0 : len(xf_sample) // 2]
                                 ffttotal_sample = ffttotal_sample[0 : len(ffttotal_sample) // 2]
 
                
-                   unique_fft_properties_tracklet[current_unique_id] = current_time, current_intensity, xf_sample, ffttotal_sample
+                   unique_fft_properties_tracklet[current_unique_id] = expanded_time, expanded_intensity, xf_sample, ffttotal_sample
                    unique_cluster_properties_tracklet[current_unique_id] =  current_time, current_cluster_class, current_cluster_class_score
                    self.unique_fft_properties[track_id].update({current_unique_id:unique_fft_properties_tracklet[current_unique_id]})
                    self.unique_cluster_properties[track_id].update({current_unique_id:unique_cluster_properties_tracklet[current_unique_id]})
+
 
                                  
     def _dict_update(self, unique_tracklet_ids: List,  cell_id, track_id, source_id, target_id):
