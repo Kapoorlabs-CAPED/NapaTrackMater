@@ -340,7 +340,7 @@ class TrackMate(object):
                 while target_cells not in root_splits and target_cells is not None:
                        target_cell_id = target_cells[0]
                        self.tracklet_dict[target_cell_id] = tracklet_before
-                       target_cells = self.edge_target_lookup[target_cells]
+                       target_cells = self.edge_target_lookup[target_cell_id]
                 
          tracklet_before = 1  
          for root_split in root_splits:
