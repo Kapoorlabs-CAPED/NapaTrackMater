@@ -312,7 +312,7 @@ class TrackMate(object):
         for source_id in all_source_ids:
               if source_id not in all_target_ids:
                    root_root.append(source_id) 
-                   self.tracklet_dict[source_id] = 0
+                 
                    
        
         #Get the leafs and splits     
@@ -320,11 +320,11 @@ class TrackMate(object):
              
              if target_id not in all_source_ids:
                   root_leaf.append(target_id)
-                  self.tracklet_dict[target_id] = 0
+                
              split_count = all_source_ids.count(target_id)
              if split_count > 1:
                       root_splits.append(target_id)
-             self.tracklet_dict[target_id] = 0     
+             
 
              
         #print('root and splits',root_root, root_leaf, root_splits)
