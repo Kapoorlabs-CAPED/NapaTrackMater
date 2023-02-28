@@ -337,10 +337,11 @@ class TrackMate(object):
          for root_all in root_root:
                 
                 target_cells = self.edge_target_lookup[root_all]
-                while target_cells not in root_splits and target_cells is not None:
+                while target_cells not in root_splits:
                        target_cell_id = target_cells[0]
                        self.tracklet_dict[target_cell_id] = tracklet_before
-                       target_cells = self.edge_target_lookup[target_cell_id]
+                       if target_cell_id in self.edge_target_lookup:
+                         target_cells = self.edge_target_lookup[target_cell_id]
                 
          tracklet_before = 1  
          for root_split in root_splits:
@@ -351,7 +352,6 @@ class TrackMate(object):
                    
                    target_cell_id = target_cells[i]
                    self.graph_split[target_cell_id] = root_split 
-
                    target_cell_tracklet_id = i +  tracklet_before 
                    
                    tracklet_before = tracklet_before + 1
