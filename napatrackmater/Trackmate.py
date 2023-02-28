@@ -1198,41 +1198,47 @@ class TrackMate(object):
                 self.unique_fft_properties[track_id] = {}
                 self.unique_cluster_properties[track_id] = {}
                 expanded_time = np.zeros(self.tend - self.tstart + 1)
-                expanded_intensity = np.zeros(self.tend - self.tstart + 1)
                 point_sample = expanded_time.shape[0]
                 for i in range(len(expanded_time)):
                        expanded_time[i] = i 
+                for current_unique_id in unique_ids_set:
                    
-                current_time = []
-                current_intensity = []
-                current_cluster_class = []
-                current_cluster_class_score = []
-                time_count = 0
-                for i in range(time.shape[0]):
-                                current_time.append(int(time[i]))
-                                current_intensity.append(intensity[i])
-                                current_cluster_class.append(cluster_class[i])
-                                current_cluster_class_score.append(cluster_class_score[i])
-                
-                current_cluster_class = np.asarray(current_cluster_class)
-                current_cluster_class_score = np.asarray(current_cluster_class_score)               
-                for i in range(expanded_intensity.shape[0]):
-                    
-                    if expanded_time[i] in current_time:
-                            expanded_intensity[time_count] = current_intensity[time_count]
-                            time_count = time_count + 1
-                
-                if point_sample > 0:
-                            xf_sample = fftfreq(point_sample, self.tcalibration)
-                            fftstrip_sample = fft(expanded_intensity)
-                            ffttotal_sample = np.abs(fftstrip_sample)
-                            xf_sample = xf_sample[0 : len(xf_sample) // 2]
-                            ffttotal_sample = ffttotal_sample[0 : len(ffttotal_sample) // 2]
+                   expanded_intensity = np.zeros(self.tend - self.tstart + 1)
+                   
+                   
+                   current_time = []
+                   current_intensity = []
+                   current_cluster_class = []
+                   current_cluster_class_score = []
+                   time_count = 0
+                   for i in range(time.shape[0]):
+                          if current_unique_id == unique_ids[i]:
+                                 current_time.append(time[i])
+                                 current_intensity.append(intensity[i])
+                                 current_cluster_class.append(cluster_class[i])
+                                 current_cluster_class_score.append(cluster_class_score[i])
+                   current_time = np.asarray(current_time)
+                   current_intensity = np.asarray(current_intensity)
+                   current_cluster_class = np.asarray(current_cluster_class)
+                   current_cluster_class_score = np.asarray(current_cluster_class_score)               
+                   for i in range(expanded_intensity.shape[0]):
+                       
+                       if expanded_time[i] in current_time:
+                              expanded_intensity[time_count] = current_intensity[time_count]
+                              time_count = time_count + 1
+                   
+                   if point_sample > 0:
+                                xf_sample = fftfreq(point_sample, self.tcalibration)
+                                fftstrip_sample = fft(expanded_intensity)
+                                ffttotal_sample = np.abs(fftstrip_sample)
+                                xf_sample = xf_sample[0 : len(xf_sample) // 2]
+                                ffttotal_sample = ffttotal_sample[0 : len(ffttotal_sample) // 2]
 
-            
-                self.unique_fft_properties[track_id] = expanded_time, expanded_intensity, xf_sample, ffttotal_sample
-                self.unique_cluster_properties[track_id] =  current_time, current_cluster_class, current_cluster_class_score
                
+                   unique_fft_properties_tracklet[current_unique_id] = expanded_time, expanded_intensity, xf_sample, ffttotal_sample
+                   unique_cluster_properties_tracklet[current_unique_id] =  current_time, current_cluster_class, current_cluster_class_score
+                   self.unique_fft_properties[track_id].update({current_unique_id:unique_fft_properties_tracklet[current_unique_id]})
+                   self.unique_cluster_properties[track_id].update({current_unique_id:unique_cluster_properties_tracklet[current_unique_id]})
 
 
                                  
