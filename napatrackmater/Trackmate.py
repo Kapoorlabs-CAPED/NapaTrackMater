@@ -365,10 +365,10 @@ class TrackMate(object):
     def _assign_tracklet_id(self, target_cell_id, target_cell_tracklet_id, root_leaf, root_splits):
          
          if target_cell_id not in root_splits:
-              tracklet_before = tracklet_before + 1
+              target_cell_tracklet_id = target_cell_tracklet_id + 1
               self.tracklet_dict[target_cell_id] = target_cell_tracklet_id
               if target_cell_id not in root_leaf:
-                 tracklet_before = tracklet_before + 1
+                 target_cell_tracklet_id = target_cell_tracklet_id + 1
                  target_cell_id = self.edge_target_lookup[target_cell_id]
                  self._assign_tracklet_id(target_cell_id[0], target_cell_tracklet_id, root_leaf, root_splits)
                       
