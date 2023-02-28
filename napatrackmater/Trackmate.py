@@ -338,7 +338,7 @@ class TrackMate(object):
                 self.tracklet_dict[root_all] = tracklet_before
                 if root_all in self.edge_target_lookup:
                    target_cells = self.edge_target_lookup[root_all]
-                while target_cells not in root_splits or target_cells not in root_leaf:
+                while target_cells not in root_splits and target_cells not in root_leaf:
                        
                        for i in range(len(target_cells)):
                             target_cell_id = target_cells[i]
