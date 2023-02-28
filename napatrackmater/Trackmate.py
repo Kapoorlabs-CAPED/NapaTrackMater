@@ -1210,10 +1210,10 @@ class TrackMate(object):
                    current_intensity = []
                    current_cluster_class = []
                    current_cluster_class_score = []
-                   time_count = 0
                    for j in range(time.shape[0]):
-                          if current_unique_id == unique_ids[i]:
+                          if current_unique_id == unique_ids[j]:
                                  current_time.append(time[j])
+                                 expanded_intensity[time(j)] = intensity[j]
                                  current_intensity.append(intensity[j])
                                  current_cluster_class.append(cluster_class[j])
                                  current_cluster_class_score.append(cluster_class_score[j])
@@ -1221,11 +1221,7 @@ class TrackMate(object):
                    current_intensity = np.asarray(current_intensity)
                    current_cluster_class = np.asarray(current_cluster_class)
                    current_cluster_class_score = np.asarray(current_cluster_class_score)               
-                   for i in range(expanded_intensity.shape[0]):
-                       
-                       if expanded_time[i] in current_time:
-                              expanded_intensity[time_count] = current_intensity[time_count]
-                              time_count = time_count + 1
+                   
                    
                    if point_sample > 0:
                                 xf_sample = fftfreq(point_sample, self.tcalibration)
