@@ -923,7 +923,7 @@ class TrackMate(object):
                                         self.progress_bar.label = "Just one more thing"
                                         self.progress_bar.range = (
                                                 0,
-                                                len(self.filtered_track_ids) + 1,
+                                                len(self.filtered_track_ids),
                                             )
                                         self.progress_bar.show()
                                         self.count = self.count + 1
@@ -1107,13 +1107,13 @@ class TrackMate(object):
                 if self.cluster_model and self.seg_image is not None:
                        self._assign_cluster_class()
                        self._create_master_xml()
-
+                self.count = 0 
                 for track_id in self.filtered_track_ids:
                                     if self.progress_bar is not None:
                                         self.progress_bar.label = "Just one more thing"
                                         self.progress_bar.range = (
                                                 0,
-                                                len(self.filtered_track_ids) + 1,
+                                                len(self.filtered_track_ids),
                                             )
                                         self.progress_bar.show()
                                         self.count = self.count + 1
