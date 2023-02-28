@@ -340,7 +340,7 @@ class TrackMate(object):
                 if root_all in self.edge_target_lookup:
                    target_cells = self.edge_target_lookup[root_all]
                    for i in range(len(target_cells)):
-                        tracklet_before = tracklet_before + 1
+                        tracklet_before = i + tracklet_before + 1
                         target_cell_id = target_cells[i]
                         self._assign_tracklet_id(target_cell_id, tracklet_before, root_leaf, root_splits)    
                              
@@ -353,11 +353,10 @@ class TrackMate(object):
               target_cells = self.edge_target_lookup[root_split]
               for i in range(len(target_cells)):
                    
-                   tracklet_before = tracklet_before + 1
+                   
                    target_cell_id = target_cells[i]
                    self.graph_split[target_cell_id] = root_split 
-                   target_cell_tracklet_id = i +  tracklet_before 
-                   
+                   target_cell_tracklet_id = i +  tracklet_before + 1
                    
                    self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
 
@@ -1227,7 +1226,7 @@ class TrackMate(object):
                                 ffttotal_sample = ffttotal_sample[0 : len(ffttotal_sample) // 2]
 
                
-                   unique_fft_properties_tracklet[current_unique_id] = current_time[:,0], current_intensity[:,0], xf_sample, ffttotal_sample
+                   unique_fft_properties_tracklet[current_unique_id] = current_time, current_intensity, xf_sample, ffttotal_sample
                    unique_cluster_properties_tracklet[current_unique_id] =  current_time, current_cluster_class, current_cluster_class_score
                    self.unique_fft_properties[track_id].update({current_unique_id:unique_fft_properties_tracklet[current_unique_id]})
                    self.unique_cluster_properties[track_id].update({current_unique_id:unique_cluster_properties_tracklet[current_unique_id]})
