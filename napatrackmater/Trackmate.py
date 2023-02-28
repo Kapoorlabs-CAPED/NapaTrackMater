@@ -345,12 +345,7 @@ class TrackMate(object):
                    self.graph_split[target_cell_id] = root_split 
 
                    target_cell_tracklet_id = i +  tracklet_before 
-                   if target_cell_tracklet_id > 0:
-                          digits = int(math.log10(target_cell_tracklet_id))+1
-                   elif target_cell_tracklet_id == 0 :
-                          digits = 1   
-                   if digits > 1:
-                          target_cell_tracklet_id = target_cell_tracklet_id + self.max_track_id
+                   
                    
                    tracklet_before = tracklet_before + 1
                    self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
@@ -1238,7 +1233,7 @@ class TrackMate(object):
         generation_id = self.generation_dict[cell_id]
         tracklet_id = self.tracklet_dict[cell_id]
 
-        unique_id = str(track_id) + str(self.max_track_id) + str(generation_id) + str(tracklet_id)
+        unique_id = str(track_id) +  str(generation_id) + str(tracklet_id)
         
         unique_tracklet_ids.append(str(unique_id))
         self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : None})
