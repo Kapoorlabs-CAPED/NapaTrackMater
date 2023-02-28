@@ -923,7 +923,7 @@ class TrackMate(object):
                                         self.progress_bar.label = "Just one more thing"
                                         self.progress_bar.range = (
                                                 0,
-                                                len(self.filtered_track_ids),
+                                                len(self.filtered_track_ids) + 1,
                                             )
                                         self.progress_bar.show()
                                         self.count = self.count + 1
@@ -1113,7 +1113,7 @@ class TrackMate(object):
                                         self.progress_bar.label = "Just one more thing"
                                         self.progress_bar.range = (
                                                 0,
-                                                len(self.filtered_track_ids),
+                                                len(self.filtered_track_ids) + 1,
                                             )
                                         self.progress_bar.show()
                                         self.count = self.count + 1
