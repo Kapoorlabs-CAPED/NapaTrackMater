@@ -342,6 +342,7 @@ class TrackMate(object):
               self.tracklet_dict[root_all] = tracklet_before
               for i in range(len(target_cells)):
                    
+                   target_cell_tracklet_id = tracklet_before
                    target_cell_id = target_cells[i]
                    self.graph_split[target_cell_id] = root_all
                    self.tracklet_dict[target_cell_id] = target_cell_tracklet_id
