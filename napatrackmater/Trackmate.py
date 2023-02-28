@@ -312,7 +312,6 @@ class TrackMate(object):
         for source_id in all_source_ids:
               if source_id not in all_target_ids:
                    root_root.append(source_id) 
-                 
                    
        
         #Get the leafs and splits     
@@ -320,11 +319,9 @@ class TrackMate(object):
              
              if target_id not in all_source_ids:
                   root_leaf.append(target_id)
-                
              split_count = all_source_ids.count(target_id)
              if split_count > 1:
                       root_splits.append(target_id)
-             
 
              
         #print('root and splits',root_root, root_leaf, root_splits)
@@ -336,33 +333,36 @@ class TrackMate(object):
     def _iterate_split_down(self, root_root, root_leaf, root_splits):
          
          tracklet_before = 0
+         
          for root_all in root_root:
+                
+                target_cells = self.edge_target_lookup[root_all]
+                if target_cells not in root_splits:
+                       target_cell_id = target_cells[0]
+                       self.tracklet_dict[target_cell_id] = tracklet_before
+                
+         tracklet_before = 1  
+         for root_split in root_splits:
               
-              target_cells = self.edge_target_lookup[root_all]
-              self.tracklet_dict[root_all] = tracklet_before
+              target_cells = self.edge_target_lookup[root_split]
               for i in range(len(target_cells)):
                    
-                   target_cell_tracklet_id = tracklet_before
                    target_cell_id = target_cells[i]
-                   self.graph_split[target_cell_id] = root_all
-                   self.tracklet_dict[target_cell_id] = target_cell_tracklet_id
-                   if target_cell_id in root_splits:   
-                      target_cell_tracklet_id = i +  tracklet_before 
-                      tracklet_before = tracklet_before + 1
-                   target_cell_id = self.edge_target_lookup[target_cell_id]
-                   if target_cell_id is not None:
-                      self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
+                   self.graph_split[target_cell_id] = root_split 
+
+                   target_cell_tracklet_id = i +  tracklet_before 
+                   
+                   tracklet_before = tracklet_before + 1
+                   self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
 
    
     def _assign_tracklet_id(self, target_cell_id, target_cell_tracklet_id, root_leaf, root_splits):
-               
-
-            if target_cell_id not in root_leaf:
-                 self.tracklet_dict[target_cell_id] = target_cell_tracklet_id
+         
+         if target_cell_id not in root_splits:
+              self.tracklet_dict[target_cell_id] = target_cell_tracklet_id
+              if target_cell_id not in root_leaf:
+                 target_cell_id = self.edge_target_lookup[target_cell_id]
                  self._assign_tracklet_id(target_cell_id[0], target_cell_tracklet_id, root_leaf, root_splits)
-            else:
-                 self.tracklet_dict[target_cell_id] = target_cell_tracklet_id  
-                        
                       
   
          
@@ -454,7 +454,7 @@ class TrackMate(object):
                             
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
-                            self._iterate_split_down(root_root, root_leaf, root_splits)
+                            self._iterate_split_down(root_leaf, root_splits)
                             
                             
                             # Determine if a track has divisions or none
@@ -545,7 +545,7 @@ class TrackMate(object):
                             
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
-                            self._iterate_split_down(root_root, root_leaf, root_splits)
+                            self._iterate_split_down(root_leaf, root_splits)
                             
                             # Determine if a track has divisions or none
                             if len(root_splits) > 0:
