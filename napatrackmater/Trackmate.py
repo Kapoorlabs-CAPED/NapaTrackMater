@@ -344,6 +344,7 @@ class TrackMate(object):
          tracklet_before = 1  
          for root_split in root_splits:
               
+              self.tracklet_dict[root_split] = tracklet_before
               target_cells = self.edge_target_lookup[root_split]
               for i in range(len(target_cells)):
                    
@@ -454,7 +455,7 @@ class TrackMate(object):
                             
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
-                            self._iterate_split_down(root_leaf, root_splits)
+                            self._iterate_split_down(root_root, root_leaf, root_splits)
                             
                             
                             # Determine if a track has divisions or none
@@ -545,7 +546,7 @@ class TrackMate(object):
                             
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
-                            self._iterate_split_down(root_leaf, root_splits)
+                            self._iterate_split_down(root_root, root_leaf, root_splits)
                             
                             # Determine if a track has divisions or none
                             if len(root_splits) > 0:
