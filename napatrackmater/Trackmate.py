@@ -333,17 +333,17 @@ class TrackMate(object):
         return root_root, root_splits, root_leaf
 
 
-    def _iterate_split_down(self, root_leaf, root_splits):
+    def _iterate_split_down(self, root_root, root_leaf, root_splits):
          
          tracklet_before = 0
-         for root_split in root_splits:
+         for root_all in root_root:
               
-              target_cells = self.edge_target_lookup[root_split]
-              self.tracklet_dict[root_split] = tracklet_before
+              target_cells = self.edge_target_lookup[root_all]
+              self.tracklet_dict[root_all] = tracklet_before
               for i in range(len(target_cells)):
                    
                    target_cell_id = target_cells[i]
-                   self.graph_split[target_cell_id] = root_split 
+                   self.graph_split[target_cell_id] = root_all 
 
                    target_cell_tracklet_id = i +  tracklet_before 
                    
@@ -450,7 +450,7 @@ class TrackMate(object):
                             
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
-                            self._iterate_split_down(root_leaf, root_splits)
+                            self._iterate_split_down(root_root, root_leaf, root_splits)
                             
                             
                             # Determine if a track has divisions or none
@@ -541,7 +541,7 @@ class TrackMate(object):
                             
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
-                            self._iterate_split_down(root_leaf, root_splits)
+                            self._iterate_split_down(root_root, root_leaf, root_splits)
                             
                             # Determine if a track has divisions or none
                             if len(root_splits) > 0:
