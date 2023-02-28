@@ -343,21 +343,24 @@ class TrackMate(object):
               for i in range(len(target_cells)):
                    
                    target_cell_id = target_cells[i]
-                   self.graph_split[target_cell_id] = root_all 
-                   target_cell_tracklet_id = i +  tracklet_before 
-                   tracklet_before = tracklet_before + 1
+                   self.graph_split[target_cell_id] = root_all
                    self.tracklet_dict[target_cell_id] = target_cell_tracklet_id
-                   self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
+                   if target_cell_id in root_splits:   
+                      target_cell_tracklet_id = i +  tracklet_before 
+                      tracklet_before = tracklet_before + 1
+                   target_cell_id = self.edge_target_lookup[target_cell_id]
+                   if target_cell_id is not None:
+                      self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
 
    
     def _assign_tracklet_id(self, target_cell_id, target_cell_tracklet_id, root_leaf, root_splits):
-         
-         if target_cell_id not in root_splits:
-              self.tracklet_dict[target_cell_id] = target_cell_tracklet_id
-              if target_cell_id not in root_leaf:
-                 target_cell_id = self.edge_target_lookup[target_cell_id]
+               
+
+            if target_cell_id not in root_leaf:
+                 self.tracklet_dict[target_cell_id] = target_cell_tracklet_id
                  self._assign_tracklet_id(target_cell_id[0], target_cell_tracklet_id, root_leaf, root_splits)
-            
+            else:
+                 self.tracklet_dict[target_cell_id] = target_cell_tracklet_id  
                         
                       
   
