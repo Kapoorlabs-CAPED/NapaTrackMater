@@ -335,13 +335,17 @@ class TrackMate(object):
          tracklet_before = 0
          
          for root_all in root_root:
-                
-                target_cells = self.edge_target_lookup[root_all]
+                if root_all in target_cells:
+                   target_cells = self.edge_target_lookup[root_all]
                 while target_cells not in root_splits:
                        target_cell_id = target_cells[0]
+                       
                        self.tracklet_dict[target_cell_id] = tracklet_before
                        if target_cell_id in self.edge_target_lookup:
                          target_cells = self.edge_target_lookup[target_cell_id]
+                       if target_cell_id in root_leaf:
+                              break  
+
                 
          tracklet_before = 1  
          for root_split in root_splits:
