@@ -1230,7 +1230,7 @@ class TrackMate(object):
                                 xf_sample = xf_sample[0 : len(xf_sample) // 2]
                                 ffttotal_sample = ffttotal_sample[0 : len(ffttotal_sample) // 2]
 
-               
+                   print(expanded_time, expanded_intensity, xf_sample, ffttotal_sample)
                    unique_fft_properties_tracklet[current_unique_id] = expanded_time, expanded_intensity, xf_sample, ffttotal_sample
                    unique_cluster_properties_tracklet[current_unique_id] =  current_time, current_cluster_class, current_cluster_class_score
                    self.unique_fft_properties[track_id].update({current_unique_id:unique_fft_properties_tracklet[current_unique_id]})
