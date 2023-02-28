@@ -359,6 +359,8 @@ class TrackMate(object):
               if target_cell_id not in root_leaf:
                  target_cell_id = self.edge_target_lookup[target_cell_id]
                  self._assign_tracklet_id(target_cell_id[0], target_cell_tracklet_id, root_leaf, root_splits)
+            
+                        
                       
   
          
