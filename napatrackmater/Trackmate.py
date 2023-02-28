@@ -336,19 +336,19 @@ class TrackMate(object):
          
          for root_all in root_root:
                 self.tracklet_dict[root_all] = tracklet_before
-                tracklet_before = tracklet_before + 1
+                
                 if root_all in self.edge_target_lookup:
                    target_cells = self.edge_target_lookup[root_all]
                    for i in range(len(target_cells)):
-                        tracklet_before = i + tracklet_before + 1
+                       
                         target_cell_id = target_cells[i]
                         self._assign_tracklet_id(target_cell_id, tracklet_before, root_leaf, root_splits)    
                              
 
                 
-           
+          
          for root_split in root_splits:
-              tracklet_before = tracklet_before + 1
+              
               self.tracklet_dict[root_split] = tracklet_before
               target_cells = self.edge_target_lookup[root_split]
               for i in range(len(target_cells)):
@@ -356,7 +356,8 @@ class TrackMate(object):
                    
                    target_cell_id = target_cells[i]
                    self.graph_split[target_cell_id] = root_split 
-                   target_cell_tracklet_id = i +  tracklet_before + 1
+                   tracklet_before = tracklet_before  + 1
+                   target_cell_tracklet_id = i +  tracklet_before
                    
                    self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
 
@@ -364,10 +365,10 @@ class TrackMate(object):
     def _assign_tracklet_id(self, target_cell_id, target_cell_tracklet_id, root_leaf, root_splits):
          
          if target_cell_id not in root_splits:
-              target_cell_tracklet_id = target_cell_tracklet_id + 1
+              
               self.tracklet_dict[target_cell_id] = target_cell_tracklet_id
               if target_cell_id not in root_leaf:
-                 target_cell_tracklet_id = target_cell_tracklet_id + 1
+                 
                  target_cell_id = self.edge_target_lookup[target_cell_id]
                  self._assign_tracklet_id(target_cell_id[0], target_cell_tracklet_id, root_leaf, root_splits)
                       
@@ -1230,7 +1231,6 @@ class TrackMate(object):
                                 xf_sample = xf_sample[0 : len(xf_sample) // 2]
                                 ffttotal_sample = ffttotal_sample[0 : len(ffttotal_sample) // 2]
 
-                   print(expanded_time, expanded_intensity, xf_sample, ffttotal_sample)
                    unique_fft_properties_tracklet[current_unique_id] = expanded_time, expanded_intensity, xf_sample, ffttotal_sample
                    unique_cluster_properties_tracklet[current_unique_id] =  current_time, current_cluster_class, current_cluster_class_score
                    self.unique_fft_properties[track_id].update({current_unique_id:unique_fft_properties_tracklet[current_unique_id]})
