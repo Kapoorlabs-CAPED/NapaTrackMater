@@ -335,6 +335,7 @@ class TrackMate(object):
          tracklet_before = 0
          
          for root_all in root_root:
+                
                 self.tracklet_dict[root_all] = tracklet_before
                 
                 if root_all in self.edge_target_lookup:
@@ -1246,6 +1247,9 @@ class TrackMate(object):
 
         unique_id = str(track_id) + str(self.max_track_id) + str(generation_id) + str(tracklet_id)
         
+        if unique_id in unique_tracklet_ids:
+               unique_id = unique_tracklet_ids[-1] + unique_id
+
         unique_tracklet_ids.append(str(unique_id))
         self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : None})
         self.unique_spot_properties[int(cell_id)].update({self.clusterscore_key : 0})
