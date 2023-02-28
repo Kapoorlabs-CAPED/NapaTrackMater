@@ -393,7 +393,7 @@ class TrackMate(object):
                    self.generation_dict[pre_leaf] = int(max_generation) 
                    source_id = self.edge_source_lookup[pre_leaf]
                    if source_id in root_splits:
-                         self.generation_dict[source_id] = int(max_generation - 1)
+                         self.generation_dict[source_id] = int(max_generation)
                    if source_id not in root_splits and source_id not in root_root:                         
                          source_id = self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = int(max_generation))
 
