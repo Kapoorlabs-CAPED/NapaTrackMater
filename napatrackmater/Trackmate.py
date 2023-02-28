@@ -1247,8 +1247,7 @@ class TrackMate(object):
 
         unique_id = str(track_id) + str(self.max_track_id) + str(generation_id) + str(tracklet_id)
         
-        if unique_id in unique_tracklet_ids:
-               unique_id = unique_tracklet_ids[-1] + unique_id
+        
 
         unique_tracklet_ids.append(str(unique_id))
         self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : None})
