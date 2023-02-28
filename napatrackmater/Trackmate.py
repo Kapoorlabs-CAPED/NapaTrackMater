@@ -1211,12 +1211,12 @@ class TrackMate(object):
                    current_cluster_class = []
                    current_cluster_class_score = []
                    time_count = 0
-                   for i in range(time.shape[0]):
+                   for j in range(time.shape[0]):
                           if current_unique_id == unique_ids[i]:
-                                 current_time.append(time[i])
-                                 current_intensity.append(intensity[i])
-                                 current_cluster_class.append(cluster_class[i])
-                                 current_cluster_class_score.append(cluster_class_score[i])
+                                 current_time.append(time[j])
+                                 current_intensity.append(intensity[j])
+                                 current_cluster_class.append(cluster_class[j])
+                                 current_cluster_class_score.append(cluster_class_score[j])
                    current_time = np.asarray(current_time)
                    current_intensity = np.asarray(current_intensity)
                    current_cluster_class = np.asarray(current_cluster_class)
