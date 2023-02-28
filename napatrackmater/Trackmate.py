@@ -336,35 +336,39 @@ class TrackMate(object):
          
          for root_all in root_root:
                 self.tracklet_dict[root_all] = tracklet_before
+                tracklet_before = tracklet_before + 1
                 if root_all in self.edge_target_lookup:
                    target_cells = self.edge_target_lookup[root_all]
                    for i in range(len(target_cells)):
-                   
+                        tracklet_before = tracklet_before + 1
                         target_cell_id = target_cells[i]
                         self._assign_tracklet_id(target_cell_id, tracklet_before, root_leaf, root_splits)    
                              
 
                 
-         tracklet_before = 1  
+           
          for root_split in root_splits:
-              
+              tracklet_before = tracklet_before + 1
               self.tracklet_dict[root_split] = tracklet_before
               target_cells = self.edge_target_lookup[root_split]
               for i in range(len(target_cells)):
                    
+                   tracklet_before = tracklet_before + 1
                    target_cell_id = target_cells[i]
                    self.graph_split[target_cell_id] = root_split 
                    target_cell_tracklet_id = i +  tracklet_before 
                    
-                   tracklet_before = tracklet_before + 1
+                   
                    self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
 
     
     def _assign_tracklet_id(self, target_cell_id, target_cell_tracklet_id, root_leaf, root_splits):
          
          if target_cell_id not in root_splits:
+              tracklet_before = tracklet_before + 1
               self.tracklet_dict[target_cell_id] = target_cell_tracklet_id
               if target_cell_id not in root_leaf:
+                 tracklet_before = tracklet_before + 1
                  target_cell_id = self.edge_target_lookup[target_cell_id]
                  self._assign_tracklet_id(target_cell_id[0], target_cell_tracklet_id, root_leaf, root_splits)
                       
@@ -1197,10 +1201,7 @@ class TrackMate(object):
                 
                 for current_unique_id in unique_ids_set:
                    
-                   expanded_intensity = np.arange(self.tend - self.tstart + 1)
-                   expanded_time = np.arange(self.tend - self.tstart + 1)
-                   expanded_intensity = expanded_intensity[:, np.newaxis]  
-                   expanded_time = expanded_time[:, np.newaxis]
+                   
                    current_time = []
                    current_intensity = []
                    current_cluster_class = []
@@ -1216,21 +1217,17 @@ class TrackMate(object):
                    current_intensity = np.asarray(current_intensity)
                    current_cluster_class = np.asarray(current_cluster_class)
                    current_cluster_class_score = np.asarray(current_cluster_class_score)               
-                   for i in range(expanded_intensity.shape[0]):
-                       
-                       if expanded_time[i] in current_time:
-                              expanded_intensity[time_count] = current_intensity[time_count]
-                              time_count = time_count + 1
-                   point_sample = expanded_intensity.shape[0]
+               
+                   point_sample = current_intensity.shape[0]
                    if point_sample > 0:
                                 xf_sample = fftfreq(point_sample, self.tcalibration)
-                                fftstrip_sample = fft(expanded_intensity)
+                                fftstrip_sample = fft(current_intensity)
                                 ffttotal_sample = np.abs(fftstrip_sample)
                                 xf_sample = xf_sample[0 : len(xf_sample) // 2]
                                 ffttotal_sample = ffttotal_sample[0 : len(ffttotal_sample) // 2]
 
                
-                   unique_fft_properties_tracklet[current_unique_id] = expanded_time[:,0], expanded_intensity[:,0], xf_sample, ffttotal_sample
+                   unique_fft_properties_tracklet[current_unique_id] = current_time[:,0], current_intensity[:,0], xf_sample, ffttotal_sample
                    unique_cluster_properties_tracklet[current_unique_id] =  current_time, current_cluster_class, current_cluster_class_score
                    self.unique_fft_properties[track_id].update({current_unique_id:unique_fft_properties_tracklet[current_unique_id]})
                    self.unique_cluster_properties[track_id].update({current_unique_id:unique_cluster_properties_tracklet[current_unique_id]})
