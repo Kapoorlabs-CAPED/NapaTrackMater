@@ -332,59 +332,48 @@ class TrackMate(object):
 
     def _iterate_split_down(self, root_root, root_leaf, root_splits):
          
-         tracklet_before = 0
+         tracklet_count = 0
          
          for root_all in root_root:
                 
-                self.tracklet_dict[root_all] = tracklet_before
+                self.tracklet_dict[root_all] = tracklet_count
                 
                 if root_all in self.edge_target_lookup:
                    target_cells = self.edge_target_lookup[root_all]
                    for i in range(len(target_cells)):
-                       
                         target_cell_id = target_cells[i]
-                        self._assign_tracklet_id(target_cell_id, tracklet_before, root_leaf, root_splits)    
-                             
-
-                 
-         for root_split in root_splits:
-                
-              tracklet_before = self._increment_invalid(tracklet_before, root_splits)              
-              self.tracklet_dict[root_split] = tracklet_before
-              target_cells = self.edge_target_lookup[root_split]
-              for i in range(len(target_cells)):
-                   
-                   
-                   target_cell_id = target_cells[i]
-                   self.graph_split[target_cell_id] = root_split 
-                   tracklet_before = tracklet_before  + 1
-                   target_cell_tracklet_id = i +  tracklet_before
-                   
-                   self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
-
-    def _increment_invalid(self, tracklet_before, root_splits):
-           
-            invalid_assingements = []
-            for second_root_split in root_splits:
-                     if second_root_split in self.tracklet_dict.keys():
-                           invalid_assingements.append(self.tracklet_dict[second_root_split])
-            if tracklet_before in invalid_assingements:
-                   self._increment_invalid(tracklet_before + 1, root_splits)
-            else:
-                   return tracklet_before       
-                                  
-
-           
-    def _assign_tracklet_id(self, target_cell_id, target_cell_tracklet_id, root_leaf, root_splits):
+                        if target_cell_id in root_splits:
+                           tracklet_count = tracklet_count + 1
+                           self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, tracklet_count)  
+                        if target_cell_id not in root_splits:
+                           self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, tracklet_count)    
+                                     
          
-         if target_cell_id not in root_splits:
-              
-              self.tracklet_dict[target_cell_id] = target_cell_tracklet_id
-              if target_cell_id not in root_leaf:
-                 
-                 target_cell_id = self.edge_target_lookup[target_cell_id]
-                 self._assign_tracklet_id(target_cell_id[0], target_cell_tracklet_id, root_leaf, root_splits)
-                      
+    def _assign_tracklet_id(self, target_id, root_splits, root_leaf, tracklet_count ):
+         
+        if target_id in root_leaf:
+               self.tracklet_dict[target_id] =  tracklet_count
+       
+        if target_id not in root_leaf:  
+            if target_id not in root_splits:
+                            
+                            self.tracklet_dict[target_id] = int(tracklet_count)
+                            if target_id in self.edge_target_lookup:
+                                target_cells = self.edge_target_lookup[target_id]
+                                for i in range(len(target_cells)):
+                                    target_cell_id = target_cells[i]
+                                    self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, tracklet_count )
+            if target_id in root_splits:
+                                    
+                                    tracklet_count = tracklet_count + 1
+                                    self.tracklet_dict[target_id] = int(tracklet_count)
+                                    if target_id in self.edge_target_lookup:
+                                        target_cells = self.edge_target_lookup[target_id]
+                                        for i in range(len(target_cells)):
+                                            target_cell_id = target_cells[i]
+                                            self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, tracklet_count )
+
+                                    
   
          
 
