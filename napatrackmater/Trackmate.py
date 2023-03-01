@@ -400,7 +400,7 @@ class TrackMate(object):
          #Generation > 1
 
          for root_all in root_root:
-                
+                self.generation_dict[root_all] = 0
                 if root_all in self.edge_target_lookup:
                    target_cells = self.edge_target_lookup[root_all]
                    for i in range(len(target_cells)):
