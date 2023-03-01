@@ -432,6 +432,7 @@ class TrackMate(object):
             if target_id in root_splits:
                                     
                                     gen_count = gen_count + 1
+                                    self.generation_dict[target_id] = int(gen_count)
                                     target_cells = self.edge_target_lookup[target_id]
                                     for i in range(len(target_cells)):
                                         target_cell_id = target_cells[i]
