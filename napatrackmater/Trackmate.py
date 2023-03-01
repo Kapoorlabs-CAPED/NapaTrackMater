@@ -349,9 +349,9 @@ class TrackMate(object):
                  
          invalid_assingements = [] 
          for root_split in root_splits:
-              for assinged_id in root_splits:
-                     if assinged_id in self.tracklet_dict.keys():
-                           invalid_assingements.append(self.tracklet_dict[assinged_id])
+              for second_root_split in root_splits:
+                     if second_root_split in self.tracklet_dict.keys():
+                           invalid_assingements.append(self.tracklet_dict[second_root_split])
               if tracklet_before not in invalid_assingements:              
                  self.tracklet_dict[root_split] = tracklet_before
               else:
