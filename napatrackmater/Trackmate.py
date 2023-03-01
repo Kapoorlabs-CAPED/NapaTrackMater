@@ -349,7 +349,7 @@ class TrackMate(object):
                  
          for root_split in root_splits:
                 
-              tracklet_before = self._increment_invalid(tracklet_before, root_splits)              
+                          
               self.tracklet_dict[root_split] = tracklet_before
               target_cells = self.edge_target_lookup[root_split]
               for i in range(len(target_cells)):
@@ -362,16 +362,7 @@ class TrackMate(object):
                    
                    self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
 
-    def _increment_invalid(self, tracklet_before, root_splits):
-           
-            invalid_assingements = []
-            for second_root_split in root_splits:
-                     if second_root_split in self.tracklet_dict.keys():
-                           invalid_assingements.append(self.tracklet_dict[second_root_split])
-            if tracklet_before in invalid_assingements:
-                   self._increment_invalid(tracklet_before + 1, root_splits)
-            else:
-                   return tracklet_before       
+     
                                   
 
            
