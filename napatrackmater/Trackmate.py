@@ -346,11 +346,17 @@ class TrackMate(object):
                         self._assign_tracklet_id(target_cell_id, tracklet_before, root_leaf, root_splits)    
                              
 
-                
-          
+                 
+         invalid_assingements = [] 
          for root_split in root_splits:
-              
-              self.tracklet_dict[root_split] = tracklet_before
+              for assinged_id in root_splits:
+                     if assinged_id in self.tracklet_dict.keys():
+                           invalid_assingements.append(self.tracklet_dict[assinged_id])
+              if tracklet_before not in invalid_assingements:              
+                 self.tracklet_dict[root_split] = tracklet_before
+              else:
+                 self.tracklet_dict[root_split] = tracklet_before + 1
+
               target_cells = self.edge_target_lookup[root_split]
               for i in range(len(target_cells)):
                    
