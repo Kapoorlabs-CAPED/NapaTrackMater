@@ -393,12 +393,7 @@ class TrackMate(object):
 
 
         
-         #Generation 0
-         root_cell_id = root_root[0]    
-         self.generation_dict[root_cell_id] = 0
-        
-         #Generation > 1
-
+         gen_count = 0
          for root_all in root_root:
                 self.generation_dict[root_all] = 0
                 if root_all in self.edge_target_lookup:
@@ -406,11 +401,10 @@ class TrackMate(object):
                    for i in range(len(target_cells)):
                         target_cell_id = target_cells[i]
                         if target_cell_id not in root_splits:
-                               gen_count = 0
-                               self.generation_dict[target_cell_id] = gen_count
+                               
+                               self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count )
                         if target_cell_id in root_splits:
                                        gen_count = gen_count + 1
-                                       self.generation_dict[target_cell_id] = gen_count
                                        self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count )
 
          
