@@ -349,7 +349,7 @@ class TrackMate(object):
                  
          for root_split in root_splits:
                 
-                          
+              tracklet_before = self._increment_invalid(tracklet_before, root_splits)              
               self.tracklet_dict[root_split] = tracklet_before
               target_cells = self.edge_target_lookup[root_split]
               for i in range(len(target_cells)):
@@ -357,12 +357,21 @@ class TrackMate(object):
                    
                    target_cell_id = target_cells[i]
                    self.graph_split[target_cell_id] = root_split 
-                   
+                   tracklet_before = tracklet_before  + 1
                    target_cell_tracklet_id = i +  tracklet_before
                    
                    self._assign_tracklet_id(target_cell_id, target_cell_tracklet_id, root_leaf, root_splits)
 
-     
+    def _increment_invalid(self, tracklet_before, root_splits):
+           
+            invalid_assingements = []
+            for second_root_split in root_splits:
+                     if second_root_split in self.tracklet_dict.keys():
+                           invalid_assingements.append(self.tracklet_dict[second_root_split])
+            if tracklet_before in invalid_assingements:
+                   self._increment_invalid(tracklet_before + 1, root_splits)
+            else:
+                   return tracklet_before       
                                   
 
            
@@ -389,37 +398,43 @@ class TrackMate(object):
          self.generation_dict[root_cell_id] = 0
          max_generation = len(root_splits)
          #Generation > 1
-         for pre_leaf in root_leaf:
-              if pre_leaf == root_cell_id:
-                   self.generation_dict[pre_leaf] = 0
-              else:
-                   self.generation_dict[pre_leaf] = int(max_generation) 
-                   source_id = self.edge_source_lookup[pre_leaf]
-                   if source_id in root_splits:
-                         self.generation_dict[source_id] = int(max_generation - 1)
-                   if source_id not in root_splits and source_id not in root_root:                         
-                         source_id = self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = int(max_generation))
 
-                   
-                   
+         for root_all in root_root:
+                
+                if root_all in self.edge_target_lookup:
+                   target_cells = self.edge_target_lookup[root_all]
+                   for i in range(len(target_cells)):
+                        target_cell_id = target_cells[i]
+                        if target_cell_id not in root_splits:
+                               gen_count = 0
+                               self.generation_dict[target_cell_id] = gen_count
+                        if target_cell_id in root_splits:
+                                       gen_count = gen_count + 1
+                                       self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count )
+
+         
                               
     #Assign generation ID to each cell               
-    def _recursive_path(self, source_id, root_splits, root_root, max_generation, gen_count ):
+    def _recursive_path(self, target_id, root_splits, root_leaf, gen_count ):
          
-
-        if source_id not in root_root:  
-            if source_id not in root_splits:
+        if target_id in root_leaf:
+               self.generation_dict[target_id] =  gen_count
+       
+        if target_id not in root_leaf:  
+            if target_id not in root_splits:
                             
-                            self.generation_dict[source_id] = int(gen_count)
-                            source_id = self.edge_source_lookup[source_id]
-                            self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = gen_count)
-            if source_id in root_splits:
+                            self.generation_dict[target_id] = int(gen_count)
+                            target_cells = self.edge_target_lookup[target_id]
+                            for i in range(len(target_cells)):
+                                target_cell_id = target_cells[i]
+                                self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count = gen_count)
+            if target_id in root_splits:
                                     
-                                    gen_count = gen_count - 1
-                                    self.generation_dict[source_id] = int(gen_count)
-                                    source_id = self.edge_source_lookup[source_id]
-                                   
-                                    self._recursive_path(source_id, root_splits, root_root, max_generation, gen_count = int(gen_count))
+                                    gen_count = gen_count + 1
+                                    target_cells = self.edge_target_lookup[target_id]
+                                    for i in range(len(target_cells)):
+                                        target_cell_id = target_cells[i]
+                                        self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count = gen_count)
 
                                     
                                     
