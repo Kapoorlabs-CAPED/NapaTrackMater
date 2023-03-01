@@ -396,7 +396,7 @@ class TrackMate(object):
          #Generation 0
          root_cell_id = root_root[0]    
          self.generation_dict[root_cell_id] = 0
-         max_generation = len(root_splits)
+        
          #Generation > 1
 
          for root_all in root_root:
@@ -425,18 +425,20 @@ class TrackMate(object):
             if target_id not in root_splits:
                             
                             self.generation_dict[target_id] = int(gen_count)
-                            target_cells = self.edge_target_lookup[target_id]
-                            for i in range(len(target_cells)):
-                                target_cell_id = target_cells[i]
-                                self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count = gen_count)
+                            if target_id in self.edge_target_lookup:
+                                target_cells = self.edge_target_lookup[target_id]
+                                for i in range(len(target_cells)):
+                                    target_cell_id = target_cells[i]
+                                    self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count = gen_count)
             if target_id in root_splits:
                                     
                                     gen_count = gen_count + 1
                                     self.generation_dict[target_id] = int(gen_count)
-                                    target_cells = self.edge_target_lookup[target_id]
-                                    for i in range(len(target_cells)):
-                                        target_cell_id = target_cells[i]
-                                        self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count = gen_count)
+                                    if target_id in self.edge_target_lookup:
+                                        target_cells = self.edge_target_lookup[target_id]
+                                        for i in range(len(target_cells)):
+                                            target_cell_id = target_cells[i]
+                                            self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count = gen_count)
 
                                     
                                     
