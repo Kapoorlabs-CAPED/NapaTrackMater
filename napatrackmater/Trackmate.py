@@ -410,6 +410,7 @@ class TrackMate(object):
                                self.generation_dict[target_cell_id] = gen_count
                         if target_cell_id in root_splits:
                                        gen_count = gen_count + 1
+                                       self.generation_dict[target_cell_id] = gen_count
                                        self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count )
 
          
