@@ -184,7 +184,8 @@ class TrackMate(object):
         if not isinstance(self.master_xml_path, str):      
           if self.master_xml_path.is_file():
                print('Reading Master XML')
-               self.xml_content = et.fromstring(codecs.open(self.master_xml_path, "r", "utf8").read())
+               self.xml_content = et.iterparse(self.xml_path)
+               #et.fromstring(codecs.open(self.master_xml_path, "r", "utf8").read())
                self.filtered_track_ids = [
                             int(track.get(self.trackid_key))
                             for track in self.xml_content.find("Model")
