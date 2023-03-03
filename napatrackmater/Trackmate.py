@@ -372,6 +372,7 @@ class TrackMate(object):
                                     
                                     tracklet_count = tracklet_count + 1
                                     self.tracklet_dict[target_id] = int(tracklet_count)
+                                    self._unique_split_id(target_id, tracklet_count)
                                     if target_id in self.edge_target_lookup:
                                         target_cells = self.edge_target_lookup[target_id]
                                         for i in range(len(target_cells)):
@@ -381,7 +382,14 @@ class TrackMate(object):
                                     
   
          
+    def _unique_split_id(self, target_id, tracklet_count):
 
+        for (k,v) in self.tracklet_dict.items():
+                      if k!=target_id and v == tracklet_count:
+                         self.tracklet_dict[target_id] = tracklet_count + 1
+                         self._unique_split_id(target_id, tracklet_count + 1)
+
+           
 
     def _distance_root_leaf(self, root_root, root_leaf, root_splits):
 
