@@ -374,7 +374,7 @@ class TrackMate(object):
                                     
                                     tracklet_count = tracklet_count + 1
                                     self.tracklet_dict[target_id] = int(tracklet_count)
-                                    
+                                    self.assigned_tracket_counts.append(tracklet_count)
                                     if target_id in self.edge_target_lookup:
                                         target_cells = self.edge_target_lookup[target_id]
                                         for i in range(len(target_cells)):
