@@ -341,7 +341,7 @@ class TrackMate(object):
          self.assigned_tracket_counts = []
          for root_all in root_root:
                 
-                self.tracklet_dict[root_all] = tracklet_count
+                self.tracklet_dict[root_all] = int(tracklet_count)
                 self.assigned_tracket_counts.append(tracklet_count)
                 if root_all in self.edge_target_lookup:
                    target_cells = self.edge_target_lookup[root_all]
@@ -357,7 +357,7 @@ class TrackMate(object):
     def _assign_tracklet_id(self, target_id, root_splits, root_leaf, tracklet_count ):
          
         if target_id in root_leaf:
-               self.tracklet_dict[target_id] =  tracklet_count
+               self.tracklet_dict[target_id] =  int(tracklet_count)
                self.assigned_tracket_counts.append(tracklet_count)
         if target_id not in root_leaf:  
             if target_id not in root_splits:
@@ -373,12 +373,14 @@ class TrackMate(object):
             if target_id in root_splits:
                                     
                                     tracklet_count = tracklet_count + 1
+                                    self.tracklet_dict[target_id] = int(tracklet_count)
                                     
-                                    self._unique_split_id(target_id, tracklet_count)
                                     if target_id in self.edge_target_lookup:
                                         target_cells = self.edge_target_lookup[target_id]
                                         for i in range(len(target_cells)):
                                             target_cell_id = target_cells[i]
+                                            if self.edge_source_lookup[target_cell_id] in root_splits:
+                                                self._unique_split_id(target_cell_id, i + tracklet_count)
                                             self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, i + tracklet_count )
 
                                     
