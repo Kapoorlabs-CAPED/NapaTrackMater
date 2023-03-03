@@ -170,7 +170,8 @@ class TrackMate(object):
         
         if self.master_xml_path.is_dir():
                 print('Reading XML')
-                self.xml_content = et.iterparse(self.xml_path)
+                self.xml_content = et.fromstring(self.xml_path) 
+                #et.iterparse(self.xml_path)
                 #et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
                 self.filtered_track_ids = [
                             int(track.get(self.trackid_key))
@@ -184,7 +185,8 @@ class TrackMate(object):
         if not isinstance(self.master_xml_path, str):      
           if self.master_xml_path.is_file():
                print('Reading Master XML')
-               self.xml_content = et.iterparse(self.master_xml_path)
+               self.xml_content = et.fromstring(self.master_xml_path) 
+               #et.iterparse(self.master_xml_path)
                #et.fromstring(codecs.open(self.master_xml_path, "r", "utf8").read())
                self.filtered_track_ids = [
                             int(track.get(self.trackid_key))
