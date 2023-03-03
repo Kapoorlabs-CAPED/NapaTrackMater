@@ -2,7 +2,9 @@
 from tqdm import tqdm
 import numpy as np 
 import codecs
-import lxml.etree.ElementTree as et
+import lxml.etree as et
+from lxml import etree
+#import xml.etree.ElementTree as et
 import pandas as pd
 import math
 from skimage.measure import label, regionprops
