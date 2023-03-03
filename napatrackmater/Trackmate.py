@@ -164,13 +164,13 @@ class TrackMate(object):
         self.graph_tracks = {}
         self._timed_centroid = {}
         self.count = 0
-        
+        xml_parser = et.XMLParser(huge_tree=True)
         if self.master_xml_path is None:
                self.master_xml_path = Path('.')
         
         if self.master_xml_path.is_dir():
                 print('Reading XML')
-                self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
+                self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read(), xml_parser)
                 #et.iterparse(self.xml_path)
                 #et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
                 self.filtered_track_ids = [
@@ -185,7 +185,8 @@ class TrackMate(object):
         if not isinstance(self.master_xml_path, str):      
           if self.master_xml_path.is_file():
                print('Reading Master XML')
-               self.xml_content = et.fromstring(codecs.open(self.master_xml_path, "r", "utf8").read())
+               
+               self.xml_content = et.fromstring(codecs.open(self.master_xml_path, "r", "utf8").read(), xml_parser)
                #et.iterparse(self.master_xml_path)
                #et.fromstring(codecs.open(self.master_xml_path, "r", "utf8").read())
                self.filtered_track_ids = [
