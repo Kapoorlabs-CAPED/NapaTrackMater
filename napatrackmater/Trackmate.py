@@ -348,7 +348,7 @@ class TrackMate(object):
                    for i in range(len(target_cells)):
                         target_cell_id = target_cells[i]
                         if target_cell_id in root_splits:
-                           tracklet_count = str(i) + str(tracklet_count) + str(1)
+                           tracklet_count = str(tracklet_count) + str(i) + str(1)
                            self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, tracklet_count)  
                         if target_cell_id not in root_splits:
                            self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, tracklet_count)    
@@ -372,7 +372,7 @@ class TrackMate(object):
                                     self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, tracklet_count )
             if target_id in root_splits:
                                     
-                                    tracklet_count = str(tracklet_count) + str(1)
+                                    
                                     self.tracklet_dict[target_id] = str(tracklet_count)
                                     self.assigned_tracket_counts.append(tracklet_count)
                                     if target_id in self.edge_target_lookup:
@@ -380,8 +380,8 @@ class TrackMate(object):
                                         for i in range(len(target_cells)):
                                             target_cell_id = target_cells[i]
                                             if self.edge_source_lookup[target_cell_id] in root_splits:
-                                                self._unique_split_id(target_cell_id, str(i) + tracklet_count)
-                                            self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, str(i) + tracklet_count )
+                                                self._unique_split_id(target_cell_id, tracklet_count + str(i) + str(1))
+                                            self._assign_tracklet_id(target_cell_id, root_splits, root_leaf,  tracklet_count + str(i) + str(1) )
 
                                     
   
