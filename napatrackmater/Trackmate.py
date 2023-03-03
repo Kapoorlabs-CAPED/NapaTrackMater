@@ -384,7 +384,7 @@ class TrackMate(object):
          
     def _unique_split_id(self, target_id, tracklet_count):
 
-        for (k,v) in self.tracklet_dict.items():
+        for (k,v) in self.tracklet_dict.copy().items():
                       if k!=target_id and v == tracklet_count:
                          self.tracklet_dict.update({target_id: tracklet_count + 1})
                          self._unique_split_id(target_id, tracklet_count + 1)
