@@ -388,7 +388,7 @@ class TrackMate(object):
                self.tracklet_dict[target_id] = int(tracklet_count)
         else:
             tracklet_count = tracklet_count + 1
-            self.tracklet_dict[target_id] = int(tracklet_count)
+            self._unique_split_id(target_id, tracklet_count)
 
 
     def _distance_root_leaf(self, root_root, root_leaf, root_splits):
