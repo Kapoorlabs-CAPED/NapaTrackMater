@@ -3,7 +3,7 @@ from tqdm import tqdm
 import numpy as np 
 import codecs
 import lxml.etree as et
-from lxml import etree
+from lxml import etree as et
 #import xml.etree.ElementTree as et
 import pandas as pd
 import math
@@ -170,7 +170,8 @@ class TrackMate(object):
         
         if self.master_xml_path.is_dir():
                 print('Reading XML')
-                self.xml_content = et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
+                self.xml_content = et.iterparse(self.xml_path)
+                #et.fromstring(codecs.open(self.xml_path, "r", "utf8").read())
                 self.filtered_track_ids = [
                             int(track.get(self.trackid_key))
                             for track in self.xml_content.find("Model")
