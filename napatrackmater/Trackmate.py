@@ -388,10 +388,11 @@ class TrackMate(object):
          
     def _unique_split_id(self, target_id, tracklet_count):
 
-        if int(tracklet_count) not in self.assigned_tracket_counts:
+        if tracklet_count not in self.assigned_tracket_counts:
                self.tracklet_dict[target_id] = int(tracklet_count)
                self.assigned_tracket_counts.append(tracklet_count)
         else:
+            print('making uni')
             tracklet_count = tracklet_count + 1
             self._unique_split_id(target_id, tracklet_count)
 
