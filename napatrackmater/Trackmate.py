@@ -22,9 +22,17 @@ from .clustering import Clustering
 
 class TrackVector(object):
        
-       def __init__(self, master_xml_path: Path):
+       def __init__(self, master_xml_path: Path, t_minus: int = 0, t_plus: int = 10, x_start : int = 0, x_end: int = 10,
+                    y_start: int = 0, y_end: int = 10):
               
               self.master_xml_path = master_xml_path
+              self.t_minus = t_minus
+              self.t_plus = t_plus 
+              self.x_start = x_start 
+              self.x_end = x_end 
+              self.y_start = y_start 
+              self.y_end = y_end 
+
 
 
 class TrackMate(object):
