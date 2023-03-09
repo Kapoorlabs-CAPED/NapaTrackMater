@@ -19,6 +19,14 @@ from pathlib import Path
 import concurrent
 
 from .clustering import Clustering
+
+class TrackVector(object):
+       
+       def __init__(self, master_xml_path: Path):
+              
+              self.master_xml_path = master_xml_path
+
+
 class TrackMate(object):
     
     def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes, progress_bar = None, 
