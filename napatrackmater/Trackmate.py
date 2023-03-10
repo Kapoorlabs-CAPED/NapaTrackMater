@@ -3,7 +3,6 @@ from tqdm import tqdm
 import numpy as np 
 import codecs
 import lxml.etree as et
-from lxml import etree as et
 #import xml.etree.ElementTree as et
 import pandas as pd
 import math
@@ -13,7 +12,6 @@ from scipy import spatial
 import dask as da
 from typing import List
 from napari.qt import thread_worker
-from . import load_json
 from scipy.fftpack import fft, fftfreq, fftshift, ifft
 import os
 from pathlib import Path 
