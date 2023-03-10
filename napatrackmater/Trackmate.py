@@ -13,6 +13,7 @@ from scipy import spatial
 import dask as da
 from typing import List
 from napari.qt import thread_worker
+from . import load_json
 from scipy.fftpack import fft, fftfreq, fftshift, ifft
 import os
 from pathlib import Path 
@@ -37,7 +38,7 @@ class TrackVector(object):
 
 class TrackMate(object):
     
-    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes, progress_bar = None, 
+    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes,  progress_bar = None, 
                  master_xml_path: Path = None, master_extra_name = '', seg_image = None, channel_seg_image = None, image = None, mask = None, fourier = True, cluster_model = None, num_points = 2048, save_dir = None, batch_size = 1):
         
         
@@ -56,6 +57,8 @@ class TrackMate(object):
         self.TrackAttributeBoxname = TrackAttributeBoxname
         self.TrackidBox = TrackidBox
         self.master_extra_name = master_extra_name
+       
+       
         self.num_points = num_points
         self.spot_dataset, self.spot_dataset_index = get_csv_data(self.spot_csv_path)
         self.track_dataset, self.track_dataset_index = get_csv_data(self.track_csv_path)
