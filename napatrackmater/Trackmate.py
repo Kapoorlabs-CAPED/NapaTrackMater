@@ -553,27 +553,21 @@ class TrackMate(object):
                                          
 
                                     spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
-                                    if self.seg_image is not None:
-                                        spot_label = self.seg_image[t,int(spot_centroid[0]),int(spot_centroid[1]), int(spot_centroid[2])]
-                                    else:
-                                        spot_label = 0    
+                                     
 
                                     self.unique_spot_centroid[spot_centroid] = k
                                     self.unique_track_centroid[(t,int(spot_centroid[0]),int(spot_centroid[1]), int(spot_centroid[2]))] = track_id
 
                                     if str(t) in self._timed_centroid:
-                                           tree, spot_centroids, spot_labels = self._timed_centroid[str(t)]
+                                           tree, spot_centroids = self._timed_centroid[str(t)]
                                            spot_centroids.append(spot_centroid)
-                                           spot_labels.append(spot_label)
                                            tree = spatial.cKDTree(spot_centroids)
-                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
+                                           self._timed_centroid[str(t)] = tree, spot_centroids 
                                     else:
                                            spot_centroids = []
-                                           spot_labels = [] 
                                            spot_centroids.append(spot_centroid)
-                                           spot_labels.append(spot_label)
                                            tree = spatial.cKDTree(spot_centroids)
-                                           self._timed_centroid[str(t)] = tree, spot_centroids , spot_labels
+                                           self._timed_centroid[str(t)] = tree, spot_centroids
                             
 
     def _master_track_computer(self, track, track_id):
@@ -1181,7 +1175,7 @@ class TrackMate(object):
                     
                     for count, time_key in enumerate(self._timed_centroid.keys()):
                            
-                           tree, spot_centroids, spot_labels = self._timed_centroid[time_key]
+                           tree, spot_centroids = self._timed_centroid[time_key]
                            if self.progress_bar is not None:
                                 self.progress_bar.label = "Computing clustering classes"
                                 self.progress_bar.range = (
@@ -1191,7 +1185,7 @@ class TrackMate(object):
                                 self.progress_bar.value =  count 
                                 self.progress_bar.show()
 
-                           cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.num_points, self.cluster_model, key = time_key,spot_labels = spot_labels, progress_bar=self.progress_bar, batch_size = self.batch_size)       
+                           cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.num_points, self.cluster_model, key = time_key, progress_bar=self.progress_bar, batch_size = self.batch_size)       
                            cluster_eval._create_cluster_labels()
                            timed_cluster_label = cluster_eval.timed_cluster_label 
                            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = timed_cluster_label[time_key]

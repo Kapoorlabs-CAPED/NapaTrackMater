@@ -45,14 +45,14 @@ class PointCloudDataset(Dataset):
 
 class Clustering:
 
-    def __init__(self, label_image: np.ndarray, axes,  num_points: int, model: DeepEmbeddedClustering, spot_labels = None, key = 0,  min_size:tuple = (2,2,2), progress_bar = None, batch_size = 1):
+    def __init__(self, label_image: np.ndarray, axes,  num_points: int, model: DeepEmbeddedClustering, key = 0,  min_size:tuple = (2,2,2), progress_bar = None, batch_size = 1):
 
         self.label_image = label_image 
         self.model = model
         self.axes = axes
         self.num_points = num_points
         self.min_size = min_size
-        self.spot_labels = spot_labels
+       
         self.progress_bar = progress_bar
         self.key = key
         self.batch_size = batch_size
@@ -66,7 +66,7 @@ class Clustering:
         #YX image  
         if ndim == 2:
            
-           labels, centroids, clouds = _label_cluster(self.label_image, self.model, self.num_points, self.min_size, ndim, self.spot_labels)
+           labels, centroids, clouds, eccentricities, perimeters, solidities = _label_cluster(self.label_image, self.model, self.num_points, self.min_size, ndim)
            
            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids, self.batch_size)
            self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]     
@@ -74,7 +74,7 @@ class Clustering:
         #ZYX image
         if ndim == 3 and 'T' not in self.axes:
                
-           labels, centroids, clouds = _label_cluster(self.label_image,   self.num_points, self.min_size, ndim, self.spot_labels)
+           labels, centroids, clouds, eccentricities, perimeters, solidities = _label_cluster(self.label_image,   self.num_points, self.min_size, ndim)
            if len(labels) > 1:
                 
                 output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids, self.batch_size)
@@ -105,7 +105,7 @@ class Clustering:
     def _label_computer(self, i, dim):
         
             xyz_label_image = self.label_image[i,:]
-            labels, centroids, clouds = _label_cluster(xyz_label_image,   self.num_points, self.min_size, dim, self.spot_labels)
+            labels, centroids, clouds, eccentricities, perimeters, solidities = _label_cluster(xyz_label_image,   self.num_points, self.min_size, dim)
             if len(labels) > 1:
                 
                 output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids, self.batch_size)
@@ -138,33 +138,31 @@ def _model_output(model, clouds, labels, centroids, batch_size):
 
        
 
-def _label_cluster(label_image,   num_points, min_size, ndim, spot_labels):
+def _label_cluster(label_image, num_points, min_size, ndim):
        
        labels = []
        centroids = []
        clouds = []
-       nthreads = os.cpu_count() - 1
+       eccentricities = []
+       perimeters = []
+       solidities = []
+       nthreads = os.cpu_count()
        properties = regionprops(label_image)
        futures = []
-       with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
+       with concurrent.futures.ThreadPoolExecutor(max_workers = nthreads) as executor:
              for prop in properties:
                           futures.append(executor.submit(get_current_label_binary, prop))
              for r in concurrent.futures.as_completed(futures):
-                          binary_image, label, centroid = r.result()             
-                          
-                          if spot_labels is not None:
-                                if label in spot_labels:
-                                    label, centroid, cloud = get_label_centroid_cloud(binary_image,  num_points, ndim, label, centroid,  min_size)
-                                    clouds.append(cloud)  
-                                    labels.append(label)   
-                                    centroids.append(centroid)
-                          if spot_labels is None:
-                                    label, centroid, cloud = get_label_centroid_cloud(binary_image,  num_points, ndim, label, centroid,  min_size)
-                                    clouds.append(cloud)  
-                                    labels.append(label)   
-                                    centroids.append(centroid)
+                        binary_image, label, centroid, eccentricity, perimeter, solidity = r.result()             
+                        label, centroid, cloud = get_label_centroid_cloud(binary_image,  num_points, ndim, label, centroid,  min_size)
+                        clouds.append(cloud)  
+                        labels.append(label)   
+                        centroids.append(centroid)
+                        eccentricities.append(eccentricity)
+                        perimeters.append(perimeter)
+                        solidities.append(solidity)
 
-       return labels, centroids, clouds
+       return labels, centroids, clouds, eccentricities, perimeters, solidities
 
 def get_label_centroid_cloud(binary_image,  num_points, ndim, label, centroid, min_size):
                             
@@ -231,4 +229,8 @@ def get_current_label_binary(prop):
                 label = prop.label 
                 centroid = np.asarray(prop.centroid) 
 
-                return binary_image , label, centroid
+                eccentricity = prop.eccentricity
+                perimeter = prop.perimeter
+                solidity = prop.solidity
+
+                return binary_image , label, centroid, eccentricity, perimeter, solidity
