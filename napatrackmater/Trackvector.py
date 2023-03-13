@@ -7,10 +7,11 @@ import numpy as np
 
 class TrackVector(TrackMate):
        
-        def __init__(self, master_xml_path: Path, t_minus: int = 0, t_plus: int = 10, x_start : int = 0, x_end: int = 10,
+        def __init__(self, master_xml_path: Path, t_current: int, t_minus: int = 0, t_plus: int = 10, x_start : int = 0, x_end: int = 10,
                     y_start: int = 0, y_end: int = 10, show_tracks: bool = True):
               
               self.master_xml_path = master_xml_path
+              self.t_current = t_current
               self.t_minus = t_minus
               self.t_plus = t_plus 
               self.x_start = x_start 
@@ -19,6 +20,7 @@ class TrackVector(TrackMate):
               self.y_end = y_end 
               self.show_tracks = show_tracks
               xml_parser = et.XMLParser(huge_tree=True)
+              self.unique_morphology_dynamic_properties = {}
 
               if not isinstance(self.master_xml_path, str):      
                     if self.master_xml_path.is_file():
@@ -137,11 +139,76 @@ class TrackVector(TrackMate):
                                         self.progress_bar.show()
                                         self.count = self.count + 1
                                         self.progress_bar.value = self.count
-                                    self._final_tracks(track_id) 
+                                    self._final_morphological_dynamic_vectors(track_id) 
 
             self._compute_cluster_phenotypes()                        
-            self._temporal_plots_trackmate()   
 
+        
+        def _final_morphological_dynamic_vectors(self, track_id):
+                
+                current_cell_ids = self.all_current_cell_ids[int(track_id)]
+                current_tracklets = {}
+                current_tracklets_properties = {}
+                
+                for i in range(len(current_cell_ids)):
+                            
+                        k = int(current_cell_ids[i])    
+                        all_dict_values = self.unique_spot_properties[k]
+                        unique_id = str(all_dict_values[self.uniqueid_key])
+                        current_track_id = str(all_dict_values[self.trackid_key])
+                        t = int(float(all_dict_values[self.frameid_key]))
+                        z = float(all_dict_values[self.zposid_key])
+                        y = float(all_dict_values[self.yposid_key])
+                        x = float(all_dict_values[self.xposid_key])
+
+                        if t >= self.t_current - self.t_minus and t <= self.t_current + self.t_plus and x >= self.x_start and x <= self.x_end and y >= self.y_start and y <= self.y_end:
+                                gen_id = int(float(all_dict_values[self.generationid_key]))
+                                speed = float(all_dict_values[self.speed_key])
+                                acceleration = float(all_dict_values[self.acceleration_key])
+                                dcr = float(all_dict_values[self.directional_change_rate_key])
+                                radius = float(all_dict_values[self.radius_key])
+                               
+                                total_intensity =  float(all_dict_values[self.total_intensity_key])
+                                volume_pixels = int(float(all_dict_values[self.quality_key]))
+                                if self.clusterclass_key in all_dict_values.keys():
+                                        
+                                        if all_dict_values[self.clusterclass_key] is not None:
+                                            cluster_class = int(float(all_dict_values[self.clusterclass_key]))
+                                            cluster_class_score = float(all_dict_values[self.clusterscore_key])
+                                        else:
+                                            cluster_class = None
+                                            cluster_class_score = 0     
+                                else:
+                                        cluster_class = None
+                                        cluster_class_score = 0       
+
+                                spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
+
+                                self.unique_spot_centroid[spot_centroid] = k
+
+                                if current_track_id in current_tracklets:
+                                    tracklet_array = current_tracklets[current_track_id]
+                                    current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
+                                    current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
+
+                                    value_array = current_tracklets_properties[current_track_id]
+                                    current_value_array = np.array([t, int(float(unique_id)), gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
+                                    current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
+
+                                else:
+                                    current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
+                                    current_tracklets[current_track_id] = current_tracklet_array 
+
+                                    current_value_array = np.array([t, int(float(unique_id)), gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
+                                    current_tracklets_properties[current_track_id] = current_value_array
+
+                        current_tracklets = np.asarray(current_tracklets[str(track_id)])
+                        current_tracklets_properties = np.asarray(current_tracklets_properties[str(track_id)])
+                        
+                        self.unique_tracks[track_id] = current_tracklets     
+                        self.unique_track_properties[track_id] = current_tracklets_properties 
+            
+                        
 
         def _compute_cluster_phenotypes(self):
                 

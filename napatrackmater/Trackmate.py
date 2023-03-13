@@ -132,6 +132,7 @@ class TrackMate(object):
         self.centroid_key = 'centroid'
         self.clusterclass_key = 'cluster_class'
         self.clusterscore_key = 'cluster_score'
+        self.circularity_key = 'circularity'
 
         self.mean_intensity_ch1_key = self.track_analysis_spot_keys["mean_intensity_ch1"]
         self.mean_intensity_ch2_key = self.track_analysis_spot_keys["mean_intensity_ch2"]
@@ -640,7 +641,7 @@ class TrackMate(object):
                             current_cell_ids = self.all_current_cell_ids[int(track_id)]
                             current_tracklets = {}
                             current_tracklets_properties = {}
-
+                            
                             for i in range(len(current_cell_ids)):
                                         
                                     k = int(current_cell_ids[i])    
@@ -673,12 +674,8 @@ class TrackMate(object):
                                            cluster_class_score = 0       
 
                                     spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
-                                       
 
                                     self.unique_spot_centroid[spot_centroid] = k
-
-                                 
-
 
                                     if current_track_id in current_tracklets:
                                         tracklet_array = current_tracklets[current_track_id]
@@ -1397,10 +1394,6 @@ class TrackMate(object):
                 self.mitotic_cluster_class = []
                 self.non_mitotic_cluster_class = []
                 self.all_cluster_class = []
-
-
-
-
 
                 all_spots_tracks = {}
                 for (k,v) in self.unique_spot_properties.items():
