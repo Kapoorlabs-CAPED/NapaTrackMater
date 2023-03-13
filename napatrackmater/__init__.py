@@ -1,5 +1,6 @@
 
 from .Trackmate import *
+from .Trackvector import *
 from .version import __version__
 from .pretrained import register_model, register_aliases, clear_models_and_aliases
 from .clustering import Clustering

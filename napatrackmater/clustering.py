@@ -88,9 +88,6 @@ class Clustering:
                for i in range(self.label_image.shape[0]):
                         self.count = self.count + 1
                         output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid  = self._label_computer(i, ndim - 1)
-          
-                      
-                                        
                         self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]
                 
         #TZYX image        
@@ -100,9 +97,6 @@ class Clustering:
                 for i in range(self.label_image.shape[0]):
                         self.count = self.count + 1
                         output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid  = self._label_computer(i, ndim)
-          
-                       
-                                        
                         self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]
                 
                         
