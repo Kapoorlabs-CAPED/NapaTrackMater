@@ -7,10 +7,13 @@ import numpy as np
 
 class TrackVector(TrackMate):
        
-        def __init__(self, master_xml_path: Path, t_current: int, t_minus: int = 0, t_plus: int = 10, x_start : int = 0, x_end: int = 10,
+        def __init__(self, master_xml_path: Path, spot_csv_path: Path, track_csv_path: Path, edges_csv_path: Path, t_current: int, t_minus: int = 0, t_plus: int = 10, x_start : int = 0, x_end: int = 10,
                     y_start: int = 0, y_end: int = 10, show_tracks: bool = True):
               
               self.master_xml_path = master_xml_path
+              self.spot_csv_path = spot_csv_path
+              self.track_csv_path = track_csv_path
+              self.edges_csv_path = edges_csv_path
               self.t_current = t_current
               self.t_minus = t_minus
               self.t_plus = t_plus 
@@ -21,6 +24,8 @@ class TrackVector(TrackMate):
               self.show_tracks = show_tracks
               xml_parser = et.XMLParser(huge_tree=True)
               self.unique_morphology_dynamic_properties = {}
+
+              super().__init__(None,  self.spot_csv_path, self.track_csv_path, self.edges_csv_path, AttributeBoxname = "AttributeIDBox", TrackAttributeBoxname = "TrackAttributeIDBox", TrackidBox = "All", axes = 'TZYX', master_xml_path = None )
 
               if not isinstance(self.master_xml_path, str):      
                     if self.master_xml_path.is_file():
@@ -72,8 +77,21 @@ class TrackVector(TrackMate):
             self.basicsettings = self.xml_content.find("Settings").find("BasicSettings")
             self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
             self.tstart = int(float(self.basicsettings.get("tstart")))
-            self.tend = int(float(self.basicsettings.get("tend")))      
+            self.tend = int(float(self.basicsettings.get("tend")))
+            self.xmin = int(float(self.basicsettings.get("xstart")))
+            self.xmax = int(float(self.basicsettings.get("xend")))      
+            self.ymin = int(float(self.basicsettings.get("ystart")))
+            self.ymax = int(float(self.basicsettings.get("yend")))
 
+            if self.x_end > self.xmax:
+                    self.x_end = self.xmax
+            if self.y_end > self.ymax:
+                    self.y_end = self.ymax
+
+            if self.x_start < self.xmin:
+                    self.x_start = self.xmin
+            if self.y_start < self.ymin:
+                    self.y_start = self.ymin                         
             print('Iterating over spots in frame')
             self.count = 0
             futures = []
