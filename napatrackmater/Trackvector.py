@@ -8,7 +8,7 @@ import numpy as np
 
 class TrackVector(TrackMate):
        
-        def __init__(self, viewer, master_xml_path: Path, spot_csv_path: Path, track_csv_path: Path, edges_csv_path: Path, t_current: int = 0, t_minus: int = 0, t_plus: int = 10, x_start : int = 0, x_end: int = 10,
+        def __init__(self, viewer, master_xml_path: Path, spot_csv_path: Path, track_csv_path: Path, edges_csv_path: Path, t_minus: int = 0, t_plus: int = 10, x_start : int = 0, x_end: int = 10,
                     y_start: int = 0, y_end: int = 10, show_tracks: bool = True):
               
               
@@ -19,7 +19,6 @@ class TrackVector(TrackMate):
               self.spot_csv_path = spot_csv_path
               self.track_csv_path = track_csv_path
               self.edges_csv_path = edges_csv_path
-              self.t_current = t_current
               self.t_minus = t_minus
               self.t_plus = t_plus 
               self.x_start = x_start 
@@ -78,13 +77,7 @@ class TrackVector(TrackMate):
         def new_y_end(self, value):
                self.y_end = value       
 
-        @property
-        def new_t_current(self):
-               return self.t_current 
-        
-        @new_t_current.setter
-        def new_t_current(self, value):
-               self.t_current = value
+       
 
         @property
         def new_t_minus(self):
@@ -203,21 +196,25 @@ class TrackVector(TrackMate):
 
         def _interactive_function(self):
                
+               self.unique_tracks = {}
+               self.unique_track_properties = {}
                for track_id in self.filtered_track_ids:
                                     
                                     self._final_morphological_dynamic_vectors(track_id)
                if self.show_tracks:
-                        unique_tracks = np.concatenate(
-                            [
-                                self.unique_tracks[unique_track_id]
-                                for unique_track_id in self.unique_tracks.keys()
-                            ]
-                        )                     
-
-                        self.viewer.add_tracks(
-                        unique_tracks,
-                        name="Track"
-                    )
+                        
+                        if len(self.unique_tracks.keys()) > 0:   
+                                unique_tracks = np.concatenate(
+                                    [
+                                        self.unique_tracks[unique_track_id]
+                                        for unique_track_id in self.unique_tracks.keys()
+                                    ]
+                                )                     
+                                
+                                self.viewer.add_tracks(
+                                unique_tracks,
+                                name="Track"
+                            )
 
 
         def _final_morphological_dynamic_vectors(self, track_id):
@@ -236,8 +233,7 @@ class TrackVector(TrackMate):
                         z = float(all_dict_values[self.zposid_key])
                         y = float(all_dict_values[self.yposid_key])
                         x = float(all_dict_values[self.xposid_key])
-
-                        if t >= self.t_current - self.t_minus and t <= self.t_current + self.t_plus and x >= self.x_start and x <= self.x_end and y >= self.y_start and y <= self.y_end:
+                        if t >= self.t_minus and t <=  self.t_plus and x >= self.x_start and x <= self.x_end and y >= self.y_start and y <= self.y_end:
                                 gen_id = int(float(all_dict_values[self.generationid_key]))
                                 speed = float(all_dict_values[self.speed_key])
                                 acceleration = float(all_dict_values[self.acceleration_key])
@@ -278,11 +274,12 @@ class TrackVector(TrackMate):
                                     current_value_array = np.array([t, int(float(unique_id)), gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
                                     current_tracklets_properties[current_track_id] = current_value_array
 
-                current_tracklets = np.asarray(current_tracklets[str(track_id)])
-                current_tracklets_properties = np.asarray(current_tracklets_properties[str(track_id)])
-                
-                self.unique_tracks[track_id] = current_tracklets     
-                self.unique_track_properties[track_id] = current_tracklets_properties 
+                if str(track_id) in current_tracklets:
+                        current_tracklets = np.asarray(current_tracklets[str(track_id)])
+                        current_tracklets_properties = np.asarray(current_tracklets_properties[str(track_id)])
+                        if len(current_tracklets.shape) == 2:
+                            self.unique_tracks[track_id] = current_tracklets     
+                            self.unique_track_properties[track_id] = current_tracklets_properties 
 
                 
             
