@@ -44,6 +44,68 @@ class TrackVector(TrackMate):
 
                         self._get_track_vector_xml_data()
 
+        
+        @property
+        def new_x_start(self):
+               return self.x_start
+        
+        @new_x_start.setter
+        def new_x_start(self, value):
+               self.x_start = value
+
+        @property
+        def new_y_start(self):
+               return self.y_start
+        
+        @new_y_start.setter
+        def new_y_start(self, value):
+               self.y_start = value
+
+        @property
+        def new_x_end(self):
+               return self.x_end
+        
+        @new_x_end.setter
+        def new_x_end(self, value):
+               self.x_end = value
+
+        @property
+        def new_y_end(self):
+               return self.y_end
+        
+        @new_y_end.setter
+        def new_y_end(self, value):
+               self.y_end = value       
+
+        @property
+        def new_t_current(self):
+               return self.t_current 
+        
+        @new_t_current.setter
+        def new_t_current(self, value):
+               self.t_current = value
+
+        @property
+        def new_t_minus(self):
+               return self.t_minus 
+        
+        @new_t_minus.setter
+        def new_t_minus(self, value):
+               self.t_minus = value
+
+        @property
+        def new_t_plus(self):
+               return self.t_plus 
+        
+        @new_t_plus.setter
+        def new_t_plus(self, value):
+               self.t_plus = value       
+
+
+
+
+
+
 
         def _get_track_vector_xml_data(self):
             
