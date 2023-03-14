@@ -172,7 +172,7 @@ class TrackMate(object):
         if self.master_xml_path is None:
                self.master_xml_path = Path('.')
         
-        if self.master_xml_path.is_dir():
+        if self.master_xml_path.is_dir() and self.xml_path is not None:
                 print('Reading XML')
                 self.xml_content = et.fromstring(open(self.xml_path).read().encode(), xml_parser)
                 
