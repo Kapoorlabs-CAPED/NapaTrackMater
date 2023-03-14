@@ -265,11 +265,11 @@ class TrackVector(TrackMate):
                                     current_value_array = np.array([t, int(float(unique_id)), gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
                                     current_tracklets_properties[current_track_id] = current_value_array
 
-                        current_tracklets = np.asarray(current_tracklets[str(track_id)])
-                        current_tracklets_properties = np.asarray(current_tracklets_properties[str(track_id)])
-                        
-                        self.unique_tracks[track_id] = current_tracklets     
-                        self.unique_track_properties[track_id] = current_tracklets_properties 
+                current_tracklets = np.asarray(current_tracklets[str(track_id)])
+                current_tracklets_properties = np.asarray(current_tracklets_properties[str(track_id)])
+                
+                self.unique_tracks[track_id] = current_tracklets     
+                self.unique_track_properties[track_id] = current_tracklets_properties 
             
                         
 
