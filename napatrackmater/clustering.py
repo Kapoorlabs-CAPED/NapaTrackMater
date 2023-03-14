@@ -108,16 +108,21 @@ class Clustering:
             labels, centroids, clouds, eccentricities, perimeters, solidities = _label_cluster(xyz_label_image,   self.num_points, self.min_size, dim)
             if len(labels) > 1:
                 
-                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids, self.batch_size)
+                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_eccentricities, output_perimeters, output_solidities = _model_output(self.model, clouds, labels, centroids, eccentricities, perimeters, solidities, self.batch_size)
             
-                return  output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid
+                return  output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_eccentricities, output_perimeters, output_solidities
 
-def _model_output(model, clouds, labels, centroids, batch_size):
+def _model_output(model, clouds, labels, centroids, eccentricities, perimeters, solidities, batch_size):
        
         output_labels = []
         output_cluster_score = []
         output_cluster_class = []
         output_cluster_centroid = []
+
+        output_eccentricities = eccentricities
+        output_perimeters = perimeters
+        output_solidities = solidities
+
         dataset = PointCloudDataset(clouds, labels, centroids)
         dataloader = DataLoader(dataset, batch_size = batch_size)
         model.eval()
@@ -133,7 +138,7 @@ def _model_output(model, clouds, labels, centroids, batch_size):
                 output_cluster_centroid = output_cluster_centroid +  [tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in centroid_inputs]
                 output_labels = output_labels + [int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in label_inputs]
                 output_cluster_class = output_cluster_class + [np.argmax(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
-        return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid              
+        return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_eccentricities, output_perimeters, output_solidities              
 
 
        
