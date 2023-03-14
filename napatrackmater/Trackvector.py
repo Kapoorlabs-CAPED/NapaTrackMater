@@ -11,6 +11,9 @@ class TrackVector(TrackMate):
         def __init__(self, master_xml_path: Path, spot_csv_path: Path, track_csv_path: Path, edges_csv_path: Path, t_current: int, t_minus: int = 0, t_plus: int = 10, x_start : int = 0, x_end: int = 10,
                     y_start: int = 0, y_end: int = 10, show_tracks: bool = True):
               
+              
+
+              super().__init__(None,  spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname = "AttributeIDBox", TrackAttributeBoxname = "TrackAttributeIDBox", TrackidBox = "All", axes = 'TZYX', master_xml_path = None )
               self.master_xml_path = master_xml_path
               self.spot_csv_path = spot_csv_path
               self.track_csv_path = track_csv_path
@@ -24,10 +27,7 @@ class TrackVector(TrackMate):
               self.y_end = y_end 
               self.show_tracks = show_tracks
               xml_parser = et.XMLParser(huge_tree=True)
-              self.unique_morphology_dynamic_properties = {}
-
-              super().__init__(None,  self.spot_csv_path, self.track_csv_path, self.edges_csv_path, AttributeBoxname = "AttributeIDBox", TrackAttributeBoxname = "TrackAttributeIDBox", TrackidBox = "All", axes = 'TZYX', master_xml_path = None )
-
+              self.unique_morphology_dynamic_properties = {}  
               if not isinstance(self.master_xml_path, str):      
                     if self.master_xml_path.is_file():
                         print('Reading Master XML')
@@ -196,13 +196,17 @@ class TrackVector(TrackMate):
             self._get_attributes()
            
             self.count = 0
-            for track_id in self.filtered_track_ids:
-                                    
-                                    self._final_morphological_dynamic_vectors(track_id) 
+             
 
             self._compute_cluster_phenotypes()                        
 
-        
+        def _interactive_function(self):
+               
+               for track_id in self.filtered_track_ids:
+                                    
+                                    self._final_morphological_dynamic_vectors(track_id)
+
+
         def _final_morphological_dynamic_vectors(self, track_id):
                 
                 current_cell_ids = self.all_current_cell_ids[int(track_id)]
