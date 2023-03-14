@@ -5,6 +5,7 @@ import concurrent
 import os
 import numpy as np
 
+
 class TrackVector(TrackMate):
        
         def __init__(self, master_xml_path: Path, spot_csv_path: Path, track_csv_path: Path, edges_csv_path: Path, t_current: int, t_minus: int = 0, t_plus: int = 10, x_start : int = 0, x_end: int = 10,
@@ -100,14 +101,7 @@ class TrackVector(TrackMate):
                 
                 for frame in self.Spotobjects.findall('SpotsInFrame'):
                             futures.append(executor.submit(self._master_spot_computer, frame))
-                if self.progress_bar is not None:
-                                
-                                self.progress_bar.label = "Collecting Spots"
-                                self.progress_bar.range = (
-                                    0,
-                                    len(futures),
-                                )
-                                self.progress_bar.show()
+                
 
                 for r in concurrent.futures.as_completed(futures):
                                 self.count = self.count + 1
@@ -126,14 +120,7 @@ class TrackVector(TrackMate):
                         track_id = int(track.get(self.trackid_key))
                         if track_id in self.filtered_track_ids:
                                 futures.append(executor.submit(self._master_track_computer, track, track_id))
-                if self.progress_bar is not None:
-                                
-                                self.progress_bar.label = "Collecting Tracks"
-                                self.progress_bar.range = (
-                                    0,
-                                    len(self.filtered_track_ids),
-                                )
-                                self.progress_bar.show()
+               
 
 
                 for r in concurrent.futures.as_completed(futures):
@@ -148,15 +135,7 @@ class TrackVector(TrackMate):
            
             self.count = 0
             for track_id in self.filtered_track_ids:
-                                    if self.progress_bar is not None:
-                                        self.progress_bar.label = "Just one more thing"
-                                        self.progress_bar.range = (
-                                                0,
-                                                len(self.filtered_track_ids),
-                                            )
-                                        self.progress_bar.show()
-                                        self.count = self.count + 1
-                                        self.progress_bar.value = self.count
+                                    
                                     self._final_morphological_dynamic_vectors(track_id) 
 
             self._compute_cluster_phenotypes()                        
