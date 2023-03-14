@@ -206,6 +206,18 @@ class TrackVector(TrackMate):
                for track_id in self.filtered_track_ids:
                                     
                                     self._final_morphological_dynamic_vectors(track_id)
+               if self.show_tracks:
+                        unique_tracks = np.concatenate(
+                            [
+                                self.unique_tracks[unique_track_id]
+                                for unique_track_id in self.unique_tracks.keys()
+                            ]
+                        )                     
+
+                        self.viewer.add_tracks(
+                        unique_tracks,
+                        name="Track"
+                    )
 
 
         def _final_morphological_dynamic_vectors(self, track_id):
@@ -271,6 +283,8 @@ class TrackVector(TrackMate):
                 
                 self.unique_tracks[track_id] = current_tracklets     
                 self.unique_track_properties[track_id] = current_tracklets_properties 
+
+                
             
                         
 
