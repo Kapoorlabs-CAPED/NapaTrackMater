@@ -8,7 +8,7 @@ import numpy as np
 
 class TrackVector(TrackMate):
        
-        def __init__(self, master_xml_path: Path, spot_csv_path: Path, track_csv_path: Path, edges_csv_path: Path, t_current: int, t_minus: int = 0, t_plus: int = 10, x_start : int = 0, x_end: int = 10,
+        def __init__(self, master_xml_path: Path, spot_csv_path: Path, track_csv_path: Path, edges_csv_path: Path, t_current: int = 0, t_minus: int = 0, t_plus: int = 10, x_start : int = 0, x_end: int = 10,
                     y_start: int = 0, y_end: int = 10, show_tracks: bool = True):
               
               
