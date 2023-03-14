@@ -11,7 +11,6 @@ from skimage.segmentation import find_boundaries
 from scipy import spatial
 import dask as da
 from typing import List
-from napari.qt import thread_worker
 from scipy.fftpack import fft, fftfreq, fftshift, ifft
 import os
 from pathlib import Path 
