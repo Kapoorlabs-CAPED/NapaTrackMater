@@ -128,7 +128,7 @@ class TrackMate(object):
         self.centroid_key = 'centroid'
         self.clusterclass_key = 'cluster_class'
         self.clusterscore_key = 'cluster_score'
-        self.eccenricity_key = 'eccentricity'
+        
         self.perimeter_key = 'perimeter'
         self.solidity_key = 'solidity'
 
@@ -1186,12 +1186,12 @@ class TrackMate(object):
                            cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.num_points, self.cluster_model, key = time_key, progress_bar=self.progress_bar, batch_size = self.batch_size)       
                            cluster_eval._create_cluster_labels()
                            timed_cluster_label = cluster_eval.timed_cluster_label 
-                           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_eccentricities, output_perimeters, output_solidities = timed_cluster_label[time_key]
+                           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid,  output_perimeters, output_solidities = timed_cluster_label[time_key]
                            for i in range(len(output_cluster_centroid)):
                                     centroid = output_cluster_centroid[i]
                                     cluster_class = output_cluster_class[i]
                                     cluster_score = output_cluster_score[i]
-                                    eccentricity = output_eccentricities[i]
+                                   
                                     perimeter = output_perimeters[i]
                                     solidity = output_solidities[i]
                                     dist, index = tree.query(centroid)
@@ -1199,7 +1199,6 @@ class TrackMate(object):
                                     closest_cell_id = self.unique_spot_centroid[closest_centroid]
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.clusterclass_key : cluster_class})
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.clusterscore_key : cluster_score})
-                                    self.unique_spot_properties[int(closest_cell_id)].update({self.eccenricity_key: eccentricity})
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.perimeter_key: perimeter})
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.solidity_key: solidity})
                            for (k,v) in self.root_spots.items():
