@@ -66,7 +66,7 @@ class Clustering:
         #YX image  
         if ndim == 2:
            
-           labels, centroids, clouds, perimeters, solidities = _label_cluster(self.label_image, self.model, self.num_points, self.min_size, ndim)
+           labels, centroids, clouds = _label_cluster(self.label_image, self.model, self.num_points, self.min_size, ndim)
            
            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids, self.batch_size)
            self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]     
@@ -74,7 +74,7 @@ class Clustering:
         #ZYX image
         if ndim == 3 and 'T' not in self.axes:
                
-           labels, centroids, clouds, perimeters, solidities = _label_cluster(self.label_image,   self.num_points, self.min_size, ndim)
+           labels, centroids, clouds = _label_cluster(self.label_image,   self.num_points, self.min_size, ndim)
            if len(labels) > 1:
                 
                 output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids, self.batch_size)
@@ -105,22 +105,20 @@ class Clustering:
     def _label_computer(self, i, dim):
         
             xyz_label_image = self.label_image[i,:]
-            labels, centroids, clouds, perimeters, solidities = _label_cluster(xyz_label_image,   self.num_points, self.min_size, dim)
+            labels, centroids, clouds = _label_cluster(xyz_label_image,   self.num_points, self.min_size, dim)
             if len(labels) > 1:
                 
-                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_perimeters, output_solidities = _model_output(self.model, clouds, labels, centroids, perimeters, solidities, self.batch_size)
+                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids, self.batch_size)
             
-                return  output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_perimeters, output_solidities
+                return  output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid
 
-def _model_output(model, clouds, labels, centroids, perimeters, solidities, batch_size):
+def _model_output(model, clouds, labels, centroids, batch_size):
        
         output_labels = []
         output_cluster_score = []
         output_cluster_class = []
         output_cluster_centroid = []
 
-        output_perimeters = perimeters
-        output_solidities = solidities
 
         dataset = PointCloudDataset(clouds, labels, centroids)
         dataloader = DataLoader(dataset, batch_size = batch_size)
@@ -137,7 +135,7 @@ def _model_output(model, clouds, labels, centroids, perimeters, solidities, batc
                 output_cluster_centroid = output_cluster_centroid +  [tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in centroid_inputs]
                 output_labels = output_labels + [int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in label_inputs]
                 output_cluster_class = output_cluster_class + [np.argmax(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
-        return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_perimeters, output_solidities              
+        return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid             
 
 
        
@@ -148,7 +146,6 @@ def _label_cluster(label_image, num_points, min_size, ndim):
        centroids = []
        clouds = []
        perimeters = []
-       solidities = []
        nthreads = os.cpu_count()
        properties = regionprops(label_image)
        futures = []
@@ -156,15 +153,13 @@ def _label_cluster(label_image, num_points, min_size, ndim):
              for prop in properties:
                           futures.append(executor.submit(get_current_label_binary, prop))
              for r in concurrent.futures.as_completed(futures):
-                        binary_image, label, centroid, perimeter, solidity = r.result()             
+                        binary_image, label, centroid = r.result()             
                         label, centroid, cloud = get_label_centroid_cloud(binary_image,  num_points, ndim, label, centroid,  min_size)
                         clouds.append(cloud)  
                         labels.append(label)   
                         centroids.append(centroid)
-                        perimeters.append(perimeter)
-                        solidities.append(solidity)
 
-       return labels, centroids, clouds, perimeters, solidities
+       return labels, centroids, clouds
 
 def get_label_centroid_cloud(binary_image,  num_points, ndim, label, centroid, min_size):
                             
@@ -231,7 +226,5 @@ def get_current_label_binary(prop):
                 label = prop.label 
                 centroid = np.asarray(prop.centroid) 
 
-                perimeter = prop.perimeter
-                solidity = prop.solidity
 
-                return binary_image , label, centroid, perimeter, solidity
+                return binary_image , label, centroid
