@@ -4,29 +4,33 @@ import lxml.etree as et
 import concurrent
 import os
 import numpy as np
-
+import napari
 
 class TrackVector(TrackMate):
        
-        def __init__(self, viewer, master_xml_path: Path, spot_csv_path: Path, track_csv_path: Path, edges_csv_path: Path, t_minus: int = 0, t_plus: int = 10, x_start : int = 0, x_end: int = 10,
+        def __init__(self, viewer, image, master_xml_path: Path, spot_csv_path: Path, track_csv_path: Path, edges_csv_path: Path, t_minus: int = 0, t_plus: int = 10, x_start : int = 0, x_end: int = 10,
                     y_start: int = 0, y_end: int = 10, show_tracks: bool = True):
               
               
 
-              super().__init__(None,  spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname = "AttributeIDBox", TrackAttributeBoxname = "TrackAttributeIDBox", TrackidBox = "All", axes = 'TZYX', master_xml_path = None )
-              self.viewer = viewer
+              super().__init__(None,  spot_csv_path, track_csv_path, edges_csv_path, image = image, AttributeBoxname = "AttributeIDBox", TrackAttributeBoxname = "TrackAttributeIDBox", TrackidBox = "All", axes = 'TZYX', master_xml_path = None )
+              self._viewer = viewer
+              self._image = image
               self.master_xml_path = master_xml_path
               self.spot_csv_path = spot_csv_path
               self.track_csv_path = track_csv_path
               self.edges_csv_path = edges_csv_path
-              self.t_minus = t_minus
-              self.t_plus = t_plus 
-              self.x_start = x_start 
-              self.x_end = x_end 
-              self.y_start = y_start 
-              self.y_end = y_end 
-              self.show_tracks = show_tracks
+              self._t_minus = t_minus
+              self._t_plus = t_plus 
+              self._x_start = x_start 
+              self._x_end = x_end 
+              self._y_start = y_start 
+              self._y_end = y_end 
+              self._show_tracks = show_tracks
               xml_parser = et.XMLParser(huge_tree=True)
+               
+              
+
               self.unique_morphology_dynamic_properties = {}  
               if not isinstance(self.master_xml_path, str):      
                     if self.master_xml_path.is_file():
@@ -44,56 +48,72 @@ class TrackVector(TrackMate):
 
                         self._get_track_vector_xml_data()
 
-        
         @property
-        def new_x_start(self):
-               return self.x_start
+        def viewer(self):
+               return self._viewer 
         
-        @new_x_start.setter
-        def new_x_start(self, value):
-               self.x_start = value
+        @viewer.setter
+        def viewer(self, value):
+               self._viewer = value 
+
 
         @property
-        def new_y_start(self):
-               return self.y_start
+        def x_start(self):
+               return self._x_start
         
-        @new_y_start.setter
-        def new_y_start(self, value):
-               self.y_start = value
+        @x_start.setter
+        def x_start(self, value):
+               self._x_start = value
 
         @property
-        def new_x_end(self):
-               return self.x_end
+        def y_start(self):
+               return self._y_start
         
-        @new_x_end.setter
-        def new_x_end(self, value):
-               self.x_end = value
+        @y_start.setter
+        def y_start(self, value):
+               self._y_start = value
 
         @property
-        def new_y_end(self):
-               return self.y_end
+        def x_end(self):
+               return self._x_end
         
-        @new_y_end.setter
-        def new_y_end(self, value):
-               self.y_end = value       
+        @x_end.setter
+        def x_end(self, value):
+               self._x_end = value
+
+        @property
+        def y_end(self):
+               return self._y_end
+        
+        @y_end.setter
+        def y_end(self, value):
+               self._y_end = value       
 
        
 
         @property
-        def new_t_minus(self):
-               return self.t_minus 
+        def t_minus(self):
+               return self._t_minus 
         
-        @new_t_minus.setter
-        def new_t_minus(self, value):
-               self.t_minus = value
+        @t_minus.setter
+        def t_minus(self, value):
+               self._t_minus = value
 
         @property
-        def new_t_plus(self):
-               return self.t_plus 
+        def t_plus(self):
+               return self._t_plus 
         
-        @new_t_plus.setter
-        def new_t_plus(self, value):
-               self.t_plus = value       
+        @t_plus.setter
+        def t_plus(self, value):
+               self._t_plus = value 
+
+        @property 
+        def show_tracks(self):
+               return self._show_tracks
+
+        @show_tracks.setter
+        def show_tracks(self, value):
+               self._show_tracks = value             
 
 
 
@@ -201,8 +221,13 @@ class TrackVector(TrackMate):
                for track_id in self.filtered_track_ids:
                                     
                                     self._final_morphological_dynamic_vectors(track_id)
-               if self.show_tracks:
+               if self._show_tracks:
                         
+                        for layer in list(self._viewer.value.layers):
+                            if not isinstance(layer, napari.layers.Image) or not isinstance(layer, napari.layers.Labels):   
+                                self._viewer.add_image(self._image)
+
+
                         if len(self.unique_tracks.keys()) > 0:   
                                 unique_tracks = np.concatenate(
                                     [
@@ -211,10 +236,11 @@ class TrackVector(TrackMate):
                                     ]
                                 )                     
                                 
-                                self.viewer.add_tracks(
+                                self._viewer.add_tracks(
                                 unique_tracks,
                                 name="Track"
                             )
+                                
 
 
         def _final_morphological_dynamic_vectors(self, track_id):
@@ -233,7 +259,7 @@ class TrackVector(TrackMate):
                         z = float(all_dict_values[self.zposid_key])
                         y = float(all_dict_values[self.yposid_key])
                         x = float(all_dict_values[self.xposid_key])
-                        if t >= self.t_minus and t <=  self.t_plus and x >= self.x_start and x <= self.x_end and y >= self.y_start and y <= self.y_end:
+                        if t >= self._t_minus and t <=  self._t_plus and x >= self._x_start and x <= self._x_end and y >= self._y_start and y <= self._y_end:
                                 gen_id = int(float(all_dict_values[self.generationid_key]))
                                 speed = float(all_dict_values[self.speed_key])
                                 acceleration = float(all_dict_values[self.acceleration_key])
