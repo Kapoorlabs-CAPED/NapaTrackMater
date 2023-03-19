@@ -178,12 +178,8 @@ class TrackVector(TrackMate):
                 for frame in self.Spotobjects.findall('SpotsInFrame'):
                             futures.append(executor.submit(self._master_spot_computer, frame))
                 
-
-                for r in concurrent.futures.as_completed(futures):
-                                self.count = self.count + 1
-                                if self.progress_bar is not None:
-                                    self.progress_bar.value =  self.count
-                                r.result()    
+                [r.result() for r in concurrent.futures.as_completed(futures)]
+                   
 
             
             print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
@@ -196,14 +192,8 @@ class TrackVector(TrackMate):
                         track_id = int(track.get(self.trackid_key))
                         if track_id in self.filtered_track_ids:
                                 futures.append(executor.submit(self._master_track_computer, track, track_id))
-               
 
-
-                for r in concurrent.futures.as_completed(futures):
-                                self.count = self.count + 1
-                                if self.progress_bar is not None:
-                                    self.progress_bar.value = self.count
-                                r.result()
+                [r.result() for r in concurrent.futures.as_completed(futures)]
             
 
             print('getting attributes')                
@@ -223,7 +213,7 @@ class TrackVector(TrackMate):
                                     self._final_morphological_dynamic_vectors(track_id)
                if self._show_tracks:
                         
-                        for layer in list(self._viewer.value.layers):
+                        for layer in list(self._viewer.layers):
                             if not isinstance(layer, napari.layers.Image) or not isinstance(layer, napari.layers.Labels):   
                                 self._viewer.add_image(self._image)
 
