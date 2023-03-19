@@ -31,7 +31,9 @@ class TrackVector(TrackMate):
                
               
 
-              self.unique_morphology_dynamic_properties = {}  
+              self.unique_morphology_dynamic_properties = {}
+              self.unique_mitosis_label = {}
+              self.non_unique_mitosis_label = {}  
               if not isinstance(self.master_xml_path, str):      
                     if self.master_xml_path.is_file():
                         print('Reading Master XML')
@@ -211,12 +213,54 @@ class TrackVector(TrackMate):
                for track_id in self.filtered_track_ids:
                                     
                                     self._final_morphological_dynamic_vectors(track_id)
-                                    
+
                if self._show_tracks:
                         
-                        for layer in list(self._viewer.layers):
-                            if not isinstance(layer, napari.layers.Image) or not isinstance(layer, napari.layers.Labels):   
-                                self._viewer.add_image(self._image)
+                        features = {
+                            "time": map(
+                                   int,
+                                   np.asarray(self.unique_tracks_properties, dtype="float64")[:, 0],
+                            ),
+                            "generation": map(
+                                   int,
+                                   np.asarray(self.unique_tracks_properties, dtype="float64")[:, 2],
+                            ),
+                            "speed": map(
+                                   float,
+                                   np.asarray(self.unique_tracks_properties, dtype="float64")[:, 3],
+                            ),
+                            "directional_change_rate": map(
+                                   float,
+                                   np.asarray(self.unique_tracks_properties, dtype="float64")[:, 4],
+                            ),
+                            "total-intensity": map(
+                                   float,
+                                   np.asarray(self.unique_tracks_properties, dtype="float64")[:, 5],
+                            ),
+                            "volume_pixels": map(
+                                   float,
+                                   np.asarray(self.unique_tracks_properties, dtype="float64")[:, 6],
+                            ),
+                            "acceleration": map(
+                                   float,
+                                   np.asarray(self.unique_tracks_properties, dtype="float64")[:, 7],
+                            ),
+                            "cluster_class": map(
+                                   float,
+                                   np.asarray(self.unique_tracks_properties, dtype="float64")[:, 8],
+                            ),
+                            "cluster_score": map(
+                                   float,
+                                   np.asarray(self.unique_tracks_properties, dtype="float64")[:, 9],
+                            ),
+                            }
+                        if len(list(self._viewer.layers)) > 0:
+                            for layer in list(self._viewer.layers):
+                                   if not isinstance(layer, napari.layers.Image) or not isinstance(layer, napari.layers.Labels):   
+                                      self._viewer.add_image(self._image)
+                        else:
+
+                               self._viewer.add_image(self._image)              
 
 
                         if len(self.unique_tracks.keys()) > 0:   
@@ -226,10 +270,19 @@ class TrackVector(TrackMate):
                                         for unique_track_id in self.unique_tracks.keys()
                                     ]
                                 )                     
-                                
+                                for layer in list(self._viewer.layers):
+                                   if (
+                                          "Track" == layer.name
+                                          or "Boxes" == layer.name
+                                          or "Track_points" == layer.name
+                                   ):
+                                          self._viewer.value.layers.remove(layer)
+                                   vertices = unique_tracks[:, 1:]
+                                   self._viewer.add_points(vertices, name="Track_points", size=1)
                                 self._viewer.add_tracks(
                                 unique_tracks,
-                                name="Track"
+                                name="Track",
+                                features = features
                             )
                                 
 
