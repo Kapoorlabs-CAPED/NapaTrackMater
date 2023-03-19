@@ -216,10 +216,13 @@ class TrackVector(TrackMate):
 
                if self._show_tracks:
                         
-                        
+                       
                         if len(list(self._viewer.layers)) > 0:
+                            layer_types = []
                             for layer in list(self._viewer.layers):
-                                   if not isinstance(layer, napari.layers.Image) or not isinstance(layer, napari.layers.Labels):   
+                                   layer_types.append(layer.type)
+
+                            if  napari.layers.Image not in layer_types:   
                                       self._viewer.add_image(self._image)
                         else:
 
@@ -242,42 +245,32 @@ class TrackVector(TrackMate):
                             )             
 
                                 features = {
-                                          "time": map(
-                                                 int,
-                                                 np.asarray(unique_tracks_properties, dtype="float64")[:, 0],
-                                          ),
-                                          "generation": map(
-                                                 int,
+                                          "time": np.asarray(unique_tracks_properties, dtype="float64")[:, 0],
+                                          
+                                          "generation": 
                                                  np.asarray(unique_tracks_properties, dtype="float64")[:, 2],
-                                          ),
-                                          "speed": map(
-                                                 float,
+                                          
+                                          "speed": 
                                                  np.asarray(unique_tracks_properties, dtype="float64")[:, 3],
-                                          ),
-                                          "directional_change_rate": map(
-                                                 float,
+                                          
+                                          "directional_change_rate": 
                                                  np.asarray(unique_tracks_properties, dtype="float64")[:, 4],
-                                          ),
-                                          "total-intensity": map(
-                                                 float,
+                                          
+                                          "total-intensity": 
                                                  np.asarray(unique_tracks_properties, dtype="float64")[:, 5],
-                                          ),
-                                          "volume_pixels": map(
-                                                 float,
+                                          
+                                          "volume_pixels": 
                                                  np.asarray(unique_tracks_properties, dtype="float64")[:, 6],
-                                          ),
-                                          "acceleration": map(
-                                                 float,
+                                          
+                                          "acceleration": 
                                                  np.asarray(unique_tracks_properties, dtype="float64")[:, 7],
-                                          ),
-                                          "cluster_class": map(
-                                                 float,
+                                   
+                                          "cluster_class": 
                                                  np.asarray(unique_tracks_properties, dtype="float64")[:, 8],
-                                          ),
-                                          "cluster_score": map(
-                                                 float,
+                                          
+                                          "cluster_score": 
                                                  np.asarray(unique_tracks_properties, dtype="float64")[:, 9],
-                                          ),
+                                          
                                           }   
                                 for layer in list(self._viewer.layers):
                                    if (
@@ -285,7 +278,7 @@ class TrackVector(TrackMate):
                                           or "Boxes" == layer.name
                                           or "Track_points" == layer.name
                                    ):
-                                          self._viewer.value.layers.remove(layer)
+                                          self._viewer.layers.remove(layer)
                                    vertices = unique_tracks[:, 1:]
                                    self._viewer.add_points(vertices, name="Track_points", size=1)
                                 self._viewer.add_tracks(
