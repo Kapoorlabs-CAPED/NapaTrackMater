@@ -220,7 +220,7 @@ class TrackVector(TrackMate):
                         if len(list(self._viewer.layers)) > 0:
                             layer_types = []
                             for layer in list(self._viewer.layers):
-                                   layer_types.append(layer.type)
+                                   layer_types.append(type(layer))
 
                             if  napari.layers.Image not in layer_types:   
                                       self._viewer.add_image(self._image)
@@ -280,7 +280,7 @@ class TrackVector(TrackMate):
                                    ):
                                           self._viewer.layers.remove(layer)
                                    vertices = unique_tracks[:, 1:]
-                                   self._viewer.add_points(vertices, name="Track_points", size=1)
+                                self._viewer.add_points(vertices, name="Track_points", size=1)
                                 self._viewer.add_tracks(
                                 unique_tracks,
                                 name="Track",
