@@ -211,6 +211,7 @@ class TrackVector(TrackMate):
                for track_id in self.filtered_track_ids:
                                     
                                     self._final_morphological_dynamic_vectors(track_id)
+                                    
                if self._show_tracks:
                         
                         for layer in list(self._viewer.layers):

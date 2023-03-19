@@ -122,6 +122,7 @@ class TrackMate(object):
         self.afterid_key = 'after_id'
         self.beforeid_key = 'before_id'
         self.dividing_key = 'dividing_normal'
+        self.number_dividing_key = 'number_dividing'
         self.distance_cell_mask_key = 'distance_cell_mask'
         self.cellid_key = 'cell_id'
         self.acceleration_key = 'acceleration'
@@ -492,17 +493,17 @@ class TrackMate(object):
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
                             self._iterate_split_down(root_root, root_leaf, root_splits)
                             
-                            
+                            number_dividing = len(root_splits)
                             # Determine if a track has divisions or none
                             if len(root_splits) > 0:
-                                DividingTrajectory = True
+                                dividing_trajectory = True
                                 if int(track_id) not in self.AllTrackIds:
                                     self.AllTrackIds.append(int(track_id))
                                 if int(track_id) not in self.DividingTrackIds:     
                                     self.DividingTrackIds.append(int(track_id))
                                         
                             else:
-                                DividingTrajectory = False
+                                dividing_trajectory = False
                                 if int(track_id) not in self.AllTrackIds:
                                     self.AllTrackIds.append(int(track_id))
                                 if int(track_id) not in self.NormalTrackIds:    
@@ -512,24 +513,28 @@ class TrackMate(object):
                                    source_leaf = self.edge_source_lookup[leaf]
                                    current_cell_ids.append(leaf) 
                                    self._dict_update(unique_tracklet_ids, leaf, track_id, source_leaf, None)
-                                   self.unique_spot_properties[leaf].update({self.dividing_key : DividingTrajectory})
+                                   self.unique_spot_properties[leaf].update({self.dividing_key : dividing_trajectory})
+                                   self.unique_spot_properties[leaf].update({self.number_dividing_key : number_dividing})
 
                             for source_id in all_source_ids:
                                         target_ids = self.edge_target_lookup[source_id]
                                         current_cell_ids.append(source_id)
                                         #Root
-                                        self.unique_spot_properties[source_id].update({self.dividing_key : DividingTrajectory})
+                                        self.unique_spot_properties[source_id].update({self.dividing_key : dividing_trajectory})
+                                        self.unique_spot_properties[source_id].update({self.number_dividing_key : number_dividing})
                                         if source_id not in all_target_ids:
                                                 
                                                 for target_id in target_ids:
                                                    self._dict_update(unique_tracklet_ids, source_id, track_id, None, target_id)
-                                                   self.unique_spot_properties[target_id].update({self.dividing_key : DividingTrajectory})
+                                                   self.unique_spot_properties[target_id].update({self.dividing_key : dividing_trajectory})
+                                                   self.unique_spot_properties[target_id].update({self.number_dividing_key : number_dividing})
                                         else:
                                               #Normal        
                                               source_source_id = self.edge_source_lookup[source_id]
                                               for target_id in target_ids:
                                                     self._dict_update(unique_tracklet_ids, source_id, track_id, source_source_id, target_id) 
-                                                    self.unique_spot_properties[target_id].update({self.dividing_key : DividingTrajectory}) 
+                                                    self.unique_spot_properties[target_id].update({self.dividing_key : dividing_trajectory}) 
+                                                    self.unique_spot_properties[target_id].update({self.number_dividing_key : number_dividing})
                                         
 
                                            
@@ -578,15 +583,16 @@ class TrackMate(object):
                             self._iterate_split_down(root_root, root_leaf, root_splits)
                             
                             # Determine if a track has divisions or none
+                            number_splits = len(root_splits)
                             if len(root_splits) > 0:
-                                DividingTrajectory = True
+                                dividing_trajectory = True
                                 if int(track_id) not in self.AllTrackIds:
                                     self.AllTrackIds.append(int(track_id))
                                 if int(track_id) not in self.DividingTrackIds:     
                                     self.DividingTrackIds.append(int(track_id))
                                         
                             else:
-                                DividingTrajectory = False
+                                dividing_trajectory = False
                                 if int(track_id) not in self.AllTrackIds:
                                     self.AllTrackIds.append(int(track_id))
                                 if int(track_id) not in self.NormalTrackIds:    
@@ -594,15 +600,18 @@ class TrackMate(object):
 
                             for leaf in root_leaf:
                                    current_cell_ids.append(leaf) 
-                                   self.unique_spot_properties[leaf].update({self.dividing_key : DividingTrajectory})
+                                   self.unique_spot_properties[leaf].update({self.dividing_key : dividing_trajectory})
+                                   self.unique_spot_properties[leaf].update({self.number_dividing_key : number_splits})
                             for source_id in all_source_ids:
-                                   self.unique_spot_properties[source_id].update({self.dividing_key : DividingTrajectory})
+                                   self.unique_spot_properties[source_id].update({self.dividing_key : dividing_trajectory})
+                                   self.unique_spot_properties[source_id].update({self.number_dividing_key : number_splits})
                                    current_cell_ids.append(source_id)
                                                 
 
                             for current_root in root_root:
                                    self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
-                                   self.unique_spot_properties[source_id].update({self.dividing_key : DividingTrajectory})
+                                   self.unique_spot_properties[source_id].update({self.dividing_key : dividing_trajectory})
+                                   self.unique_spot_properties[source_id].update({self.number_dividing_key : number_splits})
                             
                             self.all_current_cell_ids[int(track_id)] = current_cell_ids
                            
