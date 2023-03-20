@@ -204,7 +204,7 @@ class TrackVector(TrackMate):
             self.count = 0
              
 
-            self._compute_cluster_phenotypes()                        
+            self._compute_phenotypes()                        
 
         def _interactive_function(self):
                
@@ -306,45 +306,8 @@ class TrackVector(TrackMate):
                         y = float(all_dict_values[self.yposid_key])
                         x = float(all_dict_values[self.xposid_key])
                         if t >= self._t_minus and t <=  self._t_plus and x >= self._x_start and x <= self._x_end and y >= self._y_start and y <= self._y_end:
-                                gen_id = int(float(all_dict_values[self.generationid_key]))
-                                speed = float(all_dict_values[self.speed_key])
-                                acceleration = float(all_dict_values[self.acceleration_key])
-                                dcr = float(all_dict_values[self.directional_change_rate_key])
-                                radius = float(all_dict_values[self.radius_key])
-                               
-                                total_intensity =  float(all_dict_values[self.total_intensity_key])
-                                volume_pixels = int(float(all_dict_values[self.quality_key]))
-                                if self.clusterclass_key in all_dict_values.keys():
-                                        
-                                        if all_dict_values[self.clusterclass_key] is not None:
-                                            cluster_class = int(float(all_dict_values[self.clusterclass_key]))
-                                            cluster_class_score = float(all_dict_values[self.clusterscore_key])
-                                        else:
-                                            cluster_class = None
-                                            cluster_class_score = 0     
-                                else:
-                                        cluster_class = None
-                                        cluster_class_score = 0       
-
-                                spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
-
-                                self.unique_spot_centroid[spot_centroid] = k
-
-                                if current_track_id in current_tracklets:
-                                    tracklet_array = current_tracklets[current_track_id]
-                                    current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
-                                    current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
-
-                                    value_array = current_tracklets_properties[current_track_id]
-                                    current_value_array = np.array([t, int(float(unique_id)), gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
-                                    current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
-
-                                else:
-                                    current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
-                                    current_tracklets[current_track_id] = current_tracklet_array 
-
-                                    current_value_array = np.array([t, int(float(unique_id)), gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
-                                    current_tracklets_properties[current_track_id] = current_value_array
+                                current_tracklets, current_tracklets_properties = self._tracklet_and_properties(all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties)
+                                    
 
                 if str(track_id) in current_tracklets:
                         current_tracklets = np.asarray(current_tracklets[str(track_id)])
@@ -357,43 +320,7 @@ class TrackVector(TrackMate):
             
                         
 
-        def _compute_cluster_phenotypes(self):
-                
-            for (k,v) in self.unique_tracks.items():
-                
-                track_id = k
-                tracklet_properties = self.unique_track_properties[k] 
-                intensity = tracklet_properties[:,5]
-                time = tracklet_properties[:,0]
-                unique_ids = tracklet_properties[:,1]
-                unique_ids_set = set(unique_ids)
-                cluster_class_score = tracklet_properties[:,9]
-                cluster_class = tracklet_properties[:,8]
-                
-                
-                unique_cluster_properties_tracklet = {}
-                self.unique_cluster_properties[track_id] = {}
-                for current_unique_id in unique_ids_set:
-                   
-                   current_time = []
-                   current_cluster_class = []
-                   current_cluster_class_score = []
-                   for j in range(time.shape[0]):
-                          if current_unique_id == unique_ids[j]:
-                                 current_time.append(time[j])
-                                 current_intensity.append(intensity[j])
-                                 current_cluster_class.append(cluster_class[j])
-                                 current_cluster_class_score.append(cluster_class_score[j])
-                   current_time = np.asarray(current_time)
-                   current_intensity = np.asarray(current_intensity)
-                   current_cluster_class = np.asarray(current_cluster_class)
-                   current_cluster_class_score = np.asarray(current_cluster_class_score)               
-                 
-
-                   unique_cluster_properties_tracklet[current_unique_id] =  current_time, current_cluster_class, current_cluster_class_score
-                   self.unique_cluster_properties[track_id].update({current_unique_id:unique_cluster_properties_tracklet[current_unique_id]})
-
-
+        
 
                 
 
