@@ -203,7 +203,7 @@ class TrackVector(TrackMate):
                                     
         def _compute_track_vectors(self):
 
-               current_shape_vectors = []
+               self.current_shape_vectors = []
                for k in self.unique_shape_properties.keys():
                       
                       nested_unique_shape_properties = self.unique_shape_properties[k]
@@ -212,12 +212,12 @@ class TrackVector(TrackMate):
                              
                              unique_shape_properties_tracklet = nested_unique_shape_properties[current_unique_id]
                              current_time, radius, volume, current_cluster_class, current_cluster_class_score = unique_shape_properties_tracklet
-                             current_shape_vectors.append([current_time, radius, volume, current_cluster_class, current_cluster_class_score])
+                             self.current_shape_vectors.append([current_time, radius, volume, current_cluster_class, current_cluster_class_score])
 
           
-               print(f'returning shape vectors as list {len(current_shape_vectors)}')
+               print(f'returning shape vectors as list {len(self.current_shape_vectors)}')
 
-               current_dynamic_vectors = []
+               self.current_dynamic_vectors = []
                for k in self.unique_dynamic_properties.keys():
                       
                       nested_unique_dynamic_properties = self.unique_dynamic_properties[k]
@@ -226,12 +226,11 @@ class TrackVector(TrackMate):
                              
                              unique_dynamic_properties_tracklet = nested_unique_dynamic_properties[current_unique_id]
                              current_time, speed, directional_change_rate, acceleration = unique_dynamic_properties_tracklet
-                             current_dynamic_vectors.append([current_time, speed, directional_change_rate, acceleration])
+                             self.current_dynamic_vectors.append([current_time, speed, directional_change_rate, acceleration])
 
           
-               print(f'returning dynamic vectors as list {len(current_dynamic_vectors)}')
+               print(f'returning dynamic vectors as list {len(self.current_dynamic_vectors)}')
 
-               return current_shape_vectors, current_dynamic_vectors              
 
         def _interactive_function(self):
                
