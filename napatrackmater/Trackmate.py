@@ -154,6 +154,8 @@ class TrackMate(object):
         self.unique_track_properties = {}
         self.unique_fft_properties = {}
         self.unique_cluster_properties = {}
+        self.unique_shape_properties = {}
+        self.unique_dynamic_properties = {}
         self.unique_spot_properties = {}
         self.unique_spot_centroid = {}
         self.unique_track_centroid = {}
@@ -651,13 +653,24 @@ class TrackMate(object):
                                     z = float(all_dict_values[self.zposid_key])
                                     y = float(all_dict_values[self.yposid_key])
                                     x = float(all_dict_values[self.xposid_key])
+
+                                    current_tracklets, current_tracklets_properties = self._tracklet_and_properties(all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties)
+                                    
+
+                            current_tracklets = np.asarray(current_tracklets[str(track_id)])
+                            current_tracklets_properties = np.asarray(current_tracklets_properties[str(track_id)])
+                            
+                            self.unique_tracks[track_id] = current_tracklets     
+                            self.unique_track_properties[track_id] = current_tracklets_properties    
+
+    def _tracklet_and_properties(self, all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties):
+           
                                     gen_id = int(float(all_dict_values[self.generationid_key]))
                                     speed = float(all_dict_values[self.speed_key])
                                     acceleration = float(all_dict_values[self.acceleration_key])
                                     dcr = float(all_dict_values[self.directional_change_rate_key])
-                                    dcr = (float(dcr))
-                                    speed = (float(speed))
-                                    acceleration = (acceleration)
+                                    radius = float(all_dict_values[self.radius_key])
+
                                     total_intensity =  float(all_dict_values[self.total_intensity_key])
                                     volume_pixels = int(float(all_dict_values[self.quality_key]))
                                     if self.clusterclass_key in all_dict_values.keys():
@@ -681,22 +694,18 @@ class TrackMate(object):
                                         current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
 
                                         value_array = current_tracklets_properties[current_track_id]
-                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
+                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels, cluster_class, cluster_class_score, total_intensity, speed, dcr, acceleration])
+                                        
                                         current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
 
                                     else:
                                         current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
                                         current_tracklets[current_track_id] = current_tracklet_array 
 
-                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, speed, dcr, total_intensity, volume_pixels, acceleration, cluster_class, cluster_class_score])
+                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels, cluster_class, cluster_class_score, total_intensity, speed, dcr, acceleration])
                                         current_tracklets_properties[current_track_id] = current_value_array
 
-                            current_tracklets = np.asarray(current_tracklets[str(track_id)])
-                            current_tracklets_properties = np.asarray(current_tracklets_properties[str(track_id)])
-                            
-                            self.unique_tracks[track_id] = current_tracklets     
-                            self.unique_track_properties[track_id] = current_tracklets_properties    
-
+                                    return current_tracklets, current_tracklets_properties     
 
     def _master_spot_computer(self, frame):
           
@@ -706,8 +715,6 @@ class TrackMate(object):
                       
                         if self.uniqueid_key in Spotobject.keys():
                         
-                                 
-                               
                                         
                                 self.unique_spot_properties[cell_id] = {
                                     self.cellid_key: int(float(Spotobject.get(self.spotid_key))), 
@@ -1213,19 +1220,31 @@ class TrackMate(object):
           for (k,v) in self.unique_tracks.items():
                 
                 track_id = k
-                tracklet_properties = self.unique_track_properties[k] 
-                intensity = tracklet_properties[:,5]
+                tracklet_properties = self.unique_track_properties[k]
+                
                 time = tracklet_properties[:,0]
                 unique_ids = tracklet_properties[:,1]
                 unique_ids_set = set(unique_ids)
-                cluster_class_score = tracklet_properties[:,9]
-                cluster_class = tracklet_properties[:,8]
-                
+                generation_ids = tracklet_properties[:,2]
+                radius = tracklet_properties[:,3]
+                volume = tracklet_properties[:,4]
+                cluster_class = tracklet_properties[:,5]
+                cluster_class_score = tracklet_properties[:,6]
+                intensity = tracklet_properties[:,7]
+                speed = tracklet_properties[:,8]
+                directional_change_rate = tracklet_properties[:,9]
+                acceleration = tracklet_properties[:,10]
+
                 
                 unique_fft_properties_tracklet = {}
                 unique_cluster_properties_tracklet = {}
                 self.unique_fft_properties[track_id] = {}
                 self.unique_cluster_properties[track_id] = {}
+
+                unique_shape_properties_tracklet = {}
+                unique_dynamic_properties_tracklet = {}
+                self.unique_shape_properties[track_id] = {}
+                self.unique_dynamic_properties[track_id] = {}
                 expanded_time = np.zeros(self.tend - self.tstart + 1)
                 point_sample = expanded_time.shape[0]
                 for i in range(len(expanded_time)):
@@ -1248,8 +1267,19 @@ class TrackMate(object):
                                  current_cluster_class_score.append(cluster_class_score[j])
                    current_time = np.asarray(current_time)
                    current_intensity = np.asarray(current_intensity)
+
+
                    current_cluster_class = np.asarray(current_cluster_class)
-                   current_cluster_class_score = np.asarray(current_cluster_class_score)               
+                   current_cluster_class_score = np.asarray(current_cluster_class_score)   
+
+                   radius = np.asarray(radius)
+                   volume = np.asarray(volume)
+
+                   speed = np.asarray(speed)
+                   directional_change_rate = np.asarray(directional_change_rate)
+                   acceleration = np.asarray(acceleration)
+
+
                    
                    
                    if point_sample > 0:
@@ -1261,8 +1291,12 @@ class TrackMate(object):
 
                    unique_fft_properties_tracklet[current_unique_id] = expanded_time, expanded_intensity, xf_sample, ffttotal_sample
                    unique_cluster_properties_tracklet[current_unique_id] =  current_time, current_cluster_class, current_cluster_class_score
+                   unique_shape_properties_tracklet[current_unique_id] = current_time, radius, volume, current_cluster_class, current_cluster_class_score
+                   unique_dynamic_properties_tracklet[current_unique_id] = current_time, speed, directional_change_rate, acceleration
                    self.unique_fft_properties[track_id].update({current_unique_id:unique_fft_properties_tracklet[current_unique_id]})
                    self.unique_cluster_properties[track_id].update({current_unique_id:unique_cluster_properties_tracklet[current_unique_id]})
+                   self.unique_shape_properties[track_id].update({current_unique_id:unique_shape_properties_tracklet[current_unique_id]})
+                   self.unique_dynamic_properties[track_id].update({current_unique_id:unique_dynamic_properties_tracklet[current_unique_id]})
 
 
                                  
