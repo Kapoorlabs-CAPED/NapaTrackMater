@@ -214,9 +214,8 @@ class TrackVector(TrackMate):
                              current_time, radius, volume, current_cluster_class, current_cluster_class_score = unique_shape_properties_tracklet
                              current_shape_vectors.append([current_time, radius, volume, current_cluster_class, current_cluster_class_score])
 
-               current_shape_vectors = np.array(current_shape_vectors)
           
-               print(f'returning shape vectors of shape {current_shape_vectors.shape}')
+               print(f'returning shape vectors as list {len(current_shape_vectors)}')
 
                current_dynamic_vectors = []
                for k in self.unique_dynamic_properties.keys():
@@ -229,9 +228,8 @@ class TrackVector(TrackMate):
                              current_time, speed, directional_change_rate, acceleration = unique_dynamic_properties_tracklet
                              current_dynamic_vectors.append([current_time, speed, directional_change_rate, acceleration])
 
-               current_dynamic_vectors = np.array(current_dynamic_vectors)
           
-               print(f'returning dynamic vectors of shape {current_dynamic_vectors.shape}')
+               print(f'returning dynamic vectors as list {len(current_dynamic_vectors)}')
 
                return current_shape_vectors, current_dynamic_vectors              
 
