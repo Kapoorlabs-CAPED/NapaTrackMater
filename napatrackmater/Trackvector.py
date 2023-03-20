@@ -185,7 +185,7 @@ class TrackVector(TrackMate):
 
             
             print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
-            self.count = 0
+         
             futures = []
             with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
                 
@@ -200,19 +200,21 @@ class TrackVector(TrackMate):
 
             print('getting attributes')                
             self._get_attributes()
-           
-            self.count = 0
-             
-
-            self._compute_phenotypes()                        
+                                    
 
         def _interactive_function(self):
                
                self.unique_tracks = {}
                self.unique_track_properties = {}
+               self.unique_fft_properties = {}
+               self.unique_cluster_properties = {}
+               self.unique_shape_properties = {}
+               self.unique_dynamic_properties = {}
+
                for track_id in self.filtered_track_ids:
                                     
                                     self._final_morphological_dynamic_vectors(track_id)
+               self._compute_phenotypes()
 
                if self._show_tracks:
                         
