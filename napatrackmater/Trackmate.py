@@ -555,10 +555,10 @@ class TrackMate(object):
                                          
 
                                     spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
-                                     
+                                    frame_spot_centroid = (t,round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
 
-                                    self.unique_spot_centroid[spot_centroid] = k
-                                    self.unique_track_centroid[(t,int(spot_centroid[0]),int(spot_centroid[1]), int(spot_centroid[2]))] = track_id
+                                    self.unique_spot_centroid[frame_spot_centroid] = k
+                                    self.unique_track_centroid[frame_spot_centroid] = track_id
 
                                     if str(t) in self._timed_centroid:
                                            tree, spot_centroids = self._timed_centroid[str(t)]
@@ -628,11 +628,10 @@ class TrackMate(object):
                                     x = float(all_dict_values[self.xposid_key])
                                     
 
-                                    spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
-                                     
+                                    frame_spot_centroid = (t,round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration) 
 
-                                    self.unique_spot_centroid[spot_centroid] = k
-                                    self.unique_track_centroid[(t,int(spot_centroid[0]),int(spot_centroid[1]), int(spot_centroid[2]))] = track_id
+                                    self.unique_spot_centroid[frame_spot_centroid] = k
+                                    self.unique_track_centroid[frame_spot_centroid] = track_id
                                    
 
         
@@ -673,9 +672,8 @@ class TrackMate(object):
                                            cluster_class = None
                                            cluster_class_score = 0       
 
-                                    spot_centroid = (round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration)
-
-                                    self.unique_spot_centroid[spot_centroid] = k
+                                    frame_spot_centroid = (t,round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration) 
+                                    self.unique_spot_centroid[frame_spot_centroid] = k
 
                                     if current_track_id in current_tracklets:
                                         tracklet_array = current_tracklets[current_track_id]
@@ -1202,7 +1200,8 @@ class TrackMate(object):
                                    
                                     dist, index = tree.query(centroid)
                                     closest_centroid = spot_centroids[index]
-                                    closest_cell_id = self.unique_spot_centroid[closest_centroid]
+                                    frame_spot_centroid = (int(time_key),closest_centroid[0], closest_centroid[1], closest_centroid[2])
+                                    closest_cell_id = self.unique_spot_centroid[frame_spot_centroid]
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.clusterclass_key : cluster_class})
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.clusterscore_key : cluster_score})
                                     
