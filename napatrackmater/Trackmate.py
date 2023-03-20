@@ -1295,6 +1295,7 @@ class TrackMate(object):
                    unique_dynamic_properties_tracklet[current_unique_id] = current_time, speed, directional_change_rate, acceleration
                    self.unique_fft_properties[track_id].update({current_unique_id:unique_fft_properties_tracklet[current_unique_id]})
                    self.unique_cluster_properties[track_id].update({current_unique_id:unique_cluster_properties_tracklet[current_unique_id]})
+                   
                    self.unique_shape_properties[track_id].update({current_unique_id:unique_shape_properties_tracklet[current_unique_id]})
                    self.unique_dynamic_properties[track_id].update({current_unique_id:unique_dynamic_properties_tracklet[current_unique_id]})
 

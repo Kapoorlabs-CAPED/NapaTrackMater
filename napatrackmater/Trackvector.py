@@ -201,6 +201,39 @@ class TrackVector(TrackMate):
             print('getting attributes')                
             self._get_attributes()
                                     
+        def _compute_track_vectors(self):
+
+               current_shape_vectors = []
+               for k in self.unique_shape_properties.keys():
+                      
+                      nested_unique_shape_properties = self.unique_shape_properties[k]
+
+                      for current_unique_id in nested_unique_shape_properties.keys():
+                             
+                             unique_shape_properties_tracklet = nested_unique_shape_properties[current_unique_id]
+                             current_time, radius, volume, current_cluster_class, current_cluster_class_score = unique_shape_properties_tracklet
+                             current_shape_vectors.append([current_time, radius, volume, current_cluster_class, current_cluster_class_score])
+
+               current_shape_vectors = np.array(current_shape_vectors)
+          
+               print(f'returning shape vectors of shape {current_shape_vectors.shape}')
+
+               current_dynamic_vectors = []
+               for k in self.unique_dynamic_properties.keys():
+                      
+                      nested_unique_dynamic_properties = self.unique_dynamic_properties[k]
+
+                      for current_unique_id in nested_unique_dynamic_properties.keys():
+                             
+                             unique_dynamic_properties_tracklet = nested_unique_dynamic_properties[current_unique_id]
+                             current_time, speed, directional_change_rate, acceleration = unique_dynamic_properties_tracklet
+                             current_dynamic_vectors.append([current_time, speed, directional_change_rate, acceleration])
+
+               current_dynamic_vectors = np.array(current_dynamic_vectors)
+          
+               print(f'returning dynamic vectors of shape {current_dynamic_vectors.shape}')
+
+               return current_shape_vectors, current_dynamic_vectors              
 
         def _interactive_function(self):
                
@@ -215,6 +248,7 @@ class TrackVector(TrackMate):
                                     
                                     self._final_morphological_dynamic_vectors(track_id)
                self._compute_phenotypes()
+               self._compute_track_vectors()
 
                if self._show_tracks:
                         
