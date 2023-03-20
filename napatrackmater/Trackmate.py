@@ -151,6 +151,7 @@ class TrackMate(object):
         self.edge_z_location_key = self.track_analysis_edges_keys["edge_z_location"]
         
         self.unique_tracks = {}
+        self.unique_track_mitosis_label = {}
         self.unique_track_properties = {}
         self.unique_fft_properties = {}
         self.unique_cluster_properties = {}
@@ -498,6 +499,7 @@ class TrackMate(object):
                             number_dividing = len(root_splits)
                             # Determine if a track has divisions or none
                             if len(root_splits) > 0:
+                                self.unique_track_mitosis_label[track_id] = [1, number_dividing]
                                 dividing_trajectory = True
                                 if int(track_id) not in self.AllTrackIds:
                                     self.AllTrackIds.append(int(track_id))
@@ -505,6 +507,7 @@ class TrackMate(object):
                                     self.DividingTrackIds.append(int(track_id))
                                         
                             else:
+                                self.unique_track_mitosis_label[track_id] = [0, 0]
                                 dividing_trajectory = False
                                 if int(track_id) not in self.AllTrackIds:
                                     self.AllTrackIds.append(int(track_id))
@@ -585,8 +588,9 @@ class TrackMate(object):
                             self._iterate_split_down(root_root, root_leaf, root_splits)
                             
                             # Determine if a track has divisions or none
-                            number_splits = len(root_splits)
+                            number_dividing = len(root_splits)
                             if len(root_splits) > 0:
+                                self.unique_track_mitosis_label[track_id] = [1, number_dividing]
                                 dividing_trajectory = True
                                 if int(track_id) not in self.AllTrackIds:
                                     self.AllTrackIds.append(int(track_id))
@@ -594,6 +598,7 @@ class TrackMate(object):
                                     self.DividingTrackIds.append(int(track_id))
                                         
                             else:
+                                self.unique_track_mitosis_label[track_id] = [0, 0]
                                 dividing_trajectory = False
                                 if int(track_id) not in self.AllTrackIds:
                                     self.AllTrackIds.append(int(track_id))
@@ -603,17 +608,17 @@ class TrackMate(object):
                             for leaf in root_leaf:
                                    current_cell_ids.append(leaf) 
                                    self.unique_spot_properties[leaf].update({self.dividing_key : dividing_trajectory})
-                                   self.unique_spot_properties[leaf].update({self.number_dividing_key : number_splits})
+                                   self.unique_spot_properties[leaf].update({self.number_dividing_key : number_dividing})
                             for source_id in all_source_ids:
                                    self.unique_spot_properties[source_id].update({self.dividing_key : dividing_trajectory})
-                                   self.unique_spot_properties[source_id].update({self.number_dividing_key : number_splits})
+                                   self.unique_spot_properties[source_id].update({self.number_dividing_key : number_dividing})
                                    current_cell_ids.append(source_id)
                                                 
 
                             for current_root in root_root:
                                    self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
                                    self.unique_spot_properties[source_id].update({self.dividing_key : dividing_trajectory})
-                                   self.unique_spot_properties[source_id].update({self.number_dividing_key : number_splits})
+                                   self.unique_spot_properties[source_id].update({self.number_dividing_key : number_dividing})
                             
                             self.all_current_cell_ids[int(track_id)] = current_cell_ids
                            
@@ -1258,6 +1263,11 @@ class TrackMate(object):
                    current_intensity = []
                    current_cluster_class = []
                    current_cluster_class_score = []
+                   current_radius = []
+                   current_volume = []
+                   current_speed = []
+                   current_directional_change_rate = []
+                   current_acceleration = []
                    for j in range(time.shape[0]):
                           if current_unique_id == unique_ids[j]:
                                  current_time.append(time[j])
@@ -1265,6 +1275,11 @@ class TrackMate(object):
                                  current_intensity.append(intensity[j])
                                  current_cluster_class.append(cluster_class[j])
                                  current_cluster_class_score.append(cluster_class_score[j])
+                                 current_radius.append(radius[j])
+                                 current_volume.append(volume[j])
+                                 current_speed.append(speed[j])
+                                 current_directional_change_rate.append(directional_change_rate[j])
+                                 current_acceleration.append(acceleration[j])
                    current_time = np.asarray(current_time)
                    current_intensity = np.asarray(current_intensity)
 
@@ -1272,12 +1287,12 @@ class TrackMate(object):
                    current_cluster_class = np.asarray(current_cluster_class)
                    current_cluster_class_score = np.asarray(current_cluster_class_score)   
 
-                   radius = np.asarray(radius)
-                   volume = np.asarray(volume)
+                   current_radius = np.asarray(current_radius)
+                   current_volume = np.asarray(current_volume)
 
-                   speed = np.asarray(speed)
-                   directional_change_rate = np.asarray(directional_change_rate)
-                   acceleration = np.asarray(acceleration)
+                   current_speed = np.asarray(current_speed)
+                   current_directional_change_rate = np.asarray(current_directional_change_rate)
+                   current_acceleration = np.asarray(current_acceleration)
 
 
                    
@@ -1291,11 +1306,11 @@ class TrackMate(object):
 
                    unique_fft_properties_tracklet[current_unique_id] = expanded_time, expanded_intensity, xf_sample, ffttotal_sample
                    unique_cluster_properties_tracklet[current_unique_id] =  current_time, current_cluster_class, current_cluster_class_score
-                   unique_shape_properties_tracklet[current_unique_id] = current_time, radius, volume, current_cluster_class, current_cluster_class_score
-                   unique_dynamic_properties_tracklet[current_unique_id] = current_time, speed, directional_change_rate, acceleration
+                   unique_shape_properties_tracklet[current_unique_id] = current_time, current_radius, current_volume, current_cluster_class, current_cluster_class_score
+                   unique_dynamic_properties_tracklet[current_unique_id] = current_time, current_speed, current_directional_change_rate, current_acceleration
                    self.unique_fft_properties[track_id].update({current_unique_id:unique_fft_properties_tracklet[current_unique_id]})
                    self.unique_cluster_properties[track_id].update({current_unique_id:unique_cluster_properties_tracklet[current_unique_id]})
-                   
+
                    self.unique_shape_properties[track_id].update({current_unique_id:unique_shape_properties_tracklet[current_unique_id]})
                    self.unique_dynamic_properties[track_id].update({current_unique_id:unique_dynamic_properties_tracklet[current_unique_id]})
 
@@ -1726,9 +1741,7 @@ def parallel_map(timed_mask, mask, xcalibration, ycalibration, zcalibration, Bou
  
 
 
-def sortTracks(List):
 
-    return int(float(List[2]))
 
 
 def get_csv_data(csv):
@@ -1839,9 +1852,7 @@ def scale_value(x, scale = 255 * 255):
 
      return x * scale   
     
-def sortFirst(List):
 
-    return int(float(List[0]))    
 
 def prob_sigmoid(x):
     return 1 - math.exp(-x)
