@@ -71,8 +71,8 @@ class Clustering:
            
            labels, centroids, clouds = _label_cluster(self.label_image, self.model, self.num_points, self.min_size, ndim)
            
-           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids, self.batch_size)
-           self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]     
+           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_cloud_surface_area = _model_output(self.model, clouds, labels, centroids, self.batch_size)
+           self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_cloud_surface_area]     
  
         #ZYX image
         if ndim == 3 and 'T' not in self.axes:
@@ -80,8 +80,8 @@ class Clustering:
            labels, centroids, clouds = _label_cluster(self.label_image,   self.num_points, self.min_size, ndim)
            if len(labels) > 1:
                 
-                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids, self.batch_size)
-                self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]
+                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_cloud_surface_area = _model_output(self.model, clouds, labels, centroids, self.batch_size)
+                self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_cloud_surface_area]
 
 
         #TYX
@@ -90,8 +90,8 @@ class Clustering:
 
                for i in range(self.label_image.shape[0]):
                         self.count = self.count + 1
-                        output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid  = self._label_computer(i, ndim - 1)
-                        self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]
+                        output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_cloud_surface_area  = self._label_computer(i, ndim - 1)
+                        self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_cloud_surface_area]
                 
         #TZYX image        
         if ndim == 4:
@@ -99,8 +99,8 @@ class Clustering:
 
                 for i in range(self.label_image.shape[0]):
                         self.count = self.count + 1
-                        output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid  = self._label_computer(i, ndim)
-                        self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid]
+                        output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_cloud_surface_area  = self._label_computer(i, ndim)
+                        self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_cloud_surface_area]
                 
                         
                             
@@ -111,9 +111,9 @@ class Clustering:
             labels, centroids, clouds = _label_cluster(xyz_label_image,   self.num_points, self.min_size, dim)
             if len(labels) > 1:
                 
-                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid = _model_output(self.model, clouds, labels, centroids, self.batch_size)
+                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_cloud_surface_area = _model_output(self.model, clouds, labels, centroids, self.batch_size)
             
-                return  output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid
+                return  output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_cloud_surface_area
 
 def _model_output(model, clouds, labels, centroids, batch_size):
        
