@@ -15,7 +15,8 @@ from pyntcloud import PyntCloud
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import tempfile 
-from sklearn.decomposition import PCA
+from scipy.spatial import ConvexHull
+
 
 class PointCloudDataset(Dataset):
     def __init__(self, clouds, labels, centroids, centre=True, scale=20.0):
@@ -121,6 +122,7 @@ def _model_output(model, clouds, labels, centroids, batch_size):
         output_cluster_class = []
         output_cluster_centroid = []
         output_cloud_eccentricity = [] 
+        output_cloud_surface_area = []
 
         dataset = PointCloudDataset(clouds, labels, centroids)
         dataloader = DataLoader(dataset, batch_size = batch_size)
@@ -137,8 +139,9 @@ def _model_output(model, clouds, labels, centroids, batch_size):
                 output_cluster_centroid = output_cluster_centroid +  [tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in centroid_inputs]
                 output_labels = output_labels + [int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in label_inputs]
                 output_cluster_class = output_cluster_class + [np.argmax(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
-                output_cloud_eccentricity = output_cloud_eccentricity +  [tuple(torch.squeeze(cloud_input).detach().cpu().numpy()) for cloud_input in cloud_inputs]
-        return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity             
+                output_cloud_eccentricity = output_cloud_eccentricity +  [tuple(torch.squeeze(get_eccentricity(cloud_input)).detach().cpu().numpy()) for cloud_input in cloud_inputs]
+                output_cloud_surface_area = output_cloud_surface_area + [float(torch.squeeze(get_surface_area(cloud_input)).detach().cpu().numpy()) for cloud_input in cloud_inputs]
+        return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_cloud_surface_area             
 
 
        
@@ -239,6 +242,24 @@ def get_eccentricity(point_cloud):
     
         return eccentricities
 
+def get_surface_area(point_cloud):
+    # Compute the convex hull of the point cloud
+    hull = ConvexHull(point_cloud)
+
+    # Compute the areas of the triangles in the convex hull
+    areas = np.zeros(hull.simplices.shape[0])
+    for i, simplex in enumerate(hull.simplices):
+        a = point_cloud[simplex[0]]
+        b = point_cloud[simplex[1]]
+        c = point_cloud[simplex[2]]
+        ab = b - a
+        ac = c - a
+        areas[i] = 0.5 * np.linalg.norm(np.cross(ab, ac))
+
+    # Compute the total surface area
+    surface_area = areas.sum()
+
+    return surface_area
 
 def get_current_label_binary(prop):
                       

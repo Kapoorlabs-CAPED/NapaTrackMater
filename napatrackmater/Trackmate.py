@@ -132,6 +132,7 @@ class TrackMate(object):
         self.eccentricity_xkey = 'cloud_eccentricity_x'
         self.eccentricity_ykey = 'cloud_eccentricity_y'
         self.eccentricity_zkey = 'cloud_eccentricity_z'
+        self.surface_areakey = 'cloud_surfacearea'
         
       
 
@@ -1207,12 +1208,13 @@ class TrackMate(object):
                            cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.num_points, self.cluster_model, key = time_key, progress_bar=self.progress_bar, batch_size = self.batch_size)       
                            cluster_eval._create_cluster_labels()
                            timed_cluster_label = cluster_eval.timed_cluster_label 
-                           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity = timed_cluster_label[time_key]
+                           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_cloud_surface_area = timed_cluster_label[time_key]
                            for i in range(len(output_cluster_centroid)):
                                     centroid = output_cluster_centroid[i]
                                     cluster_class = output_cluster_class[i]
                                     cluster_score = output_cluster_score[i]
                                     eccentricity_xyz = output_cloud_eccentricity[i]
+                                    surface_area = output_cloud_surface_area[i]
                                     dist, index = tree.query(centroid)
                                     closest_centroid = spot_centroids[index]
                                     frame_spot_centroid = (int(time_key),closest_centroid[0], closest_centroid[1], closest_centroid[2])
@@ -1222,6 +1224,7 @@ class TrackMate(object):
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_xkey : eccentricity_xyz[0]})
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_ykey : eccentricity_xyz[1]})
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_zkey : eccentricity_xyz[2]})
+                                    self.unique_spot_properties[int(closest_cell_id)].update({self.surface_areakey : surface_area})
                                     
                            for (k,v) in self.root_spots.items():
                                   self.root_spots[k] = self.unique_spot_properties[k]         
