@@ -764,11 +764,21 @@ class TrackMate(object):
                                 if self.clusterclass_key in Spotobject.keys():
                                     if Spotobject.get(self.clusterclass_key) != 'None':
                                             self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : int(float(Spotobject.get(self.clusterclass_key))),
-                                                                                        self.clusterscore_key : float(Spotobject.get(self.clusterscore_key))
+                                                                                        self.clusterscore_key : float(Spotobject.get(self.clusterscore_key)),
+                                                                                        self.eccentricity_xkey : float(Spotobject.get(self.eccentricity_xkey)),
+                                                                                        self.eccentricity_ykey : float(Spotobject.get(self.eccentricity_ykey)),
+                                                                                        self.eccentricity_zkey : float(Spotobject.get(self.eccentricity_zkey)),
+                                                                                        self.surface_areakey : float(Spotobject.get(self.surface_areakey))
                                                                                             })
+                                            
+                                            
                                     else:
                                             self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : None,
-                                                                                        self.clusterscore_key : 0
+                                                                                        self.clusterscore_key : 0,
+                                                                                        self.eccentricity_xkey : None,
+                                                                                        self.eccentricity_ykey : None,
+                                                                                        self.eccentricity_zkey : None,
+                                                                                        self.surface_areakey : None
                                                                                             }) 
                         elif self.uniqueid_key not in Spotobject.keys():
                                                           
@@ -1380,6 +1390,10 @@ class TrackMate(object):
         self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : 0.0})
         self.unique_spot_properties[int(cell_id)].update({self.speed_key : 0.0})
         self.unique_spot_properties[int(cell_id)].update({self.acceleration_key : 0.0})
+        self.unique_spot_properties[int(cell_id)].update({self.eccentricity_xkey : None})
+        self.unique_spot_properties[int(cell_id)].update({self.eccentricity_ykey : None})
+        self.unique_spot_properties[int(cell_id)].update({self.eccentricity_zkey : None})
+        self.unique_spot_properties[int(cell_id)].update({self.surface_areakey : None})
 
         if source_id is not None:
             self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : int(source_id)})
