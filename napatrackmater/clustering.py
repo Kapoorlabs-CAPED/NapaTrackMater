@@ -15,6 +15,8 @@ from pyntcloud import PyntCloud
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import tempfile 
+from sklearn.decomposition import PCA
+
 class PointCloudDataset(Dataset):
     def __init__(self, clouds, labels, centroids, centre=True, scale=20.0):
         self.clouds = clouds
@@ -118,24 +120,25 @@ def _model_output(model, clouds, labels, centroids, batch_size):
         output_cluster_score = []
         output_cluster_class = []
         output_cluster_centroid = []
-
+        output_cloud_eccentricity = [] 
 
         dataset = PointCloudDataset(clouds, labels, centroids)
         dataloader = DataLoader(dataset, batch_size = batch_size)
         model.eval()
        
         for data in dataloader:
-                inputs, label_inputs, centroid_inputs = data
+                cloud_inputs, label_inputs, centroid_inputs = data
                 try:
-                        output, features, clusters = model(inputs.cuda())
+                        output, features, clusters = model(cloud_inputs.cuda())
                 except ValueError:
-                        output, features, clusters = model(inputs.cpu())      
+                        output, features, clusters = model(cloud_inputs.cpu())      
                                 
                 output_cluster_score = output_cluster_score + [max(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
                 output_cluster_centroid = output_cluster_centroid +  [tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in centroid_inputs]
                 output_labels = output_labels + [int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in label_inputs]
                 output_cluster_class = output_cluster_class + [np.argmax(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
-        return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid             
+                output_cloud_eccentricity = output_cloud_eccentricity +  [tuple(torch.squeeze(cloud_input).detach().cpu().numpy()) for cloud_input in cloud_inputs]
+        return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity             
 
 
        
@@ -218,6 +221,23 @@ def get_panda_cloud_xyz(points):
         return cloud
 
         
+def get_eccentricity(point_cloud):
+        
+        # Compute the covariance matrix of the point cloud
+        cov_mat = np.cov(point_cloud, rowvar=False)
+        
+         # Compute the eigenvectors and eigenvalues of the covariance matrix
+        eigenvalues, eigenvectors = np.linalg.eigh(cov_mat)
+        
+        # Sort the eigenvectors in descending order of their corresponding eigenvalues
+        idx = eigenvalues.argsort()[::-1]
+        eigenvectors = eigenvectors[:, idx]
+        eigenvalues = eigenvalues[idx]
+        
+        # Compute the eccentricity along each principal axis
+        eccentricities = np.sqrt(eigenvalues / eigenvalues.min())
+    
+        return eccentricities
 
 
 def get_current_label_binary(prop):
