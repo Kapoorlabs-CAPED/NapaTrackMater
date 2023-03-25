@@ -258,7 +258,7 @@ def get_surface_area(point_cloud):
 
     # Compute the total surface area
     surface_area = areas.sum()
-    print(point_cloud.shape, surface_area)
+ 
     return surface_area
 
 def get_current_label_binary(prop):
