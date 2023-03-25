@@ -683,22 +683,32 @@ class TrackMate(object):
                                     total_intensity =  float(all_dict_values[self.total_intensity_key])
                                     volume_pixels = int(float(all_dict_values[self.quality_key]))
 
-                                    eccentricity_x = float(all_dict_values[self.eccentricity_xkey])
-                                    eccentricity_y = float(all_dict_values[self.eccentricity_ykey])
-                                    eccentricity_z = float(all_dict_values[self.eccentricity_zkey])
-                                    surface_area = float(all_dict_values[self.surface_areakey])
+                                    
 
                                     if self.clusterclass_key in all_dict_values.keys():
                                            
                                            if all_dict_values[self.clusterclass_key] is not None:
                                                 cluster_class = int(float(all_dict_values[self.clusterclass_key]))
                                                 cluster_class_score = float(all_dict_values[self.clusterscore_key])
+                                                eccentricity_x = float(all_dict_values[self.eccentricity_xkey])
+                                                eccentricity_y = float(all_dict_values[self.eccentricity_ykey])
+                                                eccentricity_z = float(all_dict_values[self.eccentricity_zkey])
+                                                surface_area = float(all_dict_values[self.surface_areakey])
                                            else:
                                                 cluster_class = None
-                                                cluster_class_score = 0     
+                                                cluster_class_score = 0  
+                                                eccentricity_x = None
+                                                eccentricity_y = None 
+                                                eccentricity_z = None 
+                                                surface_area = None
+                                               
                                     else:
                                            cluster_class = None
-                                           cluster_class_score = 0       
+                                           cluster_class_score = 0
+                                           eccentricity_x = None
+                                           eccentricity_y = None 
+                                           eccentricity_z = None 
+                                           surface_area = None       
 
                                     frame_spot_centroid = (t,round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration) 
                                     self.unique_spot_centroid[frame_spot_centroid] = k
