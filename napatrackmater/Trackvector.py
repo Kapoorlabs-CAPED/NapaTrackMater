@@ -203,50 +203,6 @@ class TrackVector(TrackMate):
                                     
         def _compute_track_vectors(self):
 
-               self.current_shape_vectors = []
-               for k in self.unique_shape_properties.keys():
-                      
-                      nested_unique_shape_properties = self.unique_shape_properties[k]
-                      dividing, number_dividing = self.unique_track_mitosis_label[k]
-                      
-                      for current_unique_id in nested_unique_shape_properties.keys():
-                             
-                             unique_shape_properties_tracklet = nested_unique_shape_properties[current_unique_id]
-                             current_time, radius, volume, eccentricity_comp_first, eccentricity_comp_second, surface_area, current_cluster_class, current_cluster_class_score = unique_shape_properties_tracklet
-                             track_id_array = np.ones(current_time.shape)
-                             dividing_array = np.ones(current_time.shape)
-                             number_dividing_array = np.ones(current_time.shape)
-                             for i in range(track_id_array.shape[0]):
-                                    track_id_array[i] = track_id_array[i] * k
-                                    dividing_array[i] = dividing_array[i] * dividing 
-                                    number_dividing_array[i] = number_dividing_array[i] * number_dividing
-                                 
-                             self.current_shape_vectors.append([current_time, track_id_array, dividing_array, number_dividing_array,  radius, volume , eccentricity_comp_first, eccentricity_comp_second, surface_area, current_cluster_class])
-
-          
-               print(f'returning shape vectors as list {len(self.current_shape_vectors)}')
-
-               self.current_dynamic_vectors = []
-               for k in self.unique_dynamic_properties.keys():
-                      
-                      nested_unique_dynamic_properties = self.unique_dynamic_properties[k]
-                      dividing, number_dividing = self.unique_track_mitosis_label[k]
-                      for current_unique_id in nested_unique_dynamic_properties.keys():
-                             
-                             unique_dynamic_properties_tracklet = nested_unique_dynamic_properties[current_unique_id]
-                             current_time, speed, directional_change_rate, acceleration = unique_dynamic_properties_tracklet
-                             
-                             track_id_array = np.ones(current_time.shape)
-                             dividing_array = np.ones(current_time.shape)
-                             number_dividing_array = np.ones(current_time.shape)
-                             for i in range(track_id_array.shape[0]):
-                                    track_id_array[i] = track_id_array[i] * k
-                                    dividing_array[i] = dividing_array[i] * dividing 
-                                    number_dividing_array[i] = number_dividing_array[i] * number_dividing
-                             self.current_dynamic_vectors.append([current_time, track_id_array, dividing_array, number_dividing_array,   speed, directional_change_rate, acceleration])
-
-          
-               print(f'returning dynamic vectors as list {len(self.current_dynamic_vectors)}')
 
                self.current_shape_dynamic_vectors = []
                for k in self.unique_dynamic_properties.keys():
@@ -267,7 +223,7 @@ class TrackVector(TrackMate):
                                     track_id_array[i] = track_id_array[i] * k
                                     dividing_array[i] = dividing_array[i] * dividing 
                                     number_dividing_array[i] = number_dividing_array[i] * number_dividing
-                             self.current_shape_dynamic_vectors.append([current_time, track_id_array, dividing_array, number_dividing_array, radius, volume, current_cluster_class, speed, directional_change_rate, acceleration])
+                             self.current_shape_dynamic_vectors.append([current_time, track_id_array, dividing_array, number_dividing_array, radius, volume, eccentricity_comp_first, eccentricity_comp_second, surface_area, current_cluster_class, speed, directional_change_rate, acceleration])
 
           
                print(f'returning shape and dynamic vectors as list {len(self.current_shape_dynamic_vectors)}')
