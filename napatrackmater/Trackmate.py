@@ -1263,16 +1263,13 @@ class TrackMate(object):
                 volume = tracklet_properties[:,4]
                 eccentricity_comp_first = tracklet_properties[:,5]
                 eccentricity_comp_second = tracklet_properties[:,6]
-                surface_area = tracklet_properties[:,8]
-
-
-
-                cluster_class = tracklet_properties[:,9]
-                cluster_class_score = tracklet_properties[:,10]
-                intensity = tracklet_properties[:,11]
-                speed = tracklet_properties[:,12]
-                directional_change_rate = tracklet_properties[:,13]
-                acceleration = tracklet_properties[:,14]
+                surface_area = tracklet_properties[:,7]
+                cluster_class = tracklet_properties[:,8]
+                cluster_class_score = tracklet_properties[:,9]
+                intensity = tracklet_properties[:,10]
+                speed = tracklet_properties[:,11]
+                directional_change_rate = tracklet_properties[:,12]
+                acceleration = tracklet_properties[:,13]
 
                 
                 unique_fft_properties_tracklet = {}
