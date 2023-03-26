@@ -151,7 +151,6 @@ def _label_cluster(label_image, num_points, min_size, ndim):
        labels = []
        centroids = []
        clouds = []
-       perimeters = []
        nthreads = os.cpu_count()
        properties = regionprops(label_image)
        futures = []
