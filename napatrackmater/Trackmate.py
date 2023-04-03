@@ -267,14 +267,14 @@ class TrackMate(object):
     def _get_boundary_points(self):
          
         print('Computing boundary points') 
-        if  self.mask is not None and self.image is not None:
-                    if len(self.mask.shape) < len(self.image.shape):
+        if  self.mask is not None and self.seg_image is not None:
+                    if len(self.mask.shape) < len(self.seg_image.shape):
                         self.update_mask = np.zeros(
                             [
-                                self.image.shape[0],
-                                self.image.shape[1],
-                                self.image.shape[2],
-                                self.image.shape[3],
+                                self.seg_image.shape[0],
+                                self.seg_image.shape[1],
+                                self.seg_image.shape[2],
+                                self.seg_image.shape[3],
                             ]
                         )
                         for i in range(0, self.update_mask.shape[0]):
@@ -460,24 +460,8 @@ class TrackMate(object):
         if self.mask is not None:
 
                 tree, indices, masklabel, masklabelvolume = self.timed_mask[str(int(float(frame)))]
-                if len(self.mask.shape) == 4:
-                        z, y, x = testlocation 
-                        region_label = self.mask[
-                            int(float(frame) ),
-                            int(float(z) / self.zcalibration),
-                            int(float(y) / self.ycalibration),
-                            int(float(x) / self.xcalibration),
-                        ]
-                if len(self.mask.shape) == 3:
-                        y,x = testlocation
-                        region_label = self.mask[
-                            int(float(frame) ),
-                            int(float(y) / self.ycalibration),
-                            int(float(x) / self.xcalibration),
-                        ]
+                        
                 for k in range(0, len(masklabel)):
-                    currentlabel = masklabel[k]
-                    currentvolume = masklabelvolume[k]
                     currenttree = tree[k]
                     # Get the location and distance to the nearest boundary point
                     distance_cell_mask, location = currenttree.query(testlocation)
