@@ -9,9 +9,8 @@ import math
 from skimage.measure import label, regionprops
 from skimage.segmentation import find_boundaries
 from scipy import spatial
-import dask as da
 from typing import List
-from scipy.fftpack import fft, fftfreq, fftshift, ifft
+from scipy.fftpack import fft, fftfreq
 import os
 from pathlib import Path 
 import concurrent
@@ -466,7 +465,6 @@ class TrackMate(object):
                     # Get the location and distance to the nearest boundary point
                     distance_cell_mask, locationindex = currenttree.query(testlocation)
                     distance_cell_mask = max(0, distance_cell_mask - float(cellradius))
-                    mask_location = indices[locationindex]
                    
         else:
                 distance_cell_mask = 0
