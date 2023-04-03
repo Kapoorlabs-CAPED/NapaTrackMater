@@ -1430,6 +1430,9 @@ class TrackMate(object):
                 self.mitotic_mean_directional_change = []
                 self.mitotic_var_directional_change = []
 
+                self.mitotic_mean_distance_cell_mask = []
+                self.mitotic_var_distance_cell_mask = []
+
                 self.non_mitotic_mean_disp_z = []
                 self.non_mitotic_var_disp_z = []
 
@@ -1451,6 +1454,9 @@ class TrackMate(object):
                 self.non_mitotic_mean_directional_change = []
                 self.non_mitotic_var_directional_change = []
 
+                self.non_mitotic_mean_distance_cell_mask = []
+                self.non_mitotic_var_distance_cell_mask = []
+
                 self.all_mean_disp_z = []
                 self.all_var_disp_z = []
 
@@ -1471,6 +1477,9 @@ class TrackMate(object):
 
                 self.all_mean_directional_change = []
                 self.all_var_directional_change = []
+
+                self.all_mean_distance_cell_mask = []
+                self.all_var_distance_cell_mask = []
 
                 self.mitotic_cluster_class = []
                 self.non_mitotic_cluster_class = []
@@ -1504,6 +1513,8 @@ class TrackMate(object):
                     mitotic_acc = []
                     mitotic_directional_change = []
                     mitotic_cluster_class = []
+                    mitotic_distance_cell_mask = []
+
                     non_mitotic_disp_z = []
                     non_mitotic_disp_y = []
                     non_mitotic_disp_x = []
@@ -1512,6 +1523,8 @@ class TrackMate(object):
                     non_mitotic_acc = []
                     non_mitotic_directional_change = []
                     non_mitotic_cluster_class = []
+                    non_mitotic_distance_cell_mask = []
+                    
                     all_disp_z = []
                     all_disp_y = []
                     all_disp_x = []
@@ -1520,6 +1533,7 @@ class TrackMate(object):
                     all_acc = []
                     all_directional_change = []
                     all_cluster_class = []
+                    all_distance_cell_mask = []
 
 
 
@@ -1538,6 +1552,7 @@ class TrackMate(object):
                                         mitotic_speed.append(all_spots_tracks[k][self.speed_key])
                                         mitotic_acc.append(all_spots_tracks[k][self.acceleration_key])
                                         mitotic_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])
+                                        mitotic_distance_cell_mask.append(all_spots_tracks[k][self.distance_cell_mask_key])
                                         if self.clusterclass_key in all_spots_tracks[k].keys() :
                                                mitotic_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])
 
@@ -1550,6 +1565,7 @@ class TrackMate(object):
                                         non_mitotic_speed.append(all_spots_tracks[k][self.speed_key])
                                         non_mitotic_acc.append(all_spots_tracks[k][self.acceleration_key])
                                         non_mitotic_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])
+                                        non_mitotic_distance_cell_mask.append(all_spots_tracks[k][self.distance_cell_mask_key])
                                         if self.clusterclass_key in all_spots_tracks[k].keys() :
                                                non_mitotic_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])
 
@@ -1560,6 +1576,7 @@ class TrackMate(object):
                                   all_speed.append(all_spots_tracks[k][self.speed_key])
                                   all_acc.append(all_spots_tracks[k][self.acceleration_key])
                                   all_directional_change.append(all_spots_tracks[k][self.directional_change_rate_key])   
+                                  all_distance_cell_mask.append(all_spots_tracks[k][self.distance_cell_mask_key])
                                   if self.clusterclass_key in all_spots_tracks[k].keys() :
                                                all_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])    
                                               
@@ -1605,6 +1622,9 @@ class TrackMate(object):
                     self.mitotic_mean_directional_change.append(np.mean(mitotic_directional_change))
                     self.mitotic_var_directional_change.append(np.std(mitotic_directional_change))
 
+                    self.mitotic_mean_distance_cell_mask.append(np.mean(mitotic_distance_cell_mask))
+                    self.mitotic_var_distance_cell_mask.append(np.std(mitotic_distance_cell_mask))
+
                     self.non_mitotic_mean_disp_z.append(np.mean(non_mitotic_disp_z))
                     self.non_mitotic_var_disp_z.append(np.std(non_mitotic_disp_z))
 
@@ -1625,6 +1645,10 @@ class TrackMate(object):
 
                     self.non_mitotic_mean_directional_change.append(np.mean(non_mitotic_directional_change))
                     self.non_mitotic_var_directional_change.append(np.std(non_mitotic_directional_change)) 
+
+                    self.non_mitotic_mean_distance_cell_mask.append(np.mean(non_mitotic_distance_cell_mask))
+                    self.non_mitotic_var_distance_cell_mask.append(np.std(non_mitotic_distance_cell_mask))
+
 
                     self.all_mean_disp_z.append(np.mean(all_disp_z))
                     self.all_var_disp_z.append(np.std(all_disp_z))
@@ -1648,6 +1672,9 @@ class TrackMate(object):
 
                     self.all_mean_directional_change.append(np.mean(all_directional_change))
                     self.all_var_directional_change.append(np.std(all_directional_change))
+
+                    self.all_mean_distance_cell_mask.append(np.mean(all_distance_cell_mask))
+                    self.all_var_distance_cell_mask.append(np.std(all_distance_cell_mask))
                             
         
 def boundary_points(mask, xcalibration, ycalibration, zcalibration):
