@@ -662,7 +662,7 @@ class TrackMate(object):
                                     acceleration = float(all_dict_values[self.acceleration_key])
                                     dcr = float(all_dict_values[self.directional_change_rate_key])
                                     radius = float(all_dict_values[self.radius_key])
-
+                                    distance_cell_mask = float(all_dict_values[self.distance_cell_mask_key])
                                     total_intensity =  float(all_dict_values[self.total_intensity_key])
                                     volume_pixels = int(float(all_dict_values[self.quality_key]))
 
@@ -699,7 +699,7 @@ class TrackMate(object):
                                         current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
 
                                         value_array = current_tracklets_properties[current_track_id]
-                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels, eccentricity_comp_first, eccentricity_comp_second, surface_area, cluster_class, cluster_class_score, total_intensity, speed, dcr, acceleration])
+                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels, eccentricity_comp_first, eccentricity_comp_second, surface_area, cluster_class, cluster_class_score, total_intensity, speed, dcr, acceleration, distance_cell_mask])
                                         
                                         current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
 
@@ -707,7 +707,7 @@ class TrackMate(object):
                                         current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
                                         current_tracklets[current_track_id] = current_tracklet_array 
 
-                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels,  eccentricity_comp_first, eccentricity_comp_second, surface_area, cluster_class, cluster_class_score, total_intensity, speed, dcr, acceleration])
+                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels,  eccentricity_comp_first, eccentricity_comp_second, surface_area, cluster_class, cluster_class_score, total_intensity, speed, dcr, acceleration, distance_cell_mask])
                                         current_tracklets_properties[current_track_id] = current_value_array
 
                                     return current_tracklets, current_tracklets_properties     
@@ -1254,7 +1254,7 @@ class TrackMate(object):
                 speed = tracklet_properties[:,11]
                 directional_change_rate = tracklet_properties[:,12]
                 acceleration = tracklet_properties[:,13]
-
+                distance_cell_mask = tracklet_properties[:,14]
                 
                 unique_fft_properties_tracklet = {}
                 unique_cluster_properties_tracklet = {}
@@ -1283,6 +1283,7 @@ class TrackMate(object):
                    current_speed = []
                    current_directional_change_rate = []
                    current_acceleration = []
+                   current_distance_cell_mask = []
                    current_eccentricity_comp_first = []
                    current_eccentricity_comp_second = []
                    current_surface_area = []
@@ -1298,6 +1299,7 @@ class TrackMate(object):
                                  current_speed.append(speed[j])
                                  current_directional_change_rate.append(directional_change_rate[j])
                                  current_acceleration.append(acceleration[j])
+                                 current_distance_cell_mask.append(distance_cell_mask[j])
                                  current_eccentricity_comp_first.append(eccentricity_comp_first[j])
                                  current_eccentricity_comp_second.append(eccentricity_comp_second[j])
                                  current_surface_area.append(surface_area[j])
@@ -1317,6 +1319,7 @@ class TrackMate(object):
                    current_speed = np.asarray(current_speed)
                    current_directional_change_rate = np.asarray(current_directional_change_rate)
                    current_acceleration = np.asarray(current_acceleration)
+                   current_distance_cell_mask = np.asarray(distance_cell_mask)
 
 
                    
@@ -1331,7 +1334,7 @@ class TrackMate(object):
                    unique_fft_properties_tracklet[current_unique_id] = expanded_time, expanded_intensity, xf_sample, ffttotal_sample
                    unique_cluster_properties_tracklet[current_unique_id] =  current_time, current_cluster_class, current_cluster_class_score
                    unique_shape_properties_tracklet[current_unique_id] = current_time, current_radius, current_volume, current_eccentricity_comp_first, current_eccentricity_comp_second, current_surface_area, current_cluster_class, current_cluster_class_score
-                   unique_dynamic_properties_tracklet[current_unique_id] = current_time, current_speed, current_directional_change_rate, current_acceleration
+                   unique_dynamic_properties_tracklet[current_unique_id] = current_time, current_speed, current_directional_change_rate, current_acceleration, current_distance_cell_mask
                    self.unique_fft_properties[track_id].update({current_unique_id:unique_fft_properties_tracklet[current_unique_id]})
                    self.unique_cluster_properties[track_id].update({current_unique_id:unique_cluster_properties_tracklet[current_unique_id]})
 
@@ -1651,6 +1654,8 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
 
     ndim = len(mask.shape)
     timed_mask = {}
+    mask = mask > 0
+    mask = mask.astype('uint8')
     # YX shaped object
     if ndim == 2:
         mask = label(mask)
