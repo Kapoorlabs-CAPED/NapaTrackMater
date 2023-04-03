@@ -459,11 +459,10 @@ class TrackMate(object):
          
         if self.mask is not None:
 
-                tree, indices, masklabel, masklabelvolume, regioncentroid = self.timed_mask[str(int(float(frame)))]
+                tree, indices, masklabel, masklabelvolume = self.timed_mask[str(int(float(frame)))]
                         
                 for k in range(0, len(masklabel)):
                     currenttree = tree[k]
-                    currentcentroid = regioncentroid[k]
                     # Get the location and distance to the nearest boundary point
                     distance_cell_mask, locationindex = currenttree.query(testlocation)
                     distance_cell_mask = max(0, distance_cell_mask - float(cellradius))
@@ -1696,9 +1695,6 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
 
             labelimage = prop.image
             regionlabel = prop.label
-            regioncentroid = prop.centroid
-            regioncentroid[0] = regioncentroid[0] * ycalibration
-            regioncentroid[1] = regioncentroid[1] * xcalibration
 
             sizey = abs(prop.bbox[0] - prop.bbox[2]) * ycalibration
             sizex = abs(prop.bbox[1] - prop.bbox[3]) * xcalibration
@@ -1719,7 +1715,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
                 labels.append(regionlabel)
                 size.append(radius)
         # This object contains list of all the points for all the labels in the Mask image with the label id and volume of each label
-        timed_mask[str(0)] = [tree, indices, labels, size, regioncentroid]
+        timed_mask[str(0)] = [tree, indices, labels, size]
 
     # TYX shaped object
     if ndim == 3:
@@ -1736,9 +1732,6 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
 
                 labelimage = prop.image
                 regionlabel = prop.label
-                regioncentroid = prop.centroid
-                regioncentroid[0] = regioncentroid[0] * ycalibration
-                regioncentroid[1] = regioncentroid[1] * xcalibration
                 sizey = abs(prop.bbox[0] - prop.bbox[2]) * ycalibration
                 sizex = abs(prop.bbox[1] - prop.bbox[3]) * xcalibration
                 volume = sizey * sizex
@@ -1756,11 +1749,11 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
                     labels.append(regionlabel)
                     size.append(radius)
 
-            timed_mask[str(i)] = [tree, indices, labels, size, regioncentroid]
+            timed_mask[str(i)] = [tree, indices, labels, size]
             
     # TZYX shaped object
     if ndim == 4:
-        print('Maks made into a 4D cylinder')
+        print('Masks made into a 4D cylinder')
         Boundary = np.zeros(
             [mask.shape[0], mask.shape[1], mask.shape[2], mask.shape[3]]
         )
@@ -1788,10 +1781,6 @@ def parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i):
         sizez = abs(prop.bbox[0] - prop.bbox[3]) * zcalibration
         sizey = abs(prop.bbox[1] - prop.bbox[4]) * ycalibration
         sizex = abs(prop.bbox[2] - prop.bbox[5]) * xcalibration
-        regioncentroid = prop.centroid
-        regioncentroid[0] = regioncentroid[0] * zcalibration
-        regioncentroid[1] = regioncentroid[1] * ycalibration
-        regioncentroid[2] = regioncentroid[2] * xcalibration
         volume = sizex * sizey * sizez
         radius = math.pow(3 * volume / (4 * math.pi), 1.0 / 3.0)
 
@@ -1809,7 +1798,7 @@ def parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i):
             labels.append(regionlabel)
             size.append(radius)
     
-    pred = [tree, indices, labels, size, regioncentroid]
+    pred = [tree, indices, labels, size]
      
 
     return pred
