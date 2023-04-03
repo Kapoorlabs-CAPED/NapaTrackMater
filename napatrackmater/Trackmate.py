@@ -1761,7 +1761,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
                 Boundary[i,j, :, :] = find_boundaries(mask[i, j, :, :])
             pred = parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i) 
             timed_mask[str(i)] = pred
-
+    print('Should be returning')
     return timed_mask, Boundary        
 
 
