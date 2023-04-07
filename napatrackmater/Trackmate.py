@@ -1775,14 +1775,16 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             regioncentroid = compute_centroid(boundary[i,:]) 
             indices = np.where(boundary[i,:] > 0)
             real_indices = np.transpose(np.asarray(indices)).copy()
+            print(i, mask.shape[0], 'what')
             for j in range(0, len(real_indices)):
 
                     real_indices[j][0] = real_indices[j][0] * zcalibration
                     real_indices[j][1] = real_indices[j][1] * ycalibration
                     real_indices[j][2] = real_indices[j][2] * xcalibration
 
+            print(i, mask.shape[0], 'what the')
             tree = spatial.cKDTree(real_indices)
-
+            print(i, mask.shape[0], 'what the hell')
             timed_mask[str(i)] = [tree, indices, regioncentroid]
             print(i, mask.shape[0])
     print('Computed the boundary points')
