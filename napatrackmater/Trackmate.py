@@ -1768,9 +1768,10 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
         boundary = np.zeros(
             [mask.shape[0], mask.shape[1], mask.shape[2], mask.shape[3]]
         )
-        
+        print('this?')
         for i in tqdm(range(0, mask.shape[0])):
-
+            
+            print('in loop', i)
             boundary[i,:] = find_boundaries(mask[i,:])
             print(boundary[i,:].shape)
             regioncentroid = compute_centroid(boundary[i,:]) 
@@ -1778,7 +1779,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             indices = np.where(boundary[i,:] > 0)
             print(len(indices))
             real_indices = np.transpose(np.asarray(indices)).copy()
-            
+
             print(i, mask.shape[0], 'what')
             for j in range(0, len(real_indices)):
 
