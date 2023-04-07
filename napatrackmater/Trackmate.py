@@ -1764,7 +1764,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             
     # TZYX shaped object
     if ndim == 4:
-        print('Masks made into a 4D cylinder')
+        print('Masks made into a 4D cylinder, up')
         boundary = np.zeros(
             [mask.shape[0], mask.shape[1], mask.shape[2], mask.shape[3]]
         )
