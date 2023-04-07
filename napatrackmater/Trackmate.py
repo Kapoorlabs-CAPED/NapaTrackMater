@@ -1788,7 +1788,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
 
             timed_mask[str(i)] = [tree, indices, regioncentroid]
 
-
+    print('Computed the boundary points')
 
     return timed_mask, boundary        
 
