@@ -123,6 +123,9 @@ class TrackMate(object):
         self.dividing_key = 'dividing_normal'
         self.number_dividing_key = 'number_dividing'
         self.distance_cell_mask_key = 'distance_cell_mask'
+        self.maskcentroid_x_key = 'maskcentroid_x_key'
+        self.maskcentroid_z_key = 'maskcentroid_z_key'
+        self.maskcentroid_y_key = 'maskcentroid_y_key'
         self.cellid_key = 'cell_id'
         self.acceleration_key = 'acceleration'
         self.centroid_key = 'centroid'
@@ -458,7 +461,7 @@ class TrackMate(object):
          
         if self.mask is not None:
 
-                tree, indices, masklabel, masklabelvolume = self.timed_mask[str(int(float(frame)))]
+                tree, indices, masklabel, masklabelvolume, maskcentroid = self.timed_mask[str(int(float(frame)))]
                         
                 for k in range(0, len(masklabel)):
                     currenttree = tree[k]
@@ -469,7 +472,7 @@ class TrackMate(object):
         else:
                 distance_cell_mask = 0
 
-        return distance_cell_mask        
+        return distance_cell_mask, maskcentroid        
          
 
     def _track_computer(self, track, track_id):
@@ -801,7 +804,7 @@ class TrackMate(object):
                         QUALITY = Spotobject.get(self.quality_key)
                         testlocation = (float(Spotobject.get(self.zposid_key)), float(Spotobject.get(self.yposid_key)),  float(Spotobject.get(self.xposid_key)))
                         frame = Spotobject.get(self.frameid_key)
-                        distance_cell_mask = self._get_boundary_dist(frame, testlocation, RADIUS)
+                        distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, testlocation, RADIUS)
                         
                         self.unique_spot_properties[cell_id] = {
                             self.cellid_key: int(cell_id), 
@@ -813,7 +816,10 @@ class TrackMate(object):
                             self.mean_intensity_key : (float(MEAN_INTENSITY)),
                             self.radius_key : (float(RADIUS)),
                             self.quality_key : (float(QUALITY)),
-                            self.distance_cell_mask_key: float(distance_cell_mask)
+                            self.distance_cell_mask_key: float(distance_cell_mask),
+                            self.maskcentroid_z_key: float(maskcentroid[0]),
+                            self.maskcentroid_y_key: float(maskcentroid[1]),
+                            self.maskcentroid_x_key: float(maskcentroid[2]) 
                         }
        
                         
@@ -841,7 +847,7 @@ class TrackMate(object):
                     location = (int(centroids[index][0]), int(centroids[index][1]), int(centroids[index][2]))
                     QUALITY = volume[index]
                     RADIUS = math.pow(QUALITY, 1.0/3.0) * self.xcalibration * self.ycalibration * self.zcalibration
-                    distance_cell_mask = self._get_boundary_dist(frame, location, RADIUS)
+                    distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, location, RADIUS)
                     self.channel_unique_spot_properties[cell_id] = {
                             self.cellid_key: int(cell_id), 
                             self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
@@ -1350,7 +1356,14 @@ class TrackMate(object):
 
         unique_id = str(track_id) + str(self.max_track_id) + str(generation_id) + str(tracklet_id)
         
-        
+        vec_mask = [float(self.unique_spot_properties[int(cell_id)][self.maskcentroid_x_key]), float(self.unique_spot_properties[int(cell_id)][self.maskcentroid_y_key]), float(self.unique_spot_properties[int(cell_id)][self.maskcentroid_z_key]) ]
+
+        vec_cell = [float(self.unique_spot_properties[int(cell_id)][self.xposid_key]) , 
+                            float(self.unique_spot_properties[int(cell_id)][self.yposid_key]), 
+                            float(self.unique_spot_properties[int(cell_id)][self.zposid_key])]
+
+        angle = angular_change(vec_mask, vec_cell)
+        self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : angle})                    
 
         unique_tracklet_ids.append(str(unique_id))
         self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : None})
@@ -1376,16 +1389,11 @@ class TrackMate(object):
             if source_id in self.edge_source_lookup:
                     pre_source_id = self.edge_source_lookup[source_id]
                     
-                    vec_0 = [float(self.unique_spot_properties[int(source_id)][self.xposid_key]) - float(self.unique_spot_properties[int(pre_source_id)][self.xposid_key]), 
-                            float(self.unique_spot_properties[int(source_id)][self.yposid_key]) - float(self.unique_spot_properties[int(pre_source_id)][self.yposid_key]), 
-                            float(self.unique_spot_properties[int(source_id)][self.zposid_key]) -  float(self.unique_spot_properties[int(pre_source_id)][self.zposid_key])]
-                    
                     vec_2 = [float(self.unique_spot_properties[int(cell_id)][self.xposid_key]) - 2 * float(self.unique_spot_properties[int(source_id)][self.xposid_key]) + float(self.unique_spot_properties[int(pre_source_id)][self.xposid_key]), 
                             float(self.unique_spot_properties[int(cell_id)][self.yposid_key]) - 2 * float(self.unique_spot_properties[int(source_id)][self.yposid_key]) + float(self.unique_spot_properties[int(pre_source_id)][self.yposid_key]), 
                             float(self.unique_spot_properties[int(cell_id)][self.zposid_key]) -  2 * float(self.unique_spot_properties[int(source_id)][self.zposid_key]) + float(self.unique_spot_properties[int(pre_source_id)][self.zposid_key])]
                     acc = np.sqrt(np.dot(vec_2, vec_2))/self.tcalibration
-                    angle = angular_change(vec_0, vec_1)
-                    self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : angle})
+                    
                     self.unique_spot_properties[int(cell_id)].update({self.acceleration_key : acc})
         elif source_id is None:
             self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : None}) 
@@ -1687,12 +1695,14 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
         mask = label(mask)
         labels = []
         size = []
+        centroid = []
         tree = []
         properties = regionprops(mask, mask)
         for prop in properties:
 
             labelimage = prop.image
             regionlabel = prop.label
+            regioncentroid = (0,) + prop.centroid
 
             sizey = abs(prop.bbox[0] - prop.bbox[2]) * ycalibration
             sizex = abs(prop.bbox[1] - prop.bbox[3]) * xcalibration
@@ -1712,8 +1722,9 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             if regionlabel not in labels:
                 labels.append(regionlabel)
                 size.append(radius)
+                centroid.append(regioncentroid)
         # This object contains list of all the points for all the labels in the Mask image with the label id and volume of each label
-        timed_mask[str(0)] = [tree, indices, labels, size]
+        timed_mask[str(0)] = [tree, indices, labels, size, centroid]
 
     # TYX shaped object
     if ndim == 3:
@@ -1726,10 +1737,12 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             labels = []
             size = []
             tree = []
+            centroid = []
             for prop in properties:
 
                 labelimage = prop.image
                 regionlabel = prop.label
+                regioncentroid =  (0,) + prop.centroid
                 sizey = abs(prop.bbox[0] - prop.bbox[2]) * ycalibration
                 sizex = abs(prop.bbox[1] - prop.bbox[3]) * xcalibration
                 volume = sizey * sizex
@@ -1746,8 +1759,9 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
                 if regionlabel not in labels:
                     labels.append(regionlabel)
                     size.append(radius)
+                    centroid.append(regioncentroid)
 
-            timed_mask[str(i)] = [tree, indices, labels, size]
+            timed_mask[str(i)] = [tree, indices, labels, size, centroid]
             
     # TZYX shaped object
     if ndim == 4:
@@ -1767,9 +1781,11 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             labels = []
             size = []
             tree = []
+            centroid = []
             for prop in properties:
 
                 regionlabel = prop.label
+                regioncentroid = prop.centroid
                 sizez = abs(prop.bbox[0] - prop.bbox[3]) * zcalibration
                 sizey = abs(prop.bbox[1] - prop.bbox[4]) * ycalibration
                 sizex = abs(prop.bbox[2] - prop.bbox[5]) * xcalibration
@@ -1789,8 +1805,9 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
                 if regionlabel not in labels:
                     labels.append(regionlabel)
                     size.append(radius)
+                    centroid.append(regioncentroid)
 
-            timed_mask[str(i)] = [tree, indices, labels, size]
+            timed_mask[str(i)] = [tree, indices, labels, size, centroid]
 
 
 
