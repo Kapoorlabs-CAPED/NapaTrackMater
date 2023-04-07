@@ -212,7 +212,7 @@ class TrackVector(TrackMate):
                       for current_unique_id in nested_unique_dynamic_properties.keys():
                              
                              unique_dynamic_properties_tracklet = nested_unique_dynamic_properties[current_unique_id]
-                             current_time, speed, directional_change_rate, acceleration = unique_dynamic_properties_tracklet
+                             current_time, speed, directional_change_rate, acceleration, distance_cell_mask, radial_angle, cell_axis_mask = unique_dynamic_properties_tracklet
                              unique_shape_properties_tracklet = nested_unique_shape_properties[current_unique_id]
                              current_time, radius, volume, eccentricity_comp_first, eccentricity_comp_second, surface_area, current_cluster_class, current_cluster_class_score = unique_shape_properties_tracklet
                              
@@ -223,7 +223,7 @@ class TrackVector(TrackMate):
                                     track_id_array[i] = track_id_array[i] * k
                                     dividing_array[i] = dividing_array[i] * dividing 
                                     number_dividing_array[i] = number_dividing_array[i] * number_dividing
-                             self.current_shape_dynamic_vectors.append([current_time, track_id_array, dividing_array, number_dividing_array, radius, volume, eccentricity_comp_first, eccentricity_comp_second, surface_area, current_cluster_class, speed, directional_change_rate, acceleration])
+                             self.current_shape_dynamic_vectors.append([current_time, track_id_array, dividing_array, number_dividing_array, radius, volume, eccentricity_comp_first, eccentricity_comp_second, surface_area, current_cluster_class, speed, directional_change_rate, acceleration, distance_cell_mask, radial_angle, cell_axis_mask])
 
           
                print(f'returning shape and dynamic vectors as list {len(self.current_shape_dynamic_vectors)}')

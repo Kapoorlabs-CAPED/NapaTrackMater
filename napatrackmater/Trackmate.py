@@ -14,9 +14,8 @@ from scipy.fftpack import fft, fftfreq
 import os
 from pathlib import Path 
 import concurrent
-
 from .clustering import Clustering
-
+from scipy import ndimage
 
 
 
@@ -463,13 +462,11 @@ class TrackMate(object):
          
         if self.mask is not None:
 
-                tree, indices, masklabel, masklabelvolume, maskcentroid = self.timed_mask[str(int(float(frame)))]
+                tree, indices, maskcentroid = self.timed_mask[str(int(float(frame)))]
                         
-                for k in range(0, len(masklabel)):
-                    currenttree = tree[k]
-                    # Get the location and distance to the nearest boundary point
-                    distance_cell_mask, locationindex = currenttree.query(testlocation)
-                    distance_cell_mask = max(0, distance_cell_mask - float(cellradius))
+                # Get the location and distance to the nearest boundary point
+                distance_cell_mask, locationindex = tree.query(testlocation)
+                distance_cell_mask = max(0, distance_cell_mask - float(cellradius))
                    
         else:
                 distance_cell_mask = 0
@@ -1279,6 +1276,8 @@ class TrackMate(object):
                 motion_angle = tracklet_properties[:,12]
                 acceleration = tracklet_properties[:,13]
                 distance_cell_mask = tracklet_properties[:,14]
+                radial_angle = tracklet_properties[:,15]
+                cell_axis_mask = tracklet_properties[:,16]
 
 
                 
@@ -1313,6 +1312,10 @@ class TrackMate(object):
                    current_eccentricity_comp_first = []
                    current_eccentricity_comp_second = []
                    current_surface_area = []
+
+                   current_radial_angle = []
+                   current_cell_axis_mask = [] 
+                   
                    for j in range(time.shape[0]):
                           if current_unique_id == unique_ids[j]:
                                  current_time.append(time[j])
@@ -1329,6 +1332,8 @@ class TrackMate(object):
                                  current_eccentricity_comp_first.append(eccentricity_comp_first[j])
                                  current_eccentricity_comp_second.append(eccentricity_comp_second[j])
                                  current_surface_area.append(surface_area[j])
+                                 current_radial_angle.append(radial_angle[j])
+                                 current_cell_axis_mask.append(cell_axis_mask[j])
                    current_time = np.asarray(current_time)
                    current_intensity = np.asarray(current_intensity)
 
@@ -1346,6 +1351,8 @@ class TrackMate(object):
                    current_motion_angle = np.asarray(current_motion_angle)
                    current_acceleration = np.asarray(current_acceleration)
                    current_distance_cell_mask = np.asarray(distance_cell_mask)
+                   current_radial_angle = np.asarray(current_radial_angle)
+                   current_cell_axis_mask = np.asarray(current_cell_axis_mask)
 
 
                    
@@ -1360,7 +1367,7 @@ class TrackMate(object):
                    unique_fft_properties_tracklet[current_unique_id] = expanded_time, expanded_intensity, xf_sample, ffttotal_sample
                    unique_cluster_properties_tracklet[current_unique_id] =  current_time, current_cluster_class, current_cluster_class_score
                    unique_shape_properties_tracklet[current_unique_id] = current_time, current_radius, current_volume, current_eccentricity_comp_first, current_eccentricity_comp_second, current_surface_area, current_cluster_class, current_cluster_class_score
-                   unique_dynamic_properties_tracklet[current_unique_id] = current_time, current_speed, current_motion_angle, current_acceleration, current_distance_cell_mask
+                   unique_dynamic_properties_tracklet[current_unique_id] = current_time, current_speed, current_motion_angle, current_acceleration, current_distance_cell_mask, current_radial_angle, current_cell_axis_mask
                    self.unique_fft_properties[track_id].update({current_unique_id:unique_fft_properties_tracklet[current_unique_id]})
                    self.unique_cluster_properties[track_id].update({current_unique_id:unique_cluster_properties_tracklet[current_unique_id]})
 
@@ -1369,7 +1376,7 @@ class TrackMate(object):
 
 
                                  
-    def _dict_update(self, unique_tracklet_ids: List,  cell_id, track_id, source_id, target_id):
+    def _dict_update(self, unique_tracklet_ids: List,  cell_id: int, track_id: int, source_id: int, target_id: int):
 
  
         generation_id = self.generation_dict[cell_id]
@@ -1720,81 +1727,46 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
     mask = mask.astype('uint8')
     # YX shaped object
     if ndim == 2:
-        mask = label(mask)
-        labels = []
-        size = []
-        centroid = []
-        tree = []
-        properties = regionprops(mask, mask)
-        for prop in properties:
+        
+        
+        regioncentroid = (0,) + ndimage.center_of_mass(mask) 
+        boundary = find_boundaries(mask)
+        indices = np.where(boundary > 0)
+        real_indices = np.transpose(np.asarray(indices)).copy()
 
-            labelimage = prop.image
-            regionlabel = prop.label
-            regioncentroid = (0,) + prop.centroid
+        for j in range(0, len(real_indices)):
 
-            sizey = abs(prop.bbox[0] - prop.bbox[2]) * ycalibration
-            sizex = abs(prop.bbox[1] - prop.bbox[3]) * xcalibration
-            volume = sizey * sizex
-            radius = math.sqrt(volume / math.pi)
-            boundary = find_boundaries(labelimage)
-            indices = np.where(boundary > 0)
-            real_indices = np.transpose(np.asarray(indices)).copy()
+            real_indices[j][0] = real_indices[j][0] * ycalibration
+            real_indices[j][1] = real_indices[j][1] * xcalibration
 
-            for j in range(0, len(real_indices)):
-
-                real_indices[j][0] = real_indices[j][0] * ycalibration
-                real_indices[j][1] = real_indices[j][1] * xcalibration
-
-            tree.append(spatial.cKDTree(real_indices))
-
-            if regionlabel not in labels:
-                labels.append(regionlabel)
-                size.append(radius)
-                centroid.append(regioncentroid)
+        tree = spatial.cKDTree(real_indices)
         # This object contains list of all the points for all the labels in the Mask image with the label id and volume of each label
-        timed_mask[str(0)] = [tree, indices, labels, size, centroid]
+        timed_mask[str(0)] = [tree, indices, regioncentroid]
 
     # TYX shaped object
     if ndim == 3:
 
-        Boundary = find_boundaries(mask)
+
         for i in tqdm(range(0, mask.shape[0])):
-
-            mask[i, :] = label(mask[i, :])
-            properties = regionprops(mask[i, :], mask[i, :])
-            labels = []
-            size = []
-            tree = []
-            centroid = []
-            for prop in properties:
-
-                labelimage = prop.image
-                regionlabel = prop.label
-                regioncentroid =  (0,) + prop.centroid
-                sizey = abs(prop.bbox[0] - prop.bbox[2]) * ycalibration
-                sizex = abs(prop.bbox[1] - prop.bbox[3]) * xcalibration
-                volume = sizey * sizex
-                radius = math.sqrt(volume / math.pi)
-                boundary = find_boundaries(labelimage)
+                
+                boundary = find_boundaries(mask[i,:])
+                regioncentroid = (0,) + ndimage.center_of_mass(mask[i,:]) 
                 indices = np.where(boundary > 0)
                 real_indices = np.transpose(np.asarray(indices)).copy()
+
                 for j in range(0, len(real_indices)):
 
                     real_indices[j][0] = real_indices[j][0] * ycalibration
                     real_indices[j][1] = real_indices[j][1] * xcalibration
 
-                tree.append(spatial.cKDTree(real_indices))
-                if regionlabel not in labels:
-                    labels.append(regionlabel)
-                    size.append(radius)
-                    centroid.append(regioncentroid)
+                tree = spatial.cKDTree(real_indices)
 
-            timed_mask[str(i)] = [tree, indices, labels, size, centroid]
+                timed_mask[str(i)] = [tree, indices, regioncentroid]
             
     # TZYX shaped object
     if ndim == 4:
         print('Masks made into a 4D cylinder')
-        Boundary = np.zeros(
+        boundary = np.zeros(
             [mask.shape[0], mask.shape[1], mask.shape[2], mask.shape[3]]
         )
         
@@ -1802,44 +1774,24 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
 
             for j in range(mask.shape[1]):
 
-                Boundary[i,j, :, :] = find_boundaries(mask[i, j, :, :])
+                boundary[i,j, :, :] = find_boundaries(mask[i, j, :, :])
 
-            mask[i, :] = label(mask[i, :])
-            properties = regionprops(mask[i, :], mask[i, :])
-            labels = []
-            size = []
-            tree = []
-            centroid = []
-            for prop in properties:
-
-                regionlabel = prop.label
-                regioncentroid = prop.centroid
-                sizez = abs(prop.bbox[0] - prop.bbox[3]) * zcalibration
-                sizey = abs(prop.bbox[1] - prop.bbox[4]) * ycalibration
-                sizex = abs(prop.bbox[2] - prop.bbox[5]) * xcalibration
-                volume = sizex * sizey * sizez
-                radius = math.pow(3 * volume / (4 * math.pi), 1.0 / 3.0)
-
-                indices = np.where(Boundary[i, :] > 0)
-            
-                real_indices = np.transpose(np.asarray(indices)).copy()
-                for j in range(0, len(real_indices)):
+            regioncentroid = ndimage.center_of_mass(mask[i,:]) 
+            indices = np.where(boundary > 0)
+            real_indices = np.transpose(np.asarray(indices)).copy()
+            for j in range(0, len(real_indices)):
 
                     real_indices[j][0] = real_indices[j][0] * zcalibration
                     real_indices[j][1] = real_indices[j][1] * ycalibration
                     real_indices[j][2] = real_indices[j][2] * xcalibration
 
-                tree.append(spatial.cKDTree(real_indices))
-                if regionlabel not in labels:
-                    labels.append(regionlabel)
-                    size.append(radius)
-                    centroid.append(regioncentroid)
+            tree = spatial.cKDTree(real_indices)
 
-            timed_mask[str(i)] = [tree, indices, labels, size, centroid]
+            timed_mask[str(i)] = [tree, indices, regioncentroid]
 
 
 
-    return timed_mask, Boundary        
+    return timed_mask, boundary        
 
 
 
