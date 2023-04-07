@@ -1729,7 +1729,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
     if ndim == 2:
         
         boundary = find_boundaries(mask)
-        regioncentroid = (0,) + ndimage.center_of_mass(boundary) 
+        regioncentroid = (0,) + compute_centroid(boundary) 
         indices = np.where(boundary > 0)
         real_indices = np.transpose(np.asarray(indices)).copy()
 
@@ -1749,7 +1749,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
         for i in tqdm(range(0, mask.shape[0])):
                 
                 boundary = find_boundaries(mask[i,:])
-                regioncentroid = (0,) + ndimage.center_of_mass(boundary) 
+                regioncentroid = (0,) + compute_centroid(boundary) 
                 indices = np.where(boundary > 0)
                 real_indices = np.transpose(np.asarray(indices)).copy()
 
@@ -1775,7 +1775,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
 
                 boundary[i,j, :, :] = find_boundaries(mask[i, j, :, :])
 
-            regioncentroid = ndimage.center_of_mass(boundary[i,:]) 
+            regioncentroid = compute_centroid(boundary[i,:]) 
             indices = np.where(boundary > 0)
             real_indices = np.transpose(np.asarray(indices)).copy()
             for j in range(0, len(real_indices)):
@@ -1792,7 +1792,19 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
 
     return timed_mask, boundary        
 
+def compute_centroid(binary_image):
+    # Ensure binary image is a NumPy array
+    binary_image = np.array(binary_image)
 
+    white_pixels = np.where(binary_image == 1)
+    num_pixels = len(white_pixels[0])
+
+    # Compute the centroid of the white pixels in the boundary image
+    centroid = np.zeros(binary_image.ndim)
+    for dim in range(binary_image.ndim):
+        centroid[dim] = white_pixels[dim].sum() / num_pixels
+
+    return centroid
 
 
 
