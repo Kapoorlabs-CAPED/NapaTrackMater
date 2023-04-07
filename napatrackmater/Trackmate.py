@@ -1755,51 +1755,50 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
         Boundary = np.zeros(
             [mask.shape[0], mask.shape[1], mask.shape[2], mask.shape[3]]
         )
-        x_ls = range(0, mask.shape[0])
-        for i in tqdm(x_ls):
+        
+        for i in tqdm(range(0, mask.shape[0])):
+
             for j in range(mask.shape[1]):
+
                 Boundary[i,j, :, :] = find_boundaries(mask[i, j, :, :])
-            pred = parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i) 
-            timed_mask[str(i)] = pred
-    print('Should be returning')
+
+            mask[i, :] = label(mask[i, :])
+            properties = regionprops(mask[i, :], mask[i, :])
+            labels = []
+            size = []
+            tree = []
+            for prop in properties:
+
+                regionlabel = prop.label
+                sizez = abs(prop.bbox[0] - prop.bbox[3]) * zcalibration
+                sizey = abs(prop.bbox[1] - prop.bbox[4]) * ycalibration
+                sizex = abs(prop.bbox[2] - prop.bbox[5]) * xcalibration
+                volume = sizex * sizey * sizez
+                radius = math.pow(3 * volume / (4 * math.pi), 1.0 / 3.0)
+
+                indices = np.where(Boundary[i, :] > 0)
+            
+                real_indices = np.transpose(np.asarray(indices)).copy()
+                for j in range(0, len(real_indices)):
+
+                    real_indices[j][0] = real_indices[j][0] * zcalibration
+                    real_indices[j][1] = real_indices[j][1] * ycalibration
+                    real_indices[j][2] = real_indices[j][2] * xcalibration
+
+                tree.append(spatial.cKDTree(real_indices))
+                if regionlabel not in labels:
+                    labels.append(regionlabel)
+                    size.append(radius)
+
+            timed_mask[str(i)] = [tree, indices, labels, size]
+
+
+
     return timed_mask, Boundary        
 
 
 
-def parallel_map(mask, xcalibration, ycalibration, zcalibration, Boundary, i):
 
-    mask[i, :] = label(mask[i, :])
-    properties = regionprops(mask[i, :], mask[i, :])
-    labels = []
-    size = []
-    tree = []
-    for prop in properties:
-
-        regionlabel = prop.label
-        sizez = abs(prop.bbox[0] - prop.bbox[3]) * zcalibration
-        sizey = abs(prop.bbox[1] - prop.bbox[4]) * ycalibration
-        sizex = abs(prop.bbox[2] - prop.bbox[5]) * xcalibration
-        volume = sizex * sizey * sizez
-        radius = math.pow(3 * volume / (4 * math.pi), 1.0 / 3.0)
-
-        indices = np.where(Boundary[i, :] > 0)
-       
-        real_indices = np.transpose(np.asarray(indices)).copy()
-        for j in range(0, len(real_indices)):
-
-            real_indices[j][0] = real_indices[j][0] * zcalibration
-            real_indices[j][1] = real_indices[j][1] * ycalibration
-            real_indices[j][2] = real_indices[j][2] * xcalibration
-
-        tree.append(spatial.cKDTree(real_indices))
-        if regionlabel not in labels:
-            labels.append(regionlabel)
-            size.append(radius)
-    
-    pred = [tree, indices, labels, size]
-     
-
-    return pred
 
  
 
