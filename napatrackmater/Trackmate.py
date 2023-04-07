@@ -1784,7 +1784,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             tree = spatial.cKDTree(real_indices)
 
             timed_mask[str(i)] = [tree, indices, regioncentroid]
-
+            print(i, mask.shape[0])
     print('Computed the boundary points')
 
     return timed_mask, boundary        
