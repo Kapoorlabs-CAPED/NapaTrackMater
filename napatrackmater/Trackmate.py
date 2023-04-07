@@ -1728,9 +1728,8 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
     # YX shaped object
     if ndim == 2:
         
-        
-        regioncentroid = (0,) + ndimage.center_of_mass(mask) 
         boundary = find_boundaries(mask)
+        regioncentroid = (0,) + ndimage.center_of_mass(boundary) 
         indices = np.where(boundary > 0)
         real_indices = np.transpose(np.asarray(indices)).copy()
 
@@ -1750,7 +1749,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
         for i in tqdm(range(0, mask.shape[0])):
                 
                 boundary = find_boundaries(mask[i,:])
-                regioncentroid = (0,) + ndimage.center_of_mass(mask[i,:]) 
+                regioncentroid = (0,) + ndimage.center_of_mass(boundary) 
                 indices = np.where(boundary > 0)
                 real_indices = np.transpose(np.asarray(indices)).copy()
 
@@ -1776,7 +1775,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
 
                 boundary[i,j, :, :] = find_boundaries(mask[i, j, :, :])
 
-            regioncentroid = ndimage.center_of_mass(mask[i,:]) 
+            regioncentroid = ndimage.center_of_mass(boundary[i,:]) 
             indices = np.where(boundary > 0)
             real_indices = np.transpose(np.asarray(indices)).copy()
             for j in range(0, len(real_indices)):
