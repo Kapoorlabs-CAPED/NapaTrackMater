@@ -1776,7 +1776,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
                 boundary[i,j, :, :] = find_boundaries(mask[i, j, :, :])
 
             regioncentroid = compute_centroid(boundary[i,:]) 
-            indices = np.where(boundary > 0)
+            indices = np.where(boundary[i,:] > 0)
             real_indices = np.transpose(np.asarray(indices)).copy()
             for j in range(0, len(real_indices)):
 
