@@ -1769,7 +1769,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             [mask.shape[0], mask.shape[1], mask.shape[2], mask.shape[3]]
         )
         print('this?')
-        for i in tqdm(range(0, mask.shape[0])):
+        for i in range(0, mask.shape[0]):
             
             print('in loop', i)
             boundary[i,:] = find_boundaries(mask[i,:])
