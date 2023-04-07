@@ -126,6 +126,7 @@ class TrackMate(object):
         self.maskcentroid_x_key = 'maskcentroid_x_key'
         self.maskcentroid_z_key = 'maskcentroid_z_key'
         self.maskcentroid_y_key = 'maskcentroid_y_key'
+        self.cellaxis_mask_key = 'cellaxis_mask_key'
         self.cellid_key = 'cell_id'
         self.acceleration_key = 'acceleration'
         self.centroid_key = 'centroid'
@@ -133,8 +134,8 @@ class TrackMate(object):
         self.clusterscore_key = 'cluster_score'
         self.eccentricity_comp_firstkey = 'cloud_eccentricity_comp_first'
         self.eccentricity_comp_secondkey = 'cloud_eccentricity_comp_second'
-        self.surface_areakey = 'cloud_surfacearea'
-        
+        self.surface_area_key = 'cloud_surfacearea'
+        self.radial_angle_key = 'radial_angle_key'
       
 
         self.mean_intensity_ch1_key = self.track_analysis_spot_keys["mean_intensity_ch1"]
@@ -148,6 +149,7 @@ class TrackMate(object):
         self.spot_source_id_key = self.track_analysis_edges_keys["spot_source_id"]
         self.spot_target_id_key = self.track_analysis_edges_keys["spot_target_id"]
         self.directional_change_rate_key = self.track_analysis_edges_keys["directional_change_rate"] 
+        
         self.speed_key = self.track_analysis_edges_keys["speed"]
         self.displacement_key = self.track_analysis_edges_keys["displacement"]
         self.edge_time_key = self.track_analysis_edges_keys["edge_time"]
@@ -471,6 +473,7 @@ class TrackMate(object):
                    
         else:
                 distance_cell_mask = 0
+                maskcentroid = (0,0,0)
 
         return distance_cell_mask, maskcentroid        
          
@@ -677,7 +680,7 @@ class TrackMate(object):
                                                 cluster_class_score = float(all_dict_values[self.clusterscore_key])
                                                 eccentricity_comp_first = float(all_dict_values[self.eccentricity_comp_firstkey])
                                                 eccentricity_comp_second = float(all_dict_values[self.eccentricity_comp_secondkey])
-                                                surface_area = float(all_dict_values[self.surface_areakey])
+                                                surface_area = float(all_dict_values[self.surface_area_key])
                                            else:
                                                 cluster_class = None
                                                 cluster_class_score = 0  
@@ -749,7 +752,7 @@ class TrackMate(object):
                                                                                         self.clusterscore_key : float(Spotobject.get(self.clusterscore_key)),
                                                                                         self.eccentricity_comp_firstkey : float(Spotobject.get(self.eccentricity_comp_firstkey)),
                                                                                         self.eccentricity_comp_secondkey : float(Spotobject.get(self.eccentricity_comp_secondkey)),
-                                                                                        self.surface_areakey : float(Spotobject.get(self.surface_areakey))
+                                                                                        self.surface_area_key : float(Spotobject.get(self.surface_area_key))
                                                                                             })
                                             
                                             
@@ -758,7 +761,7 @@ class TrackMate(object):
                                                                                         self.clusterscore_key : 0,
                                                                                         self.eccentricity_comp_firstkey : None,
                                                                                         self.eccentricity_comp_secondkey : None,
-                                                                                        self.surface_areakey : None
+                                                                                        self.surface_area_key : None
                                                                                             }) 
                         elif self.uniqueid_key not in Spotobject.keys():
                                                           
@@ -860,7 +863,10 @@ class TrackMate(object):
 
                             self.radius_key : (float(RADIUS)),
                             self.quality_key : (float(QUALITY)),
-                            self.distance_cell_mask_key: float(distance_cell_mask)
+                            self.distance_cell_mask_key: float(distance_cell_mask),
+                            self.maskcentroid_z_key: float(maskcentroid[0]),
+                            self.maskcentroid_y_key: float(maskcentroid[1]),
+                            self.maskcentroid_x_key: float(maskcentroid[2]) 
 
                     } 
                         
@@ -1217,22 +1223,28 @@ class TrackMate(object):
                            cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.num_points, self.cluster_model, key = time_key, progress_bar=self.progress_bar, batch_size = self.batch_size)       
                            cluster_eval._create_cluster_labels()
                            timed_cluster_label = cluster_eval.timed_cluster_label 
-                           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_cloud_surface_area = timed_cluster_label[time_key]
+                           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_cloud_surface_area = timed_cluster_label[time_key]
+                           
                            for i in range(len(output_cluster_centroid)):
                                     centroid = output_cluster_centroid[i]
                                     cluster_class = output_cluster_class[i]
                                     cluster_score = output_cluster_score[i]
                                     eccentricity_comp_firstyz = output_cloud_eccentricity[i]
+                                    cell_axis = output_largest_eigenvector[i]
                                     surface_area = output_cloud_surface_area[i]
                                     dist, index = tree.query(centroid)
                                     closest_centroid = spot_centroids[index]
                                     frame_spot_centroid = (int(time_key),closest_centroid[0], closest_centroid[1], closest_centroid[2])
                                     closest_cell_id = self.unique_spot_centroid[frame_spot_centroid]
+                                    mask_vector = [ float(self.unique_spot_properties[int(closest_cell_id)][self.maskcentroid_x_key]), float(self.unique_spot_properties[int(closest_cell_id)][self.maskcentroid_y_key]), float(self.unique_spot_properties[int(closest_cell_id)][self.maskcentroid_z_key]) ]
+                                    cell_axis_mask = angular_change(cell_axis, mask_vector)
+                                    
+                                    self.unique_spot_properties[int(closest_cell_id)].update({self.cellaxis_mask_key : cell_axis_mask})
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.clusterclass_key : cluster_class})
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.clusterscore_key : cluster_score})
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_firstkey : eccentricity_comp_firstyz[0]})
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_secondkey : eccentricity_comp_firstyz[1]})
-                                    self.unique_spot_properties[int(closest_cell_id)].update({self.surface_areakey : surface_area})
+                                    self.unique_spot_properties[int(closest_cell_id)].update({self.surface_area_key : surface_area})
                                     
                            for (k,v) in self.root_spots.items():
                                   self.root_spots[k] = self.unique_spot_properties[k]         
@@ -1363,7 +1375,8 @@ class TrackMate(object):
                             float(self.unique_spot_properties[int(cell_id)][self.zposid_key])]
 
         angle = angular_change(vec_mask, vec_cell)
-        self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : angle})                    
+
+        self.unique_spot_properties[int(cell_id)].update({self.radial_angle_key : angle})                    
 
         unique_tracklet_ids.append(str(unique_id))
         self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : None})
@@ -1377,7 +1390,7 @@ class TrackMate(object):
         self.unique_spot_properties[int(cell_id)].update({self.acceleration_key : 0.0})
         self.unique_spot_properties[int(cell_id)].update({self.eccentricity_comp_firstkey : None})
         self.unique_spot_properties[int(cell_id)].update({self.eccentricity_comp_secondkey : None})
-        self.unique_spot_properties[int(cell_id)].update({self.surface_areakey : None})
+        self.unique_spot_properties[int(cell_id)].update({self.surface_area_key : None})
 
         if source_id is not None:
             self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : int(source_id)})
@@ -1386,6 +1399,11 @@ class TrackMate(object):
                             float(self.unique_spot_properties[int(cell_id)][self.zposid_key]) -  float(self.unique_spot_properties[int(source_id)][self.zposid_key])]
             speed = np.sqrt(np.dot(vec_1, vec_1))/self.tcalibration
             self.unique_spot_properties[int(cell_id)].update({self.speed_key : speed})
+
+            motion_angle = angular_change(vec_mask, vec_1)
+
+            self.unique_spot_properties[int(cell_id)].update({self.directional_change_rate_key : motion_angle}) 
+
             if source_id in self.edge_source_lookup:
                     pre_source_id = self.edge_source_lookup[source_id]
                     
