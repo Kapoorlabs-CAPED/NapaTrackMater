@@ -141,7 +141,7 @@ def _model_output(model, clouds, labels, centroids, batch_size):
                 output_labels = output_labels + [int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in label_inputs]
                 output_cluster_class = output_cluster_class + [np.argmax(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
                 output_cloud_eccentricity = output_cloud_eccentricity +  [tuple(get_eccentricity(cloud_input)[0]) for cloud_input in cloud_inputs]
-                output_largest_eigenvector = output_largest_eigenvector * [get_eccentricity(cloud_input)[1] for cloud_input in cloud_inputs]
+                output_largest_eigenvector = output_largest_eigenvector + [get_eccentricity(cloud_input)[1] for cloud_input in cloud_inputs]
                 output_cloud_surface_area = output_cloud_surface_area + [float(get_surface_area(cloud_input)) for cloud_input in cloud_inputs]
         return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_cloud_surface_area             
 
