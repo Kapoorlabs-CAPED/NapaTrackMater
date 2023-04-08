@@ -101,8 +101,7 @@ class TrackMate(object):
                 total_track_distance="TOTAL_DISTANCE_TRAVELED",
                 max_track_distance="MAX_DISTANCE_TRAVELED",
                 mean_straight_line_speed="MEAN_STRAIGHT_LINE_SPEED",
-                linearity_forward_progression="LINEARITY_OF_FORWARD_PROGRESSION",
-                mean_motion_angle="MEAN_motion_angle",
+                linearity_forward_progression="LINEARITY_OF_FORWARD_PROGRESSION"
             )
 
         self.frameid_key = self.track_analysis_spot_keys["frame"]
@@ -1768,30 +1767,21 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
         boundary = np.zeros(
             [mask.shape[0], mask.shape[1], mask.shape[2], mask.shape[3]]
         )
-        print('this?')
         for i in range(0, mask.shape[0]):
             
-            print('in loop', i)
             boundary[i,:] = find_boundaries(mask[i,:])
-            print(boundary[i,:].shape)
             regioncentroid = compute_centroid(boundary[i,:]) 
-            print(regioncentroid)
             indices = np.where(boundary[i,:] > 0)
-            print(len(indices))
             real_indices = np.transpose(np.asarray(indices)).copy()
 
-            print(i, mask.shape[0], 'what')
             for j in range(0, len(real_indices)):
 
                     real_indices[j][0] = real_indices[j][0] * zcalibration
                     real_indices[j][1] = real_indices[j][1] * ycalibration
                     real_indices[j][2] = real_indices[j][2] * xcalibration
 
-            print(i, mask.shape[0], 'what the')
             tree = spatial.cKDTree(real_indices)
-            print(i, mask.shape[0], 'what the hell')
             timed_mask[str(i)] = [tree, indices, regioncentroid]
-            print(i, mask.shape[0])
     print('Computed the boundary points')
 
     return timed_mask, boundary        
