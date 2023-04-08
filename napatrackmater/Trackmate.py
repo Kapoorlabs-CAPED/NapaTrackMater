@@ -72,7 +72,6 @@ class TrackMate(object):
                 
                 spot_source_id="SPOT_SOURCE_ID",
                 spot_target_id="SPOT_TARGET_ID",
-                motion_angle="motion_angle",
                 speed="SPEED",
                 displacement="DISPLACEMENT",
                 edge_time="EDGE_TIME",
