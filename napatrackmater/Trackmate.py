@@ -468,7 +468,7 @@ class TrackMate(object):
                    
         else:
                 distance_cell_mask = 0
-                maskcentroid = (0,0,0)
+                maskcentroid = (1,1,1)
 
         return distance_cell_mask, maskcentroid        
          
