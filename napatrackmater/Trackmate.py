@@ -133,7 +133,7 @@ class TrackMate(object):
         self.eccentricity_comp_secondkey = 'cloud_eccentricity_comp_second'
         self.surface_area_key = 'cloud_surfacearea'
         self.radial_angle_key = 'radial_angle_key'
-      
+        self.motion_angle_key = 'motion_angle' 
 
         self.mean_intensity_ch1_key = self.track_analysis_spot_keys["mean_intensity_ch1"]
         self.mean_intensity_ch2_key = self.track_analysis_spot_keys["mean_intensity_ch2"]
@@ -145,7 +145,7 @@ class TrackMate(object):
 
         self.spot_source_id_key = self.track_analysis_edges_keys["spot_source_id"]
         self.spot_target_id_key = self.track_analysis_edges_keys["spot_target_id"]
-        self.motion_angle_key = self.track_analysis_edges_keys["motion_angle"] 
+       
         
         self.speed_key = self.track_analysis_edges_keys["speed"]
         self.displacement_key = self.track_analysis_edges_keys["displacement"]
