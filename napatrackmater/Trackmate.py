@@ -265,40 +265,35 @@ class TrackMate(object):
              print('obtained track attributes')
              self.AllEdgesValues = get_edges_dataset(self.edges_dataset, self.edges_dataset_index, self.track_analysis_spot_keys, self.track_analysis_edges_keys)
              print('obtained edge attributes')
+
+    
+                    
     def _get_boundary_points(self):
          
         print('Computing boundary points') 
-        if  self.mask is not None and self.seg_image is not None:
-                    if len(self.mask.shape) < len(self.seg_image.shape):
-                        self.update_mask = np.zeros(
-                            [
-                                self.seg_image.shape[0],
-                                self.seg_image.shape[1],
-                                self.seg_image.shape[2],
-                                self.seg_image.shape[3],
-                            ]
-                        )
-                        for i in range(0, self.update_mask.shape[0]):
-                            for j in range(0, self.update_mask.shape[1]):
-
-                                self.update_mask[i, j, :, :] = self.mask[i, :, :]
-                                
-                    else:
-                        self.update_mask = self.mask
-                        
-                    self.mask = self.update_mask.astype('uint16')
-
-                    self.timed_mask, self.boundary = boundary_points(self.mask, self.xcalibration, self.ycalibration, self.zcalibration)
-        else:
+        if  self.mask is not None:
+            if self.seg_image is not None:
                     
-                    self.update_mask = np.zeros(
+                        self.update_mask = check_and_update_mask(self.mask, self.seg_image)
+                      
+            if self.seg_image is None and self.image is not None:
+                        
+                        self.update_mask = check_and_update_mask(self.mask, self.image)    
+                           
+            self.mask = self.update_mask.astype('uint16')
+            self.timed_mask, self.boundary = boundary_points(self.mask, self.xcalibration, self.ycalibration, self.zcalibration)
+        elif self.mask is None:
+            if self.seg_image is not None:
+                    
+                    self.update_mask = np.zeros(self.seg_image.shape)
+                        
+            if self.seg_image is None and self.image is not None:
+
+                    self.update_mask = np.zeros(self.image.shape) 
                             
-                                self.seg_image.shape
-                            
-                        )
-                    self.mask = self.update_mask.astype('uint16')
-                    self.mask[:,:,1:-1,1:-1] = 1
-                    self.timed_mask, self.boundary = boundary_points(self.mask, self.xcalibration, self.ycalibration, self.zcalibration)
+            self.mask = self.update_mask.astype('uint16')
+            self.mask[:,:,1:-1,1:-1] = 1
+            self.timed_mask, self.boundary = boundary_points(self.mask, self.xcalibration, self.ycalibration, self.zcalibration)
 
           
 
@@ -688,18 +683,18 @@ class TrackMate(object):
                                            else:
                                                 cluster_class = None
                                                 cluster_class_score = 0  
-                                                eccentricity_comp_first = None
-                                                eccentricity_comp_second = None 
-                                                surface_area = None
-                                                cell_axis_mask = None
+                                                eccentricity_comp_first = 0
+                                                eccentricity_comp_second = 0 
+                                                surface_area = 0
+                                                cell_axis_mask = 0
                                                
                                     else:
-                                           cluster_class = None
-                                           cluster_class_score = 0
-                                           eccentricity_comp_first = None
-                                           eccentricity_comp_second = None 
-                                           surface_area = None
-                                           cell_axis_mask = None       
+                                            cluster_class = None
+                                            cluster_class_score = 0  
+                                            eccentricity_comp_first = 0
+                                            eccentricity_comp_second = 0 
+                                            surface_area = 0
+                                            cell_axis_mask = 0      
 
                                     frame_spot_centroid = (t,round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration) 
                                     self.unique_spot_centroid[frame_spot_centroid] = k
@@ -1941,3 +1936,24 @@ def eval_bool(value):
                 div_key = False 
 
         return div_key                
+
+def check_and_update_mask(mask,image):
+       
+        if len(mask.shape) < len(image.shape):
+            update_mask = np.zeros(
+                            [
+                                image.shape[0],
+                                image.shape[1],
+                                image.shape[2],
+                                image.shape[3],
+                            ]
+                        )
+            for i in range(0, update_mask.shape[0]):
+                for j in range(0, update_mask.shape[1]):
+
+                    update_mask[i, j, :, :] = mask[i, :, :]
+        else:
+                update_mask = mask
+
+        return update_mask        
+       
