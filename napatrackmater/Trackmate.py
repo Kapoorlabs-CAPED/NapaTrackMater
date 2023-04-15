@@ -290,8 +290,16 @@ class TrackMate(object):
 
                     self.timed_mask, self.boundary = boundary_points(self.mask, self.xcalibration, self.ycalibration, self.zcalibration)
         else:
-                    self.timed_mask = None
-                    self.boundary = None
+                    
+                    self.update_mask = np.ones(
+                            
+                                self.seg_image.shape
+                            
+                        )
+                    self.mask = self.update_mask.astype('uint16')
+                    for i in range(0, self.update_mask.shape[0]):
+                       self.mask[i,...] = find_boundaries(self.update_mask[i,...]) 
+                    self.timed_mask, self.boundary = boundary_points(self.mask, self.xcalibration, self.ycalibration, self.zcalibration)
 
           
 
