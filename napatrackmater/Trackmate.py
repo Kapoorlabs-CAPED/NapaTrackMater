@@ -1348,7 +1348,7 @@ class TrackMate(object):
                    current_speed = np.asarray(current_speed)
                    current_motion_angle = np.asarray(current_motion_angle)
                    current_acceleration = np.asarray(current_acceleration)
-                   current_distance_cell_mask = np.asarray(distance_cell_mask)
+                   current_distance_cell_mask = np.asarray(current_distance_cell_mask)
                    current_radial_angle = np.asarray(current_radial_angle)
                    current_cell_axis_mask = np.asarray(current_cell_axis_mask)
 
