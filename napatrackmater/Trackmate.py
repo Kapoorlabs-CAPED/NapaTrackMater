@@ -1326,8 +1326,8 @@ class TrackMate(object):
                           if current_unique_id == unique_ids[j]:
                                  current_time.append(time[j])
                                  current_z.append(Z[j])
-                                 current_x.append(Y[j])
-                                 current_X.append(X[j])
+                                 current_y.append(Y[j])
+                                 current_x.append(X[j])
                                  expanded_intensity[int(time[j])] = intensity[j]
                                  current_intensity.append(intensity[j])
                                  current_cluster_class.append(cluster_class[j])

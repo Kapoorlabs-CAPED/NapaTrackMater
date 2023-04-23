@@ -223,7 +223,7 @@ class TrackVector(TrackMate):
                                     track_id_array[i] = track_id_array[i] * current_unique_id
                                     dividing_array[i] = dividing_array[i] * dividing 
                                     number_dividing_array[i] = number_dividing_array[i] * number_dividing
-                             self.current_shape_dynamic_vectors.append([ track_id_array, current_time, dividing_array, number_dividing_array, radius, volume, eccentricity_comp_first, eccentricity_comp_second, surface_area, current_cluster_class, speed, motion_angle, acceleration, distance_cell_mask, radial_angle, cell_axis_mask])
+                             self.current_shape_dynamic_vectors.append([ track_id_array, current_time, current_z, current_y, current_x, dividing_array, number_dividing_array, radius, volume, eccentricity_comp_first, eccentricity_comp_second, surface_area, current_cluster_class, speed, motion_angle, acceleration, distance_cell_mask, radial_angle, cell_axis_mask])
 
           
                print(f'returning shape and dynamic vectors as list {len(self.current_shape_dynamic_vectors)}')
