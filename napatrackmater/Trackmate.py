@@ -1259,7 +1259,10 @@ class TrackMate(object):
                 
                 track_id = k
                 tracklet_properties = self.unique_track_properties[k]
-                
+                tracks = self.unique_tracks[k]
+                Z = tracks[:,2]
+                Y = tracks[:,3]
+                X = tracks[:,4]
                 time = tracklet_properties[:,0]
                 unique_ids = tracklet_properties[:,1]
                 unique_ids_set = set(unique_ids)
@@ -1300,6 +1303,9 @@ class TrackMate(object):
                    
                    
                    current_time = []
+                   current_z = []
+                   current_y = []
+                   current_x = []
                    current_intensity = []
                    current_cluster_class = []
                    current_cluster_class_score = []
@@ -1319,6 +1325,9 @@ class TrackMate(object):
                    for j in range(time.shape[0]):
                           if current_unique_id == unique_ids[j]:
                                  current_time.append(time[j])
+                                 current_z.append(Z[j])
+                                 current_x.append(Y[j])
+                                 current_X.append(X[j])
                                  expanded_intensity[int(time[j])] = intensity[j]
                                  current_intensity.append(intensity[j])
                                  current_cluster_class.append(cluster_class[j])
@@ -1366,7 +1375,7 @@ class TrackMate(object):
 
                    unique_fft_properties_tracklet[current_unique_id] = expanded_time, expanded_intensity, xf_sample, ffttotal_sample
                    unique_cluster_properties_tracklet[current_unique_id] =  current_time, current_cluster_class, current_cluster_class_score
-                   unique_shape_properties_tracklet[current_unique_id] = current_time, current_radius, current_volume, current_eccentricity_comp_first, current_eccentricity_comp_second, current_surface_area, current_cluster_class, current_cluster_class_score
+                   unique_shape_properties_tracklet[current_unique_id] = current_time, current_z, current_y, current_x, current_radius, current_volume, current_eccentricity_comp_first, current_eccentricity_comp_second, current_surface_area, current_cluster_class, current_cluster_class_score
                    unique_dynamic_properties_tracklet[current_unique_id] = current_time, current_speed, current_motion_angle, current_acceleration, current_distance_cell_mask, current_radial_angle, current_cell_axis_mask
                    self.unique_fft_properties[track_id].update({current_unique_id:unique_fft_properties_tracklet[current_unique_id]})
                    self.unique_cluster_properties[track_id].update({current_unique_id:unique_cluster_properties_tracklet[current_unique_id]})
