@@ -7,7 +7,7 @@ import zarr
 from sklearn.neighbors import KNeighborsTransformer, RadiusNeighborsRegressor
 from tqdm import tqdm
 
-from in_silico_fate_mapping.fast_radius_regression import FastRadiusRegressor
+from .fast_radius_regression import FastRadiusRegressor
 
 
 def outdate_fit(method):
