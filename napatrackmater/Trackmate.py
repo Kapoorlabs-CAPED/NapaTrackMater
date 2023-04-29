@@ -272,6 +272,11 @@ class TrackMate(object):
          
         print('Computing boundary points') 
         if  self.mask is not None:
+
+            if self.channel_seg_image is not None:
+                    
+                    self.update_mask = check_and_update_mask(self.mask, self.channel_seg_image)
+
             if self.seg_image is not None:
                     
                         self.update_mask = check_and_update_mask(self.mask, self.seg_image)
