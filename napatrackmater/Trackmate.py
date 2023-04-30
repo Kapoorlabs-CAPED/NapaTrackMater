@@ -600,16 +600,19 @@ class TrackMate(object):
                                     self.NormalTrackIds.append(int(track_id))
 
                             for leaf in root_leaf:
+                                   self._second_channel_update(leaf, track_id)
                                    current_cell_ids.append(leaf) 
                                    self.unique_spot_properties[leaf].update({self.dividing_key : dividing_trajectory})
                                    self.unique_spot_properties[leaf].update({self.number_dividing_key : number_dividing})
                             for source_id in all_source_ids:
+                                   self._second_channel_update(source_id, track_id)
                                    self.unique_spot_properties[source_id].update({self.dividing_key : dividing_trajectory})
                                    self.unique_spot_properties[source_id].update({self.number_dividing_key : number_dividing})
                                    current_cell_ids.append(source_id)
                                                 
 
                             for current_root in root_root:
+                                   self._second_channel_update(current_root, track_id)
                                    self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
                                    self.unique_spot_properties[source_id].update({self.dividing_key : dividing_trajectory})
                                    self.unique_spot_properties[source_id].update({self.number_dividing_key : number_dividing})
@@ -634,7 +637,15 @@ class TrackMate(object):
                                     self.unique_spot_centroid[frame_spot_centroid] = k
                                     self.unique_track_centroid[frame_spot_centroid] = track_id
                                    
-
+    def _second_channel_update(self, cell_id, track_id):
+            
+            if self.channel_seg_image is not None:
+                
+                frame = self.unique_spot_properties[int(cell_id)][self.frameid_key]
+                z = self.unique_spot_properties[int(cell_id)][self.zposid_key]
+                y = self.unique_spot_properties[int(cell_id)][self.yposid_key]
+                x = self.unique_spot_properties[int(cell_id)][self.xposid_key]
+                self._second_channel_spots(self, frame, z, y, x, cell_id, track_id)
         
     def _final_tracks(self, track_id):
 
@@ -796,8 +807,7 @@ class TrackMate(object):
        
                    
                        
-                        if self.channel_seg_image is not None:
-                                    self._transfer_tracks(Spotobject, frame, cell_id)
+                     
 
     def _spot_computer(self, frame):
 
@@ -835,49 +845,10 @@ class TrackMate(object):
        
                         
             
-                        if self.channel_seg_image is not None:
-                               
-                               self._transfer_tracks(Spotobject, frame, cell_id)
+                        
                                     
 
-    def _transfer_tracks(self, Spotobject, frame, cell_id):
-           
-            pixeltestlocation = (float(Spotobject.get(self.zposid_key))/float(self.zcalibration), float(Spotobject.get(self.yposid_key))/float(self.ycalibration),  float(Spotobject.get(self.xposid_key))/ float(self.xcalibration))
-            tree, centroids, labels, volume, intensity_mean, intensity_total, bounding_boxes = self._timed_channel_seg_image[str(int(float(frame)))]
-            dist, index = tree.query(pixeltestlocation)
-
-
-            bbox = bounding_boxes[index]
-            sizez = abs(bbox[0] - bbox[3])
-            sizey = abs(bbox[1] - bbox[4])
-            sizex = abs(bbox[2] - bbox[5]) 
-            veto_volume = sizex * sizey * sizez
-            veto_radius = math.pow(3 * veto_volume / (4 * math.pi), 1.0 / 3.0)
-
-            location = (centroids[index][0] * self.zcalibration, centroids[index][1]*self.ycalibration, centroids[index][2]*self.xcalibration)
-            QUALITY = volume[index]
-            RADIUS = math.pow(QUALITY, 1.0/3.0) * self.xcalibration * self.ycalibration * self.zcalibration
-            distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, location, RADIUS)
-            if dist <= 2 * veto_radius:
-                self.channel_unique_spot_properties[cell_id] = {
-                        self.cellid_key: int(cell_id), 
-                        self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
-                        self.zposid_key : float(centroids[index][0]* self.zcalibration),
-                        self.yposid_key : float(centroids[index][1]* self.ycalibration),
-                        self.xposid_key : float(centroids[index][2]* self.xcalibration),
-
-                        self.total_intensity_key : (float(intensity_total[index])),
-                        self.mean_intensity_key : (float(intensity_mean[index])),
-
-                        self.radius_key : (float(RADIUS)),
-                        self.quality_key : (float(QUALITY)),
-                        self.distance_cell_mask_key: float(distance_cell_mask),
-                        self.maskcentroid_z_key: float(maskcentroid[0]),
-                        self.maskcentroid_y_key: float(maskcentroid[1]),
-                        self.maskcentroid_x_key: float(maskcentroid[2]) 
-
-                } 
-            print(f'found {len(self.channel_unique_spot_properties)} matching spots')    
+    
                         
 
     def _get_master_xml_data(self):
@@ -1007,7 +978,8 @@ class TrackMate(object):
 
     def _create_second_channel_xml(self):
            
-                    print('Transferring XML')               
+                    print('Transferring XML')   
+                    channel_filtered_tracks = []            
                     for Spotobject in self.xml_root.iter('Spot'):
                             cell_id = int(Spotobject.get(self.spotid_key))
                             if cell_id in self.channel_unique_spot_properties.keys():        
@@ -1033,6 +1005,8 @@ class TrackMate(object):
                                     Spotobject.set(self.radius_key, str(new_radius))     
                                     Spotobject.set(self.quality_key, str(new_quality))
                                     Spotobject.set(self.distance_cell_mask_key, str(new_distance_cell_mask))
+                                    track_id = self.channel_unique_spot_properties[int(cell_id)][self.trackid_key]
+                                    channel_filtered_tracks.append(track_id)
                                     
                     
                     for parent in self.xml_root.findall('Model'):
@@ -1044,7 +1018,31 @@ class TrackMate(object):
                                         if spot_source_id not in self.channel_unique_spot_properties.keys() and spot_target_id not in self.channel_unique_spot_properties.keys():     
                                                             secondchild.remove(Edgeobject)  
 
-                                               
+
+                    for parent in self.xml_root.findall('Model'):
+                        for firstchild in parent.findall('AllSpots'):
+                            for secondchild in firstchild.findall('SpotsInFrame'):
+                                for Spotchannelobject in secondchild.findall('Spot'):
+                                    spot_id = int(secondchild.get(self.spotid_key))
+                                    if spot_id not in self.channel_unique_spot_properties.keys():    
+                                        secondchild.remove(Spotchannelobject)
+                                
+                    
+                    for parent in self.xml_root.findall('Model'):
+                        for firstchild in parent.findall('AllTracks'):
+                            for secondchild in firstchild.findall('Track'):
+                                for Edgeobject in secondchild.findall('Edge'):
+                                        spot_source_id = int(float(Edgeobject.get(self.spot_source_id_key)))  
+                                        spot_target_id = int(float(Edgeobject.get(self.spot_target_id_key)))      
+                                        if spot_source_id not in self.channel_unique_spot_properties.keys() and spot_target_id not in self.channel_unique_spot_properties.keys():     
+                                                            secondchild.remove(Edgeobject)  
+
+                    for parent in self.xml_root.findall('Model'):
+                        for firstchild in parent.findall('FilteredTracks'):
+                            for secondchild in firstchild.findall('TrackID'): 
+                                    filter_track_id = int(secondchild.get(self.trackid_key))  
+                                    if filter_track_id not in channel_filtered_tracks:
+                                            firstchild.remove(secondchild)                           
 
                     self.xml_tree.write(os.path.join(self.channel_xml_path, self.channel_xml_name)) 
 
@@ -1373,7 +1371,43 @@ class TrackMate(object):
                    self.unique_shape_properties[track_id].update({current_unique_id:unique_shape_properties_tracklet[current_unique_id]})
                    self.unique_dynamic_properties[track_id].update({current_unique_id:unique_dynamic_properties_tracklet[current_unique_id]})
 
+    def _second_channel_spots(self, frame, z, y, x, cell_id, track_id):
+           
+            tree, centroids, labels, volume, intensity_mean, intensity_total, bounding_boxes = self._timed_channel_seg_image[str(int(float(frame)))]
+            pixeltestlocation = (z,y,x)
+            dist, index = tree.query(pixeltestlocation)
 
+
+            bbox = bounding_boxes[index]
+            sizez = abs(bbox[0] - bbox[3])
+            sizey = abs(bbox[1] - bbox[4])
+            sizex = abs(bbox[2] - bbox[5]) 
+            veto_volume = sizex * sizey * sizez
+            veto_radius = math.pow(3 * veto_volume / (4 * math.pi), 1.0 / 3.0)
+
+            location = (centroids[index][0] * self.zcalibration, centroids[index][1]*self.ycalibration, centroids[index][2]*self.xcalibration)
+            QUALITY = volume[index]
+            RADIUS = math.pow(QUALITY, 1.0/3.0) * self.xcalibration * self.ycalibration * self.zcalibration
+            distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, location, RADIUS)
+            if dist <= veto_radius:
+                self.channel_unique_spot_properties[cell_id] = {
+                        self.cellid_key: int(cell_id), 
+                        self.frameid_key : int(frame),
+                        self.zposid_key : float(centroids[index][0]* self.zcalibration),
+                        self.yposid_key : float(centroids[index][1]* self.ycalibration),
+                        self.xposid_key : float(centroids[index][2]* self.xcalibration),
+                        self.trackid_key: int(track_id),
+                        self.total_intensity_key : (float(intensity_total[index])),
+                        self.mean_intensity_key : (float(intensity_mean[index])),
+
+                        self.radius_key : (float(RADIUS)),
+                        self.quality_key : (float(QUALITY)),
+                        self.distance_cell_mask_key: float(distance_cell_mask),
+                        self.maskcentroid_z_key: float(maskcentroid[0]),
+                        self.maskcentroid_y_key: float(maskcentroid[1]),
+                        self.maskcentroid_x_key: float(maskcentroid[2]) 
+
+                } 
                                  
     def _dict_update(self, unique_tracklet_ids: List,  cell_id: int, track_id: int, source_id: int, target_id: int):
 
@@ -1438,9 +1472,9 @@ class TrackMate(object):
         elif target_id is None:
             self.unique_spot_properties[int(cell_id)].update({self.afterid_key : None})
             
-                 
-                                    
-                
+        self._second_channel_update(cell_id, track_id)    
+
+
     def _temporal_plots_trackmate(self):
     
     
