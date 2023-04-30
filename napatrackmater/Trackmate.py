@@ -854,7 +854,7 @@ class TrackMate(object):
             veto_volume = sizex * sizey * sizez
             veto_radius = math.pow(3 * veto_volume / (4 * math.pi), 1.0 / 3.0)
 
-            location = (int(centroids[index][0]), int(centroids[index][1]), int(centroids[index][2]))
+            location = (centroids[index][0] * self.zcalibration, centroids[index][1]*self.ycalibration, centroids[index][2]*self.xcalibration)
             QUALITY = volume[index]
             RADIUS = math.pow(QUALITY, 1.0/3.0) * self.xcalibration * self.ycalibration * self.zcalibration
             distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, location, RADIUS)
@@ -862,9 +862,9 @@ class TrackMate(object):
                 self.channel_unique_spot_properties[cell_id] = {
                         self.cellid_key: int(cell_id), 
                         self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
-                        self.zposid_key : float(centroids[index][0]),
-                        self.yposid_key : float(centroids[index][1]),
-                        self.xposid_key : float(centroids[index][2]),
+                        self.zposid_key : float(centroids[index][0]* self.zcalibration),
+                        self.yposid_key : float(centroids[index][1]* self.ycalibration),
+                        self.xposid_key : float(centroids[index][2]* self.xcalibration),
 
                         self.total_intensity_key : (float(intensity_total[index])),
                         self.mean_intensity_key : (float(intensity_mean[index])),
