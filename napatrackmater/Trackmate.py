@@ -858,24 +858,26 @@ class TrackMate(object):
             QUALITY = volume[index]
             RADIUS = math.pow(QUALITY, 1.0/3.0) * self.xcalibration * self.ycalibration * self.zcalibration
             distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, location, RADIUS)
-            self.channel_unique_spot_properties[cell_id] = {
-                    self.cellid_key: int(cell_id), 
-                    self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
-                    self.zposid_key : float(centroids[index][0]),
-                    self.yposid_key : float(centroids[index][1]),
-                    self.xposid_key : float(centroids[index][2]),
+            if dist <= 2 * veto_radius:
+                self.channel_unique_spot_properties[cell_id] = {
+                        self.cellid_key: int(cell_id), 
+                        self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
+                        self.zposid_key : float(centroids[index][0]),
+                        self.yposid_key : float(centroids[index][1]),
+                        self.xposid_key : float(centroids[index][2]),
 
-                    self.total_intensity_key : (float(intensity_total[index])),
-                    self.mean_intensity_key : (float(intensity_mean[index])),
+                        self.total_intensity_key : (float(intensity_total[index])),
+                        self.mean_intensity_key : (float(intensity_mean[index])),
 
-                    self.radius_key : (float(RADIUS)),
-                    self.quality_key : (float(QUALITY)),
-                    self.distance_cell_mask_key: float(distance_cell_mask),
-                    self.maskcentroid_z_key: float(maskcentroid[0]),
-                    self.maskcentroid_y_key: float(maskcentroid[1]),
-                    self.maskcentroid_x_key: float(maskcentroid[2]) 
+                        self.radius_key : (float(RADIUS)),
+                        self.quality_key : (float(QUALITY)),
+                        self.distance_cell_mask_key: float(distance_cell_mask),
+                        self.maskcentroid_z_key: float(maskcentroid[0]),
+                        self.maskcentroid_y_key: float(maskcentroid[1]),
+                        self.maskcentroid_x_key: float(maskcentroid[2]) 
 
-            } 
+                } 
+            print(f'found {len(self.channel_unique_spot_properties)} matching spots')    
                         
 
     def _get_master_xml_data(self):
@@ -1005,7 +1007,6 @@ class TrackMate(object):
 
     def _create_second_channel_xml(self):
            
-                    channel_filtered_tracks = []    
                     print('Transferring XML')               
                     for Spotobject in self.xml_root.iter('Spot'):
                             cell_id = int(Spotobject.get(self.spotid_key))
@@ -1032,17 +1033,7 @@ class TrackMate(object):
                                     Spotobject.set(self.radius_key, str(new_radius))     
                                     Spotobject.set(self.quality_key, str(new_quality))
                                     Spotobject.set(self.distance_cell_mask_key, str(new_distance_cell_mask))
-                                    if self.trackid_key in self.unique_spot_properties[int(cell_id)].keys():
-                                        
-                                        track_id = self.unique_spot_properties[int(cell_id)][self.trackid_key]
-                                        channel_filtered_tracks.append(track_id)
-                    for parent in self.xml_root.findall('Model'):
-                        for firstchild in parent.findall('AllTracks'):
-                            for secondchild in firstchild.findall('Track'):
-                                track_id = int(secondchild.get(self.trackid_key))
-                                if track_id not in channel_filtered_tracks:    
-                                    firstchild.remove(secondchild)
-                                
+                                    
                     
                     for parent in self.xml_root.findall('Model'):
                         for firstchild in parent.findall('AllTracks'):
@@ -1053,12 +1044,7 @@ class TrackMate(object):
                                         if spot_source_id not in self.channel_unique_spot_properties.keys() and spot_target_id not in self.channel_unique_spot_properties.keys():     
                                                             secondchild.remove(Edgeobject)  
 
-                    for parent in self.xml_root.findall('Model'):
-                        for firstchild in parent.findall('FilteredTracks'):
-                            for secondchild in firstchild.findall('TrackID'): 
-                                    filter_track_id = int(secondchild.get(self.trackid_key))  
-                                    if filter_track_id not in channel_filtered_tracks:
-                                            firstchild.remove(secondchild)                             
+                                               
 
                     self.xml_tree.write(os.path.join(self.channel_xml_path, self.channel_xml_name)) 
 
