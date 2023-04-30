@@ -645,7 +645,7 @@ class TrackMate(object):
                 z = self.unique_spot_properties[int(cell_id)][self.zposid_key]
                 y = self.unique_spot_properties[int(cell_id)][self.yposid_key]
                 x = self.unique_spot_properties[int(cell_id)][self.xposid_key]
-                self._second_channel_spots(self, frame, z, y, x, cell_id, track_id)
+                self._second_channel_spots(frame, z, y, x, cell_id, track_id)
         
     def _final_tracks(self, track_id):
 
