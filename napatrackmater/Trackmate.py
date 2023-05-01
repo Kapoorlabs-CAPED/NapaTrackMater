@@ -1023,7 +1023,7 @@ class TrackMate(object):
                         for firstchild in parent.findall('AllSpots'):
                             for secondchild in firstchild.findall('SpotsInFrame'):
                                 for Spotchannelobject in secondchild.findall('Spot'):
-                                    spot_id = int(secondchild.get(self.spotid_key))
+                                    spot_id = int(Spotchannelobject.get(self.spotid_key))
                                     if spot_id not in self.channel_unique_spot_properties.keys():    
                                         secondchild.remove(Spotchannelobject)
                                 
