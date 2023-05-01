@@ -1034,7 +1034,7 @@ class TrackMate(object):
                                 for Edgeobject in secondchild.findall('Edge'):
                                         spot_source_id = int(float(Edgeobject.get(self.spot_source_id_key)))  
                                         spot_target_id = int(float(Edgeobject.get(self.spot_target_id_key)))      
-                                        if spot_source_id not in self.channel_unique_spot_properties.keys() and spot_target_id not in self.channel_unique_spot_properties.keys():     
+                                        if spot_source_id not in self.channel_unique_spot_properties.keys() or spot_target_id not in self.channel_unique_spot_properties.keys():     
                                                             secondchild.remove(Edgeobject)  
 
                     for parent in self.xml_root.findall('Model'):
@@ -1389,7 +1389,7 @@ class TrackMate(object):
             QUALITY = volume[index]
             RADIUS = math.pow(QUALITY, 1.0/3.0) * self.xcalibration * self.ycalibration * self.zcalibration
             distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, location, RADIUS)
-            if dist <= veto_radius:
+            if dist <= 2 * veto_radius:
                 self.channel_unique_spot_properties[cell_id] = {
                         self.cellid_key: int(cell_id), 
                         self.frameid_key : int(frame),
