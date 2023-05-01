@@ -1008,35 +1008,6 @@ class TrackMate(object):
                                     track_id = self.channel_unique_spot_properties[int(cell_id)][self.trackid_key]
                                     channel_filtered_tracks.append(track_id)
                                     
-                    
-                 
-
-
-                    for parent in self.xml_root.findall('Model'):
-                        for firstchild in parent.findall('AllSpots'):
-                            for secondchild in firstchild.findall('SpotsInFrame'):
-                                for Spotchannelobject in secondchild.findall('Spot'):
-                                    spot_id = int(Spotchannelobject.get(self.spotid_key))
-                                    if spot_id not in self.channel_unique_spot_properties.keys():    
-                                        secondchild.remove(Spotchannelobject)
-                                
-                    
-                    for parent in self.xml_root.findall('Model'):
-                        for firstchild in parent.findall('AllTracks'):
-                            for secondchild in firstchild.findall('Track'):
-                                for Edgeobject in secondchild.findall('Edge'):
-                                        spot_source_id = int(float(Edgeobject.get(self.spot_source_id_key)))  
-                                        spot_target_id = int(float(Edgeobject.get(self.spot_target_id_key)))      
-                                        if spot_source_id not in self.channel_unique_spot_properties.keys() or spot_target_id not in self.channel_unique_spot_properties.keys():     
-                                                            secondchild.remove(Edgeobject)  
-
-                    for parent in self.xml_root.findall('Model'):
-                        for firstchild in parent.findall('FilteredTracks'):
-                            for secondchild in firstchild.findall('TrackID'): 
-                                    filter_track_id = int(secondchild.get(self.trackid_key))  
-                                    if filter_track_id not in channel_filtered_tracks:
-                                            firstchild.remove(secondchild)                           
-
                     self.xml_tree.write(os.path.join(self.channel_xml_path, self.channel_xml_name)) 
 
     def _get_xml_data(self):
@@ -1400,7 +1371,17 @@ class TrackMate(object):
                         self.maskcentroid_y_key: float(maskcentroid[1]),
                         self.maskcentroid_x_key: float(maskcentroid[2]) 
 
-                } 
+                }
+            elif self.edge_source_lookup[cell_id] is not None:
+                    if self.channel_unique_spot_properties[self.edge_source_lookup[cell_id]] is not None:
+                       self.channel_unique_spot_properties[cell_id] = self.channel_unique_spot_properties[self.edge_source_lookup[cell_id]]
+                    else:
+                       self.channel_unique_spot_properties[cell_id] = self.unique_spot_properties[cell_id]     
+                               
+            else:
+                    self.channel_unique_spot_properties[cell_id] = self.unique_spot_properties[cell_id]
+
+
                                  
     def _dict_update(self, unique_tracklet_ids: List,  cell_id: int, track_id: int, source_id: int, target_id: int):
 
