@@ -642,9 +642,9 @@ class TrackMate(object):
             if self.channel_seg_image is not None:
                 
                 frame = self.unique_spot_properties[int(cell_id)][self.frameid_key]
-                z = self.unique_spot_properties[int(cell_id)][self.zposid_key]
-                y = self.unique_spot_properties[int(cell_id)][self.yposid_key]
-                x = self.unique_spot_properties[int(cell_id)][self.xposid_key]
+                z = self.unique_spot_properties[int(cell_id)][self.zposid_key]/self.zcalibration
+                y = self.unique_spot_properties[int(cell_id)][self.yposid_key]/self.ycalibration
+                x = self.unique_spot_properties[int(cell_id)][self.xposid_key]/self.xcalibration
                 self._second_channel_spots(frame, z, y, x, cell_id, track_id)
         
     def _final_tracks(self, track_id):
@@ -1009,14 +1009,7 @@ class TrackMate(object):
                                     channel_filtered_tracks.append(track_id)
                                     
                     
-                    for parent in self.xml_root.findall('Model'):
-                        for firstchild in parent.findall('AllTracks'):
-                            for secondchild in firstchild.findall('Track'):
-                                for Edgeobject in secondchild.findall('Edge'):
-                                        spot_source_id = int(float(Edgeobject.get(self.spot_source_id_key)))  
-                                        spot_target_id = int(float(Edgeobject.get(self.spot_target_id_key)))      
-                                        if spot_source_id not in self.channel_unique_spot_properties.keys() and spot_target_id not in self.channel_unique_spot_properties.keys():     
-                                                            secondchild.remove(Edgeobject)  
+                 
 
 
                     for parent in self.xml_root.findall('Model'):
