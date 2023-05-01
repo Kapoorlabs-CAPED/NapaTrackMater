@@ -1372,8 +1372,9 @@ class TrackMate(object):
                         self.maskcentroid_x_key: float(maskcentroid[2]) 
 
                 }
-            elif self.edge_source_lookup[cell_id] is not None:
-                    if self.channel_unique_spot_properties[self.edge_source_lookup[cell_id]] is not None:
+            elif cell_id in self.edge_source_lookup[cell_id].keys():
+                    
+                    if self.edge_source_lookup[cell_id] in self.channel_unique_spot_properties.keys() is not None:
                        self.channel_unique_spot_properties[cell_id] = self.channel_unique_spot_properties[self.edge_source_lookup[cell_id]]
                     else:
                        self.channel_unique_spot_properties[cell_id] = self.unique_spot_properties[cell_id]     
