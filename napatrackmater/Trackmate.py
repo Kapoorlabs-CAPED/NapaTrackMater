@@ -1230,20 +1230,21 @@ class TrackMate(object):
                                     cell_axis = output_largest_eigenvector[i]
                                     surface_area = output_cloud_surface_area[i]
                                     dist, index = tree.query(centroid)
-                                    closest_centroid = spot_centroids[index]
-                                    frame_spot_centroid = (int(time_key),closest_centroid[0], closest_centroid[1], closest_centroid[2])
-                                    closest_cell_id = self.unique_spot_centroid[frame_spot_centroid]
-                                    mask_vector = [ float(self.unique_spot_properties[int(closest_cell_id)][self.maskcentroid_x_key]), float(self.unique_spot_properties[int(closest_cell_id)][self.maskcentroid_y_key]), float(self.unique_spot_properties[int(closest_cell_id)][self.maskcentroid_z_key]) ]
-                                    cell_axis_mask = angular_change(cell_axis, mask_vector)
-                                    
-                                    self.unique_spot_properties[int(closest_cell_id)].update({self.cellaxis_mask_key : cell_axis_mask})
-                                    self.unique_spot_properties[int(closest_cell_id)].update({self.clusterclass_key : cluster_class})
-                                    self.unique_spot_properties[int(closest_cell_id)].update({self.clusterscore_key : cluster_score})
-                                    self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_firstkey : eccentricity_comp_firstyz[0]})
-                                    self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_secondkey : eccentricity_comp_firstyz[1]})
-                                    self.unique_spot_properties[int(closest_cell_id)].update({self.surface_area_key : surface_area})
-                                    self.unique_spot_properties[int(closest_cell_id)].update({self.quality_key : quality})
-                                    self.unique_spot_properties[int(closest_cell_id)].update({self.radius_key : quality * math.pow(self.zcalibration * self.xcalibration * self.ycalibration, 1.0/3.0) })
+                                    if dist < quality:
+                                            closest_centroid = spot_centroids[index]
+                                            frame_spot_centroid = (int(time_key),closest_centroid[0], closest_centroid[1], closest_centroid[2])
+                                            closest_cell_id = self.unique_spot_centroid[frame_spot_centroid]
+                                            mask_vector = [ float(self.unique_spot_properties[int(closest_cell_id)][self.maskcentroid_x_key]), float(self.unique_spot_properties[int(closest_cell_id)][self.maskcentroid_y_key]), float(self.unique_spot_properties[int(closest_cell_id)][self.maskcentroid_z_key]) ]
+                                            cell_axis_mask = angular_change(cell_axis, mask_vector)
+                                            
+                                            self.unique_spot_properties[int(closest_cell_id)].update({self.cellaxis_mask_key : cell_axis_mask})
+                                            self.unique_spot_properties[int(closest_cell_id)].update({self.clusterclass_key : cluster_class})
+                                            self.unique_spot_properties[int(closest_cell_id)].update({self.clusterscore_key : cluster_score})
+                                            self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_firstkey : eccentricity_comp_firstyz[0]})
+                                            self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_secondkey : eccentricity_comp_firstyz[1]})
+                                            self.unique_spot_properties[int(closest_cell_id)].update({self.surface_area_key : surface_area})
+                                            self.unique_spot_properties[int(closest_cell_id)].update({self.quality_key : quality})
+                                            self.unique_spot_properties[int(closest_cell_id)].update({self.radius_key : quality * math.pow(self.zcalibration * self.xcalibration * self.ycalibration, 1.0/3.0) })
 
 
                                     
