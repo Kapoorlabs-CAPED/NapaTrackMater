@@ -463,7 +463,7 @@ class TrackMate(object):
                                     
                                     
                             
-    def _get_boundary_dist(self, frame, testlocation, cellradius):
+    def _get_boundary_dist(self, frame, testlocation):
          
         if self.mask is not None:
 
@@ -471,7 +471,7 @@ class TrackMate(object):
                         
                 # Get the location and distance to the nearest boundary point
                 distance_cell_mask, locationindex = tree.query(testlocation)
-                distance_cell_mask = max(0, distance_cell_mask - float(cellradius))
+                distance_cell_mask = max(0, distance_cell_mask)
                    
         else:
                 distance_cell_mask = 0
@@ -680,9 +680,14 @@ class TrackMate(object):
                                     acceleration = float(all_dict_values[self.acceleration_key])
                                     motion_angle = float(all_dict_values[self.motion_angle_key])
                                     radial_angle = float(all_dict_values[self.radial_angle_key])
-                                    radius = float(all_dict_values[self.radius_key])
+                                    if all_dict_values[self.radius_key] is not None:
+                                       radius = float(all_dict_values[self.radius_key])
+                                       total_intensity =  float(all_dict_values[self.total_intensity_key])
+                                    else:
+                                       radius = None        
+                                       total_intensity = None
                                     distance_cell_mask = float(all_dict_values[self.distance_cell_mask_key])
-                                    total_intensity =  float(all_dict_values[self.total_intensity_key])
+                                    
                                     volume_pixels = int(float(all_dict_values[self.quality_key]))
 
                                     
@@ -742,17 +747,29 @@ class TrackMate(object):
                       
                         if self.uniqueid_key in Spotobject.keys():
                         
-                                        
+                                if Spotobject.get(self.radius_key) is not None:
+                                       radius = float(Spotobject.get(self.radius_key))
+                                       quality = float(Spotobject.get(self.quality_key))
+                                       total_intensity = float(Spotobject.get(self.total_intensity_key))
+                                       mean_intensity = float(Spotobject.get(self.mean_intensity_key))
+
+                                else:
+                                       radius = None
+                                       quality = None
+                                       total_intensity = None 
+                                       mean_intensity = None 
+
+
                                 self.unique_spot_properties[cell_id] = {
                                     self.cellid_key: int(float(Spotobject.get(self.spotid_key))), 
                                     self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
                                     self.zposid_key : float(Spotobject.get(self.zposid_key)),
                                     self.yposid_key : float(Spotobject.get(self.yposid_key)),
                                     self.xposid_key : float(Spotobject.get(self.xposid_key)),
-                                    self.total_intensity_key : (float(Spotobject.get(self.total_intensity_key))),
-                                    self.mean_intensity_key : (float(Spotobject.get(self.mean_intensity_key))),
-                                    self.radius_key : (float(Spotobject.get(self.radius_key))),
-                                    self.quality_key : (float(Spotobject.get(self.quality_key))),
+                                    self.total_intensity_key : total_intensity,
+                                    self.mean_intensity_key : mean_intensity,
+                                    self.radius_key : radius,
+                                    self.quality_key : quality,
                                     self.distance_cell_mask_key: (float(Spotobject.get(self.distance_cell_mask_key))),
                                     self.uniqueid_key : str(Spotobject.get(self.uniqueid_key)),
                                     self.trackletid_key : str(Spotobject.get(self.trackletid_key)),
@@ -790,8 +807,16 @@ class TrackMate(object):
                                             else:        
                                                     TOTAL_INTENSITY = Spotobject.get(self.total_intensity_ch1_key)
                                                     MEAN_INTENSITY = Spotobject.get(self.mean_intensity_ch1_key)
-                                            RADIUS = Spotobject.get(self.radius_key)
-                                            QUALITY = Spotobject.get(self.quality_key)              
+                                            if Spotobject.get(self.radius_key) is not None:         
+                                               RADIUS = float(Spotobject.get(self.radius_key))
+                                               QUALITY = float(Spotobject.get(self.quality_key))     
+                                               TOTAL_INTENSITY = float(TOTAL_INTENSITY)
+                                               MEAN_INTENSITY = float(MEAN_INTENSITY)
+                                            else:
+                                               RADIUS = None 
+                                               QUALITY = None
+                                               TOTAL_INTENSITY = None 
+                                               MEAN_INTENSITY = None                  
                                             self.unique_spot_properties[cell_id] = {
                                             self.cellid_key: int(cell_id), 
                                             self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
@@ -799,10 +824,10 @@ class TrackMate(object):
                                             self.yposid_key : float(Spotobject.get(self.yposid_key)),
                                             self.xposid_key : float(Spotobject.get(self.xposid_key)),
                                             
-                                            self.total_intensity_key : (float(TOTAL_INTENSITY)),
-                                            self.mean_intensity_key : (float(MEAN_INTENSITY)),
-                                            self.radius_key : (float(RADIUS)),
-                                            self.quality_key : (float(QUALITY))
+                                            self.total_intensity_key : TOTAL_INTENSITY,
+                                            self.mean_intensity_key : MEAN_INTENSITY,
+                                            self.radius_key : RADIUS,
+                                            self.quality_key : QUALITY
                                         }
        
                    
@@ -816,16 +841,30 @@ class TrackMate(object):
                         cell_id = int(Spotobject.get(self.spotid_key))
                         # Get the TZYX location of the cells in that frame
                         if self.detectorchannel == 1:
-                                TOTAL_INTENSITY = Spotobject.get(self.total_intensity_ch2_key)
-                                MEAN_INTENSITY = Spotobject.get(self.mean_intensity_ch2_key)
+                                if Spotobject.get(self.total_intensity_ch2_key) is not None:
+                                        TOTAL_INTENSITY = float(Spotobject.get(self.total_intensity_ch2_key))
+                                        MEAN_INTENSITY = float(Spotobject.get(self.mean_intensity_ch2_key))
+                                else:
+                                       TOTAL_INTENSITY = None 
+                                       MEAN_INTENSITY = None        
                         else:        
-                                TOTAL_INTENSITY = Spotobject.get(self.total_intensity_ch1_key)
-                                MEAN_INTENSITY = Spotobject.get(self.mean_intensity_ch1_key)
-                        RADIUS = Spotobject.get(self.radius_key)
-                        QUALITY = Spotobject.get(self.quality_key)
+                                if Spotobject.get(self.total_intensity_ch1_key) is not None:
+                                        TOTAL_INTENSITY = float(Spotobject.get(self.total_intensity_ch1_key))
+                                        MEAN_INTENSITY = float(Spotobject.get(self.mean_intensity_ch1_key))
+                                else:
+                                        TOTAL_INTENSITY = None 
+                                        MEAN_INTENSITY = None          
+
+                                
+                        if Spotobject.get(self.radius_key) is not None:         
+                           RADIUS = float(Spotobject.get(self.radius_key))
+                           QUALITY = float(Spotobject.get(self.quality_key))
+                        else:
+                              RADIUS = None 
+                              QUALITY = None    
                         testlocation = (float(Spotobject.get(self.zposid_key)), float(Spotobject.get(self.yposid_key)),  float(Spotobject.get(self.xposid_key)))
                         frame = Spotobject.get(self.frameid_key)
-                        distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, testlocation, RADIUS)
+                        distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, testlocation)
                         
                         self.unique_spot_properties[cell_id] = {
                             self.cellid_key: int(cell_id), 
@@ -833,10 +872,10 @@ class TrackMate(object):
                             self.zposid_key : float(Spotobject.get(self.zposid_key)),
                             self.yposid_key : float(Spotobject.get(self.yposid_key)),
                             self.xposid_key : float(Spotobject.get(self.xposid_key)),
-                            self.total_intensity_key : (float(TOTAL_INTENSITY)),
-                            self.mean_intensity_key : (float(MEAN_INTENSITY)),
-                            self.radius_key : (float(RADIUS)),
-                            self.quality_key : (float(QUALITY)),
+                            self.total_intensity_key : TOTAL_INTENSITY,
+                            self.mean_intensity_key : MEAN_INTENSITY,
+                            self.radius_key : RADIUS,
+                            self.quality_key : QUALITY,
                             self.distance_cell_mask_key: float(distance_cell_mask),
                             self.maskcentroid_z_key: float(maskcentroid[0]),
                             self.maskcentroid_y_key: float(maskcentroid[1]),
@@ -1355,8 +1394,9 @@ class TrackMate(object):
 
             location = (centroids[index][0] * self.zcalibration, centroids[index][1]*self.ycalibration, centroids[index][2]*self.xcalibration)
             QUALITY = volume[index]
-            RADIUS = math.pow(QUALITY, 1.0/3.0) * self.xcalibration * self.ycalibration * self.zcalibration
-            distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, location, RADIUS)
+            RADIUS = math.pow(QUALITY * self.xcalibration * self.ycalibration * self.zcalibration, 1.0/3.0) 
+
+            distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, location)
             if dist <= 2 * veto_radius:
                 self.channel_unique_spot_properties[cell_id] = {
                         self.cellid_key: int(cell_id), 
