@@ -667,8 +667,8 @@ class TrackMate(object):
                                     current_tracklets, current_tracklets_properties = self._tracklet_and_properties(all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties)
                                     
 
-                            current_tracklets = np.asarray(current_tracklets[str(track_id)])
-                            current_tracklets_properties = np.asarray(current_tracklets_properties[str(track_id)])
+                            current_tracklets = np.asarray(current_tracklets[str(track_id)], dtype=np.float32)
+                            current_tracklets_properties = np.asarray(current_tracklets_properties[str(track_id)], dtype=np.float32)
                             
                             self.unique_tracks[track_id] = current_tracklets     
                             self.unique_track_properties[track_id] = current_tracklets_properties    
@@ -1341,25 +1341,25 @@ class TrackMate(object):
                                  current_surface_area.append(surface_area[j])
                                  current_radial_angle.append(radial_angle[j])
                                  current_cell_axis_mask.append(cell_axis_mask[j])
-                   current_time = np.asarray(current_time)
-                   current_intensity = np.asarray(current_intensity)
+                   current_time = np.asarray(current_time, dtype=np.float32)
+                   current_intensity = np.asarray(current_intensity, dtype=np.float32)
 
 
-                   current_cluster_class = np.asarray(current_cluster_class)
-                   current_cluster_class_score = np.asarray(current_cluster_class_score)   
+                   current_cluster_class = np.asarray(current_cluster_class, dtype=np.float32)
+                   current_cluster_class_score = np.asarray(current_cluster_class_score, dtype=np.float32)   
 
-                   current_radius = np.asarray(current_radius)
-                   current_volume = np.asarray(current_volume)
-                   current_eccentricity_comp_first = np.asarray(current_eccentricity_comp_first)
-                   current_eccentricity_comp_second = np.asarray(current_eccentricity_comp_second)
-                   current_surface_area = np.asarray(current_surface_area)
+                   current_radius = np.asarray(current_radius, dtype=np.float32)
+                   current_volume = np.asarray(current_volume, dtype=np.float32)
+                   current_eccentricity_comp_first = np.asarray(current_eccentricity_comp_first, dtype=np.float32)
+                   current_eccentricity_comp_second = np.asarray(current_eccentricity_comp_second, dtype=np.float32)
+                   current_surface_area = np.asarray(current_surface_area, dtype=np.float32)
 
-                   current_speed = np.asarray(current_speed)
-                   current_motion_angle = np.asarray(current_motion_angle)
-                   current_acceleration = np.asarray(current_acceleration)
-                   current_distance_cell_mask = np.asarray(current_distance_cell_mask)
-                   current_radial_angle = np.asarray(current_radial_angle)
-                   current_cell_axis_mask = np.asarray(current_cell_axis_mask)
+                   current_speed = np.asarray(current_speed, dtype=np.float32)
+                   current_motion_angle = np.asarray(current_motion_angle, dtype=np.float32)
+                   current_acceleration = np.asarray(current_acceleration, dtype=np.float32)
+                   current_distance_cell_mask = np.asarray(current_distance_cell_mask, dtype=np.float32)
+                   current_radial_angle = np.asarray(current_radial_angle, dtype=np.float32)
+                   current_cell_axis_mask = np.asarray(current_cell_axis_mask, dtype=np.float32)
 
 
                    
@@ -1644,7 +1644,8 @@ class TrackMate(object):
                                         mitotic_disp_z.append(all_spots_tracks[k][self.zposid_key])
                                         mitotic_disp_y.append(all_spots_tracks[k][self.yposid_key])
                                         mitotic_disp_x.append(all_spots_tracks[k][self.xposid_key])
-                                        mitotic_radius.append(all_spots_tracks[k][self.radius_key])
+                                        if all_spots_tracks[k][self.radius_key] is not None:
+                                           mitotic_radius.append(all_spots_tracks[k][self.radius_key])
                                         mitotic_speed.append(all_spots_tracks[k][self.speed_key])
                                         mitotic_acc.append(all_spots_tracks[k][self.acceleration_key])
                                         mitotic_directional_change.append(all_spots_tracks[k][self.motion_angle_key])
@@ -1657,7 +1658,8 @@ class TrackMate(object):
                                         non_mitotic_disp_z.append(all_spots_tracks[k][self.zposid_key])
                                         non_mitotic_disp_y.append(all_spots_tracks[k][self.yposid_key])
                                         non_mitotic_disp_x.append(all_spots_tracks[k][self.xposid_key])
-                                        non_mitotic_radius.append(all_spots_tracks[k][self.radius_key])
+                                        if all_spots_tracks[k][self.radius_key] is not None:
+                                            non_mitotic_radius.append(all_spots_tracks[k][self.radius_key])
                                         non_mitotic_speed.append(all_spots_tracks[k][self.speed_key])
                                         non_mitotic_acc.append(all_spots_tracks[k][self.acceleration_key])
                                         non_mitotic_directional_change.append(all_spots_tracks[k][self.motion_angle_key])
@@ -1668,7 +1670,8 @@ class TrackMate(object):
                                   all_disp_z.append(all_spots_tracks[k][self.zposid_key])
                                   all_disp_y.append(all_spots_tracks[k][self.yposid_key])
                                   all_disp_x.append(all_spots_tracks[k][self.xposid_key])
-                                  all_radius.append(all_spots_tracks[k][self.radius_key])
+                                  if all_spots_tracks[k][self.radius_key] is not None:
+                                     all_radius.append(all_spots_tracks[k][self.radius_key])
                                   all_speed.append(all_spots_tracks[k][self.speed_key])
                                   all_acc.append(all_spots_tracks[k][self.acceleration_key])
                                   all_directional_change.append(all_spots_tracks[k][self.motion_angle_key])   
@@ -1693,9 +1696,9 @@ class TrackMate(object):
                                         
                     self.time.append(i * self.tcalibration)
 
-                    self.mitotic_cluster_class.append(np.asarray(mitotic_cluster_class))
-                    self.non_mitotic_cluster_class.append(np.asarray(non_mitotic_cluster_class))
-                    self.all_cluster_class.append(np.asarray(all_cluster_class))
+                    self.mitotic_cluster_class.append(np.asarray(mitotic_cluster_class, dtype=np.float32))
+                    self.non_mitotic_cluster_class.append(np.asarray(non_mitotic_cluster_class, dtype=np.float32))
+                    self.all_cluster_class.append(np.asarray(all_cluster_class, dtype=np.float32))
 
                     self.mitotic_mean_disp_z.append(np.mean(mitotic_disp_z))
                     self.mitotic_var_disp_z.append(np.std(mitotic_disp_z))
@@ -1706,8 +1709,9 @@ class TrackMate(object):
                     self.mitotic_mean_disp_x.append(np.mean(mitotic_disp_x))
                     self.mitotic_var_disp_x.append(np.std(mitotic_disp_x))
 
-                    self.mitotic_mean_radius.append(np.mean(mitotic_radius))
-                    self.mitotic_var_radius.append(np.std(mitotic_radius))
+                    if len(mitotic_radius) > 0:
+                        self.mitotic_mean_radius.append(np.mean(mitotic_radius))
+                        self.mitotic_var_radius.append(np.std(mitotic_radius))
 
                     self.mitotic_mean_speed.append(np.mean(mitotic_speed))
                     self.mitotic_var_speed.append(np.std(mitotic_speed))
@@ -1730,8 +1734,9 @@ class TrackMate(object):
                     self.non_mitotic_mean_disp_x.append(np.mean(non_mitotic_disp_x))
                     self.non_mitotic_var_disp_x.append(np.std(non_mitotic_disp_x))
 
-                    self.non_mitotic_mean_radius.append(np.mean(non_mitotic_radius))
-                    self.non_mitotic_var_radius.append(np.std(non_mitotic_radius))
+                    if len(non_mitotic_radius) > 0:
+                        self.non_mitotic_mean_radius.append(np.mean(non_mitotic_radius))
+                        self.non_mitotic_var_radius.append(np.std(non_mitotic_radius))
 
                     self.non_mitotic_mean_speed.append(np.mean(non_mitotic_speed))
                     self.non_mitotic_var_speed.append(np.std(non_mitotic_speed))
@@ -1755,8 +1760,9 @@ class TrackMate(object):
                     self.all_mean_disp_x.append(np.mean(all_disp_x))
                     self.all_var_disp_x.append(np.std(all_disp_x))
 
-                    self.all_mean_radius.append(np.mean(all_radius))
-                    self.all_var_radius.append(np.std(all_radius))
+                    if len(all_radius) > 0:
+                            self.all_mean_radius.append(np.mean(all_radius))
+                            self.all_var_radius.append(np.std(all_radius))
 
                     self.all_mean_speed.append(np.mean(all_speed))
                     self.all_var_speed.append(np.std(all_speed))
@@ -1785,7 +1791,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
         boundary = find_boundaries(mask)
         regioncentroid = (0,) + compute_centroid(boundary) 
         indices = np.where(boundary > 0)
-        real_indices = np.transpose(np.asarray(indices)).copy()
+        real_indices = np.transpose(np.asarray(indices, dtype=np.float32)).copy()
 
         for j in range(0, len(real_indices)):
 
@@ -1805,7 +1811,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
                 boundary = find_boundaries(mask[i,:])
                 regioncentroid = (0,) + compute_centroid(boundary) 
                 indices = np.where(boundary > 0)
-                real_indices = np.transpose(np.asarray(indices)).copy()
+                real_indices = np.transpose(np.asarray(indices, dtype=np.float32)).copy()
 
                 for j in range(0, len(real_indices)):
 
@@ -1827,7 +1833,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             boundary[i,:] = find_boundaries(mask[i,:])
             regioncentroid = compute_centroid(boundary[i,:]) 
             indices = np.where(boundary[i,:] > 0)
-            real_indices = np.transpose(np.asarray(indices)).copy()
+            real_indices = np.transpose(np.asarray(indices, dtype=np.float32)).copy()
 
             for j in range(0, len(real_indices)):
 
