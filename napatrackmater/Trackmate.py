@@ -682,13 +682,15 @@ class TrackMate(object):
                                     radial_angle = float(all_dict_values[self.radial_angle_key])
                                     if all_dict_values[self.radius_key] is not None:
                                        radius = float(all_dict_values[self.radius_key])
+                                       volume_pixels = int(float(all_dict_values[self.quality_key]))
                                        total_intensity =  float(all_dict_values[self.total_intensity_key])
                                     else:
-                                       radius = None        
+                                       radius = None
+                                       volume_pixels = None        
                                        total_intensity = None
                                     distance_cell_mask = float(all_dict_values[self.distance_cell_mask_key])
                                     
-                                    volume_pixels = int(float(all_dict_values[self.quality_key]))
+                                    
 
                                     
 
