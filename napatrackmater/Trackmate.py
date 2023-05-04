@@ -1178,12 +1178,13 @@ class TrackMate(object):
                            cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.num_points, self.cluster_model, key = time_key, progress_bar=self.progress_bar, batch_size = self.batch_size)       
                            cluster_eval._create_cluster_labels()
                            timed_cluster_label = cluster_eval.timed_cluster_label 
-                           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_cloud_surface_area = timed_cluster_label[time_key]
+                           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area = timed_cluster_label[time_key]
                            
                            for i in range(len(output_cluster_centroid)):
                                     centroid = output_cluster_centroid[i]
                                     cluster_class = output_cluster_class[i]
                                     cluster_score = output_cluster_score[i]
+                                    quality = output_largest_eigenvalue[i]
                                     eccentricity_comp_firstyz = output_cloud_eccentricity[i]
                                     cell_axis = output_largest_eigenvector[i]
                                     surface_area = output_cloud_surface_area[i]
@@ -1200,6 +1201,9 @@ class TrackMate(object):
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_firstkey : eccentricity_comp_firstyz[0]})
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_secondkey : eccentricity_comp_firstyz[1]})
                                     self.unique_spot_properties[int(closest_cell_id)].update({self.surface_area_key : surface_area})
+                                    self.unique_spot_properties[int(closest_cell_id)].update({self.quality_key : quality})
+                                    self.unique_spot_properties[int(closest_cell_id)].update({self.radius_key : quality * math.pow(self.zcalibration * self.xcalibration * self.ycalibration, 1.0/3.0) })
+
 
                                     
                            for (k,v) in self.root_spots.items():
@@ -1374,13 +1378,12 @@ class TrackMate(object):
                 }
             elif cell_id in self.edge_source_lookup.keys():
                     
-                    if self.edge_source_lookup[cell_id] in self.channel_unique_spot_properties.keys() is not None:
-                       self.channel_unique_spot_properties[cell_id] = self.channel_unique_spot_properties[self.edge_source_lookup[cell_id]]
-                    else:
-                       self.channel_unique_spot_properties[cell_id] = self.unique_spot_properties[cell_id]     
-                               
-            else:
                     self.channel_unique_spot_properties[cell_id] = self.unique_spot_properties[cell_id]
+
+                    self.channel_unique_spot_properties[cell_id].update({self.total_intensity_key: None})
+                    self.channel_unique_spot_properties[cell_id].update({self.mean_intensity_key: None})
+                    self.channel_unique_spot_properties[cell_id].update({self.radius_key: None})
+                    self.channel_unique_spot_properties[cell_id].update({self.quality_key: None})
 
 
                                  

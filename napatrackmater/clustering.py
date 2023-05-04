@@ -71,8 +71,8 @@ class Clustering:
            
            labels, centroids, clouds = _label_cluster(self.label_image, self.model, self.num_points, self.min_size, ndim)
            
-           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_cloud_surface_area = _model_output(self.model, clouds, labels, centroids, self.batch_size)
-           self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_cloud_surface_area]     
+           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area = _model_output(self.model, clouds, labels, centroids, self.batch_size)
+           self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area]     
  
         #ZYX image
         if ndim == 3 and 'T' not in self.axes:
@@ -80,8 +80,8 @@ class Clustering:
            labels, centroids, clouds = _label_cluster(self.label_image,   self.num_points, self.min_size, ndim)
            if len(labels) > 1:
                 
-                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_cloud_surface_area = _model_output(self.model, clouds, labels, centroids, self.batch_size)
-                self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_cloud_surface_area]
+                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector,output_largest_eigenvalue, output_cloud_surface_area = _model_output(self.model, clouds, labels, centroids, self.batch_size)
+                self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area]
 
 
         #TYX
@@ -90,8 +90,8 @@ class Clustering:
 
                for i in range(self.label_image.shape[0]):
                         self.count = self.count + 1
-                        output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_cloud_surface_area  = self._label_computer(i, ndim - 1)
-                        self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_cloud_surface_area]
+                        output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area  = self._label_computer(i, ndim - 1)
+                        self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area]
                 
         #TZYX image        
         if ndim == 4:
@@ -99,8 +99,8 @@ class Clustering:
 
                 for i in range(self.label_image.shape[0]):
                         self.count = self.count + 1
-                        output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_cloud_surface_area  = self._label_computer(i, ndim)
-                        self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_cloud_surface_area]
+                        output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area  = self._label_computer(i, ndim)
+                        self.timed_cluster_label[str(i)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area]
                 
                         
                             
@@ -111,9 +111,9 @@ class Clustering:
             labels, centroids, clouds = _label_cluster(xyz_label_image,   self.num_points, self.min_size, dim)
             if len(labels) > 1:
                 
-                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_cloud_surface_area = _model_output(self.model, clouds, labels, centroids, self.batch_size)
+                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area = _model_output(self.model, clouds, labels, centroids, self.batch_size)
             
-                return  output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_cloud_surface_area
+                return  output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area
 
 def _model_output(model, clouds, labels, centroids, batch_size):
        
@@ -142,8 +142,10 @@ def _model_output(model, clouds, labels, centroids, batch_size):
                 output_cluster_class = output_cluster_class + [np.argmax(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
                 output_cloud_eccentricity = output_cloud_eccentricity +  [tuple(get_eccentricity(cloud_input)[0]) for cloud_input in cloud_inputs]
                 output_largest_eigenvector = output_largest_eigenvector + [get_eccentricity(cloud_input)[1] for cloud_input in cloud_inputs]
+                output_largest_eigenvalue = output_largest_eigenvalue + [get_eccentricity(cloud_input)[2] for cloud_input in cloud_inputs]
+
                 output_cloud_surface_area = output_cloud_surface_area + [float(get_surface_area(cloud_input)) for cloud_input in cloud_inputs]
-        return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_cloud_surface_area             
+        return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area             
 
 
        
@@ -238,11 +240,11 @@ def get_eccentricity(point_cloud):
         eigenvectors = eigenvectors[:, idx]
         eigenvalues = eigenvalues[idx]
         largest_eigen_vector = eigenvectors[:, idx[0]]
-        
+        largest_eigen_value = eigenvalues[idx[0]]
         # Compute the eccentricity along each principal axis
         eccentricities = np.sqrt(eigenvalues / eigenvalues.min())
     
-        return eccentricities, largest_eigen_vector
+        return eccentricities, largest_eigen_vector, largest_eigen_value
 
 def get_surface_area(point_cloud):
     # Compute the convex hull of the point cloud
