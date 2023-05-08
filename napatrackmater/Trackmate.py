@@ -1364,8 +1364,8 @@ class TrackMate(object):
             veto_radius = math.pow(3 * veto_volume / (4 * math.pi), 1.0 / 3.0)
 
             location = (centroids[index][0] * self.zcalibration, centroids[index][1]*self.ycalibration, centroids[index][2]*self.xcalibration)
-            QUALITY = volume[index]
-            RADIUS = math.pow(QUALITY * self.xcalibration * self.ycalibration * self.zcalibration, 1.0/3.0) 
+            QUALITY = math.pow(volume[index], 1.0/3.0)
+            RADIUS = math.pow(volume[index] * self.xcalibration * self.ycalibration * self.zcalibration, 1.0/3.0) 
 
             distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, location)
             if dist <= 2 * veto_radius:
