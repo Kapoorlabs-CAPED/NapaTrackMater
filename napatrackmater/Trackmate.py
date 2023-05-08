@@ -701,12 +701,12 @@ class TrackMate(object):
                                            
                                                
                                     else:
-                                            cluster_class = -100
-                                            cluster_class_score = -100  
-                                            eccentricity_comp_first = -100
-                                            eccentricity_comp_second = -100
-                                            surface_area = -100
-                                            cell_axis_mask = -100     
+                                            cluster_class = -1
+                                            cluster_class_score = -1  
+                                            eccentricity_comp_first = -1
+                                            eccentricity_comp_second = -1
+                                            surface_area = -1
+                                            cell_axis_mask = -1     
 
                                     frame_spot_centroid = (t,round(z)/self.zcalibration, round(y)/self.ycalibration, round(x)/self.xcalibration) 
                                     self.unique_spot_centroid[frame_spot_centroid] = k
@@ -818,15 +818,15 @@ class TrackMate(object):
                                         TOTAL_INTENSITY = float(Spotobject.get(self.total_intensity_ch2_key))
                                         MEAN_INTENSITY = float(Spotobject.get(self.mean_intensity_ch2_key))
                                 else:
-                                       TOTAL_INTENSITY = -100
-                                       MEAN_INTENSITY = -100       
+                                       TOTAL_INTENSITY = -1
+                                       MEAN_INTENSITY = -1       
                         else:        
                                 if Spotobject.get(self.total_intensity_ch1_key) is not None:
                                         TOTAL_INTENSITY = float(Spotobject.get(self.total_intensity_ch1_key))
                                         MEAN_INTENSITY = float(Spotobject.get(self.mean_intensity_ch1_key))
                                 else:
-                                        TOTAL_INTENSITY = -100
-                                        MEAN_INTENSITY = -100         
+                                        TOTAL_INTENSITY = -1
+                                        MEAN_INTENSITY = -1         
 
                                 
                         RADIUS = float(Spotobject.get(self.radius_key))
@@ -1391,10 +1391,10 @@ class TrackMate(object):
                     
                     self.channel_unique_spot_properties[cell_id] = self.unique_spot_properties[cell_id]
 
-                    self.channel_unique_spot_properties[cell_id].update({self.total_intensity_key: -100})
-                    self.channel_unique_spot_properties[cell_id].update({self.mean_intensity_key: -100})
-                    self.channel_unique_spot_properties[cell_id].update({self.radius_key: -100})
-                    self.channel_unique_spot_properties[cell_id].update({self.quality_key: -100})
+                    self.channel_unique_spot_properties[cell_id].update({self.total_intensity_key: -1})
+                    self.channel_unique_spot_properties[cell_id].update({self.mean_intensity_key: -1})
+                    self.channel_unique_spot_properties[cell_id].update({self.radius_key: -1})
+                    self.channel_unique_spot_properties[cell_id].update({self.quality_key: -1})
 
 
                                  
@@ -1417,7 +1417,7 @@ class TrackMate(object):
         self.unique_spot_properties[int(cell_id)].update({self.radial_angle_key : angle})                    
 
         unique_tracklet_ids.append(str(unique_id))
-        self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : -100})
+        self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : -1})
         self.unique_spot_properties[int(cell_id)].update({self.clusterscore_key : 0})
         self.unique_spot_properties[int(cell_id)].update({self.uniqueid_key : str(unique_id)})
         self.unique_spot_properties[int(cell_id)].update({self.trackletid_key : str(tracklet_id)}) 
@@ -1426,10 +1426,10 @@ class TrackMate(object):
         self.unique_spot_properties[int(cell_id)].update({self.motion_angle_key : 0.0})
         self.unique_spot_properties[int(cell_id)].update({self.speed_key : 0.0})
         self.unique_spot_properties[int(cell_id)].update({self.acceleration_key : 0.0})
-        self.unique_spot_properties[int(cell_id)].update({self.eccentricity_comp_firstkey : -100})
-        self.unique_spot_properties[int(cell_id)].update({self.eccentricity_comp_secondkey : -100})
-        self.unique_spot_properties[int(cell_id)].update({self.surface_area_key : -100})
-        self.unique_spot_properties[int(cell_id)].update({self.cellaxis_mask_key : -100})
+        self.unique_spot_properties[int(cell_id)].update({self.eccentricity_comp_firstkey : -1})
+        self.unique_spot_properties[int(cell_id)].update({self.eccentricity_comp_secondkey : -1})
+        self.unique_spot_properties[int(cell_id)].update({self.surface_area_key : -1})
+        self.unique_spot_properties[int(cell_id)].update({self.cellaxis_mask_key : -1})
 
         if source_id is not None:
             self.unique_spot_properties[int(cell_id)].update({self.beforeid_key : int(source_id)})
