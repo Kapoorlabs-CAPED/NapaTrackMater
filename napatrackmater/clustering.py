@@ -123,7 +123,7 @@ def _model_output(model, clouds, labels, centroids, batch_size):
         output_cloud_eccentricity = [] 
         output_cloud_surface_area = []
         output_largest_eigenvector = []
-
+        output_largest_eigenvalue = []
         dataset = PointCloudDataset(clouds, labels, centroids)
         dataloader = DataLoader(dataset, batch_size = batch_size)
         model.eval()
