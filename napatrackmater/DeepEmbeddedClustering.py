@@ -1,4 +1,4 @@
-from cellshape_cluster import DeepEmbeddedClustering
+from kapoorlabs_lightning.pytorch_models import DeepEmbeddedClustering
 from .pretrained import get_cluster_instance, get_model_details, get_registered_models
 import sys
 

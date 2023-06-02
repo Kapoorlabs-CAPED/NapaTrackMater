@@ -12,7 +12,7 @@ from collections import OrderedDict
 from warnings import warn
 import torch
 from pathlib import Path
-from tensorflow.keras.utils import get_file
+import tensorflow as tf
 import os 
 import json
 
@@ -105,7 +105,7 @@ def get_model_details(cls, key_or_alias, verbose=False):
 def get_model_folder(cls, key_or_alias):
     key, alias, m = get_model_details(cls, key_or_alias)
     target = str(Path('models') / cls.__name__ / key)
-    path = Path(get_file(fname=key+'.zip', origin=m['url'], file_hash=m['hash'],
+    path = Path(tf.keras.utils.get_file(fname=key+'.zip', origin=m['url'], file_hash=m['hash'],
                          cache_subdir=target, extract=True))
     assert path.exists() and path.parent.exists()
     return path.parent, key

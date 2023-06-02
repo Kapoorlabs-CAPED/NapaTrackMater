@@ -1,5 +1,5 @@
-from cellshape_cloud import CloudAutoEncoder
 import sys
+from kapoorlabs_lightning.pytorch_models import CloudAutoEncoder
 from .pretrained import get_autoencoder_instance, get_model_details, get_registered_models
 
 

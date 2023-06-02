@@ -1,5 +1,4 @@
-from cellshape_cluster import DeepEmbeddedClustering
-from cellshape_cloud import CloudAutoEncoder
+from kapoorlabs_lightning.pytorch_models import DeepEmbeddedClustering
 from cellshape_helper.vendor.pytorch_geometric_files import read_off, sample_points
 import numpy as np
 import concurrent 
