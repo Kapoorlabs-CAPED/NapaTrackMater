@@ -30,12 +30,25 @@ class TrackMate(object):
         self.spot_csv_path = spot_csv_path
         self.track_csv_path = track_csv_path 
         self.edges_csv_path = edges_csv_path
-        self.image = image.astype(np.float16) 
-        self.mask = mask.astype(np.uint16)
+        if image is not None:
+          self.image = image.astype(np.float16) 
+        else:
+            self.image = image
+        if mask is not None:       
+           self.mask = mask.astype(np.uint16)
+        else:
+            self.mask = mask
+
         self.fourier = fourier
         self.cluster_model = cluster_model 
-        self.channel_seg_image = channel_seg_image.astype(np.uint16)
-        self.seg_image = seg_image.astype(np.uint16)
+        if channel_seg_image is not None:
+           self.channel_seg_image = channel_seg_image.astype(np.uint16)
+        else:
+           self.channel_seg_image = channel_seg_image
+        if seg_image is not None:                    
+           self.seg_image = seg_image.astype(np.uint16)
+        else:
+           self.seg_image = seg_image       
         self.AttributeBoxname = AttributeBoxname
         self.TrackAttributeBoxname = TrackAttributeBoxname
         self.TrackidBox = TrackidBox
