@@ -1984,7 +1984,7 @@ def check_and_update_mask(mask,image):
                                 image.shape[1],
                                 image.shape[2],
                                 image.shape[3],
-                            ]
+                            ], dtype="uint8"
                         )
             for i in range(0, update_mask.shape[0]):
                 for j in range(0, update_mask.shape[1]):
