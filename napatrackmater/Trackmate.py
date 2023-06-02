@@ -22,7 +22,7 @@ from scipy import ndimage
 class TrackMate(object):
     
     def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes,  progress_bar = None, 
-                 master_xml_path: Path = None, master_extra_name = '', seg_image = None, channel_seg_image = None, image = None, mask = None, fourier = True, cluster_model = None, num_points = 2048, batch_size = 1):
+                 master_xml_path: Path = None, master_extra_name = '', seg_image:np.ndarray = None, channel_seg_image:np.ndarray = None, image :np.ndarray = None, mask:np.ndarray = None, fourier = True, cluster_model = None, num_points = 2048, batch_size = 1):
         
         
         self.xml_path = xml_path
@@ -30,12 +30,12 @@ class TrackMate(object):
         self.spot_csv_path = spot_csv_path
         self.track_csv_path = track_csv_path 
         self.edges_csv_path = edges_csv_path
-        self.image = image 
-        self.mask = mask
+        self.image = image.astype(np.float16) 
+        self.mask = mask.astype(np.uint16)
         self.fourier = fourier
         self.cluster_model = cluster_model 
-        self.channel_seg_image = channel_seg_image
-        self.seg_image = seg_image
+        self.channel_seg_image = channel_seg_image.astype(np.uint16)
+        self.seg_image = seg_image.astype(np.uint16)
         self.AttributeBoxname = AttributeBoxname
         self.TrackAttributeBoxname = TrackAttributeBoxname
         self.TrackidBox = TrackidBox
