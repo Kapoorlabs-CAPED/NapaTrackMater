@@ -1142,7 +1142,9 @@ class TrackMate(object):
                             self.graph_tracks[daughter_track_id] = parent_track_id
                 self._get_attributes()
                 if self.cluster_model and self.seg_image is not None:
+                       print('Getting cluster labels')
                        self._assign_cluster_class()
+                       print('Creating master xml')
                        self._create_master_xml()
                 self.count = 0 
                 for track_id in self.filtered_track_ids:

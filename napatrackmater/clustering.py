@@ -18,7 +18,7 @@ from scipy.spatial import ConvexHull
 
 
 class PointCloudDataset(Dataset):
-    def __init__(self, clouds, labels, centroids, centre=True, scale=20.0):
+    def __init__(self, clouds, labels, centroids, centre=True, scale=1.0):
         self.clouds = clouds
         self.labels = labels 
         self.centroids = centroids 
