@@ -21,7 +21,9 @@ from scipy import ndimage
 
 class TrackMate(object):
     
-    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes,  progress_bar = None, 
+    def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes, 
+                 scale_z = 1.0, scale_xy = 1.0, center = True, 
+                 progress_bar = None, accelerator: str = 'cuda', devices: List[int] | str | int = -1,
                  master_xml_path: Path = None, master_extra_name = '', seg_image:np.ndarray = None, channel_seg_image:np.ndarray = None, image :np.ndarray = None, mask:np.ndarray = None, fourier = True, cluster_model = None, num_points = 2048, batch_size = 1):
         
         
@@ -30,6 +32,11 @@ class TrackMate(object):
         self.spot_csv_path = spot_csv_path
         self.track_csv_path = track_csv_path 
         self.edges_csv_path = edges_csv_path
+        self.accelerator = accelerator
+        self.devices = devices
+        self.scale_z = scale_z
+        self.scale_xy = scale_xy
+        self.center = center  
         if image is not None:
           self.image = image.astype(np.float16) 
         else:
@@ -1199,7 +1206,7 @@ class TrackMate(object):
                                 self.progress_bar.value =  count 
                                 self.progress_bar.show()
 
-                           cluster_eval = Clustering(self.seg_image[int(time_key),:],  self.axes, self.num_points, self.cluster_model, key = time_key, progress_bar=self.progress_bar, batch_size = self.batch_size)       
+                           cluster_eval = Clustering(self.accelerator, self.devices, self.seg_image[int(time_key),:],  self.axes, self.num_points, self.cluster_model, key = time_key, progress_bar=self.progress_bar, batch_size = self.batch_size, scale_z=self.scale_z, scale_xy= self.scale_xy, center = self.center)       
                            cluster_eval._create_cluster_labels()
                            timed_cluster_label = cluster_eval.timed_cluster_label 
                            output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area = timed_cluster_label[time_key]

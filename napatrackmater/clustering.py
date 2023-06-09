@@ -15,15 +15,16 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 import tempfile 
 from scipy.spatial import ConvexHull
-
-
+from lightning import  Trainer
+from typing import List 
 class PointCloudDataset(Dataset):
-    def __init__(self, clouds, labels, centroids, centre=True, scale=1.0):
+    def __init__(self, clouds, labels, centroids, center=True, scale_z=1.0, scale_xy=1.0):
         self.clouds = clouds
         self.labels = labels 
         self.centroids = centroids 
-        self.centre = centre
-        self.scale = scale
+        self.center = center
+        self.scale_z = scale_z
+        self.scale_xy = scale_xy
       
       
 
@@ -38,23 +39,28 @@ class PointCloudDataset(Dataset):
         mean = 0
         point_cloud = torch.tensor(point_cloud.points.values)
        
-        if self.centre:
+        if self.center:
             mean = torch.mean(point_cloud, 0)
 
-        scale = torch.tensor([[self.scale, self.scale, self.scale]])
+        scale = torch.tensor([[self.scale_z, self.scale_xy, self.scale_xy]])
         point_cloud = (point_cloud - mean) / scale
         return point_cloud, point_label, point_centroid 
 
 class Clustering:
 
-    def __init__(self, label_image: np.ndarray, axes,  num_points: int, model: DeepEmbeddedClustering, key = 0,  min_size:tuple = (2,2,2), progress_bar = None, batch_size = 1):
+    def __init__(self, accelerator: str, devices: List[int] | str | int,  label_image: np.ndarray, axes,  num_points: int, model: DeepEmbeddedClustering, key = 0,  min_size:tuple = (2,2,2), progress_bar = None, batch_size = 1, scale_z=1.0, scale_xy=1.0, center=True):
 
+
+        self.accelerator = accelerator
+        self.devices = devices
         self.label_image = label_image 
         self.model = model
         self.axes = axes
         self.num_points = num_points
         self.min_size = min_size
-       
+        self.scale_z = scale_z
+        self.scale_xy = scale_xy
+        self.center = center
         self.progress_bar = progress_bar
         self.key = key
         self.batch_size = batch_size
@@ -70,7 +76,7 @@ class Clustering:
            
            labels, centroids, clouds = _label_cluster(self.label_image, self.model, self.num_points, self.min_size, ndim)
            
-           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area = _model_output(self.model, clouds, labels, centroids, self.batch_size)
+           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area = _model_output(self.model, self.accelerator, self.devices,  clouds, labels, centroids, self.batch_size, self.scale_z, self.scale_xy)
            self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area]     
  
         #ZYX image
@@ -79,7 +85,7 @@ class Clustering:
            labels, centroids, clouds = _label_cluster(self.label_image,   self.num_points, self.min_size, ndim)
            if len(labels) > 1:
                 
-                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector,output_largest_eigenvalue, output_cloud_surface_area = _model_output(self.model, clouds, labels, centroids, self.batch_size)
+                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector,output_largest_eigenvalue, output_cloud_surface_area = _model_output(self.model, self.accelerator, self.devices,  clouds, labels, centroids, self.batch_size, self.scale_z, self.scale_xy)
                 self.timed_cluster_label[str(self.key)] = [output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area]
 
 
@@ -110,11 +116,11 @@ class Clustering:
             labels, centroids, clouds = _label_cluster(xyz_label_image,   self.num_points, self.min_size, dim)
             if len(labels) > 1:
                 
-                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area = _model_output(self.model, clouds, labels, centroids, self.batch_size)
+                output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area = _model_output(self.model, self.accelerator, self.devices, clouds, labels, centroids, self.batch_size, self.scale_z, self.scale_xy)
             
                 return  output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area
 
-def _model_output(model, clouds, labels, centroids, batch_size):
+def _model_output(model: torch.nn.Module, accelerator: str, devices: List[int] | str | int, clouds, labels, centroids, batch_size: int, scale_z:float=1.0, scale_xy:float=1.0):
        
         output_labels = []
         output_cluster_score = []
@@ -124,26 +130,24 @@ def _model_output(model, clouds, labels, centroids, batch_size):
         output_cloud_surface_area = []
         output_largest_eigenvector = []
         output_largest_eigenvalue = []
-        dataset = PointCloudDataset(clouds, labels, centroids)
+        dataset = PointCloudDataset(clouds, labels, centroids, scale_z=scale_z, scale_xy=scale_xy)
         dataloader = DataLoader(dataset, batch_size = batch_size)
         model.eval()
-       
-        for data in dataloader:
-                cloud_inputs, label_inputs, centroid_inputs = data
-                try:
-                        output, features, clusters = model(cloud_inputs.cuda())
-                except ValueError:
-                        output, features, clusters = model(cloud_inputs.cpu())      
-                                
-                output_cluster_score = output_cluster_score + [max(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
-                output_cluster_centroid = output_cluster_centroid +  [tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in centroid_inputs]
-                output_labels = output_labels + [int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in label_inputs]
-                output_cluster_class = output_cluster_class + [np.argmax(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
-                output_cloud_eccentricity = output_cloud_eccentricity +  [tuple(get_eccentricity(cloud_input)[0]) for cloud_input in cloud_inputs]
-                output_largest_eigenvector = output_largest_eigenvector + [get_eccentricity(cloud_input)[1] for cloud_input in cloud_inputs]
-                output_largest_eigenvalue = output_largest_eigenvalue + [get_eccentricity(cloud_input)[2] for cloud_input in cloud_inputs]
+        
+        pretrainer = Trainer(accelerator=accelerator, devices=devices)
 
-                output_cloud_surface_area = output_cloud_surface_area + [float(get_surface_area(cloud_input)) for cloud_input in cloud_inputs]
+        results = pretrainer.predict(model=model, dataloaders=dataloader)
+        outputs, features, clusters = zip(*results)
+        
+        output_cluster_score = output_cluster_score + [max(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
+        output_cluster_centroid = output_cluster_centroid +  [tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in centroids]
+        output_labels = output_labels + [int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in labels]
+        output_cluster_class = output_cluster_class + [np.argmax(torch.squeeze(cluster).detach().cpu().numpy()) for cluster in clusters]
+        output_cloud_eccentricity = output_cloud_eccentricity +  [tuple(get_eccentricity(cloud_input)[0]) for cloud_input in outputs]
+        output_largest_eigenvector = output_largest_eigenvector + [get_eccentricity(cloud_input)[1] for cloud_input in outputs]
+        output_largest_eigenvalue = output_largest_eigenvalue + [get_eccentricity(cloud_input)[2] for cloud_input in outputs]
+        output_cloud_surface_area = output_cloud_surface_area + [float(get_surface_area(cloud_input)) for cloud_input in outputs]
+                
         return output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area             
 
 
@@ -264,8 +268,8 @@ def get_surface_area(point_cloud):
  
     return surface_area
 
-def get_current_label_binary(prop):
-                      
+def get_current_label_binary(prop: regionprops):
+                
                 binary_image = prop.image
                 label = prop.label 
                 centroid = np.asarray(prop.centroid) 
