@@ -1910,7 +1910,7 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
                        
                        AllValues[v] = spot_dataset[v].astype("float")
                 if k == "volume":
-                        value = track_analysis_spot_keys["radius"]
+                        value = float(track_analysis_spot_keys["radius"])
                         AllValues[v] = 4/3 * np.pi * (value**3)      
 
         AllValues[posix] = round(LocationX,3)
