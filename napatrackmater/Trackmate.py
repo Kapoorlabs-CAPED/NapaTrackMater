@@ -706,10 +706,6 @@ class TrackMate(object):
                                     total_intensity =  float(all_dict_values[self.total_intensity_key])
                                    
                                     distance_cell_mask = float(all_dict_values[self.distance_cell_mask_key])
-                                    
-                                    
-
-                                    
 
                                     if self.surface_area_key in all_dict_values.keys():
                                            
@@ -759,9 +755,7 @@ class TrackMate(object):
                                 quality = float(Spotobject.get(self.quality_key))
                                 total_intensity = float(Spotobject.get(self.total_intensity_key))
                                 mean_intensity = float(Spotobject.get(self.mean_intensity_key))
-
-                                 
-
+                                volume = 4/3 * np.pi * radius**3
 
                                 self.unique_spot_properties[cell_id] = {
                                     self.cellid_key: int(float(Spotobject.get(self.spotid_key))), 
@@ -772,6 +766,7 @@ class TrackMate(object):
                                     self.total_intensity_key : total_intensity,
                                     self.mean_intensity_key : mean_intensity,
                                     self.radius_key : radius,
+                                    self.volume_key : volume,
                                     self.quality_key : quality,
                                     self.distance_cell_mask_key: (float(Spotobject.get(self.distance_cell_mask_key))),
                                     self.uniqueid_key : str(Spotobject.get(self.uniqueid_key)),
@@ -805,14 +800,14 @@ class TrackMate(object):
                                             QUALITY = float(Spotobject.get(self.quality_key))     
                                             TOTAL_INTENSITY = float(TOTAL_INTENSITY)
                                             MEAN_INTENSITY = float(MEAN_INTENSITY)
-                                                            
+                                            VOLUME = 4/3 * np.pi * RADIUS**3                
                                             self.unique_spot_properties[cell_id] = {
                                             self.cellid_key: int(cell_id), 
                                             self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
                                             self.zposid_key : float(Spotobject.get(self.zposid_key)),
                                             self.yposid_key : float(Spotobject.get(self.yposid_key)),
                                             self.xposid_key : float(Spotobject.get(self.xposid_key)),
-                                            
+                                            self.volume_key : VOLUME,
                                             self.total_intensity_key : TOTAL_INTENSITY,
                                             self.mean_intensity_key : MEAN_INTENSITY,
                                             self.radius_key : RADIUS,
@@ -847,7 +842,7 @@ class TrackMate(object):
                                 
                         RADIUS = float(Spotobject.get(self.radius_key))
                         QUALITY = float(Spotobject.get(self.quality_key))
-                         
+                        VOLUME = 4/3 * np.pi * RADIUS**3 
                         testlocation = (float(Spotobject.get(self.zposid_key)), float(Spotobject.get(self.yposid_key)),  float(Spotobject.get(self.xposid_key)))
                         frame = Spotobject.get(self.frameid_key)
                         distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, testlocation)
@@ -861,6 +856,7 @@ class TrackMate(object):
                             self.total_intensity_key : TOTAL_INTENSITY,
                             self.mean_intensity_key : MEAN_INTENSITY,
                             self.radius_key : RADIUS,
+                            self.volume_key : VOLUME,
                             self.quality_key : QUALITY,
                             self.distance_cell_mask_key: float(distance_cell_mask),
                             self.maskcentroid_z_key: float(maskcentroid[0]),
@@ -1017,6 +1013,7 @@ class TrackMate(object):
                                     new_mean_intensity = self.channel_unique_spot_properties[cell_id][self.mean_intensity_key]
 
                                     new_radius = self.channel_unique_spot_properties[cell_id][self.radius_key]
+                                    new_volume = self.channel_unique_spot_properties[cell_id][self.volume_key]
                                     new_quality = self.channel_unique_spot_properties[cell_id][self.quality_key]
                                     new_distance_cell_mask = self.channel_unique_spot_properties[cell_id][self.distance_cell_mask_key]
 
@@ -1026,7 +1023,7 @@ class TrackMate(object):
 
                                     Spotobject.set(self.total_intensity_key, str(new_total_intensity))     
                                     Spotobject.set(self.mean_intensity_key, str(new_mean_intensity))
-
+                                    Spotobject.set(self.volume_key, str(new_volume))
                                     Spotobject.set(self.radius_key, str(new_radius))     
                                     Spotobject.set(self.quality_key, str(new_quality))
                                     Spotobject.set(self.distance_cell_mask_key, str(new_distance_cell_mask))
@@ -1441,7 +1438,9 @@ class TrackMate(object):
                     self.channel_unique_spot_properties[cell_id].update({self.total_intensity_key: -1})
                     self.channel_unique_spot_properties[cell_id].update({self.mean_intensity_key: -1})
                     self.channel_unique_spot_properties[cell_id].update({self.radius_key: -1})
+                    self.channel_unique_spot_properties[cell_id].update({self.volume_key: -1})
                     self.channel_unique_spot_properties[cell_id].update({self.quality_key: -1})
+
 
 
                                  
