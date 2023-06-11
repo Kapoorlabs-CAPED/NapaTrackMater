@@ -190,11 +190,15 @@ def get_label_centroid_cloud(binary_image,  num_points, ndim, label, centroid, m
                                         vertices=vertices, faces=faces, process=False
                                     )
                                    
-                                    mesh_obj.sample(num_points)
-                                    x_coords = mesh_obj.vertices[:, 0]  # X coordinates
-                                    y_coords = mesh_obj.vertices[:, 1]  # Y coordinates
-                                    z_coords = mesh_obj.vertices[:, 2]  # Z coordinates
-                                    points = np.vstack((x_coords, y_coords, z_coords)).T
+
+                                    mesh_file = str(label) 
+                                    
+                                    with tempfile.TemporaryDirectory() as mesh_dir:
+                                                save_mesh_file = os.path.join(mesh_dir, mesh_file) + ".off"
+                                                mesh_obj.export(save_mesh_file) 
+                                                data = read_off(save_mesh_file)
+                                    
+                                    points = sample_points(data=data, num=num_points).numpy()
                                     if ndim == 2:
                                       cloud = get_panda_cloud_xy(points)
                                     if ndim == 3:
