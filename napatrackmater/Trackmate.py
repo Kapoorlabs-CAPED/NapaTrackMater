@@ -82,7 +82,7 @@ class TrackMate(object):
                 posit="POSITION_T",
                 frame="FRAME",
                 radius="RADIUS",
-                volume="VOLUME",
+                
                 mean_intensity_ch1="MEAN_INTENSITY_CH1",
                 total_intensity_ch1="TOTAL_INTENSITY_CH1",
                 mean_intensity_ch2="MEAN_INTENSITY_CH2",
@@ -132,7 +132,6 @@ class TrackMate(object):
         self.spotid_key = self.track_analysis_spot_keys["spot_id"]
         self.trackid_key = self.track_analysis_spot_keys["track_id"]
         self.radius_key = self.track_analysis_spot_keys["radius"]
-        self.volume_key = self.track_analysis_spot_keys["volume"]
         self.quality_key = self.track_analysis_spot_keys["quality"]
 
         self.generationid_key = 'generation_id'
@@ -755,7 +754,6 @@ class TrackMate(object):
                                 quality = float(Spotobject.get(self.quality_key))
                                 total_intensity = float(Spotobject.get(self.total_intensity_key))
                                 mean_intensity = float(Spotobject.get(self.mean_intensity_key))
-                                volume = 4/3 * np.pi * radius**3
 
                                 self.unique_spot_properties[cell_id] = {
                                     self.cellid_key: int(float(Spotobject.get(self.spotid_key))), 
@@ -766,7 +764,6 @@ class TrackMate(object):
                                     self.total_intensity_key : total_intensity,
                                     self.mean_intensity_key : mean_intensity,
                                     self.radius_key : radius,
-                                    self.volume_key : volume,
                                     self.quality_key : quality,
                                     self.distance_cell_mask_key: (float(Spotobject.get(self.distance_cell_mask_key))),
                                     self.uniqueid_key : str(Spotobject.get(self.uniqueid_key)),
@@ -800,14 +797,12 @@ class TrackMate(object):
                                             QUALITY = float(Spotobject.get(self.quality_key))     
                                             TOTAL_INTENSITY = float(TOTAL_INTENSITY)
                                             MEAN_INTENSITY = float(MEAN_INTENSITY)
-                                            VOLUME = 4/3 * np.pi * RADIUS**3                
                                             self.unique_spot_properties[cell_id] = {
                                             self.cellid_key: int(cell_id), 
                                             self.frameid_key : int(float(Spotobject.get(self.frameid_key))),
                                             self.zposid_key : float(Spotobject.get(self.zposid_key)),
                                             self.yposid_key : float(Spotobject.get(self.yposid_key)),
                                             self.xposid_key : float(Spotobject.get(self.xposid_key)),
-                                            self.volume_key : VOLUME,
                                             self.total_intensity_key : TOTAL_INTENSITY,
                                             self.mean_intensity_key : MEAN_INTENSITY,
                                             self.radius_key : RADIUS,
@@ -842,7 +837,6 @@ class TrackMate(object):
                                 
                         RADIUS = float(Spotobject.get(self.radius_key))
                         QUALITY = float(Spotobject.get(self.quality_key))
-                        VOLUME = 4/3 * np.pi * RADIUS**3 
                         testlocation = (float(Spotobject.get(self.zposid_key)), float(Spotobject.get(self.yposid_key)),  float(Spotobject.get(self.xposid_key)))
                         frame = Spotobject.get(self.frameid_key)
                         distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, testlocation)
@@ -856,7 +850,6 @@ class TrackMate(object):
                             self.total_intensity_key : TOTAL_INTENSITY,
                             self.mean_intensity_key : MEAN_INTENSITY,
                             self.radius_key : RADIUS,
-                            self.volume_key : VOLUME,
                             self.quality_key : QUALITY,
                             self.distance_cell_mask_key: float(distance_cell_mask),
                             self.maskcentroid_z_key: float(maskcentroid[0]),
@@ -1013,7 +1006,6 @@ class TrackMate(object):
                                     new_mean_intensity = self.channel_unique_spot_properties[cell_id][self.mean_intensity_key]
 
                                     new_radius = self.channel_unique_spot_properties[cell_id][self.radius_key]
-                                    new_volume = self.channel_unique_spot_properties[cell_id][self.volume_key]
                                     new_quality = self.channel_unique_spot_properties[cell_id][self.quality_key]
                                     new_distance_cell_mask = self.channel_unique_spot_properties[cell_id][self.distance_cell_mask_key]
 
@@ -1023,7 +1015,6 @@ class TrackMate(object):
 
                                     Spotobject.set(self.total_intensity_key, str(new_total_intensity))     
                                     Spotobject.set(self.mean_intensity_key, str(new_mean_intensity))
-                                    Spotobject.set(self.volume_key, str(new_volume))
                                     Spotobject.set(self.radius_key, str(new_radius))     
                                     Spotobject.set(self.quality_key, str(new_quality))
                                     Spotobject.set(self.distance_cell_mask_key, str(new_distance_cell_mask))
@@ -1246,7 +1237,6 @@ class TrackMate(object):
                                     surface_area = output_cloud_surface_area[i] * self.zcalibration * self.ycalibration * self.xcalibration
                                     dist, index = tree.query(centroid)
                                     radius = quality * math.pow(self.zcalibration * self.xcalibration * self.ycalibration, 1.0/3.0)
-                                    volume = 4.0/3.0 * math.pi * math.pow(radius, 3)
                                     if dist < quality:
                                             closest_centroid = spot_centroids[index]
                                             frame_spot_centroid = (int(time_key),closest_centroid[0], closest_centroid[1], closest_centroid[2])
@@ -1260,7 +1250,6 @@ class TrackMate(object):
                                             self.unique_spot_properties[int(closest_cell_id)].update({self.surface_area_key : surface_area})
                                             self.unique_spot_properties[int(closest_cell_id)].update({self.quality_key : quality})
                                             self.unique_spot_properties[int(closest_cell_id)].update({self.radius_key : radius })
-                                            self.unique_spot_properties[int(closest_cell_id)].update({self.volume_key : volume })
 
 
                                     
@@ -1423,7 +1412,6 @@ class TrackMate(object):
                         self.trackid_key: int(track_id),
                         self.total_intensity_key : (float(intensity_total[index])),
                         self.mean_intensity_key : (float(intensity_mean[index])),
-                        self.volume_key : (float(volume[index])),
                         self.radius_key : (float(RADIUS)),
                         self.quality_key : (float(QUALITY)),
                         self.distance_cell_mask_key: float(distance_cell_mask),
@@ -1438,7 +1426,6 @@ class TrackMate(object):
                     self.channel_unique_spot_properties[cell_id].update({self.total_intensity_key: -1})
                     self.channel_unique_spot_properties[cell_id].update({self.mean_intensity_key: -1})
                     self.channel_unique_spot_properties[cell_id].update({self.radius_key: -1})
-                    self.channel_unique_spot_properties[cell_id].update({self.volume_key: -1})
                     self.channel_unique_spot_properties[cell_id].update({self.quality_key: -1})
 
 
@@ -1895,7 +1882,7 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
         LocationT = (spot_dataset[frame].astype("float")).astype("int")
         
 
-        ignore_values = [track_analysis_spot_keys["mean_intensity"],track_analysis_spot_keys["total_intensity"], track_analysis_spot_keys["volume"]]
+        ignore_values = [track_analysis_spot_keys["mean_intensity"],track_analysis_spot_keys["total_intensity"]]
         for (k,v) in track_analysis_spot_keys.items():
 
                 if detectionchannel == 1:
@@ -1909,9 +1896,7 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
                 if v not in ignore_values:
                        
                        AllValues[v] = spot_dataset[v].astype("float")
-                if k == "volume":
-                        value = float(spot_dataset[track_analysis_spot_keys["radius"]].astype("float"))
-                        AllValues[v] = 4/3 * np.pi * (value**3)      
+                   
 
         AllValues[posix] = round(LocationX,3)
         AllValues[posiy] = round(LocationY,3)
