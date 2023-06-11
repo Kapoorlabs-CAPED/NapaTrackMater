@@ -1895,7 +1895,7 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
         LocationT = (spot_dataset[frame].astype("float")).astype("int")
         
 
-        ignore_values = [track_analysis_spot_keys["mean_intensity"],track_analysis_spot_keys["total_intensity"]] 
+        ignore_values = [track_analysis_spot_keys["mean_intensity"],track_analysis_spot_keys["total_intensity"], track_analysis_spot_keys["volume"]]
         for (k,v) in track_analysis_spot_keys.items():
 
                 if detectionchannel == 1:
@@ -1909,6 +1909,9 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
                 if v not in ignore_values:
                        
                        AllValues[v] = spot_dataset[v].astype("float")
+                if k == "volume":
+                        value = track_analysis_spot_keys["radius"]
+                        AllValues[v] = 4/3 * np.pi * (value**3)      
 
         AllValues[posix] = round(LocationX,3)
         AllValues[posiy] = round(LocationY,3)
