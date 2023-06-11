@@ -128,7 +128,7 @@ def _model_output(model: torch.nn.Module, accelerator: str, devices: List[int] |
         output_largest_eigenvector = []
         output_largest_eigenvalue = []
         output_dimensions = []
-        dataset = PointCloudDataset(clouds, labels, centroids, scale_z=scale_z, scale_xy=scale_xy)
+        dataset = PointCloudDataset(clouds, scale_z=scale_z, scale_xy=scale_xy)
         dataloader = DataLoader(dataset, batch_size = batch_size)
         model.eval()
         
