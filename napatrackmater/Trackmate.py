@@ -24,7 +24,8 @@ class TrackMate(object):
     def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes, 
                  scale_z = 1.0, scale_xy = 1.0, center = True, 
                  progress_bar = None, accelerator: str = 'cuda', devices: List[int] | str | int = -1,
-                 master_xml_path: Path = None, master_extra_name = '', seg_image:np.ndarray = None, channel_seg_image:np.ndarray = None, image :np.ndarray = None, mask:np.ndarray = None, fourier = True, cluster_model = None, num_points = 2048, batch_size = 1):
+                 master_xml_path: Path = None, master_extra_name = '', seg_image:np.ndarray = None, channel_seg_image:np.ndarray = None, 
+                 image :np.ndarray = None, mask:np.ndarray = None, fourier = True, autoencoder_model = None, num_points = 2048, batch_size = 1):
         
         
         self.xml_path = xml_path
@@ -47,7 +48,7 @@ class TrackMate(object):
             self.mask = mask
 
         self.fourier = fourier
-        self.cluster_model = cluster_model 
+        self.autoencoder_model = autoencoder_model 
         if channel_seg_image is not None:
            self.channel_seg_image = channel_seg_image.astype(np.uint16)
         else:
@@ -130,6 +131,7 @@ class TrackMate(object):
         self.spotid_key = self.track_analysis_spot_keys["spot_id"]
         self.trackid_key = self.track_analysis_spot_keys["track_id"]
         self.radius_key = self.track_analysis_spot_keys["radius"]
+        self.volume_key = self.track_analysis_spot_keys["volume"]
         self.quality_key = self.track_analysis_spot_keys["quality"]
 
         self.generationid_key = 'generation_id'
@@ -147,8 +149,6 @@ class TrackMate(object):
         self.cellid_key = 'cell_id'
         self.acceleration_key = 'acceleration'
         self.centroid_key = 'centroid'
-        self.clusterclass_key = 'cluster_class'
-        self.clusterscore_key = 'cluster_score'
         self.eccentricity_comp_firstkey = 'cloud_eccentricity_comp_first'
         self.eccentricity_comp_secondkey = 'cloud_eccentricity_comp_second'
         self.surface_area_key = 'cloud_surfacearea'
@@ -710,10 +710,8 @@ class TrackMate(object):
 
                                     
 
-                                    if self.clusterclass_key in all_dict_values.keys():
+                                    if self.surface_area_key in all_dict_values.keys():
                                            
-                                           cluster_class = int(float(all_dict_values[self.clusterclass_key]))
-                                           cluster_class_score = float(all_dict_values[self.clusterscore_key])
                                            eccentricity_comp_first = float(all_dict_values[self.eccentricity_comp_firstkey])
                                            eccentricity_comp_second = float(all_dict_values[self.eccentricity_comp_secondkey])
                                            surface_area = float(all_dict_values[self.surface_area_key])
@@ -721,8 +719,6 @@ class TrackMate(object):
                                            
                                                
                                     else:
-                                            cluster_class = -1
-                                            cluster_class_score = -1  
                                             eccentricity_comp_first = -1
                                             eccentricity_comp_second = -1
                                             surface_area = -1
@@ -737,7 +733,7 @@ class TrackMate(object):
                                         current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
 
                                         value_array = current_tracklets_properties[current_track_id]
-                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels, eccentricity_comp_first, eccentricity_comp_second, surface_area, cluster_class, cluster_class_score, total_intensity, speed, motion_angle, acceleration, distance_cell_mask, radial_angle, cell_axis_mask])
+                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels, eccentricity_comp_first, eccentricity_comp_second, surface_area, total_intensity, speed, motion_angle, acceleration, distance_cell_mask, radial_angle, cell_axis_mask])
                                         
                                         current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
 
@@ -745,7 +741,7 @@ class TrackMate(object):
                                         current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
                                         current_tracklets[current_track_id] = current_tracklet_array 
 
-                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels,  eccentricity_comp_first, eccentricity_comp_second, surface_area, cluster_class, cluster_class_score, total_intensity, speed, motion_angle, acceleration, distance_cell_mask, radial_angle, cell_axis_mask ])
+                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels,  eccentricity_comp_first, eccentricity_comp_second, surface_area,  total_intensity, speed, motion_angle, acceleration, distance_cell_mask, radial_angle, cell_axis_mask ])
                                         current_tracklets_properties[current_track_id] = current_value_array
 
                                     return current_tracklets, current_tracklets_properties     
@@ -786,9 +782,8 @@ class TrackMate(object):
                                     self.acceleration_key : (float(Spotobject.get(self.acceleration_key))),
                                     self.radial_angle_key: float(Spotobject.get(self.radial_angle_key)),
                                 }
-                                if self.clusterclass_key in Spotobject.keys():
-                                    self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : int(float(Spotobject.get(self.clusterclass_key))),
-                                                                                        self.clusterscore_key : float(Spotobject.get(self.clusterscore_key)),
+                                if self.surface_area_key in Spotobject.keys():
+                                    self.unique_spot_properties[int(cell_id)].update({
                                                                                         self.eccentricity_comp_firstkey : float(Spotobject.get(self.eccentricity_comp_firstkey)),
                                                                                         self.eccentricity_comp_secondkey : float(Spotobject.get(self.eccentricity_comp_secondkey)),
                                                                                         self.surface_area_key : float(Spotobject.get(self.surface_area_key)),
@@ -1050,7 +1045,7 @@ class TrackMate(object):
                       self.channel_xml_name = 'second_channel_' + os.path.splitext(os.path.basename(self.xml_path))[0] + '.xml'
                       self.channel_xml_path = os.path.dirname(self.xml_path)
                       self._create_channel_tree()
-                if self.cluster_model is not None and self.seg_image is not None:
+                if self.autoencoder_model is not None and self.seg_image is not None:
                        self.master_xml_content = self.xml_content
                        self.master_xml_tree = et.parse(self.xml_path)
                        self.master_xml_root = self.master_xml_tree.getroot()
@@ -1148,8 +1143,8 @@ class TrackMate(object):
                             parent_track_id = int(float(str(self.unique_spot_properties[int(float(v))][self.uniqueid_key])))
                             self.graph_tracks[daughter_track_id] = parent_track_id
                 self._get_attributes()
-                if self.cluster_model and self.seg_image is not None:
-                       print('Getting cluster labels')
+                if self.autoencoder_model and self.seg_image is not None:
+                       print('Getting autoencoder clouds')
                        self._assign_cluster_class()
                        print('Creating master xml')
                        self._create_master_xml()
@@ -1198,7 +1193,7 @@ class TrackMate(object):
                            
                            tree, spot_centroids = self._timed_centroid[time_key]
                            if self.progress_bar is not None:
-                                self.progress_bar.label = "Computing clustering classes"
+                                self.progress_bar.label = "Autoencoder for refining point clouds"
                                 self.progress_bar.range = (
                                                                 0,
                                                                 len(self._timed_centroid.keys()) + 1,
@@ -1206,20 +1201,54 @@ class TrackMate(object):
                                 self.progress_bar.value =  count 
                                 self.progress_bar.show()
 
-                           cluster_eval = Clustering(self.accelerator, self.devices, self.seg_image[int(time_key),:],  self.axes, self.num_points, self.cluster_model, key = time_key, progress_bar=self.progress_bar, batch_size = self.batch_size, scale_z=self.scale_z, scale_xy= self.scale_xy, center = self.center)       
+                           cluster_eval = Clustering(self.accelerator, self.devices, self.seg_image[int(time_key),:],  self.axes, self.num_points, self.autoencoder_model, key = time_key, progress_bar=self.progress_bar, batch_size = self.batch_size, scale_z=self.scale_z, scale_xy= self.scale_xy, center = self.center)       
                            cluster_eval._create_cluster_labels()
                            timed_cluster_label = cluster_eval.timed_cluster_label 
-                           output_labels, output_cluster_score, output_cluster_class, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_cloud_surface_area = timed_cluster_label[time_key]
-                           
+                           output_labels,  output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_dimensions, output_cloud_surface_area = timed_cluster_label[time_key]
+                           scale_1 = 1
+                           scale_2 = 1
                            for i in range(len(output_cluster_centroid)):
                                     centroid = output_cluster_centroid[i]
-                                    cluster_class = output_cluster_class[i]
-                                    cluster_score = output_cluster_score[i]
                                     quality = output_largest_eigenvalue[i]
                                     eccentricity_comp_firstyz = output_cloud_eccentricity[i]
+                                    essentricity_dimension = output_dimensions[i] 
+                                    if essentricity_dimension[0] == 2:
+                                           scale_1 = self.zcalibration
+                                           if essentricity_dimension[1] == 1:
+                                                  scale_2 = self.ycalibration
+
+                                    if essentricity_dimension[0] == 2:
+                                           scale_1 = self.zcalibration
+                                           if essentricity_dimension[1] == 0:
+                                                  scale_2 = self.xcalibration   
+
+                                    if essentricity_dimension[0] == 1:
+                                           scale_1 = self.ycalibration
+                                           if essentricity_dimension[1] == 0:
+                                                  scale_2 = self.xcalibration  
+
+                                    if essentricity_dimension[0] == 1:
+                                           scale_1 = self.ycalibration
+                                           if essentricity_dimension[1] == 2:
+                                                  scale_2 = self.zcalibration               
+
+                                    if essentricity_dimension[0] == 0:
+                                           scale_1 = self.xcalibration
+                                           if essentricity_dimension[1] == 1:
+                                                  scale_2 = self.ycalibration
+
+                                    if essentricity_dimension[0] == 0:
+                                           scale_1 = self.xcalibration
+                                           if essentricity_dimension[1] == 2:
+                                                  scale_2 = self.zcalibration
+                                                                                                     
+
+                                          
                                     cell_axis = output_largest_eigenvector[i]
-                                    surface_area = output_cloud_surface_area[i]
+                                    surface_area = output_cloud_surface_area[i] * self.zcalibration * self.ycalibration * self.xcalibration
                                     dist, index = tree.query(centroid)
+                                    radius = quality * math.pow(self.zcalibration * self.xcalibration * self.ycalibration, 1.0/3.0)
+                                    volume = 4.0/3.0 * math.pi * math.pow(radius, 3)
                                     if dist < quality:
                                             closest_centroid = spot_centroids[index]
                                             frame_spot_centroid = (int(time_key),closest_centroid[0], closest_centroid[1], closest_centroid[2])
@@ -1228,13 +1257,12 @@ class TrackMate(object):
                                             cell_axis_mask = angular_change(cell_axis, mask_vector)
                                             
                                             self.unique_spot_properties[int(closest_cell_id)].update({self.cellaxis_mask_key : cell_axis_mask})
-                                            self.unique_spot_properties[int(closest_cell_id)].update({self.clusterclass_key : cluster_class})
-                                            self.unique_spot_properties[int(closest_cell_id)].update({self.clusterscore_key : cluster_score})
-                                            self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_firstkey : eccentricity_comp_firstyz[0]})
-                                            self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_secondkey : eccentricity_comp_firstyz[1]})
+                                            self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_firstkey : eccentricity_comp_firstyz[0] * scale_1})
+                                            self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_secondkey : eccentricity_comp_firstyz[1] * scale_2})
                                             self.unique_spot_properties[int(closest_cell_id)].update({self.surface_area_key : surface_area})
                                             self.unique_spot_properties[int(closest_cell_id)].update({self.quality_key : quality})
-                                            self.unique_spot_properties[int(closest_cell_id)].update({self.radius_key : quality * math.pow(self.zcalibration * self.xcalibration * self.ycalibration, 1.0/3.0) })
+                                            self.unique_spot_properties[int(closest_cell_id)].update({self.radius_key : radius })
+                                            self.unique_spot_properties[int(closest_cell_id)].update({self.volume_key : volume })
 
 
                                     
@@ -1260,15 +1288,14 @@ class TrackMate(object):
                 eccentricity_comp_first = tracklet_properties[:,5]
                 eccentricity_comp_second = tracklet_properties[:,6]
                 surface_area = tracklet_properties[:,7]
-                cluster_class = tracklet_properties[:,8]
-                cluster_class_score = tracklet_properties[:,9]
-                intensity = tracklet_properties[:,10]
-                speed = tracklet_properties[:,11]
-                motion_angle = tracklet_properties[:,12]
-                acceleration = tracklet_properties[:,13]
-                distance_cell_mask = tracklet_properties[:,14]
-                radial_angle = tracklet_properties[:,15]
-                cell_axis_mask = tracklet_properties[:,16]
+               
+                intensity = tracklet_properties[:,8]
+                speed = tracklet_properties[:,9]
+                motion_angle = tracklet_properties[:,10]
+                acceleration = tracklet_properties[:,11]
+                distance_cell_mask = tracklet_properties[:,12]
+                radial_angle = tracklet_properties[:,13]
+                cell_axis_mask = tracklet_properties[:,14]
 
 
                 
@@ -1318,8 +1345,6 @@ class TrackMate(object):
                                  current_x.append(X[j])
                                  expanded_intensity[int(time[j])] = intensity[j]
                                  current_intensity.append(intensity[j])
-                                 current_cluster_class.append(cluster_class[j])
-                                 current_cluster_class_score.append(cluster_class_score[j])
                                  current_radius.append(radius[j])
                                  current_volume.append(volume[j])
                                  current_speed.append(speed[j])
@@ -1400,7 +1425,7 @@ class TrackMate(object):
                         self.trackid_key: int(track_id),
                         self.total_intensity_key : (float(intensity_total[index])),
                         self.mean_intensity_key : (float(intensity_mean[index])),
-
+                        self.volume_key : (float(volume[index])),
                         self.radius_key : (float(RADIUS)),
                         self.quality_key : (float(QUALITY)),
                         self.distance_cell_mask_key: float(distance_cell_mask),
@@ -1412,7 +1437,6 @@ class TrackMate(object):
             elif cell_id in self.edge_source_lookup.keys():
                     
                     self.channel_unique_spot_properties[cell_id] = self.unique_spot_properties[cell_id]
-
                     self.channel_unique_spot_properties[cell_id].update({self.total_intensity_key: -1})
                     self.channel_unique_spot_properties[cell_id].update({self.mean_intensity_key: -1})
                     self.channel_unique_spot_properties[cell_id].update({self.radius_key: -1})
@@ -1439,8 +1463,6 @@ class TrackMate(object):
         self.unique_spot_properties[int(cell_id)].update({self.radial_angle_key : angle})                    
 
         unique_tracklet_ids.append(str(unique_id))
-        self.unique_spot_properties[int(cell_id)].update({self.clusterclass_key : -1})
-        self.unique_spot_properties[int(cell_id)].update({self.clusterscore_key : 0})
         self.unique_spot_properties[int(cell_id)].update({self.uniqueid_key : str(unique_id)})
         self.unique_spot_properties[int(cell_id)].update({self.trackletid_key : str(tracklet_id)}) 
         self.unique_spot_properties[int(cell_id)].update({self.generationid_key : str(generation_id)}) 
@@ -1639,8 +1661,6 @@ class TrackMate(object):
                                         mitotic_acc.append(all_spots_tracks[k][self.acceleration_key])
                                         mitotic_directional_change.append(all_spots_tracks[k][self.motion_angle_key])
                                         mitotic_distance_cell_mask.append(all_spots_tracks[k][self.distance_cell_mask_key])
-                                        if self.clusterclass_key in all_spots_tracks[k].keys() :
-                                               mitotic_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])
 
 
                                   if not mitotic:
@@ -1652,8 +1672,6 @@ class TrackMate(object):
                                         non_mitotic_acc.append(all_spots_tracks[k][self.acceleration_key])
                                         non_mitotic_directional_change.append(all_spots_tracks[k][self.motion_angle_key])
                                         non_mitotic_distance_cell_mask.append(all_spots_tracks[k][self.distance_cell_mask_key])
-                                        if self.clusterclass_key in all_spots_tracks[k].keys() :
-                                               non_mitotic_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])
 
                                   all_disp_z.append(all_spots_tracks[k][self.zposid_key])
                                   all_disp_y.append(all_spots_tracks[k][self.yposid_key])
@@ -1663,8 +1681,6 @@ class TrackMate(object):
                                   all_acc.append(all_spots_tracks[k][self.acceleration_key])
                                   all_directional_change.append(all_spots_tracks[k][self.motion_angle_key])   
                                   all_distance_cell_mask.append(all_spots_tracks[k][self.distance_cell_mask_key])
-                                  if self.clusterclass_key in all_spots_tracks[k].keys() :
-                                               all_cluster_class.append(all_spots_tracks[k][self.clusterclass_key])    
                                               
 
                     mitotic_disp_z = np.abs(np.diff(mitotic_disp_z))
