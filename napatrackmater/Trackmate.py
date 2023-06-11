@@ -82,6 +82,7 @@ class TrackMate(object):
                 posit="POSITION_T",
                 frame="FRAME",
                 radius="RADIUS",
+                volume="VOLUME",
                 mean_intensity_ch1="MEAN_INTENSITY_CH1",
                 total_intensity_ch1="TOTAL_INTENSITY_CH1",
                 mean_intensity_ch2="MEAN_INTENSITY_CH2",

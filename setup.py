@@ -27,6 +27,7 @@ setup(
         "napari",
         "natsort",
         "seaborn",
+        "kapoorlabs-lightning",
     ],
     entry_points = {
         'console_scripts': [
