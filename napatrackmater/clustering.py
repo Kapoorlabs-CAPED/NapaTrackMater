@@ -134,14 +134,13 @@ def _model_output(model: torch.nn.Module, accelerator: str, devices: List[int] |
         
         pretrainer = Trainer(accelerator=accelerator, devices=devices)
         outputs = pretrainer.predict(model=model, dataloaders=dataloader)
-        outputs = outputs.detach().cpu().numpy()
         output_cluster_centroid = output_cluster_centroid +  [tuple(centroid_input) for centroid_input in centroids]
         output_labels = output_labels + [int(float(label_input)) for label_input in labels]
-        output_cloud_eccentricity = output_cloud_eccentricity +  [tuple(get_eccentricity(cloud_input))[0] for cloud_input in outputs]
-        output_largest_eigenvector = output_largest_eigenvector + [get_eccentricity(cloud_input)[1] for cloud_input in outputs]
-        output_largest_eigenvalue = output_largest_eigenvalue + [get_eccentricity(cloud_input)[2] for cloud_input in outputs]
-        output_dimensions = output_dimensions + [get_eccentricity(cloud_input)[3] for cloud_input in outputs]
-        output_cloud_surface_area = output_cloud_surface_area + [float(get_surface_area(cloud_input)) for cloud_input in outputs]
+        output_cloud_eccentricity = output_cloud_eccentricity +  [tuple(get_eccentricity(cloud_input.detach().cpu().numpy()))[0] for cloud_input in outputs]
+        output_largest_eigenvector = output_largest_eigenvector + [get_eccentricity(cloud_input.detach().cpu().numpy())[1] for cloud_input in outputs]
+        output_largest_eigenvalue = output_largest_eigenvalue + [get_eccentricity(cloud_input.detach().cpu().numpy())[2] for cloud_input in outputs]
+        output_dimensions = output_dimensions + [get_eccentricity(cloud_input.detach().cpu().numpy())[3] for cloud_input in outputs]
+        output_cloud_surface_area = output_cloud_surface_area + [float(get_surface_area(cloud_input.detach().cpu().numpy())) for cloud_input in outputs]
                 
         return output_labels, output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_dimensions, output_cloud_surface_area             
 
