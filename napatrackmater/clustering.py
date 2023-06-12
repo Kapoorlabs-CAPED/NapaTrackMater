@@ -136,8 +136,8 @@ def _model_output(model: torch.nn.Module, accelerator: str, devices: List[int] |
         results = pretrainer.predict(model=model, dataloaders=dataloader)
         outputs = zip(*results)
         
-        output_cluster_centroid = output_cluster_centroid +  [tuple(torch.squeeze(centroid_input).detach().cpu().numpy()) for centroid_input in centroids]
-        output_labels = output_labels + [int(float(torch.squeeze(label_input).detach().cpu().numpy())) for label_input in labels]
+        output_cluster_centroid = output_cluster_centroid +  [tuple(centroid_input) for centroid_input in centroids]
+        output_labels = output_labels + [int(float(label_input)) for label_input in labels]
         output_cloud_eccentricity = output_cloud_eccentricity +  [tuple(get_eccentricity(cloud_input)[0]) for cloud_input in outputs]
         output_largest_eigenvector = output_largest_eigenvector + [get_eccentricity(cloud_input)[1] for cloud_input in outputs]
         output_largest_eigenvalue = output_largest_eigenvalue + [get_eccentricity(cloud_input)[2] for cloud_input in outputs]
