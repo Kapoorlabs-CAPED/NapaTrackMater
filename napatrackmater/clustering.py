@@ -133,9 +133,8 @@ def _model_output(model: torch.nn.Module, accelerator: str, devices: List[int] |
         model.eval()
         
         pretrainer = Trainer(accelerator=accelerator, devices=devices)
-        results = pretrainer.predict(model=model, dataloaders=dataloader)
-        outputs = zip(*results)
-        
+        outputs = pretrainer.predict(model=model, dataloaders=dataloader)
+        outputs = outputs.detach().cpu().numpy()
         output_cluster_centroid = output_cluster_centroid +  [tuple(centroid_input) for centroid_input in centroids]
         output_labels = output_labels + [int(float(label_input)) for label_input in labels]
         output_cloud_eccentricity = output_cloud_eccentricity +  [tuple(get_eccentricity(cloud_input))[0] for cloud_input in outputs]
