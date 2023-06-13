@@ -161,10 +161,13 @@ def _label_cluster(label_image, num_points, min_size, ndim):
                           futures.append(executor.submit(get_current_label_binary, prop))
              for r in concurrent.futures.as_completed(futures):
                         binary_image, label, centroid = r.result()             
-                        label, centroid, cloud = get_label_centroid_cloud(binary_image,  num_points, ndim, label, centroid,  min_size)
-                        clouds.append(cloud)  
-                        labels.append(label)   
-                        centroids.append(centroid)
+                        results = get_label_centroid_cloud(binary_image,  num_points, ndim, label, centroid,  min_size)
+                        
+                        if results is not None:
+                                label, centroid, cloud = results
+                                clouds.append(cloud)  
+                                labels.append(label)   
+                                centroids.append(centroid)
 
        return labels, centroids, clouds
 
@@ -205,7 +208,7 @@ def get_label_centroid_cloud(binary_image,  num_points, ndim, label, centroid, m
                                     else:
                                       cloud = get_panda_cloud_xyz(points)    
                                      
-                            return  label, centroid, cloud       
+                                    return  label, centroid, cloud       
        
 
 def get_panda_cloud_xy(points):
