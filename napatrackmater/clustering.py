@@ -187,28 +187,31 @@ def get_label_centroid_cloud(binary_image,  num_points, ndim, label, centroid, m
                                                     
                             if False not in valid:
                                     #Apply the model prediction for getting clusters
-                                    vertices, faces, normals, values = marching_cubes(binary_image)
-                                    mesh_obj = trimesh.Trimesh(
-                                        vertices=vertices, faces=faces, process=False
-                                    )
-                                   
+                                    try:
+                                            vertices, faces, normals, values = marching_cubes(binary_image)
+                                            mesh_obj = trimesh.Trimesh(
+                                                vertices=vertices, faces=faces, process=False
+                                            )
+                                        
 
-                                    mesh_file = str(label) 
-                                    
-                                    with tempfile.TemporaryDirectory() as mesh_dir:
-                                                save_mesh_file = os.path.join(mesh_dir, mesh_file) + ".off"
-                                                mesh_obj.export(save_mesh_file) 
-                                                data = read_off(save_mesh_file)
-                                    
-                                    points = sample_points(data=data, num=num_points).numpy()
-                                    if ndim == 2:
-                                      cloud = get_panda_cloud_xy(points)
-                                    if ndim == 3:
-                                      cloud = get_panda_cloud_xyz(points)  
-                                    else:
-                                      cloud = get_panda_cloud_xyz(points)    
-                                     
-                                    return  label, centroid, cloud       
+                                            mesh_file = str(label) 
+                                            
+                                            with tempfile.TemporaryDirectory() as mesh_dir:
+                                                        save_mesh_file = os.path.join(mesh_dir, mesh_file) + ".off"
+                                                        mesh_obj.export(save_mesh_file) 
+                                                        data = read_off(save_mesh_file)
+                                            
+                                            points = sample_points(data=data, num=num_points).numpy()
+                                            if ndim == 2:
+                                               cloud = get_panda_cloud_xy(points)
+                                            if ndim == 3:
+                                               cloud = get_panda_cloud_xyz(points)  
+                                            else:
+                                               cloud = get_panda_cloud_xyz(points)    
+                                            
+                                            return  label, centroid, cloud
+                                    except ValueError:
+                                            return None       
        
 
 def get_panda_cloud_xy(points):
