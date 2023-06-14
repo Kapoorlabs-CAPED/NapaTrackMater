@@ -189,6 +189,10 @@ def get_label_centroid_cloud(binary_image,  num_points, ndim, label, centroid, m
                                     #Apply the model prediction for getting clusters
                                     try:
                                             vertices, faces, normals, values = marching_cubes(binary_image)
+                                    except RuntimeError:
+                                            print('Marching cubes failed for label: ', label)
+                                            vertices = None
+                                    if vertices is not None:                
                                             mesh_obj = trimesh.Trimesh(
                                                 vertices=vertices, faces=faces, process=False
                                             )
@@ -210,8 +214,8 @@ def get_label_centroid_cloud(binary_image,  num_points, ndim, label, centroid, m
                                                cloud = get_panda_cloud_xyz(points)    
                                             
                                             return  label, centroid, cloud
-                                    except ValueError:
-                                            return None       
+                                    
+                                                
        
 
 def get_panda_cloud_xy(points):
