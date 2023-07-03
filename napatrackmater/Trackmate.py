@@ -366,9 +366,6 @@ class TrackMate(object):
              if split_count > 1:
                       root_splits.append(target_id)
 
-             
-        #print('root and splits',root_root, root_leaf, root_splits)
-        self._distance_root_leaf(root_root, root_leaf, root_splits)
 
         return root_root, root_splits, root_leaf
 
@@ -420,7 +417,10 @@ class TrackMate(object):
                             if target_cells in root_leaf:
                                    self.generation_dict[target_cells] = gen_count
                                    self.tracklet_dict[target_cells] = tracklet_count
-                                   break       
+                                   break
+                   if target_cell_id in sorted_root_splits:
+                            self.generation_dict[target_cell_id] = gen_count
+                            self.tracklet_dict[target_cell_id] = tracklet_count                
                             
                             
     def _get_boundary_dist(self, frame, testlocation):
