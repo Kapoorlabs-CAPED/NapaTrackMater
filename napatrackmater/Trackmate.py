@@ -394,13 +394,13 @@ class TrackMate(object):
         global Global_count 
         if target_id in root_leaf:
                self.tracklet_dict[target_id] = tracklet_count
-               self._check_gen(target_id)
+              
         if target_id not in root_leaf:  
 
             if target_id not in root_splits:
                             
                             self.tracklet_dict[target_id] = tracklet_count
-                            self._check_gen(target_id)
+                           
                             if target_id in self.edge_target_lookup:
                                 target_cells = self.edge_target_lookup[target_id]
                                 
@@ -411,7 +411,7 @@ class TrackMate(object):
                                     
                                     
                                     self.tracklet_dict[target_id] = tracklet_count
-                                    self._check_gen(target_id)
+                                  
                                     if target_id in self.edge_target_lookup:
                                         target_cells = self.edge_target_lookup[target_id]
                                         for i in range(len(target_cells)):
@@ -421,13 +421,7 @@ class TrackMate(object):
         Global_count = tracklet_count + 1 
 
          
-    def _check_gen(self, target_id):
-           
-           if target_id in self.edge_source_lookup:
-              source_id = self.edge_source_lookup[target_id]
-              if self.generation_dict[source_id] == self.generation_dict[target_id]:
-                 if self.tracklet_dict[source_id] == self.tracklet_dict[target_id]:
-                    self.tracklet_dict[target_id] = self.tracklet_dict[source_id] + 1
+
               
            
     def _distance_root_leaf(self, root_root, root_leaf, root_splits):
