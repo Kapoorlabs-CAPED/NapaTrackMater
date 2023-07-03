@@ -132,7 +132,7 @@ def _model_output(model: torch.nn.Module, accelerator: str, devices: List[int] |
         dataloader = DataLoader(dataset, batch_size = batch_size)
         model.eval()
         print(f'Predicting {len(dataset)} clouds..., {len(centroids)} centroids...')
-        pretrainer = Trainer(accelerator=accelerator, devices=devices)
+        pretrainer = Trainer(accelerator=accelerator, devices=devices, inference_mode = True)
         outputs_list = pretrainer.predict(model=model, dataloaders=dataloader)
         output_cluster_centroid = output_cluster_centroid +  [tuple(centroid_input) for centroid_input in centroids]
         output_labels = output_labels + [int(float(label_input)) for label_input in labels]
