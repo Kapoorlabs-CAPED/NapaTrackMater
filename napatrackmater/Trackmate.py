@@ -398,12 +398,10 @@ class TrackMate(object):
         if target_id not in root_leaf:  
             source_id = self.edge_source_lookup[target_id]
             if source_id in root_splits:
-
-            
+                self.tracklet_dict[target_id] = tracklet_count + 1
                 if target_id in self.edge_target_lookup:
                     target_cells = self.edge_target_lookup[target_id]
                     for i in range(len(target_cells)):
-                        tracklet_count  = tracklet_count + 1
                         target_cell_id = target_cells[i]
                         self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, tracklet_count ) 
 
