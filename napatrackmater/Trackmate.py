@@ -432,13 +432,8 @@ class TrackMate(object):
                    target_cells = self.edge_target_lookup[root_all]
                    for i in range(len(target_cells)):
                         target_cell_id = target_cells[i]
-                        if target_cell_id not in root_splits:
-                               
-                               self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count, max_gen_count )
-                        if target_cell_id in root_splits:
-                                       gen_count = gen_count + 1
-                                       self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count, max_gen_count )
-
+                        self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count, max_gen_count )
+                        
          
                               
     #Assign generation ID to each cell               
@@ -448,7 +443,19 @@ class TrackMate(object):
                self.generation_dict[target_id] =  max_gen_count
        
         if target_id not in root_leaf:  
-            if target_id not in root_splits:
+
+            source_id = self.edge_source_lookup[target_id]
+            if source_id in root_splits:
+
+                gen_count = gen_count + 1
+                self.generation_dict[target_id] = gen_count
+                if target_id in self.edge_target_lookup:
+                    target_cells = self.edge_target_lookup[target_id]
+                    for i in range(len(target_cells)):
+                        target_cell_id = target_cells[i]
+                        self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count = gen_count, max_gen_count = max_gen_count) 
+
+            if source_id not in root_splits:
                             
                             self.generation_dict[target_id] = gen_count
                             if target_id in self.edge_target_lookup:
@@ -456,16 +463,6 @@ class TrackMate(object):
                                 for i in range(len(target_cells)):
                                     target_cell_id = target_cells[i]
                                     self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count = gen_count, max_gen_count = max_gen_count)
-            if target_id in root_splits:
-                                    
-                                    gen_count = gen_count + 1
-                                    self.generation_dict[target_id] = gen_count
-                                    if target_id in self.edge_target_lookup:
-                                        target_cells = self.edge_target_lookup[target_id]
-                                        for i in range(len(target_cells)):
-                                            target_cell_id = target_cells[i]
-                                            self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count = gen_count, max_gen_count = max_gen_count)
-
                                     
                                     
                             
