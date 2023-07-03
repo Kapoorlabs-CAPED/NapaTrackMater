@@ -384,8 +384,7 @@ class TrackMate(object):
                 if root_all in self.edge_target_lookup:
                    target_cells = self.edge_target_lookup[root_all]
                    for i in range(len(target_cells)):
-                        target_cell_id = target_cells[i]
-                        if target_cell_id in root_splits:
+                           target_cell_id = target_cells[i]
                            tracklet_count = Global_count
                            self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, tracklet_count)    
                                      
