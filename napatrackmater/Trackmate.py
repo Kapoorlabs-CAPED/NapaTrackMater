@@ -394,11 +394,12 @@ class TrackMate(object):
                      while target_cells not in sorted_root_splits:
                             self.generation_dict[target_cells] = gen_count
                             self.tracklet_dict[target_cells] = tracklet_count
-                            target_cells = self.edge_target_lookup[target_cells][0]
-                            if target_cells in root_leaf:
-                                   self.generation_dict[target_cells] = gen_count
-                                   self.tracklet_dict[target_cells] = tracklet_count
-                                   break
+                            if target_cells in self.edge_target_lookup:
+                                target_cells = self.edge_target_lookup[target_cells][0]
+                                if target_cells in root_leaf:
+                                    self.generation_dict[target_cells] = gen_count
+                                    self.tracklet_dict[target_cells] = tracklet_count
+                                    break
                      
         for root_split in sorted_root_splits:
             self.generation_dict[root_split] = gen_count
@@ -411,13 +412,14 @@ class TrackMate(object):
                    self.generation_dict[target_cell_id] = gen_count
                    self.tracklet_dict[target_cell_id] = tracklet_count
                    while target_cell_id not in sorted_root_splits:
-                            target_cell_id = self.edge_target_lookup[target_cell_id][0]
-                            self.generation_dict[target_cell_id] = gen_count
-                            self.tracklet_dict[target_cell_id] = tracklet_count
-                            if target_cells in root_leaf:
-                                   self.generation_dict[target_cells] = gen_count
-                                   self.tracklet_dict[target_cells] = tracklet_count
-                                   break
+                            if target_cell_id in self.edge_target_lookup:
+                                target_cell_id = self.edge_target_lookup[target_cell_id][0]
+                                self.generation_dict[target_cell_id] = gen_count
+                                self.tracklet_dict[target_cell_id] = tracklet_count
+                                if target_cells in root_leaf:
+                                    self.generation_dict[target_cells] = gen_count
+                                    self.tracklet_dict[target_cells] = tracklet_count
+                                    break
                    if target_cell_id in sorted_root_splits:
                             self.generation_dict[target_cell_id] = gen_count
                             self.tracklet_dict[target_cell_id] = tracklet_count                
