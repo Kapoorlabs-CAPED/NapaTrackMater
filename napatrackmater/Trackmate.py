@@ -394,7 +394,7 @@ class TrackMate(object):
                      while target_cells not in sorted_root_splits:
                             self.generation_dict[target_cells] = gen_count
                             self.tracklet_dict[target_cells] = tracklet_count
-                            target_cells = self.edge_target_lookup[target_cells]
+                            target_cells = self.edge_target_lookup[target_cells][0]
                             if target_cells in root_leaf:
                                    self.generation_dict[target_cells] = gen_count
                                    self.tracklet_dict[target_cells] = tracklet_count
