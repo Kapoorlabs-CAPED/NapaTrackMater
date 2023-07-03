@@ -400,6 +400,8 @@ class TrackMate(object):
                                     self.generation_dict[target_cells] = gen_count
                                     self.tracklet_dict[target_cells] = tracklet_count
                                     break
+                            else:
+                                   break    
                      
         for root_split in sorted_root_splits:
             self.generation_dict[root_split] = gen_count
