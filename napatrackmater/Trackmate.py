@@ -1309,8 +1309,6 @@ class TrackMate(object):
                    current_y = []
                    current_x = []
                    current_intensity = []
-                   current_cluster_class = []
-                   current_cluster_class_score = []
                    current_radius = []
                    current_volume = []
                    current_speed = []
@@ -1347,8 +1345,6 @@ class TrackMate(object):
                    current_intensity = np.asarray(current_intensity, dtype=np.float32)
 
 
-                   current_cluster_class = np.asarray(current_cluster_class, dtype=np.float32)
-                   current_cluster_class_score = np.asarray(current_cluster_class_score, dtype=np.float32)   
 
                    current_radius = np.asarray(current_radius, dtype=np.float32)
                    current_volume = np.asarray(current_volume, dtype=np.float32)
@@ -1374,8 +1370,8 @@ class TrackMate(object):
                                 ffttotal_sample = ffttotal_sample[0 : len(ffttotal_sample) // 2]
 
                    unique_fft_properties_tracklet[current_unique_id] = expanded_time, expanded_intensity, xf_sample, ffttotal_sample
-                   unique_cluster_properties_tracklet[current_unique_id] =  current_time, current_cluster_class, current_cluster_class_score
-                   unique_shape_properties_tracklet[current_unique_id] = current_time, current_z, current_y, current_x, current_radius, current_volume, current_eccentricity_comp_first, current_eccentricity_comp_second, current_surface_area, current_cluster_class, current_cluster_class_score
+                   unique_cluster_properties_tracklet[current_unique_id] =  current_time
+                   unique_shape_properties_tracklet[current_unique_id] = current_time, current_z, current_y, current_x, current_radius, current_volume, current_eccentricity_comp_first, current_eccentricity_comp_second, current_surface_area
                    unique_dynamic_properties_tracklet[current_unique_id] = current_time, current_speed, current_motion_angle, current_acceleration, current_distance_cell_mask, current_radial_angle, current_cell_axis_mask
                    self.unique_fft_properties[track_id].update({current_unique_id:unique_fft_properties_tracklet[current_unique_id]})
                    self.unique_cluster_properties[track_id].update({current_unique_id:unique_cluster_properties_tracklet[current_unique_id]})
@@ -1576,9 +1572,6 @@ class TrackMate(object):
                 self.all_mean_distance_cell_mask = []
                 self.all_var_distance_cell_mask = []
 
-                self.mitotic_cluster_class = []
-                self.non_mitotic_cluster_class = []
-                self.all_cluster_class = []
 
                 all_spots_tracks = {}
                 for (k,v) in self.unique_spot_properties.items():
@@ -1607,7 +1600,6 @@ class TrackMate(object):
                     mitotic_speed = []
                     mitotic_acc = []
                     mitotic_directional_change = []
-                    mitotic_cluster_class = []
                     mitotic_distance_cell_mask = []
 
                     non_mitotic_disp_z = []
@@ -1617,7 +1609,6 @@ class TrackMate(object):
                     non_mitotic_speed = []
                     non_mitotic_acc = []
                     non_mitotic_directional_change = []
-                    non_mitotic_cluster_class = []
                     non_mitotic_distance_cell_mask = []
                     
                     all_disp_z = []
@@ -1627,7 +1618,6 @@ class TrackMate(object):
                     all_speed = []
                     all_acc = []
                     all_directional_change = []
-                    all_cluster_class = []
                     all_distance_cell_mask = []
 
 
@@ -1686,9 +1676,6 @@ class TrackMate(object):
                                         
                     self.time.append(i * self.tcalibration)
 
-                    self.mitotic_cluster_class.append(np.asarray(mitotic_cluster_class, dtype=np.float32))
-                    self.non_mitotic_cluster_class.append(np.asarray(non_mitotic_cluster_class, dtype=np.float32))
-                    self.all_cluster_class.append(np.asarray(all_cluster_class, dtype=np.float32))
 
                     self.mitotic_mean_disp_z.append(np.mean(mitotic_disp_z))
                     self.mitotic_var_disp_z.append(np.std(mitotic_disp_z))

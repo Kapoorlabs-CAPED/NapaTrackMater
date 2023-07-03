@@ -27,8 +27,8 @@ setup(
         "napari",
         "natsort",
         "seaborn",
-        "cellshape-cloud@git+https://github.com/kapoorlab/cellshape-cloud.git",
-        "cellshape-helper@git+https://github.com/kapoorlab/cellshape-helper.git",
+        "cellshape-cloud",
+        "cellshape-helper",
         "kapoorlabs-lightning",
         "lightning>=2.0.4"
     ],
