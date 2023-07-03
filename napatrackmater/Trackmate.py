@@ -399,10 +399,10 @@ class TrackMate(object):
                                    self.generation_dict[target_cells] = gen_count
                                    self.tracklet_dict[target_cells] = tracklet_count
                                    break
-                     if target_cells in sorted_root_splits:
-                            self.generation_dict[target_cells] = gen_count
-                            self.tracklet_dict[target_cells] = tracklet_count
+                     
         for root_split in sorted_root_splits:
+            self.generation_dict[target_cells] = gen_count
+            self.tracklet_dict[target_cells] = tracklet_count
             target_cells = self.edge_target_lookup[root_split]
             gen_count += 1
             for i in range(len(target_cells)):
