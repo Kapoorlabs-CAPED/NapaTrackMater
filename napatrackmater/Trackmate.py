@@ -416,10 +416,13 @@ class TrackMate(object):
                                 target_cell_id = self.edge_target_lookup[target_cell_id][0]
                                 self.generation_dict[target_cell_id] = gen_count
                                 self.tracklet_dict[target_cell_id] = tracklet_count
+
                                 if target_cell_id in root_leaf:
                                     self.generation_dict[target_cells] = gen_count
                                     self.tracklet_dict[target_cells] = tracklet_count
                                     break
+                            else:
+                                   break    
                    if target_cell_id in sorted_root_splits:
                             self.generation_dict[target_cell_id] = gen_count
                             self.tracklet_dict[target_cell_id] = tracklet_count                
