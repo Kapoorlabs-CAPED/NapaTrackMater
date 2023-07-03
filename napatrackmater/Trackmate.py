@@ -372,101 +372,56 @@ class TrackMate(object):
 
         return root_root, root_splits, root_leaf
 
+    def _sort_dividing_cells(self, root_splits):
+           cell_id_times = []
+           cell_ids = []
+           for root_split in root_splits:
+                  split_cell_id_time = self.unique_spot_properties[root_split][self.frameid_key]
+                  cell_id_times.append(split_cell_id_time)
+                  cell_ids.append(root_split)
+           sorted_indices = sorted(range(len(cell_id_times)), key=lambda k: cell_id_times[k])
+           sorted_cell_ids = [cell_ids[i] for i in sorted_indices]
+
+           return sorted_cell_ids       
 
     def _iterate_split_down(self, root_root, root_leaf, root_splits):
          
-         tracklet_count = 0
-         self.assigned_tracket_counts = []
-         for root_all in root_root:
-                
+        sorted_root_splits = self._sort_dividing_cells(root_splits)
+        gen_count = 0
+        tracklet_count = 0
+        for root_all in root_root:
+                self.generation_dict[root_all] = gen_count
                 self.tracklet_dict[root_all] = tracklet_count
-                self.assigned_tracket_counts.append(tracklet_count)
                 if root_all in self.edge_target_lookup:
-                   target_cells = self.edge_target_lookup[root_all]
-                   for i in range(len(target_cells)):
-                           target_cell_id = target_cells[i]
-                           tracklet_count = Global_count
-                           self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, tracklet_count)    
-                                     
-         
-    def _assign_tracklet_id(self, target_id, root_splits, root_leaf, tracklet_count ):
-         
-        global Global_count 
-        if target_id in root_leaf:
-               self.tracklet_dict[target_id] = tracklet_count
-              
-        if target_id not in root_leaf:  
-            source_id = self.edge_source_lookup[target_id]
-            if source_id in root_splits:
-                self.tracklet_dict[target_id] = tracklet_count + 1
-                if target_id in self.edge_target_lookup:
-                    target_cells = self.edge_target_lookup[target_id]
-                    for i in range(len(target_cells)):
-                        target_cell_id = target_cells[i]
-                        self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, tracklet_count ) 
-
-            if source_id not in root_splits:
+                     target_cells = self.edge_target_lookup[root_all]
+                     while target_cells not in sorted_root_splits:
+                            self.generation_dict[target_cells] = gen_count
+                            self.tracklet_dict[target_cells] = tracklet_count
+                            target_cells = self.edge_target_lookup[target_cells]
+                            if target_cells in root_leaf:
+                                   self.generation_dict[target_cells] = gen_count
+                                   self.tracklet_dict[target_cells] = tracklet_count
+                                   break
+                     if target_cells in sorted_root_splits:
+                            self.generation_dict[target_cells] = gen_count
+                            self.tracklet_dict[target_cells] = tracklet_count
+        for root_split in sorted_root_splits:
+            target_cells = self.edge_target_lookup[root_split]
+            gen_count += 1
+            for i in range(len(target_cells)):
+                   tracklet_count += 1
+                   target_cell_id = target_cells[i]                    
+                   self.generation_dict[target_cell_id] = gen_count
+                   self.tracklet_dict[target_cell_id] = tracklet_count
+                   while target_cell_id not in sorted_root_splits:
+                            target_cell_id = self.edge_target_lookup[target_cell_id]
+                            self.generation_dict[target_cell_id] = gen_count
+                            self.tracklet_dict[target_cell_id] = tracklet_count
+                            if target_cells in root_leaf:
+                                   self.generation_dict[target_cells] = gen_count
+                                   self.tracklet_dict[target_cells] = tracklet_count
+                                   break       
                             
-                            self.tracklet_dict[target_id] = tracklet_count
-                           
-                            if target_id in self.edge_target_lookup:
-                                target_cells = self.edge_target_lookup[target_id]
-                                
-                                for i in range(len(target_cells)):
-                                    target_cell_id = target_cells[i]
-                                    self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, tracklet_count )
-            
-        Global_count = tracklet_count + 1 
-
-         
-
-              
-           
-    def _distance_root_leaf(self, root_root, root_leaf, root_splits):
-
-
-        
-         gen_count = 0
-         max_gen_count = len(root_splits)
-         for root_all in root_root:
-                self.generation_dict[root_all] = 0
-                if root_all in self.edge_target_lookup:
-                   target_cells = self.edge_target_lookup[root_all]
-                   for i in range(len(target_cells)):
-                        target_cell_id = target_cells[i]
-                        self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count, max_gen_count )
-                        
-         
-                              
-    #Assign generation ID to each cell               
-    def _recursive_path(self, target_id, root_splits, root_leaf, gen_count, max_gen_count ):
-         
-        if target_id in root_leaf:
-               self.generation_dict[target_id] =  max_gen_count
-       
-        if target_id not in root_leaf:  
-
-            source_id = self.edge_source_lookup[target_id]
-            if source_id in root_splits:
-
-                gen_count = gen_count + 1
-                self.generation_dict[target_id] = gen_count
-                if target_id in self.edge_target_lookup:
-                    target_cells = self.edge_target_lookup[target_id]
-                    for i in range(len(target_cells)):
-                        target_cell_id = target_cells[i]
-                        self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count = gen_count, max_gen_count = max_gen_count) 
-
-            if source_id not in root_splits:
-                            
-                            self.generation_dict[target_id] = gen_count
-                            if target_id in self.edge_target_lookup:
-                                target_cells = self.edge_target_lookup[target_id]
-                                for i in range(len(target_cells)):
-                                    target_cell_id = target_cells[i]
-                                    self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count = gen_count, max_gen_count = max_gen_count)
-                                    
-                                    
                             
     def _get_boundary_dist(self, frame, testlocation):
          
