@@ -375,18 +375,18 @@ class TrackMate(object):
 
     def _iterate_split_down(self, root_root, root_leaf, root_splits):
          
-         tracklet_count = str(0)
+         tracklet_count = 0
          self.assigned_tracket_counts = []
          for root_all in root_root:
                 
-                self.tracklet_dict[root_all] = str(tracklet_count)
+                self.tracklet_dict[root_all] = tracklet_count
                 self.assigned_tracket_counts.append(tracklet_count)
                 if root_all in self.edge_target_lookup:
                    target_cells = self.edge_target_lookup[root_all]
                    for i in range(len(target_cells)):
                         target_cell_id = target_cells[i]
                         if target_cell_id in root_splits:
-                           tracklet_count = str(tracklet_count) + str(i) + str(1)
+                           tracklet_count = tracklet_count + 1
                            self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, tracklet_count)  
                         if target_cell_id not in root_splits:
                            self._assign_tracklet_id(target_cell_id, root_splits, root_leaf, tracklet_count)    
@@ -395,13 +395,12 @@ class TrackMate(object):
     def _assign_tracklet_id(self, target_id, root_splits, root_leaf, tracklet_count ):
          
         if target_id in root_leaf:
-               self.tracklet_dict[target_id] =  str(tracklet_count)
-               self.assigned_tracket_counts.append(tracklet_count)
+               self.tracklet_dict[target_id] = tracklet_count
         if target_id not in root_leaf:  
             if target_id not in root_splits:
                             
-                            self.tracklet_dict[target_id] = str(tracklet_count)
-                            self.assigned_tracket_counts.append(tracklet_count)
+                            self.tracklet_dict[target_id] = tracklet_count
+                            
                             if target_id in self.edge_target_lookup:
                                 target_cells = self.edge_target_lookup[target_id]
                                 
@@ -411,35 +410,22 @@ class TrackMate(object):
             if target_id in root_splits:
                                     
                                     
-                                    self.tracklet_dict[target_id] = str(tracklet_count)
-                                    self.assigned_tracket_counts.append(tracklet_count)
+                                    self.tracklet_dict[target_id] = tracklet_count
                                     if target_id in self.edge_target_lookup:
                                         target_cells = self.edge_target_lookup[target_id]
                                         for i in range(len(target_cells)):
+                                            tracklet_count  = tracklet_count + 1
                                             target_cell_id = target_cells[i]
-                                            if self.edge_source_lookup[target_cell_id] in root_splits:
-                                                self._unique_split_id(target_cell_id, tracklet_count + str(i) + str(1))
-                                            self._assign_tracklet_id(target_cell_id, root_splits, root_leaf,  tracklet_count + str(i) + str(1) )
+                                            self._assign_tracklet_id(target_cell_id, root_splits, root_leaf,  tracklet_count  )
 
-                                    
-  
          
-    def _unique_split_id(self, target_id, tracklet_count):
-
-        if tracklet_count not in self.assigned_tracket_counts:
-               self.tracklet_dict[target_id] = str(tracklet_count)
-               self.assigned_tracket_counts.append(tracklet_count)
-        else:
-        
-            tracklet_count = str(tracklet_count) + str(1)
-            self._unique_split_id(target_id, tracklet_count)
-
-
+    
     def _distance_root_leaf(self, root_root, root_leaf, root_splits):
 
 
         
          gen_count = 0
+         max_gen_count = len(root_splits)
          for root_all in root_root:
                 self.generation_dict[root_all] = 0
                 if root_all in self.edge_target_lookup:
@@ -448,18 +434,18 @@ class TrackMate(object):
                         target_cell_id = target_cells[i]
                         if target_cell_id not in root_splits:
                                
-                               self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count )
+                               self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count, max_gen_count )
                         if target_cell_id in root_splits:
                                        gen_count = gen_count + 1
-                                       self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count )
+                                       self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count, max_gen_count )
 
          
                               
     #Assign generation ID to each cell               
-    def _recursive_path(self, target_id, root_splits, root_leaf, gen_count ):
+    def _recursive_path(self, target_id, root_splits, root_leaf, gen_count, max_gen_count ):
          
         if target_id in root_leaf:
-               self.generation_dict[target_id] =  gen_count
+               self.generation_dict[target_id] =  max_gen_count
        
         if target_id not in root_leaf:  
             if target_id not in root_splits:
@@ -469,7 +455,7 @@ class TrackMate(object):
                                 target_cells = self.edge_target_lookup[target_id]
                                 for i in range(len(target_cells)):
                                     target_cell_id = target_cells[i]
-                                    self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count = gen_count)
+                                    self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count = gen_count, max_gen_count = max_gen_count)
             if target_id in root_splits:
                                     
                                     gen_count = gen_count + 1
@@ -478,7 +464,7 @@ class TrackMate(object):
                                         target_cells = self.edge_target_lookup[target_id]
                                         for i in range(len(target_cells)):
                                             target_cell_id = target_cells[i]
-                                            self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count = gen_count)
+                                            self._recursive_path(target_cell_id, root_splits, root_leaf, gen_count = gen_count, max_gen_count = max_gen_count)
 
                                     
                                     
@@ -1245,11 +1231,22 @@ class TrackMate(object):
                                             cell_axis_mask = angular_change(cell_axis, mask_vector)
                                             
                                             self.unique_spot_properties[int(closest_cell_id)].update({self.cellaxis_mask_key : cell_axis_mask})
-                                            self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_firstkey : eccentricity_comp_firstyz[0] * scale_1})
-                                            self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_secondkey : eccentricity_comp_firstyz[1] * scale_2})
-                                            self.unique_spot_properties[int(closest_cell_id)].update({self.surface_area_key : surface_area})
-                                            self.unique_spot_properties[int(closest_cell_id)].update({self.quality_key : quality})
-                                            self.unique_spot_properties[int(closest_cell_id)].update({self.radius_key : radius })
+                                            if self.unique_spot_properties[int(closest_cell_id)][self.radius_key] > 0:
+                                                    self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_firstkey : eccentricity_comp_firstyz[0] * scale_1})
+                                                    self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_secondkey : eccentricity_comp_firstyz[1] * scale_2})
+                                                    self.unique_spot_properties[int(closest_cell_id)].update({self.surface_area_key : surface_area})
+                                                    self.unique_spot_properties[int(closest_cell_id)].update({self.quality_key : quality})
+                                                    self.unique_spot_properties[int(closest_cell_id)].update({self.radius_key : radius })
+                                            else:
+                                                   
+                                                    self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_firstkey : -1})
+                                                    self.unique_spot_properties[int(closest_cell_id)].update({self.eccentricity_comp_secondkey : -1})
+                                                    self.unique_spot_properties[int(closest_cell_id)].update({self.surface_area_key : -1})
+                                                    self.unique_spot_properties[int(closest_cell_id)].update({self.quality_key : -1})
+                                                    self.unique_spot_properties[int(closest_cell_id)].update({self.radius_key : -1 })
+                                                   
+
+
 
 
                                     
@@ -1433,7 +1430,7 @@ class TrackMate(object):
         generation_id = self.generation_dict[cell_id]
         tracklet_id = self.tracklet_dict[cell_id]
 
-        unique_id = str(track_id) + str(self.max_track_id) + str(generation_id) + str(tracklet_id)
+        unique_id = str(track_id) +  str(generation_id) + str(tracklet_id)
         
         vec_mask = [float(self.unique_spot_properties[int(cell_id)][self.maskcentroid_x_key]), float(self.unique_spot_properties[int(cell_id)][self.maskcentroid_y_key]), float(self.unique_spot_properties[int(cell_id)][self.maskcentroid_z_key]) ]
 
@@ -1633,7 +1630,10 @@ class TrackMate(object):
                                         mitotic_disp_z.append(all_spots_tracks[k][self.zposid_key])
                                         mitotic_disp_y.append(all_spots_tracks[k][self.yposid_key])
                                         mitotic_disp_x.append(all_spots_tracks[k][self.xposid_key])
-                                        mitotic_radius.append(all_spots_tracks[k][self.radius_key])
+                                        if all_spots_tracks[k][self.radius_key] > 0:
+                                           mitotic_radius.append(all_spots_tracks[k][self.radius_key])
+                                        else:
+                                           mitotic_radius.append(None)       
                                         mitotic_speed.append(all_spots_tracks[k][self.speed_key])
                                         mitotic_acc.append(all_spots_tracks[k][self.acceleration_key])
                                         mitotic_directional_change.append(all_spots_tracks[k][self.motion_angle_key])
@@ -1644,7 +1644,10 @@ class TrackMate(object):
                                         non_mitotic_disp_z.append(all_spots_tracks[k][self.zposid_key])
                                         non_mitotic_disp_y.append(all_spots_tracks[k][self.yposid_key])
                                         non_mitotic_disp_x.append(all_spots_tracks[k][self.xposid_key])
-                                        non_mitotic_radius.append(all_spots_tracks[k][self.radius_key])
+                                        if all_spots_tracks[k][self.radius_key] > 0:
+                                            non_mitotic_radius.append(all_spots_tracks[k][self.radius_key])
+                                        else:
+                                            non_mitotic_radius.append(None)          
                                         non_mitotic_speed.append(all_spots_tracks[k][self.speed_key])
                                         non_mitotic_acc.append(all_spots_tracks[k][self.acceleration_key])
                                         non_mitotic_directional_change.append(all_spots_tracks[k][self.motion_angle_key])
@@ -1653,7 +1656,10 @@ class TrackMate(object):
                                   all_disp_z.append(all_spots_tracks[k][self.zposid_key])
                                   all_disp_y.append(all_spots_tracks[k][self.yposid_key])
                                   all_disp_x.append(all_spots_tracks[k][self.xposid_key])
-                                  all_radius.append(all_spots_tracks[k][self.radius_key])
+                                  if all_spots_tracks[k][self.radius_key] > 0:
+                                      all_radius.append(all_spots_tracks[k][self.radius_key])
+                                  else:
+                                      all_radius.append(None)       
                                   all_speed.append(all_spots_tracks[k][self.speed_key])
                                   all_acc.append(all_spots_tracks[k][self.acceleration_key])
                                   all_directional_change.append(all_spots_tracks[k][self.motion_angle_key])   
@@ -1686,10 +1692,9 @@ class TrackMate(object):
                     self.mitotic_mean_disp_x.append(np.mean(mitotic_disp_x))
                     self.mitotic_var_disp_x.append(np.std(mitotic_disp_x))
 
-                    if len(mitotic_radius) > 0:
-                        self.mitotic_mean_radius.append(np.mean(mitotic_radius))
-                        self.mitotic_var_radius.append(np.std(mitotic_radius))
-
+                    self.mitotic_mean_radius.append(np.mean(mitotic_radius))
+                    self.mitotic_var_radius.append(np.std(mitotic_radius))
+                    
                     self.mitotic_mean_speed.append(np.mean(mitotic_speed))
                     self.mitotic_var_speed.append(np.std(mitotic_speed))
 
@@ -1711,9 +1716,8 @@ class TrackMate(object):
                     self.non_mitotic_mean_disp_x.append(np.mean(non_mitotic_disp_x))
                     self.non_mitotic_var_disp_x.append(np.std(non_mitotic_disp_x))
 
-                    if len(non_mitotic_radius) > 0:
-                        self.non_mitotic_mean_radius.append(np.mean(non_mitotic_radius))
-                        self.non_mitotic_var_radius.append(np.std(non_mitotic_radius))
+                    self.non_mitotic_mean_radius.append(np.mean(non_mitotic_radius))
+                    self.non_mitotic_var_radius.append(np.std(non_mitotic_radius))
 
                     self.non_mitotic_mean_speed.append(np.mean(non_mitotic_speed))
                     self.non_mitotic_var_speed.append(np.std(non_mitotic_speed))
@@ -1737,9 +1741,8 @@ class TrackMate(object):
                     self.all_mean_disp_x.append(np.mean(all_disp_x))
                     self.all_var_disp_x.append(np.std(all_disp_x))
 
-                    if len(all_radius) > 0:
-                            self.all_mean_radius.append(np.mean(all_radius))
-                            self.all_var_radius.append(np.std(all_radius))
+                    self.all_mean_radius.append(np.mean(all_radius))
+                    self.all_var_radius.append(np.std(all_radius))
 
                     self.all_mean_speed.append(np.mean(all_speed))
                     self.all_var_speed.append(np.std(all_speed))
