@@ -434,13 +434,14 @@ class TrackMate(object):
                     
                 # Wait for all tasks to complete
             concurrent.futures.wait(futures)
-            next_gen_count = gen_count + 1
+            
             for i in range(len(next_iter_cells)):
                 next_target_cell, tracklet_count_cell = next_iter_cells[i]
                 self.generation_dict[next_target_cell] = next_gen_count
                 self.tracklet_dict[next_target_cell] = tracklet_count_cell  
                 
             if len(next_iter_cells) > 0:
+                next_gen_count = gen_count + 1
                 for i in range(len(next_iter_cells)):
                    tracklet_count += 1
                    next_target_cell, tracklet_count_cell = next_iter_cells[i]
