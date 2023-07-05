@@ -381,57 +381,109 @@ class TrackMate(object):
 
            return sorted_cell_ids       
 
+    def _iterate_non_dividing(self, root_root, root_leaf):
+             
+            gen_count = 0
+            tracklet_count = 0
+            for root_all in root_root:
+                    self.generation_dict[root_all] = gen_count
+                    self.tracklet_dict[root_all] = tracklet_count
+                    if root_all in self.edge_target_lookup:
+                         target_cell = self.edge_target_lookup[root_all][0]
+                         while True:
+                                if target_cell in self.edge_target_lookup:
+                                    self.generation_dict[target_cell] = gen_count
+                                    self.tracklet_dict[target_cell] = tracklet_count
+                                    target_cell = self.edge_target_lookup[target_cell][0]
+                                elif target_cell in root_leaf:
+                                    self.generation_dict[target_cell] = gen_count
+                                    self.tracklet_dict[target_cell] = tracklet_count
+                                    break
+
+    def _iterate_dividing_recursive(self, root_leaf, target_cells, sorted_root_splits, gen_count, tracklet_count):
+            
+            next_iter_cells = []
+            def process_target_cell(i):
+                
+                target_cell = target_cells[i]
+                
+                if target_cell == root_leaf:
+                    self.generation_dict[target_cell] = gen_count
+                    self.tracklet_dict[target_cell] = tracklet_count
+                    return
+                
+                self.generation_dict[target_cell] = gen_count
+                self.tracklet_dict[target_cell] = tracklet_count
+                
+                if target_cell in self.edge_target_lookup:
+                    next_target_cells = self.edge_target_lookup[target_cell]
+                    next_target_cell = next_target_cells[0]
+                    while next_target_cell not in sorted_root_splits:
+                        self.generation_dict[next_target_cell] = gen_count
+                        self.tracklet_dict[next_target_cell] = tracklet_count
+                        if next_target_cell in self.edge_target_lookup:
+                            next_target_cells = self.edge_target_lookup[next_target_cell]
+                            next_target_cell = next_target_cells[0]
+                    next_iter_cells.append([next_target_cell, tracklet_count])
+
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                    futures = []
+                    for i in range(len(target_cells)):
+                        future = executor.submit(process_target_cell, i)
+                        futures.append(future)
+                    
+                # Wait for all tasks to complete
+            concurrent.futures.wait(futures)
+            next_gen_count = gen_count + 1
+            for i in range(len(next_iter_cells)):
+                next_target_cell, tracklet_count_cell = next_iter_cells[i]
+                self.generation_dict[next_target_cell] = next_gen_count
+                self.tracklet_dict[next_target_cell] = tracklet_count_cell  
+                
+            if len(next_iter_cells) > 0:
+                for i in range(len(next_iter_cells)):
+                   tracklet_count += 1
+                   next_target_cell, tracklet_count_cell = next_iter_cells[i]
+                   if next_target_cell in self.edge_target_lookup:
+                       target_cells = self.edge_target_lookup[next_target_cell]
+                       self._iterate_dividing_recursive(root_leaf, target_cells, sorted_root_splits, next_gen_count, tracklet_count)      
+
+    def _iterate_dividing(self, root_root, root_leaf, root_splits):
+            gen_count = 0
+            tracklet_count = 0
+            for root_all in root_root:
+                    self.generation_dict[root_all] = gen_count
+                    self.tracklet_dict[root_all] = tracklet_count
+                    if root_all in self.edge_target_lookup:
+                         target_cell = self.edge_target_lookup[root_all][0]
+                         while target_cell not in root_splits:
+                                if target_cell in self.edge_target_lookup:
+                                    self.generation_dict[target_cell] = gen_count
+                                    self.tracklet_dict[target_cell] = tracklet_count
+                                    target_cell = self.edge_target_lookup[target_cell][0]
+                                
+
+            sorted_root_splits = self._sort_dividing_cells(root_splits)
+            gen_count = 0
+            tracklet_count = 0
+            next_gen_count = 0
+            first_split = sorted_root_splits[0]
+            self.generation_dict[first_split] = gen_count
+            self.tracklet_dict[first_split] = tracklet_count
+            if first_split in self.edge_target_lookup:
+                target_cells = self.edge_target_lookup[first_split]
+                next_gen_count += 1
+                self._iterate_dividing_recursive(root_leaf, target_cells, sorted_root_splits, next_gen_count, tracklet_count)
+                
+                                           
+
     def _iterate_split_down(self, root_root, root_leaf, root_splits):
          
-        sorted_root_splits = self._sort_dividing_cells(root_splits)
-        gen_count = 0
-        tracklet_count = 0
-        for root_all in root_root:
-                self.generation_dict[root_all] = gen_count
-                self.tracklet_dict[root_all] = tracklet_count
-                if root_all in self.edge_target_lookup and root_all not in sorted_root_splits:
-                     target_cells = self.edge_target_lookup[root_all][0]
-                     while target_cells not in sorted_root_splits:
-                            self.generation_dict[target_cells] = gen_count
-                            self.tracklet_dict[target_cells] = tracklet_count
-                            if target_cells in self.edge_target_lookup:
-                                target_cells = self.edge_target_lookup[target_cells][0]
-                                if target_cells in root_leaf:
-                                    self.generation_dict[target_cells] = gen_count
-                                    self.tracklet_dict[target_cells] = tracklet_count
-                                    break
-                            else:
-                                   break    
-                     
-        for root_split in sorted_root_splits:
-            self.generation_dict[root_split] = gen_count
-            self.tracklet_dict[root_split] = tracklet_count
-            target_cells = self.edge_target_lookup[root_split]
-            gen_count += 1
-            for i in range(len(target_cells)):
-                   tracklet_count += 1
-                   target_cell_id = target_cells[i]                    
-                   self.generation_dict[target_cell_id] = gen_count
-                   self.tracklet_dict[target_cell_id] = tracklet_count
-                   while target_cell_id not in sorted_root_splits:
-                            if target_cell_id in self.edge_target_lookup:
-                                target_cell_id = self.edge_target_lookup[target_cell_id][0]
-                                self.generation_dict[target_cell_id] = gen_count
-                                self.tracklet_dict[target_cell_id] = tracklet_count
+        if len(root_splits) == 0:
+               self._iterate_non_dividing(root_root, root_leaf)
+        if len(root_splits) > 0:
+               self._iterate_dividing(root_root, root_leaf, root_splits)       
 
-                                if target_cell_id in root_leaf:
-                                    self.generation_dict[target_cell_id] = gen_count
-                                    self.tracklet_dict[target_cell_id] = tracklet_count
-                                    break
-                            else:
-                                   break    
-                   if target_cell_id in sorted_root_splits:
-                            self.generation_dict[target_cell_id] = gen_count
-                            self.tracklet_dict[target_cell_id] = tracklet_count
-        for leaf in root_leaf:
-                 self.generation_dict[leaf] = gen_count
-                 self.tracklet_dict[leaf] = tracklet_count                                  
-                            
                             
     def _get_boundary_dist(self, frame, testlocation):
          
