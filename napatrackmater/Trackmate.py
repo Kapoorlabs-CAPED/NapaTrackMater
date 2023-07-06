@@ -335,7 +335,6 @@ class TrackMate(object):
                             target_id = int(edge.get(self.spot_target_id_key))
                             all_source_ids.append(source_id)
                             all_target_ids.append(target_id)
-                            
                             if source_id in self.edge_target_lookup.keys():
                                self.edge_target_lookup[source_id].append(target_id)
                             else:      
@@ -403,7 +402,7 @@ class TrackMate(object):
     def _iterate_dividing_recursive(self, root_leaf, target_cells, sorted_root_splits, gen_count, tracklet_count):
             
             next_iter_cells = []
-            def process_target_cell(i):
+            for i in range(len(target_cells)):
                 
                 target_cell = target_cells[i]
                 
@@ -411,14 +410,14 @@ class TrackMate(object):
                     self.generation_dict[target_cell] = gen_count
                     self.tracklet_dict[target_cell] = tracklet_count
                     return
-                
+                tracklet_count = tracklet_count + 1
                 self.generation_dict[target_cell] = gen_count
                 self.tracklet_dict[target_cell] = tracklet_count
                 
                 if target_cell in self.edge_target_lookup:
                     next_target_cells = self.edge_target_lookup[target_cell]
                     next_target_cell = next_target_cells[0]
-                    while next_target_cell not in sorted_root_splits:
+                    while next_target_cell not in sorted_root_splits and next_target_cell not in root_leaf:
                         self.generation_dict[next_target_cell] = gen_count
                         self.tracklet_dict[next_target_cell] = tracklet_count
                         if next_target_cell in self.edge_target_lookup:
@@ -426,18 +425,10 @@ class TrackMate(object):
                             next_target_cell = next_target_cells[0]
                     next_iter_cells.append([next_target_cell, tracklet_count])
 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                    futures = []
-                    for i in range(len(target_cells)):
-                        future = executor.submit(process_target_cell, i)
-                        futures.append(future)
-                    
-                # Wait for all tasks to complete
-            concurrent.futures.wait(futures)
-            
+           
             for i in range(len(next_iter_cells)):
                 next_target_cell, tracklet_count_cell = next_iter_cells[i]
-                self.generation_dict[next_target_cell] = next_gen_count
+                self.generation_dict[next_target_cell] = gen_count
                 self.tracklet_dict[next_target_cell] = tracklet_count_cell  
                 
             if len(next_iter_cells) > 0:
@@ -448,7 +439,7 @@ class TrackMate(object):
                    if next_target_cell in self.edge_target_lookup:
                        target_cells = self.edge_target_lookup[next_target_cell]
                        self._iterate_dividing_recursive(root_leaf, target_cells, sorted_root_splits, next_gen_count, tracklet_count)      
-
+            
     def _iterate_dividing(self, root_root, root_leaf, root_splits):
             gen_count = 0
             tracklet_count = 0
@@ -463,7 +454,7 @@ class TrackMate(object):
                                     self.tracklet_dict[target_cell] = tracklet_count
                                     target_cell = self.edge_target_lookup[target_cell][0]
                                 
-
+        
             sorted_root_splits = self._sort_dividing_cells(root_splits)
             gen_count = 0
             tracklet_count = 0
@@ -475,7 +466,7 @@ class TrackMate(object):
                 target_cells = self.edge_target_lookup[first_split]
                 next_gen_count += 1
                 self._iterate_dividing_recursive(root_leaf, target_cells, sorted_root_splits, next_gen_count, tracklet_count)
-                
+               
                                            
 
     def _iterate_split_down(self, root_root, root_leaf, root_splits):
@@ -508,11 +499,10 @@ class TrackMate(object):
                             
                             current_cell_ids = []
                             unique_tracklet_ids = []
-                            
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
-                            self._iterate_split_down(root_root, root_leaf, root_splits)
                             
+                            self._iterate_split_down(root_root, root_leaf, root_splits)
                             number_dividing = len(root_splits)
                             # Determine if a track has divisions or none
                             if len(root_splits) > 0:
@@ -1120,7 +1110,7 @@ class TrackMate(object):
                                     self.progress_bar.show()
 
 
-                    for r in concurrent.futures.as_completed(futures):
+                for r in concurrent.futures.as_completed(futures):
                                     self.count = self.count + 1
                                     if self.progress_bar is not None:
                                        self.progress_bar.value = self.count
