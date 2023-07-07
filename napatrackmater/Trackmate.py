@@ -929,33 +929,21 @@ class TrackMate(object):
                                         self.progress_bar.value =  self.count
                                     r.result()    
 
-            executor.shutdown(wait=True)
             print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
             self.count = 0
             futures = []
-            with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
-                
-                for track in self.tracks.findall('Track'):
-                        
-                        track_id = int(track.get(self.trackid_key))
-                        if track_id in self.filtered_track_ids:
-                                futures.append(executor.submit(self._master_track_computer, track, track_id))
-                if self.progress_bar is not None:
-                                
-                                self.progress_bar.label = "Collecting Tracks"
-                                self.progress_bar.range = (
-                                    0,
-                                    len(self.filtered_track_ids),
-                                )
-                                self.progress_bar.show()
+            if self.progress_bar is not None:
+                self.progress_bar.label = "Collecting Tracks"
+                self.progress_bar.range = (0, len(self.filtered_track_ids))
+                self.progress_bar.show()
 
-
-                for r in concurrent.futures.as_completed(futures):
-                                    self.count = self.count + 1
-                                    if self.progress_bar is not None:
-                                        self.progress_bar.value = self.count
-                                    r.result()
-            executor.shutdown(wait=True)
+            for track in self.tracks.findall('Track'):
+                track_id = int(track.get(self.trackid_key))
+                if track_id in self.filtered_track_ids:
+                    self._master_track_computer(track, track_id)
+                    self.count += 1
+                    if self.progress_bar is not None:
+                        self.progress_bar.value = self.count
             if self.channel_seg_image is not None:  
                        
                        self._create_second_channel_xml()
@@ -1099,28 +1087,18 @@ class TrackMate(object):
                 print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
                 self.count = 0
                 futures = []
-                with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
-                    
-                    for track in self.tracks.findall('Track'):
-                            
-                            track_id = int(track.get(self.trackid_key))
-                            if track_id in self.filtered_track_ids:
-                                  futures.append(executor.submit(self._track_computer, track, track_id))
-                    if self.progress_bar is not None:
-                                 
-                                    self.progress_bar.label = "Collecting Tracks"
-                                    self.progress_bar.range = (
-                                        0,
-                                        len(self.filtered_track_ids),
-                                    )
-                                    self.progress_bar.show()
+                if self.progress_bar is not None:
+                    self.progress_bar.label = "Collecting Tracks"
+                    self.progress_bar.range = (0, len(self.filtered_track_ids))
+                    self.progress_bar.show()
 
-
-                    for r in concurrent.futures.as_completed(futures):
-                                    self.count = self.count + 1
-                                    if self.progress_bar is not None:
-                                       self.progress_bar.value = self.count
-                                    r.result()
+                for track in self.tracks.findall('Track'):
+                    track_id = int(track.get(self.trackid_key))
+                    if track_id in self.filtered_track_ids:
+                        self._master_track_computer(track, track_id)
+                        self.count += 1
+                        if self.progress_bar is not None:
+                            self.progress_bar.value = self.count
                 if self.channel_seg_image is not None:  
                        self._create_second_channel_xml()
                 
@@ -1426,8 +1404,7 @@ class TrackMate(object):
                         self.maskcentroid_x_key: float(maskcentroid[2]) 
 
                 }
-            elif cell_id in self.edge_source_lookup.keys():
-                    
+            else:
                     self.channel_unique_spot_properties[cell_id] = self.unique_spot_properties[cell_id]
                     self.channel_unique_spot_properties[cell_id].update({self.total_intensity_key: -1})
                     self.channel_unique_spot_properties[cell_id].update({self.mean_intensity_key: -1})
