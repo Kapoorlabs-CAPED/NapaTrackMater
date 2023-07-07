@@ -401,7 +401,6 @@ class TrackMate(object):
 
     def _iterate_dividing_recursive(self, root_leaf, target_cell, sorted_root_splits, gen_count, tracklet_count):
             
-                next_iter_cells = []
                 if target_cell == root_leaf:
                     self.generation_dict[target_cell] = gen_count
                     self.tracklet_dict[target_cell] = tracklet_count
@@ -409,7 +408,7 @@ class TrackMate(object):
                 tracklet_count = tracklet_count + 1
                 self.generation_dict[target_cell] = gen_count
                 self.tracklet_dict[target_cell] = tracklet_count
-                
+                next_target_cell = None
                 if target_cell in self.edge_target_lookup:
                     next_target_cells = self.edge_target_lookup[target_cell]
                     next_target_cell = next_target_cells[0]
@@ -427,22 +426,18 @@ class TrackMate(object):
                                self.generation_dict[target_cell] = gen_count
                                self.tracklet_dict[target_cell] = tracklet_count
                                break
-                    next_iter_cells.append([next_target_cell, tracklet_count])
 
-           
-                for i in range(len(next_iter_cells)):
-                    next_target_cell, tracklet_count_cell = next_iter_cells[i]
+                if next_target_cell is not None:
                     self.generation_dict[next_target_cell] = gen_count
-                    self.tracklet_dict[next_target_cell] = tracklet_count_cell  
-                    
-                if len(next_iter_cells) > 0:
+                    self.tracklet_dict[next_target_cell] = tracklet_count  
                     next_gen_count = gen_count + 1
-                    for i in range(len(next_iter_cells)):
-                        tracklet_count += 1
-                        next_target_cell, tracklet_count_cell = next_iter_cells[i]
-                        if next_target_cell in self.edge_target_lookup:
+                    
+                    if next_target_cell in self.edge_target_lookup:
                             target_cells = self.edge_target_lookup[next_target_cell]
-                            self._iterate_dividing_recursive(root_leaf, target_cells, sorted_root_splits, next_gen_count, tracklet_count)      
+                            for k in range(len(target_cells)):
+                                target_cell = target_cells[k]
+                                tracklet_count = tracklet_count + 1
+                                self._iterate_dividing_recursive(root_leaf, target_cell, sorted_root_splits, next_gen_count, tracklet_count)      
                     
     def _iterate_dividing(self, root_root, root_leaf, root_splits):
             gen_count = 0
