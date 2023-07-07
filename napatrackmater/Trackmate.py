@@ -390,10 +390,10 @@ class TrackMate(object):
                     if root_all in self.edge_target_lookup:
                          target_cell = self.edge_target_lookup[root_all][0]
                          while target_cell not in root_leaf:
-                                if target_cell in self.edge_target_lookup:
                                     self.generation_dict[target_cell] = gen_count
                                     self.tracklet_dict[target_cell] = tracklet_count
-                                    target_cell = self.edge_target_lookup[target_cell][0]
+                                    if target_cell in self.edge_target_lookup:
+                                       target_cell = self.edge_target_lookup[target_cell][0]
             for leaf in root_leaf:
                    self.generation_dict[leaf] = gen_count
                    self.tracklet_dict[leaf] = tracklet_count                        
