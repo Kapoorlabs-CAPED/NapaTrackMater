@@ -1086,7 +1086,6 @@ class TrackMate(object):
                 executor.shutdown(wait=True)
                 print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
                 self.count = 0
-                futures = []
                 if self.progress_bar is not None:
                     self.progress_bar.label = "Collecting Tracks"
                     self.progress_bar.range = (0, len(self.filtered_track_ids))
@@ -1095,7 +1094,7 @@ class TrackMate(object):
                 for track in self.tracks.findall('Track'):
                     track_id = int(track.get(self.trackid_key))
                     if track_id in self.filtered_track_ids:
-                        self._master_track_computer(track, track_id)
+                        self._track_computer(track, track_id)
                         self.count += 1
                         if self.progress_bar is not None:
                             self.progress_bar.value = self.count
