@@ -401,14 +401,17 @@ class TrackMate(object):
 
     def _iterate_dividing_recursive(self, root_leaf, target_cell, sorted_root_splits, gen_count, tracklet_count):
             
-                if target_cell == root_leaf:
-                    self.generation_dict[target_cell] = gen_count
-                    self.tracklet_dict[target_cell] = tracklet_count
-                    return
-                tracklet_count = tracklet_count + 1
+
+
                 self.generation_dict[target_cell] = gen_count
                 self.tracklet_dict[target_cell] = tracklet_count
+
+                if target_cell == root_leaf:
+                    return
+                
                 next_target_cell = None
+                
+                    
                 if target_cell in self.edge_target_lookup:
                     next_target_cells = self.edge_target_lookup[target_cell]
                     next_target_cell = next_target_cells[0]
@@ -476,7 +479,8 @@ class TrackMate(object):
         if len(root_splits) == 0:
                self._iterate_non_dividing(root_root, root_leaf)
         if len(root_splits) > 0:
-               self._iterate_dividing(root_root, root_leaf, root_splits)       
+               self._iterate_dividing(root_root, root_leaf, root_splits)
+                 
 
                             
     def _get_boundary_dist(self, frame, testlocation):
