@@ -454,31 +454,32 @@ class TrackMate(object):
                                     self.generation_dict[target_cell] = gen_count
                                     self.tracklet_dict[target_cell] = tracklet_count
                                     target_cell = self.edge_target_lookup[target_cell][0]
-                                
-        
-            sorted_root_splits = self._sort_dividing_cells(root_splits)
-            gen_count = 0
-            tracklet_count = 0
-            next_gen_count = 0
-            first_split = sorted_root_splits[0]
-            self.generation_dict[first_split] = gen_count
-            self.tracklet_dict[first_split] = tracklet_count
-            if first_split in self.edge_target_lookup:
-                target_cells = self.edge_target_lookup[first_split]
-                next_gen_count += 1
-                for i in range(len(target_cells)):
-                    tracklet_count += 1
-                    target_cell = target_cells[i]
-                    self._iterate_dividing_recursive(root_leaf, target_cell, sorted_root_splits, next_gen_count, tracklet_count)
-               
+                                else:
+                                      self.generation_dict[target_cell] = gen_count
+                                      self.tracklet_dict[target_cell] = tracklet_count
+                                      break 
+                                       
+            if len(root_splits) > 0:
+                    sorted_root_splits = self._sort_dividing_cells(root_splits)
+                    gen_count = 0
+                    tracklet_count = 0
+                    next_gen_count = 0
+                    first_split = sorted_root_splits[0]
+                    self.generation_dict[first_split] = gen_count
+                    self.tracklet_dict[first_split] = tracklet_count
+                    if first_split in self.edge_target_lookup:
+                        target_cells = self.edge_target_lookup[first_split]
+                        next_gen_count += 1
+                        for i in range(len(target_cells)):
+                            tracklet_count += 1
+                            target_cell = target_cells[i]
+                            self._iterate_dividing_recursive(root_leaf, target_cell, sorted_root_splits, next_gen_count, tracklet_count)
+                    
                                            
 
     def _iterate_split_down(self, root_root, root_leaf, root_splits):
          
-        if len(root_splits) == 0:
-               self._iterate_non_dividing(root_root, root_leaf)
-        if len(root_splits) > 0:
-               self._iterate_dividing(root_root, root_leaf, root_splits)
+        self._iterate_dividing(root_root, root_leaf, root_splits)
                  
 
                             
@@ -907,43 +908,53 @@ class TrackMate(object):
 
             print('Iterating over spots in frame')
             self.count = 0
+            futures = []
 
-            for frame in self.Spotobjects.findall('SpotsInFrame'):
-                self._master_spot_computer(frame)
+            with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
+                
+                for frame in self.Spotobjects.findall('SpotsInFrame'):
+                            futures.append(executor.submit(self._master_spot_computer, frame))
                 if self.progress_bar is not None:
                                 
+                                self.progress_bar.label = "Collecting Spots"
+                                self.progress_bar.range = (
+                                    0,
+                                    len(futures),
+                                )
+                                self.progress_bar.show()
+
+                for r in concurrent.futures.as_completed(futures):
                                 self.count = self.count + 1
                                 if self.progress_bar is not None:
                                     self.progress_bar.value =  self.count
-                                    self.progress_bar.label = "Collecting Spots"
-                                    self.progress_bar.range = (
-                                        0,
-                                        len(self.Spotobjects.findall('SpotsInFrame')),
-                                    )
-                                    self.progress_bar.show()
-
-                  
+                                r.result()    
 
             
             print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
             self.count = 0
-            for track in self.tracks.findall('Track'):
+            futures = []
+            with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
+                
+                for track in self.tracks.findall('Track'):
                         
                         track_id = int(track.get(self.trackid_key))
                         if track_id in self.filtered_track_ids:
-                                self._master_track_computer( track, track_id)
+                                futures.append(executor.submit(self._master_track_computer, track, track_id))
+                if self.progress_bar is not None:
+                                
+                                self.progress_bar.label = "Collecting Tracks"
+                                self.progress_bar.range = (
+                                    0,
+                                    len(self.filtered_track_ids),
+                                )
+                                self.progress_bar.show()
+
+
+                for r in concurrent.futures.as_completed(futures):
                                 self.count = self.count + 1
                                 if self.progress_bar is not None:
-                                                self.progress_bar.value = self.count
-                                                self.progress_bar.label = "Collecting Tracks"
-                                                self.progress_bar.range = (
-                                                    0,
-                                                    len(self.filtered_track_ids),
-                                                )
-                                                self.progress_bar.show()
-
-
-       
+                                    self.progress_bar.value = self.count
+                                r.result()
             
             if self.channel_seg_image is not None:  
                        
@@ -1064,29 +1075,38 @@ class TrackMate(object):
                 self._get_boundary_points()
                 print('Iterating over spots in frame')
                 self.count = 0
+                futures = []
 
-                for frame in self.Spotobjects.findall('SpotsInFrame'):
-                             self._spot_computer(frame)
-                             if self.progress_bar is not None:
+                with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
+                    
+                    for frame in self.Spotobjects.findall('SpotsInFrame'):
+                             futures.append(executor.submit(self._spot_computer, frame))
+                    if self.progress_bar is not None:
                                  
                                     self.progress_bar.label = "Collecting Spots"
                                     self.progress_bar.range = (
                                         0,
-                                        len(self.Spotobjects.findall('SpotsInFrame')),
+                                        len(futures),
                                     )
                                     self.progress_bar.show()
+
+                    for r in concurrent.futures.as_completed(futures):
                                     self.count = self.count + 1
-                                    self.progress_bar.value =  self.count
+                                    if self.progress_bar is not None:
+                                      self.progress_bar.value =  self.count
+                                    r.result()
 
                 print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
                 self.count = 0
-                for track in self.tracks.findall('Track'):
+                futures = []
+                with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
+                    
+                    for track in self.tracks.findall('Track'):
                             
                             track_id = int(track.get(self.trackid_key))
                             if track_id in self.filtered_track_ids:
-                                  self._track_computer( track, track_id)
-                                  
-                            if self.progress_bar is not None:
+                                  futures.append(executor.submit(self._track_computer, track, track_id))
+                    if self.progress_bar is not None:
                                  
                                     self.progress_bar.label = "Collecting Tracks"
                                     self.progress_bar.range = (
@@ -1094,8 +1114,13 @@ class TrackMate(object):
                                         len(self.filtered_track_ids),
                                     )
                                     self.progress_bar.show()
+
+
+                for r in concurrent.futures.as_completed(futures):
                                     self.count = self.count + 1
-                                    self.progress_bar.value = self.count
+                                    if self.progress_bar is not None:
+                                       self.progress_bar.value = self.count
+                                    r.result()
                 if self.channel_seg_image is not None:  
                        self._create_second_channel_xml()
                 
