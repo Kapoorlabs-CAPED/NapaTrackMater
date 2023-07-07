@@ -389,15 +389,14 @@ class TrackMate(object):
                     self.tracklet_dict[root_all] = tracklet_count
                     if root_all in self.edge_target_lookup:
                          target_cell = self.edge_target_lookup[root_all][0]
-                         while True:
+                         while target_cell not in root_leaf:
                                 if target_cell in self.edge_target_lookup:
                                     self.generation_dict[target_cell] = gen_count
                                     self.tracklet_dict[target_cell] = tracklet_count
                                     target_cell = self.edge_target_lookup[target_cell][0]
-                                elif target_cell in root_leaf:
-                                    self.generation_dict[target_cell] = gen_count
-                                    self.tracklet_dict[target_cell] = tracklet_count
-                                    break
+            for leaf in root_leaf:
+                   self.generation_dict[leaf] = gen_count
+                   self.tracklet_dict[leaf] = tracklet_count                        
 
     def _iterate_dividing_recursive(self, root_leaf, target_cell, sorted_root_splits, gen_count, tracklet_count):
             
