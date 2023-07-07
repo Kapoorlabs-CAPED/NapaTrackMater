@@ -907,53 +907,43 @@ class TrackMate(object):
 
             print('Iterating over spots in frame')
             self.count = 0
-            futures = []
 
-            with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
-                
-                for frame in self.Spotobjects.findall('SpotsInFrame'):
-                            futures.append(executor.submit(self._master_spot_computer, frame))
+            for frame in self.Spotobjects.findall('SpotsInFrame'):
+                self._master_spot_computer(frame)
                 if self.progress_bar is not None:
                                 
-                                self.progress_bar.label = "Collecting Spots"
-                                self.progress_bar.range = (
-                                    0,
-                                    len(futures),
-                                )
-                                self.progress_bar.show()
-
-                for r in concurrent.futures.as_completed(futures):
                                 self.count = self.count + 1
                                 if self.progress_bar is not None:
                                     self.progress_bar.value =  self.count
-                                r.result()    
+                                    self.progress_bar.label = "Collecting Spots"
+                                    self.progress_bar.range = (
+                                        0,
+                                        len(self.Spotobjects.findall('SpotsInFrame')),
+                                    )
+                                    self.progress_bar.show()
+
+                  
 
             
             print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
             self.count = 0
-            futures = []
-            with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
-                
-                for track in self.tracks.findall('Track'):
+            for track in self.tracks.findall('Track'):
                         
                         track_id = int(track.get(self.trackid_key))
                         if track_id in self.filtered_track_ids:
-                                futures.append(executor.submit(self._master_track_computer, track, track_id))
-                if self.progress_bar is not None:
-                                
-                                self.progress_bar.label = "Collecting Tracks"
-                                self.progress_bar.range = (
-                                    0,
-                                    len(self.filtered_track_ids),
-                                )
-                                self.progress_bar.show()
-
-
-                for r in concurrent.futures.as_completed(futures):
+                                self._master_track_computer( track, track_id)
                                 self.count = self.count + 1
                                 if self.progress_bar is not None:
-                                    self.progress_bar.value = self.count
-                                r.result()
+                                                self.progress_bar.value = self.count
+                                                self.progress_bar.label = "Collecting Tracks"
+                                                self.progress_bar.range = (
+                                                    0,
+                                                    len(self.filtered_track_ids),
+                                                )
+                                                self.progress_bar.show()
+
+
+       
             
             if self.channel_seg_image is not None:  
                        
@@ -1074,38 +1064,29 @@ class TrackMate(object):
                 self._get_boundary_points()
                 print('Iterating over spots in frame')
                 self.count = 0
-                futures = []
 
-                with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
-                    
-                    for frame in self.Spotobjects.findall('SpotsInFrame'):
-                             futures.append(executor.submit(self._spot_computer, frame))
-                    if self.progress_bar is not None:
+                for frame in self.Spotobjects.findall('SpotsInFrame'):
+                             self._spot_computer(frame)
+                             if self.progress_bar is not None:
                                  
                                     self.progress_bar.label = "Collecting Spots"
                                     self.progress_bar.range = (
                                         0,
-                                        len(futures),
+                                        len(self.Spotobjects.findall('SpotsInFrame')),
                                     )
                                     self.progress_bar.show()
-
-                    for r in concurrent.futures.as_completed(futures):
                                     self.count = self.count + 1
-                                    if self.progress_bar is not None:
-                                      self.progress_bar.value =  self.count
-                                    r.result()
+                                    self.progress_bar.value =  self.count
 
                 print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
                 self.count = 0
-                futures = []
-                with concurrent.futures.ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
-                    
-                    for track in self.tracks.findall('Track'):
+                for track in self.tracks.findall('Track'):
                             
                             track_id = int(track.get(self.trackid_key))
                             if track_id in self.filtered_track_ids:
-                                  futures.append(executor.submit(self._track_computer, track, track_id))
-                    if self.progress_bar is not None:
+                                  self._track_computer( track, track_id)
+                                  
+                            if self.progress_bar is not None:
                                  
                                     self.progress_bar.label = "Collecting Tracks"
                                     self.progress_bar.range = (
@@ -1113,13 +1094,8 @@ class TrackMate(object):
                                         len(self.filtered_track_ids),
                                     )
                                     self.progress_bar.show()
-
-
-                for r in concurrent.futures.as_completed(futures):
                                     self.count = self.count + 1
-                                    if self.progress_bar is not None:
-                                       self.progress_bar.value = self.count
-                                    r.result()
+                                    self.progress_bar.value = self.count
                 if self.channel_seg_image is not None:  
                        self._create_second_channel_xml()
                 
