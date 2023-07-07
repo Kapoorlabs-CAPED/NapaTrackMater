@@ -924,12 +924,12 @@ class TrackMate(object):
                                 self.progress_bar.show()
 
                 for r in concurrent.futures.as_completed(futures):
-                                self.count = self.count + 1
-                                if self.progress_bar is not None:
-                                    self.progress_bar.value =  self.count
-                                r.result()    
+                                    self.count = self.count + 1
+                                    if self.progress_bar is not None:
+                                        self.progress_bar.value =  self.count
+                                    r.result()    
 
-            
+            executor.shutdown(wait=True)
             print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
             self.count = 0
             futures = []
@@ -951,11 +951,11 @@ class TrackMate(object):
 
 
                 for r in concurrent.futures.as_completed(futures):
-                                self.count = self.count + 1
-                                if self.progress_bar is not None:
-                                    self.progress_bar.value = self.count
-                                r.result()
-            
+                                    self.count = self.count + 1
+                                    if self.progress_bar is not None:
+                                        self.progress_bar.value = self.count
+                                    r.result()
+            executor.shutdown(wait=True)
             if self.channel_seg_image is not None:  
                        
                        self._create_second_channel_xml()
@@ -1091,11 +1091,11 @@ class TrackMate(object):
                                     self.progress_bar.show()
 
                     for r in concurrent.futures.as_completed(futures):
-                                    self.count = self.count + 1
-                                    if self.progress_bar is not None:
-                                      self.progress_bar.value =  self.count
-                                    r.result()
-
+                                        self.count = self.count + 1
+                                        if self.progress_bar is not None:
+                                           self.progress_bar.value =  self.count
+                                        r.result()
+                executor.shutdown(wait=True)
                 print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
                 self.count = 0
                 futures = []
@@ -1116,7 +1116,7 @@ class TrackMate(object):
                                     self.progress_bar.show()
 
 
-                for r in concurrent.futures.as_completed(futures):
+                    for r in concurrent.futures.as_completed(futures):
                                     self.count = self.count + 1
                                     if self.progress_bar is not None:
                                        self.progress_bar.value = self.count
