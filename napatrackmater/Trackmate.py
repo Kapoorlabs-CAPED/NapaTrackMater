@@ -384,7 +384,7 @@ class TrackMate(object):
     def _iterate_dividing_recursive(self, root_leaf, target_cell, sorted_root_splits, gen_count, tracklet_count):
             
 
-
+                
                 self.generation_dict[target_cell] = gen_count
                 self.tracklet_dict[target_cell] = tracklet_count
 
@@ -423,8 +423,12 @@ class TrackMate(object):
                                 target_cell = target_cells[k]
                                 tracklet_count = tracklet_count + 1
                                 self._iterate_dividing_recursive(root_leaf, target_cell, sorted_root_splits, next_gen_count, tracklet_count)      
-                    
+
+
+
     def _iterate_dividing(self, root_root, root_leaf, root_splits):
+            
+           
             gen_count = 0
             tracklet_count = 0
             for root_all in root_root:
@@ -486,6 +490,26 @@ class TrackMate(object):
 
         return distance_cell_mask, maskcentroid        
          
+    def _global_track_id(self, track_id):
+           
+        num_digits = len(str(self.max_track_digit))
+
+        track_id_str = str(track_id)
+        if len(track_id_str) < num_digits:
+             track_id_str = track_id_str.zfill(num_digits)
+        track_id = int(track_id_str)
+        return track_id
+    
+    def _global_generation_id(self, generation_id):
+        
+        num_digits = len(str(self.max_track_digit))
+        generation_id_str = str(generation_id)
+        if len(generation_id_str) < num_digits:
+                generation_id_str = generation_id_str.zfill(num_digits)
+        generation_id = int(generation_id_str)
+
+        return generation_id
+
 
     def _track_computer(self, track, track_id):
                              
@@ -495,7 +519,7 @@ class TrackMate(object):
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids) 
                             self._iterate_split_down(root_root, root_leaf, root_splits)
-
+                           
                             number_dividing = len(root_splits)
                             # Determine if a track has divisions or none
                             if len(root_splits) > 0:
@@ -1407,19 +1431,8 @@ class TrackMate(object):
  
         generation_id = self.generation_dict[cell_id]
         tracklet_id = self.tracklet_dict[cell_id]
-        
-        num_digits = len(str(self.max_track_digit))
+       
 
-        track_id_str = str(track_id)
-        if len(track_id_str) < num_digits:
-             track_id_str = track_id_str.zfill(num_digits)
-        track_id = int(track_id_str)
-
-        generation_id_str = str(generation_id)
-        if len(generation_id_str) < num_digits:
-                generation_id_str = generation_id_str.zfill(num_digits)
-        generation_id = int(generation_id_str)
-        
         unique_id = str(track_id) +  str(generation_id) + str(tracklet_id)
         
         vec_mask = [float(self.unique_spot_properties[int(cell_id)][self.maskcentroid_x_key]), float(self.unique_spot_properties[int(cell_id)][self.maskcentroid_y_key]), float(self.unique_spot_properties[int(cell_id)][self.maskcentroid_z_key]) ]
