@@ -344,27 +344,24 @@ class TrackMate(object):
         return all_source_ids, all_target_ids 
 
 
-    def _create_generations(self, all_source_ids, all_target_ids):
+    def _create_generations(self, all_source_ids: list):
          
         root_leaf = []
         root_root = []
         root_splits = []
-        split_count = 0
         #Get the root id
         for source_id in all_source_ids:
-              if source_id not in all_target_ids:
+              if source_id in self.edge_source_lookup:
+                source_target_id = self.edge_source_lookup[source_id]
+              else:
+                source_target_id = None          
+              target_target_id = self.edge_target_lookup[source_id]
+              if source_target_id is None:
                    root_root.append(source_id) 
-                   
-       
-        #Get the leafs and splits     
-        for target_id in all_target_ids:
-             
-             if target_id not in all_source_ids:
-                  root_leaf.append(target_id)
-             split_count = all_source_ids.count(target_id)
-             if split_count > 1:
-                      root_splits.append(target_id)
-
+              if len(target_target_id) > 1:
+                   root_splits.append(source_id)
+              if target_target_id[0] not in self.edge_target_lookup:
+                   root_leaf.append(target_target_id[0])          
 
         return root_root, root_splits, root_leaf
 
@@ -460,9 +457,9 @@ class TrackMate(object):
                     self.tracklet_dict[first_split] = tracklet_count
                     if first_split in self.edge_target_lookup:
                         target_cells = self.edge_target_lookup[first_split]
-                        next_gen_count += 1
+                        next_gen_count = gen_count + 1
                         for i in range(len(target_cells)):
-                            tracklet_count += 1
+                            tracklet_count = tracklet_count + 1
                             target_cell = target_cells[i]
                             self._iterate_dividing_recursive(root_leaf, target_cell, sorted_root_splits, next_gen_count, tracklet_count)
                     
@@ -497,7 +494,7 @@ class TrackMate(object):
                             current_cell_ids = []
                             unique_tracklet_ids = []
                             all_source_ids, all_target_ids =  self._generate_generations(track)
-                            root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
+                            root_root, root_splits, root_leaf = self._create_generations(all_source_ids) 
                             self._iterate_split_down(root_root, root_leaf, root_splits)
 
                             number_dividing = len(root_splits)
@@ -588,7 +585,7 @@ class TrackMate(object):
                            
                             
                             all_source_ids, all_target_ids =  self._generate_generations(track)
-                            root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
+                            root_root, root_splits, root_leaf = self._create_generations(all_source_ids) 
                             self._iterate_split_down(root_root, root_leaf, root_splits)
                             
                             # Determine if a track has divisions or none
@@ -847,14 +844,6 @@ class TrackMate(object):
                             self.maskcentroid_x_key: float(maskcentroid[2]) 
                         }
        
-                        
-            
-                        
-                                    
-
-    
-                        
-
     def _get_master_xml_data(self):
             if self.channel_seg_image is not None:
                       self.channel_xml_content = self.xml_content
@@ -1785,7 +1774,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             
     # TZYX shaped object
     if ndim == 4:
-        print('Masks made into a 4D cylinder, up')
+        print('Making mask in 4D')
         boundary = np.zeros(
             [mask.shape[0], mask.shape[1], mask.shape[2], mask.shape[3]], dtype=np.uint8
         )
