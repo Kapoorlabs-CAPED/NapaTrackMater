@@ -357,9 +357,11 @@ class TrackMate(object):
                 source_target_id = None          
               target_target_id = self.edge_target_lookup[source_id]
               if source_target_id is None:
-                   root_root.append(source_id) 
+                   if source_id not in root_root:
+                      root_root.append(source_id) 
               if len(target_target_id) > 1:
-                   root_splits.append(source_id)
+                   if source_id not in root_splits:
+                      root_splits.append(source_id)
               if target_target_id[0] not in self.edge_target_lookup:
                    root_leaf.append(target_target_id[0])          
 
