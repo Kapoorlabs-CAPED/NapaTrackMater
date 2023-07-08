@@ -15,10 +15,8 @@ import os
 from pathlib import Path 
 import concurrent
 from .clustering import Clustering
-from scipy import ndimage
 
 
-Global_count = 0
 class TrackMate(object):
     
     def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes, 
@@ -39,11 +37,11 @@ class TrackMate(object):
         self.scale_xy = scale_xy
         self.center = center  
         if image is not None:
-          self.image = image.astype(np.float16) 
+          self.image = image.astype(np.uint8) 
         else:
             self.image = image
         if mask is not None:       
-           self.mask = mask.astype(np.uint16)
+           self.mask = mask.astype(np.uint8)
         else:
             self.mask = mask
 
@@ -382,23 +380,7 @@ class TrackMate(object):
 
            return sorted_cell_ids       
 
-    def _iterate_non_dividing(self, root_root, root_leaf):
-             
-            gen_count = 0
-            tracklet_count = 0
-            for root_all in root_root:
-                    self.generation_dict[root_all] = gen_count
-                    self.tracklet_dict[root_all] = tracklet_count
-                    if root_all in self.edge_target_lookup:
-                         target_cell = self.edge_target_lookup[root_all][0]
-                         while target_cell not in root_leaf:
-                                    self.generation_dict[target_cell] = gen_count
-                                    self.tracklet_dict[target_cell] = tracklet_count
-                                    if target_cell in self.edge_target_lookup:
-                                       target_cell = self.edge_target_lookup[target_cell][0]
-            for leaf in root_leaf:
-                   self.generation_dict[leaf] = gen_count
-                   self.tracklet_dict[leaf] = tracklet_count                        
+                      
 
     def _iterate_dividing_recursive(self, root_leaf, target_cell, sorted_root_splits, gen_count, tracklet_count):
             
@@ -1805,7 +1787,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
     if ndim == 4:
         print('Masks made into a 4D cylinder, up')
         boundary = np.zeros(
-            [mask.shape[0], mask.shape[1], mask.shape[2], mask.shape[3]]
+            [mask.shape[0], mask.shape[1], mask.shape[2], mask.shape[3]], dtype=np.uint8
         )
         for i in range(0, mask.shape[0]):
             
