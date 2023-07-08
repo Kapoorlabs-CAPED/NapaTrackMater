@@ -305,18 +305,20 @@ class TrackMate(object):
                         
                         self.update_mask = check_and_update_mask(self.mask, self.image)    
                            
-            self.mask = self.update_mask.astype('uint16')
+            self.mask = self.update_mask
             self.timed_mask, self.boundary = boundary_points(self.mask, self.xcalibration, self.ycalibration, self.zcalibration)
         elif self.mask is None:
             if self.seg_image is not None:
                     
-                    self.update_mask = np.zeros(self.seg_image.shape)
+                    self.update_mask = np.zeros(self.seg_image.shape, dtype=np.uint8)
                         
             if self.seg_image is None and self.image is not None:
 
-                    self.update_mask = np.zeros(self.image.shape) 
+                    self.update_mask = np.zeros(self.image.shape, dtype=np.uint8) 
+            else:
+                    self.update_mask = np.zeros(self.imagesize, dtype=np.uint8)       
                             
-            self.mask = self.update_mask.astype('uint16')
+            self.mask = self.update_mask
             self.mask[:,:,1:-1,1:-1] = 1
             self.timed_mask, self.boundary = boundary_points(self.mask, self.xcalibration, self.ycalibration, self.zcalibration)
 
@@ -447,7 +449,7 @@ class TrackMate(object):
             for root_all in root_root:
                     self.generation_dict[root_all] = gen_count
                     self.tracklet_dict[root_all] = tracklet_count
-                    if root_all in self.edge_target_lookup:
+                    if root_all in self.edge_target_lookup and root_all not in root_splits:
                          target_cell = self.edge_target_lookup[root_all][0]
                          while target_cell not in root_splits:
                                 if target_cell in self.edge_target_lookup:
@@ -458,6 +460,13 @@ class TrackMate(object):
                                       self.generation_dict[target_cell] = gen_count
                                       self.tracklet_dict[target_cell] = tracklet_count
                                       break 
+                    if root_all in self.edge_target_lookup and root_all in root_splits:
+                         target_cells = self.edge_target_lookup[root_all]
+                         gen_count = gen_count + 1
+                         for target_cell in target_cells:
+                                tracklet_count = tracklet_count + 1
+                                self._iterate_dividing_recursive(root_leaf, target_cell, root_splits, gen_count, tracklet_count)
+                                  
                                        
             if len(root_splits) > 0:
                     sorted_root_splits = self._sort_dividing_cells(root_splits)
@@ -507,8 +516,8 @@ class TrackMate(object):
                             unique_tracklet_ids = []
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids, all_target_ids) 
-                            
                             self._iterate_split_down(root_root, root_leaf, root_splits)
+
                             number_dividing = len(root_splits)
                             # Determine if a track has divisions or none
                             if len(root_splits) > 0:
@@ -1051,6 +1060,8 @@ class TrackMate(object):
                 # Extract the tracks from xml
                 self.tracks = self.xml_content.find("Model").find("AllTracks")
                 self.settings = self.xml_content.find("Settings").find("ImageData")
+                self.imagesize = (int(float(self.settings.get("nframes"))),int(float(self.settings.get("nslices"))),int(float(self.settings.get("height"))),  int(float(self.settings.get("width"))))
+                print(f'XML file made using image of {self.imagesize}')
                 self.xcalibration = float(self.settings.get("pixelwidth"))
                 self.ycalibration = float(self.settings.get("pixelheight"))
                 self.zcalibration = float(self.settings.get("voxeldepth"))
@@ -1083,7 +1094,6 @@ class TrackMate(object):
                                         if self.progress_bar is not None:
                                            self.progress_bar.value =  self.count
                                         r.result()
-                executor.shutdown(wait=True)
                 print(f'Iterating over tracks {len(self.filtered_track_ids)}')  
                 self.count = 0
                 if self.progress_bar is not None:
