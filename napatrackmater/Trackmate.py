@@ -451,19 +451,16 @@ class TrackMate(object):
                                        
             if len(root_splits) > 0:
                     sorted_root_splits = self._sort_dividing_cells(root_splits)
-                    gen_count = 0
-                    tracklet_count = 0
-                    next_gen_count = 0
                     first_split = sorted_root_splits[0]
                     self.generation_dict[first_split] = gen_count
                     self.tracklet_dict[first_split] = tracklet_count
                     if first_split in self.edge_target_lookup:
                         target_cells = self.edge_target_lookup[first_split]
-                        next_gen_count = gen_count + 1
+                        gen_count = gen_count + 1
                         for i in range(len(target_cells)):
                             tracklet_count = tracklet_count + 1
                             target_cell = target_cells[i]
-                            self._iterate_dividing_recursive(root_leaf, target_cell, sorted_root_splits, next_gen_count, tracklet_count)
+                            self._iterate_dividing_recursive(root_leaf, target_cell, sorted_root_splits, gen_count, tracklet_count)
                     
                                            
 
