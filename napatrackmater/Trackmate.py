@@ -465,10 +465,12 @@ class TrackMate(object):
                                       self.tracklet_dict[target_cell] = tracklet_count
                                       tracklet_count_taken.append(tracklet_count)
                                       break 
+                    #Start of track is a dividing cell             
                     if root_all in self.edge_target_lookup and root_all in root_splits:
                          target_cells = self.edge_target_lookup[root_all]
                          gen_count = gen_count + 1
                          for j in range(len(target_cells)):
+                                target_cell = target_cells[j]
                                 tracklet_count = tracklet_count + 1 + j
                                 tracklet_count = self._unique_tracklet_count(tracklet_count_taken, tracklet_count)
                                 tracklet_count_taken.append(tracklet_count)
