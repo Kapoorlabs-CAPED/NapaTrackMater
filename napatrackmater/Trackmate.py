@@ -1071,6 +1071,15 @@ class TrackMate(object):
                     self.progress_bar.range = (0, len(self.filtered_track_ids))
                     self.progress_bar.show()
 
+                
+                max_length = 0    
+                for track in self.tracks.findall('Track'):
+                    track_id = int(track.get(self.trackid_key))
+                    if track_id in self.filtered_track_ids:
+                            digit_length = len(str(track_id))
+                            if digit_length > max_length:
+                                max_length = digit_length
+                self.max_track_digit = max_length                
                 for track in self.tracks.findall('Track'):
                     track_id = int(track.get(self.trackid_key))
                     if track_id in self.filtered_track_ids:
@@ -1398,7 +1407,19 @@ class TrackMate(object):
  
         generation_id = self.generation_dict[cell_id]
         tracklet_id = self.tracklet_dict[cell_id]
+        
+        num_digits = len(str(self.max_track_digit))
 
+        track_id_str = str(track_id)
+        if len(track_id_str) < num_digits:
+             track_id_str = track_id_str.zfill(num_digits)
+        track_id = int(track_id_str)
+
+        generation_id_str = str(generation_id)
+        if len(generation_id_str) < num_digits:
+                generation_id_str = generation_id_str.zfill(num_digits)
+        generation_id = int(generation_id_str)
+        
         unique_id = str(track_id) +  str(generation_id) + str(tracklet_id)
         
         vec_mask = [float(self.unique_spot_properties[int(cell_id)][self.maskcentroid_x_key]), float(self.unique_spot_properties[int(cell_id)][self.maskcentroid_y_key]), float(self.unique_spot_properties[int(cell_id)][self.maskcentroid_z_key]) ]
