@@ -381,7 +381,7 @@ class TrackMate(object):
 
                       
 
-    def _iterate_dividing_recursive(self, root_leaf, target_cell, sorted_root_splits, gen_count, tracklet_count):
+    def _iterate_dividing_recursive(self, root_leaf, target_cell, sorted_root_splits, gen_count, tracklet_count, tracklet_count_taken):
             
 
                 
@@ -421,7 +421,9 @@ class TrackMate(object):
                             target_cells = self.edge_target_lookup[next_target_cell]
                             for k in range(len(target_cells)):
                                 target_cell = target_cells[k]
-                                tracklet_count = tracklet_count + 1
+                                tracklet_count = tracklet_count + 1 + k
+                                tracklet_count = self._unique_tracklet_count(tracklet_count_taken, tracklet_count)
+                                tracklet_count_taken.append(tracklet_count)
                                 self._iterate_dividing_recursive(root_leaf, target_cell, sorted_root_splits, next_gen_count, tracklet_count)      
 
 
@@ -431,26 +433,32 @@ class TrackMate(object):
            
             gen_count = 0
             tracklet_count = 0
+            tracklet_count_taken = []
             for root_all in root_root:
                     self.generation_dict[root_all] = gen_count
                     self.tracklet_dict[root_all] = tracklet_count
+                    tracklet_count_taken.append(tracklet_count)
                     if root_all in self.edge_target_lookup and root_all not in root_splits:
                          target_cell = self.edge_target_lookup[root_all][0]
                          while target_cell not in root_splits:
                                 if target_cell in self.edge_target_lookup:
                                     self.generation_dict[target_cell] = gen_count
                                     self.tracklet_dict[target_cell] = tracklet_count
+                                    tracklet_count_taken.append(tracklet_count)
                                     target_cell = self.edge_target_lookup[target_cell][0]
                                 else:
                                       self.generation_dict[target_cell] = gen_count
                                       self.tracklet_dict[target_cell] = tracklet_count
+                                      tracklet_count_taken.append(tracklet_count)
                                       break 
                     if root_all in self.edge_target_lookup and root_all in root_splits:
                          target_cells = self.edge_target_lookup[root_all]
                          gen_count = gen_count + 1
-                         for target_cell in target_cells:
-                                tracklet_count = tracklet_count + 1
-                                self._iterate_dividing_recursive(root_leaf, target_cell, root_splits, gen_count, tracklet_count)
+                         for j in range(len(target_cells)):
+                                tracklet_count = tracklet_count + 1 + j
+                                tracklet_count = self._unique_tracklet_count(tracklet_count_taken, tracklet_count)
+                                tracklet_count_taken.append(tracklet_count)
+                                self._iterate_dividing_recursive(root_leaf, target_cell, root_splits, gen_count, tracklet_count, tracklet_count_taken)
                                   
                                        
             if len(root_splits) > 0:
@@ -462,11 +470,19 @@ class TrackMate(object):
                         target_cells = self.edge_target_lookup[first_split]
                         gen_count = gen_count + 1
                         for i in range(len(target_cells)):
-                            tracklet_count = tracklet_count + 1
+                            tracklet_count = tracklet_count + 1 + i
+                            tracklet_count = self._unique_tracklet_count(tracklet_count_taken, tracklet_count)
+                            tracklet_count_taken.append(tracklet_count)
                             target_cell = target_cells[i]
-                            self._iterate_dividing_recursive(root_leaf, target_cell, sorted_root_splits, gen_count, tracklet_count)
+                            self._iterate_dividing_recursive(root_leaf, target_cell, sorted_root_splits, gen_count, tracklet_count, tracklet_count_taken)
                     
-                                           
+    def _unique_tracklet_count(self, tracklet_count_taken, tracklet_count):
+           
+           while tracklet_count in tracklet_count_taken:
+                  tracklet_count  = tracklet_count + 1 
+                  self._unique_tracklet_count(tracklet_count_taken, tracklet_count)
+           return tracklet_count       
+
 
     def _iterate_split_down(self, root_root, root_leaf, root_splits):
          
