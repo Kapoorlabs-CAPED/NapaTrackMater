@@ -393,10 +393,24 @@ class TrackMate(object):
                 
                 next_target_cell = None
                 
+                if target_cell in sorted_root_splits:
+                           next_gen_count = gen_count + 1
+                           if target_cell in self.edge_target_lookup:
+                                target_cells = self.edge_target_lookup[target_cell]
+                                for k in range(len(target_cells)):
+                                    daughter_target_cell = target_cells[k]
+                                    tracklet_count = tracklet_count + 1 + k
+                                    tracklet_count = self._unique_tracklet_count(tracklet_count_taken, tracklet_count)
+                                    tracklet_count_taken.append(tracklet_count)
+                                    self._iterate_dividing_recursive(root_leaf, daughter_target_cell, sorted_root_splits, next_gen_count, tracklet_count, tracklet_count_taken)      
+
                     
                 if target_cell in self.edge_target_lookup:
                     next_target_cells = self.edge_target_lookup[target_cell]
                     next_target_cell = next_target_cells[0]
+                    
+
+                           
                     while next_target_cell not in sorted_root_splits:
                         self.generation_dict[next_target_cell] = gen_count
                         self.tracklet_dict[next_target_cell] = tracklet_count
