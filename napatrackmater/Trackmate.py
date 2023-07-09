@@ -1727,8 +1727,9 @@ class TrackMate(object):
                     self.mitotic_mean_disp_x.append(np.mean(mitotic_disp_x))
                     self.mitotic_var_disp_x.append(np.std(mitotic_disp_x))
 
-                    self.mitotic_mean_radius.append(np.mean(mitotic_radius))
-                    self.mitotic_var_radius.append(np.std(mitotic_radius))
+                    mask = mitotic_radius == None
+                    self.mitotic_mean_radius.append(np.mean(mitotic_radius[~mask]))
+                    self.mitotic_var_radius.append(np.std(mitotic_radius[~mask]))
                     
                     self.mitotic_mean_speed.append(np.mean(mitotic_speed))
                     self.mitotic_var_speed.append(np.std(mitotic_speed))
@@ -1751,8 +1752,9 @@ class TrackMate(object):
                     self.non_mitotic_mean_disp_x.append(np.mean(non_mitotic_disp_x))
                     self.non_mitotic_var_disp_x.append(np.std(non_mitotic_disp_x))
 
-                    self.non_mitotic_mean_radius.append(np.mean(non_mitotic_radius))
-                    self.non_mitotic_var_radius.append(np.std(non_mitotic_radius))
+                    mask = non_mitotic_radius == None
+                    self.non_mitotic_mean_radius.append(np.mean(non_mitotic_radius[~mask]))
+                    self.non_mitotic_var_radius.append(np.std(non_mitotic_radius[~mask]))
 
                     self.non_mitotic_mean_speed.append(np.mean(non_mitotic_speed))
                     self.non_mitotic_var_speed.append(np.std(non_mitotic_speed))
@@ -1776,8 +1778,9 @@ class TrackMate(object):
                     self.all_mean_disp_x.append(np.mean(all_disp_x))
                     self.all_var_disp_x.append(np.std(all_disp_x))
 
-                    self.all_mean_radius.append(np.mean(all_radius))
-                    self.all_var_radius.append(np.std(all_radius))
+                    mask = all_radius == None
+                    self.all_mean_radius.append(np.mean(all_radius[~mask]))
+                    self.all_var_radius.append(np.std(all_radius[~mask]))
 
                     self.all_mean_speed.append(np.mean(all_speed))
                     self.all_var_speed.append(np.std(all_speed))
