@@ -1727,9 +1727,9 @@ class TrackMate(object):
                     self.mitotic_mean_disp_x.append(np.mean(mitotic_disp_x))
                     self.mitotic_var_disp_x.append(np.std(mitotic_disp_x))
 
-                    mask = mitotic_radius == None
-                    self.mitotic_mean_radius.append(np.mean(mitotic_radius[~mask]))
                     filtered_values = [val for val in mitotic_radius if val is not None]
+                    self.mitotic_mean_radius.append(np.mean(filtered_values))
+                    
                     self.mitotic_var_radius.append(np.std(filtered_values))
                     
                     self.mitotic_mean_speed.append(np.mean(mitotic_speed))
@@ -1753,9 +1753,9 @@ class TrackMate(object):
                     self.non_mitotic_mean_disp_x.append(np.mean(non_mitotic_disp_x))
                     self.non_mitotic_var_disp_x.append(np.std(non_mitotic_disp_x))
 
-                    mask = non_mitotic_radius == None
-                    self.non_mitotic_mean_radius.append(np.mean(non_mitotic_radius[~mask]))
                     filtered_values = [val for val in non_mitotic_radius if val is not None]
+                    self.non_mitotic_mean_radius.append(np.mean(filtered_values))
+                    
                     self.non_mitotic_var_radius.append(np.std(filtered_values))
 
                     self.non_mitotic_mean_speed.append(np.mean(non_mitotic_speed))
@@ -1780,9 +1780,9 @@ class TrackMate(object):
                     self.all_mean_disp_x.append(np.mean(all_disp_x))
                     self.all_var_disp_x.append(np.std(all_disp_x))
 
-                    mask = all_radius == None
-                    self.all_mean_radius.append(np.mean(all_radius[~mask]))
                     filtered_values = [val for val in all_radius if val is not None]
+                    self.all_mean_radius.append(np.mean(filtered_values))
+                    
                     self.all_var_radius.append(np.std(filtered_values))
 
                     self.all_mean_speed.append(np.mean(all_speed))
