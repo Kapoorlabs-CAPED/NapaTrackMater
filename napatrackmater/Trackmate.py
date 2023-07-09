@@ -1729,7 +1729,8 @@ class TrackMate(object):
 
                     mask = mitotic_radius == None
                     self.mitotic_mean_radius.append(np.mean(mitotic_radius[~mask]))
-                    self.mitotic_var_radius.append(np.std(mitotic_radius[~mask]))
+                    filtered_values = [val for val in mitotic_radius if val is not None]
+                    self.mitotic_var_radius.append(np.std(filtered_values))
                     
                     self.mitotic_mean_speed.append(np.mean(mitotic_speed))
                     self.mitotic_var_speed.append(np.std(mitotic_speed))
@@ -1754,7 +1755,8 @@ class TrackMate(object):
 
                     mask = non_mitotic_radius == None
                     self.non_mitotic_mean_radius.append(np.mean(non_mitotic_radius[~mask]))
-                    self.non_mitotic_var_radius.append(np.std(non_mitotic_radius[~mask]))
+                    filtered_values = [val for val in non_mitotic_radius if val is not None]
+                    self.non_mitotic_var_radius.append(np.std(filtered_values))
 
                     self.non_mitotic_mean_speed.append(np.mean(non_mitotic_speed))
                     self.non_mitotic_var_speed.append(np.std(non_mitotic_speed))
@@ -1780,7 +1782,8 @@ class TrackMate(object):
 
                     mask = all_radius == None
                     self.all_mean_radius.append(np.mean(all_radius[~mask]))
-                    self.all_var_radius.append(np.std(all_radius[~mask]))
+                    filtered_values = [val for val in all_radius if val is not None]
+                    self.all_var_radius.append(np.std(filtered_values))
 
                     self.all_mean_speed.append(np.mean(all_speed))
                     self.all_var_speed.append(np.std(all_speed))
