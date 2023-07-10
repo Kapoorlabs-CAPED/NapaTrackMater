@@ -15,7 +15,7 @@ setup(
 
     version=__version__,
 
-    author='Varun Kapoor, Mari Tolonen',
+    author='Varun Kapoor, Mari Tolonen, Jakub Sedzinski',
     author_email='randomaccessiblekapoor@gmail.com',
     url='https://github.com/kapoorlab/NapaTrackMater/',
     description='Import Trackmate XML files for Track Visualization and analysis in Napari.',
