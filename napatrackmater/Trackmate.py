@@ -280,10 +280,10 @@ class TrackMate(object):
           
 
     def _get_attributes(self):
-            
+             AllTrackValues = {}
              self.Attributeids, self.AllValues =  get_spot_dataset(self.spot_dataset, self.track_analysis_spot_keys, self.xcalibration, self.ycalibration, self.zcalibration, self.AttributeBoxname, self.detectorchannel)
              print('obtianed spot attributes')
-             self.TrackAttributeids, self.AllTrackValues = get_track_dataset(self.track_dataset,  self.track_analysis_spot_keys, self.track_analysis_track_keys, self.TrackAttributeBoxname)
+             self.TrackAttributeids, self.AllTrackValues = get_track_dataset( AllTrackValues, self.track_dataset,  self.track_analysis_spot_keys, self.track_analysis_track_keys, self.TrackAttributeBoxname)
              print('obtained track attributes')
              self.AllEdgesValues = get_edges_dataset(self.edges_dataset, self.edges_dataset_index, self.track_analysis_spot_keys, self.track_analysis_edges_keys)
              print('obtained edge attributes')
@@ -1952,12 +1952,12 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
         return Attributeids, AllValues     
     
 
-def get_track_dataset(track_dataset, track_analysis_spot_keys, track_analysis_track_keys, TrackAttributeBoxname):
-    AllTrackValues = {}
+def get_track_dataset(AllTrackValues, track_dataset, track_analysis_spot_keys, track_analysis_track_keys, TrackAttributeBoxname):
+   
     track_id = track_analysis_spot_keys["track_id"]
-    Tid = track_dataset[track_id].astype("float")
+    Tid = int(track_dataset[track_id].astype("float"))
 
-    AllTrackValues[track_id] = Tid
+    AllTrackValues[Tid] = {}
 
     for (k, v) in track_analysis_track_keys.items():
         x = track_dataset[v].astype("float")
@@ -1967,7 +1967,7 @@ def get_track_dataset(track_dataset, track_analysis_spot_keys, track_analysis_tr
         if minval > 0 and maxval <= 1:
             x = x + 1
 
-        AllTrackValues[track_id][k] = round(x, 3)
+        AllTrackValues[Tid][k] = round(x, 3)
 
     TrackAttributeids = [TrackAttributeBoxname] + list(track_analysis_track_keys.keys())
 
