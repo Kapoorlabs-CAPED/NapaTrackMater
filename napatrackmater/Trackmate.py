@@ -801,7 +801,11 @@ class TrackMate(object):
                                     total_intensity =  float(all_dict_values[self.total_intensity_key])
                                    
                                     distance_cell_mask = float(all_dict_values[self.distance_cell_mask_key])
-                                   
+                                    
+                                    track_displacement = float(all_dict_values[self.displacement_key])
+                                    total_track_distance = float(all_dict_values[self.total_track_distance_key])
+                                    max_track_distance = float(all_dict_values[self.max_distance_traveled_key])
+                                    track_duration = float(all_dict_values[self.track_duration_key])
 
                                       
                                     if self.surface_area_key in all_dict_values.keys():
