@@ -166,10 +166,10 @@ class TrackMate(object):
        
         
         self.speed_key = self.track_analysis_edges_keys["speed"]
-        self.displacement_key = self.track_analysis_edges_keys["displacement"]
-        self.total_track_distance_key = self.track_analysis_edges_keys["total_track_distance"]
-        self.max_distance_traveled_key = self.track_analysis_edges_keys["max_track_distance"]
-        self.track_duration_key = self.track_analysis_edges_keys["track_duration"]
+        self.displacement_key = self.track_analysis_track_keys["displacement"]
+        self.total_track_distance_key = self.track_analysis_track_keys["total_track_distance"]
+        self.max_distance_traveled_key = self.track_analysis_track_keys["max_track_distance"]
+        self.track_duration_key = self.track_analysis_track_keys["track_duration"]
         
         self.edge_time_key = self.track_analysis_edges_keys["edge_time"]
         self.edge_x_location_key = self.track_analysis_edges_keys["edge_x_location"]
