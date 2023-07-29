@@ -730,7 +730,7 @@ class TrackMate(object):
                                     y = float(all_dict_values[self.yposid_key])
                                     x = float(all_dict_values[self.xposid_key])
 
-                                    current_tracklets, current_tracklets_properties = self._tracklet_and_properties(track_id, all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties)
+                                    current_tracklets, current_tracklets_properties = self._tracklet_and_properties(int(track_id), all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties)
                                     
 
                             current_tracklets = np.asarray(current_tracklets[str(track_id)], dtype=np.float32)
