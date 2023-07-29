@@ -167,6 +167,10 @@ class TrackMate(object):
         
         self.speed_key = self.track_analysis_edges_keys["speed"]
         self.displacement_key = self.track_analysis_edges_keys["displacement"]
+        self.total_track_distance_key = self.track_analysis_edges_keys["total_track_distance"]
+        self.max_distance_traveled_key = self.track_analysis_edges_keys["max_track_distance"]
+        self.track_duration_key = self.track_analysis_edges_keys["track_duration"]
+        
         self.edge_time_key = self.track_analysis_edges_keys["edge_time"]
         self.edge_x_location_key = self.track_analysis_edges_keys["edge_x_location"]
         self.edge_y_location_key = self.track_analysis_edges_keys["edge_y_location"]
@@ -747,7 +751,13 @@ class TrackMate(object):
                                     total_intensity =  float(all_dict_values[self.total_intensity_key])
                                    
                                     distance_cell_mask = float(all_dict_values[self.distance_cell_mask_key])
+                                    
+                                    track_displacement = float(all_dict_values[self.displacement_key])
+                                    total_track_distance = float(all_dict_values[self.total_track_distance_key])
+                                    max_track_distance = float(all_dict_values[self.max_distance_traveled_key])
+                                    track_duration = float(all_dict_values[self.track_duration_key])
 
+                                     
                                     if self.surface_area_key in all_dict_values.keys():
                                            
                                            eccentricity_comp_first = float(all_dict_values[self.eccentricity_comp_firstkey])
@@ -771,7 +781,7 @@ class TrackMate(object):
                                         current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
 
                                         value_array = current_tracklets_properties[current_track_id]
-                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels, eccentricity_comp_first, eccentricity_comp_second, surface_area, total_intensity, speed, motion_angle, acceleration, distance_cell_mask, radial_angle, cell_axis_mask])
+                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels, eccentricity_comp_first, eccentricity_comp_second, surface_area, total_intensity, speed, motion_angle, acceleration, distance_cell_mask, radial_angle, cell_axis_mask, track_displacement,total_track_distance,max_track_distance, track_duration])
                                         
                                         current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
 
@@ -779,7 +789,7 @@ class TrackMate(object):
                                         current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
                                         current_tracklets[current_track_id] = current_tracklet_array 
 
-                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels,  eccentricity_comp_first, eccentricity_comp_second, surface_area,  total_intensity, speed, motion_angle, acceleration, distance_cell_mask, radial_angle, cell_axis_mask ])
+                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels,  eccentricity_comp_first, eccentricity_comp_second, surface_area,  total_intensity, speed, motion_angle, acceleration, distance_cell_mask, radial_angle, cell_axis_mask, track_displacement,total_track_distance,max_track_distance, track_duration])
                                         current_tracklets_properties[current_track_id] = current_value_array
 
                                     return current_tracklets, current_tracklets_properties     
