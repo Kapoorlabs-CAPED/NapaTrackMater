@@ -730,7 +730,7 @@ class TrackMate(object):
                                     y = float(all_dict_values[self.yposid_key])
                                     x = float(all_dict_values[self.xposid_key])
 
-                                    current_tracklets, current_tracklets_properties = self._tracklet_and_properties(all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties)
+                                    current_tracklets, current_tracklets_properties = self._tracklet_and_properties(track_id, all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties)
                                     
 
                             current_tracklets = np.asarray(current_tracklets[str(track_id)], dtype=np.float32)
@@ -739,7 +739,7 @@ class TrackMate(object):
                             self.unique_tracks[track_id] = current_tracklets     
                             self.unique_track_properties[track_id] = current_tracklets_properties    
 
-    def _tracklet_and_properties(self, all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties):
+    def _tracklet_and_properties(self, track_id, all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties):
            
                                     gen_id = int(float(all_dict_values[self.generationid_key]))
                                     speed = float(all_dict_values[self.speed_key])
@@ -752,12 +752,12 @@ class TrackMate(object):
                                    
                                     distance_cell_mask = float(all_dict_values[self.distance_cell_mask_key])
                                     
-                                    track_displacement = float(all_dict_values[self.displacement_key])
-                                    total_track_distance = float(all_dict_values[self.total_track_distance_key])
-                                    max_track_distance = float(all_dict_values[self.max_distance_traveled_key])
-                                    track_duration = float(all_dict_values[self.track_duration_key])
+                                    track_displacement = float(self.AllTrackValues[track_id][self.displacement_key])
+                                    total_track_distance = float(self.AllTrackValues[track_id][self.total_track_distance_key])
+                                    max_track_distance = float(self.AllTrackValues[track_id][self.max_distance_traveled_key])
+                                    track_duration = float(self.AllTrackValues[track_id][self.track_duration_key])
 
-                                     
+                                      
                                     if self.surface_area_key in all_dict_values.keys():
                                            
                                            eccentricity_comp_first = float(all_dict_values[self.eccentricity_comp_firstkey])
@@ -781,7 +781,7 @@ class TrackMate(object):
                                         current_tracklets[current_track_id] = np.vstack((tracklet_array, current_tracklet_array))
 
                                         value_array = current_tracklets_properties[current_track_id]
-                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels, eccentricity_comp_first, eccentricity_comp_second, surface_area, total_intensity, speed, motion_angle, acceleration, distance_cell_mask, radial_angle, cell_axis_mask, track_displacement,total_track_distance,max_track_distance, track_duration])
+                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels, eccentricity_comp_first, eccentricity_comp_second, surface_area, total_intensity, speed, motion_angle, acceleration, distance_cell_mask, radial_angle, cell_axis_mask,track_displacement, total_track_distance, max_track_distance, track_duration ])
                                         
                                         current_tracklets_properties[current_track_id] = np.vstack((value_array, current_value_array))
 
@@ -789,7 +789,7 @@ class TrackMate(object):
                                         current_tracklet_array = np.array([int(float(unique_id)), t, z/self.zcalibration, y/self.ycalibration, x/self.xcalibration])
                                         current_tracklets[current_track_id] = current_tracklet_array 
 
-                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels,  eccentricity_comp_first, eccentricity_comp_second, surface_area,  total_intensity, speed, motion_angle, acceleration, distance_cell_mask, radial_angle, cell_axis_mask, track_displacement,total_track_distance,max_track_distance, track_duration])
+                                        current_value_array = np.array([t, int(float(unique_id)), gen_id, radius, volume_pixels,  eccentricity_comp_first, eccentricity_comp_second, surface_area,  total_intensity, speed, motion_angle, acceleration, distance_cell_mask, radial_angle, cell_axis_mask,track_displacement, total_track_distance, max_track_distance, track_duration ])
                                         current_tracklets_properties[current_track_id] = current_value_array
 
                                     return current_tracklets, current_tracklets_properties     
@@ -1951,32 +1951,28 @@ def get_spot_dataset(spot_dataset, track_analysis_spot_keys, xcalibration, ycali
         
         return Attributeids, AllValues     
     
+
 def get_track_dataset(track_dataset, track_analysis_spot_keys, track_analysis_track_keys, TrackAttributeBoxname):
+    AllTrackValues = {}
+    track_id = track_analysis_spot_keys["track_id"]
+    Tid = track_dataset[track_id].astype("float")
 
-        AllTrackValues = {}
-        track_id = track_analysis_spot_keys["track_id"]
-        Tid = track_dataset[track_id].astype("float")
-       
-        AllTrackValues[track_id] = Tid
-      
-        for (k, v) in track_analysis_track_keys.items():
+    AllTrackValues[track_id] = {}
+    AllTrackValues[track_id][TrackAttributeBoxname] = Tid
 
-                x = track_dataset[v].astype("float")
-                minval = min(x)
-                maxval = max(x)
+    for (k, v) in track_analysis_track_keys.items():
+        x = track_dataset[v].astype("float")
+        minval = min(x)
+        maxval = max(x)
 
-                if minval > 0 and maxval <= 1:
+        if minval > 0 and maxval <= 1:
+            x = x + 1
 
-                    x = x + 1
+        AllTrackValues[track_id][k] = round(x, 3)
 
-                AllTrackValues[k] = round(x, 3)
+    TrackAttributeids = [TrackAttributeBoxname] + list(track_analysis_track_keys.keys())
 
-        TrackAttributeids = []
-        TrackAttributeids.append(TrackAttributeBoxname)
-        for attributename in track_analysis_track_keys.keys():
-            TrackAttributeids.append(attributename)    
-    
-        return TrackAttributeids, AllTrackValues
+    return TrackAttributeids, AllTrackValues
     
 def get_edges_dataset(edges_dataset, edges_dataset_index, track_analysis_spot_keys, track_analysis_edges_keys):
 
