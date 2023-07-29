@@ -337,8 +337,6 @@ class TrackMate(object):
           
     def _get_track_features(self, track):
         
-        
-        
         track_displacement = float(track.get(self.displacement_key))
         total_track_distance = float(track.get(self.total_track_distance_key))
         max_track_distance = float(track.get(self.max_distance_traveled_key))
@@ -572,6 +570,8 @@ class TrackMate(object):
                             
                             current_cell_ids = []
                             unique_tracklet_ids = []
+                            track_displacement,total_track_distance, max_track_distance, track_duration  =  self._get_track_features(track)
+
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids) 
                             self._iterate_split_down(root_root, root_leaf, root_splits)
@@ -600,6 +600,10 @@ class TrackMate(object):
                                    self._dict_update(unique_tracklet_ids, leaf, track_id, source_leaf, None)
                                    self.unique_spot_properties[leaf].update({self.dividing_key : dividing_trajectory})
                                    self.unique_spot_properties[leaf].update({self.number_dividing_key : number_dividing})
+                                   self.unique_spot_properties[leaf].update({self.displacement_key : track_displacement})
+                                   self.unique_spot_properties[leaf].update({self.total_track_distance_key : total_track_distance})
+                                   self.unique_spot_properties[leaf].update({self.max_distance_traveled_key : max_track_distance})
+                                   self.unique_spot_properties[leaf].update({self.track_duration_key : track_duration})
 
                             for source_id in all_source_ids:
                                         target_ids = self.edge_target_lookup[source_id]
@@ -607,12 +611,20 @@ class TrackMate(object):
                                         #Root
                                         self.unique_spot_properties[source_id].update({self.dividing_key : dividing_trajectory})
                                         self.unique_spot_properties[source_id].update({self.number_dividing_key : number_dividing})
+                                        self.unique_spot_properties[source_id].update({self.displacement_key : track_displacement})
+                                        self.unique_spot_properties[source_id].update({self.total_track_distance_key : total_track_distance})
+                                        self.unique_spot_properties[source_id].update({self.max_distance_traveled_key : max_track_distance})
+                                        self.unique_spot_properties[source_id].update({self.track_duration_key : track_duration})
                                         if source_id not in all_target_ids:
                                                 
                                                 for target_id in target_ids:
                                                    self._dict_update(unique_tracklet_ids, source_id, track_id, None, target_id)
                                                    self.unique_spot_properties[target_id].update({self.dividing_key : dividing_trajectory})
                                                    self.unique_spot_properties[target_id].update({self.number_dividing_key : number_dividing})
+                                                   self.unique_spot_properties[source_id].update({self.displacement_key : track_displacement})
+                                                   self.unique_spot_properties[source_id].update({self.total_track_distance_key : total_track_distance})
+                                                   self.unique_spot_properties[source_id].update({self.max_distance_traveled_key : max_track_distance})
+                                                   self.unique_spot_properties[source_id].update({self.track_duration_key : track_duration})
                                         else:
                                               #Normal        
                                               source_source_id = self.edge_source_lookup[source_id]
@@ -620,6 +632,10 @@ class TrackMate(object):
                                                     self._dict_update(unique_tracklet_ids, source_id, track_id, source_source_id, target_id) 
                                                     self.unique_spot_properties[target_id].update({self.dividing_key : dividing_trajectory}) 
                                                     self.unique_spot_properties[target_id].update({self.number_dividing_key : number_dividing})
+                                                    self.unique_spot_properties[source_id].update({self.displacement_key : track_displacement})
+                                                    self.unique_spot_properties[source_id].update({self.total_track_distance_key : total_track_distance})
+                                                    self.unique_spot_properties[source_id].update({self.max_distance_traveled_key : max_track_distance})
+                                                    self.unique_spot_properties[source_id].update({self.track_duration_key : track_duration})
                                         
 
                                            
@@ -662,7 +678,8 @@ class TrackMate(object):
                             
                             current_cell_ids = []
                            
-                            
+                            track_displacement,total_track_distance, max_track_distance, track_duration  =  self._get_track_features(track)
+
                             all_source_ids, all_target_ids =  self._generate_generations(track)
                             root_root, root_splits, root_leaf = self._create_generations(all_source_ids) 
                             self._iterate_split_down(root_root, root_leaf, root_splits)
@@ -690,10 +707,19 @@ class TrackMate(object):
                                    current_cell_ids.append(leaf) 
                                    self.unique_spot_properties[leaf].update({self.dividing_key : dividing_trajectory})
                                    self.unique_spot_properties[leaf].update({self.number_dividing_key : number_dividing})
+                                   self.unique_spot_properties[leaf].update({self.displacement_key : track_displacement})
+                                   self.unique_spot_properties[leaf].update({self.total_track_distance_key : total_track_distance})
+                                   self.unique_spot_properties[leaf].update({self.max_distance_traveled_key : max_track_distance})
+                                   self.unique_spot_properties[leaf].update({self.track_duration_key : track_duration})
+                                   
                             for source_id in all_source_ids:
                                    self._second_channel_update(source_id, track_id)
                                    self.unique_spot_properties[source_id].update({self.dividing_key : dividing_trajectory})
                                    self.unique_spot_properties[source_id].update({self.number_dividing_key : number_dividing})
+                                   self.unique_spot_properties[source_id].update({self.displacement_key : track_displacement})
+                                   self.unique_spot_properties[source_id].update({self.total_track_distance_key : total_track_distance})
+                                   self.unique_spot_properties[source_id].update({self.max_distance_traveled_key : max_track_distance})
+                                   self.unique_spot_properties[source_id].update({self.track_duration_key : track_duration})
                                    current_cell_ids.append(source_id)
                                                 
 
@@ -702,6 +728,10 @@ class TrackMate(object):
                                    self.root_spots[int(current_root)] = self.unique_spot_properties[int(current_root)]
                                    self.unique_spot_properties[source_id].update({self.dividing_key : dividing_trajectory})
                                    self.unique_spot_properties[source_id].update({self.number_dividing_key : number_dividing})
+                                   self.unique_spot_properties[source_id].update({self.displacement_key : track_displacement})
+                                   self.unique_spot_properties[source_id].update({self.total_track_distance_key : total_track_distance})
+                                   self.unique_spot_properties[source_id].update({self.max_distance_traveled_key : max_track_distance})
+                                   self.unique_spot_properties[source_id].update({self.track_duration_key : track_duration})
                             
                             self.all_current_cell_ids[int(track_id)] = current_cell_ids
                            
@@ -733,7 +763,7 @@ class TrackMate(object):
                 x = self.unique_spot_properties[int(cell_id)][self.xposid_key]/self.xcalibration
                 self._second_channel_spots(frame, z, y, x, cell_id, track_id)
         
-    def _final_tracks(self, track, track_id):
+    def _final_tracks(self, track_id):
 
                             current_cell_ids = self.all_current_cell_ids[int(track_id)]
                             current_tracklets = {}
@@ -750,7 +780,7 @@ class TrackMate(object):
                                     y = float(all_dict_values[self.yposid_key])
                                     x = float(all_dict_values[self.xposid_key])
 
-                                    current_tracklets, current_tracklets_properties = self._tracklet_and_properties(track,  all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties)
+                                    current_tracklets, current_tracklets_properties = self._tracklet_and_properties( all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties)
                                     
 
                             current_tracklets = np.asarray(current_tracklets[str(track_id)], dtype=np.float32)
@@ -759,7 +789,7 @@ class TrackMate(object):
                             self.unique_tracks[track_id] = current_tracklets     
                             self.unique_track_properties[track_id] = current_tracklets_properties    
 
-    def _tracklet_and_properties(self, track, all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties):
+    def _tracklet_and_properties(self,all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties):
            
                                     gen_id = int(float(all_dict_values[self.generationid_key]))
                                     speed = float(all_dict_values[self.speed_key])
@@ -771,7 +801,6 @@ class TrackMate(object):
                                     total_intensity =  float(all_dict_values[self.total_intensity_key])
                                    
                                     distance_cell_mask = float(all_dict_values[self.distance_cell_mask_key])
-                                    track_displacement,total_track_distance, max_track_distance, track_duration  =  self._get_track_features(track)
                                    
 
                                       
@@ -1032,7 +1061,7 @@ class TrackMate(object):
                                         self.count = self.count + 1
                                         self.progress_bar.value = self.count
                                     track = self.filtered_tracks[index]    
-                                    self._final_tracks(track, track_id) 
+                                    self._final_tracks(track_id) 
 
             if self.fourier:
                    print('computing Fourier')
@@ -1198,7 +1227,7 @@ class TrackMate(object):
                                         self.count = self.count + 1
                                         self.progress_bar.value = self.count
                                     track = self.filtered_tracks[index]    
-                                    self._final_tracks(track, track_id) 
+                                    self._final_tracks(track_id) 
 
                 if self.fourier:
                    print('computing Fourier')
