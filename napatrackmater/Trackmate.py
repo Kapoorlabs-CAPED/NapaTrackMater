@@ -225,7 +225,12 @@ class TrackMate(object):
                print('Reading Master XML')
                
                self.xml_content = et.fromstring(open(self.master_xml_path).read().encode(), xml_parser)
-               
+               self.filtered_tracks = [
+                            track
+                            for track in self.xml_content.find("Model")
+                            .find("FilteredTracks")
+                            .findall("TrackID")
+                        ]
                self.filtered_track_ids = [
                             int(track.get(self.trackid_key))
                             for track in self.xml_content.find("Model")
