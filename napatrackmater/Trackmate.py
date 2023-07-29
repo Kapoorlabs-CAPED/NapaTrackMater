@@ -750,7 +750,7 @@ class TrackMate(object):
                                     y = float(all_dict_values[self.yposid_key])
                                     x = float(all_dict_values[self.xposid_key])
 
-                                    current_tracklets, current_tracklets_properties = self._tracklet_and_properties(track, int(track_id), all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties)
+                                    current_tracklets, current_tracklets_properties = self._tracklet_and_properties(track,  all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties)
                                     
 
                             current_tracklets = np.asarray(current_tracklets[str(track_id)], dtype=np.float32)
@@ -759,7 +759,7 @@ class TrackMate(object):
                             self.unique_tracks[track_id] = current_tracklets     
                             self.unique_track_properties[track_id] = current_tracklets_properties    
 
-    def _tracklet_and_properties(self, track,  track_id, all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties):
+    def _tracklet_and_properties(self, track, all_dict_values, t, z, y, x, k, current_track_id, unique_id, current_tracklets, current_tracklets_properties):
            
                                     gen_id = int(float(all_dict_values[self.generationid_key]))
                                     speed = float(all_dict_values[self.speed_key])
@@ -771,7 +771,7 @@ class TrackMate(object):
                                     total_intensity =  float(all_dict_values[self.total_intensity_key])
                                    
                                     distance_cell_mask = float(all_dict_values[self.distance_cell_mask_key])
-                                    track_displacement,total_track_distance, max_track_distance, track_duration  =  self._get_track_features(self, track)
+                                    track_displacement,total_track_distance, max_track_distance, track_duration  =  self._get_track_features(track)
                                    
 
                                       
