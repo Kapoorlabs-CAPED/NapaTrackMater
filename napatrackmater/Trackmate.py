@@ -966,7 +966,7 @@ class TrackMate(object):
                       self.xml_root = self.xml_tree.getroot()
                       base_name = os.path.splitext(os.path.basename(self.xml_path))[0]
                       if 'nuclei' in base_name:
-                             base_name.replace('nuclei', 'membrane')
+                             base_name = base_name.replace('nuclei', 'membrane')
                              new_name = base_name
                       else:
                              new_name = base_name + '_membrane'              
@@ -1122,7 +1122,7 @@ class TrackMate(object):
                       self.xml_root = self.xml_tree.getroot()
                       base_name = os.path.splitext(os.path.basename(self.xml_path))[0]
                       if 'nuclei' in base_name:
-                             base_name.replace('nuclei', 'membrane')
+                             base_name = base_name.replace('nuclei', 'membrane')
                              new_name = base_name
                       else:
                              new_name = base_name + '_membrane'              
