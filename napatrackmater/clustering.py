@@ -47,7 +47,7 @@ class PointCloudDataset(Dataset):
 
 class Clustering:
 
-    def __init__(self, accelerator: str, devices: List[int] | str | int,  label_image: np.ndarray, axes,  num_points: int, model: AutoLightningModel, key = 0,  min_size:tuple = (2,2,2), progress_bar = None, batch_size = 1, scale_z=1.0, scale_xy=1.0, center=True):
+    def __init__(self, accelerator: str, devices: List[int],  label_image: np.ndarray, axes,  num_points: int, model: AutoLightningModel, key = 0,  min_size:tuple = (2,2,2), progress_bar = None, batch_size = 1, scale_z=1.0, scale_xy=1.0, center=True):
 
 
         self.accelerator = accelerator
