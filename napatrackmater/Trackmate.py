@@ -1082,7 +1082,12 @@ class TrackMate(object):
     def _create_second_channel_xml(self):
            
                     print('Transferring XML')   
-                    channel_filtered_tracks = []            
+                    channel_filtered_tracks = []    
+                    file_name = self.settings.get("filename")
+                    if 'nuclei' in file_name:
+                             file_name = file_name.replace('nuclei', 'membrane')   
+                    for Spotobject in self.xml_root.iter('ImageData'):
+                           Spotobject.set('filename', file_name)              
                     for Spotobject in self.xml_root.iter('Spot'):
                             cell_id = int(Spotobject.get(self.spotid_key))
                             if cell_id in self.channel_unique_spot_properties.keys():        
@@ -1121,6 +1126,7 @@ class TrackMate(object):
                       self.xml_tree = et.parse(self.xml_path)
                       self.xml_root = self.xml_tree.getroot()
                       base_name = os.path.splitext(os.path.basename(self.xml_path))[0]
+                      
                       if 'nuclei' in base_name:
                              base_name = base_name.replace('nuclei', 'membrane')
                              new_name = base_name
