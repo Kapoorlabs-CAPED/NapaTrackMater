@@ -119,7 +119,7 @@ class Clustering:
             
                 return  output_labels,  output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_dimensions, output_cloud_surface_area
 
-def _model_output(model: torch.nn.Module, accelerator: str, devices: List[int] | str | int, clouds, labels, centroids, batch_size: int, scale_z:float=1.0, scale_xy:float=1.0):
+def _model_output(model: torch.nn.Module, accelerator: str, devices: List[int] , clouds, labels, centroids, batch_size: int, scale_z:float=1.0, scale_xy:float=1.0):
        
         output_labels = []
         output_cluster_centroid = []

@@ -167,9 +167,9 @@ class TrackMate(object):
         
         self.speed_key = self.track_analysis_edges_keys["speed"]
         self.displacement_key = self.track_analysis_edges_keys["displacement"]
-        self.total_track_distance_key = self.track_analysis_edges_keys["total_track_distance"]
-        self.max_distance_traveled_key = self.track_analysis_edges_keys["max_track_distance"]
-        self.track_duration_key = self.track_analysis_edges_keys["track_duration"]
+        self.total_track_distance_key = self.track_analysis_track_keys["total_track_distance"]
+        self.max_distance_traveled_key = self.track_analysis_track_keys["max_track_distance"]
+        self.track_duration_key = self.track_analysis_track_keys["track_duration"]
         
         self.edge_time_key = self.track_analysis_edges_keys["edge_time"]
         self.edge_x_location_key = self.track_analysis_edges_keys["edge_x_location"]
@@ -914,7 +914,13 @@ class TrackMate(object):
                       self.channel_xml_content = self.xml_content
                       self.xml_tree = et.parse(self.xml_path)
                       self.xml_root = self.xml_tree.getroot()
-                      self.channel_xml_name = 'second_channel_' + os.path.splitext(os.path.basename(self.xml_path))[0] + '.xml'
+                      base_name = os.path.splitext(os.path.basename(self.xml_path))[0]
+                      if base_name.contains('nuclei'):
+                             base_name.replace('nuclei', 'membrane')
+                             new_name = base_name
+                      else:
+                             new_name = base_name + '_membrane'              
+                      self.channel_xml_name = new_name + '.xml'
                       self.channel_xml_path = os.path.dirname(self.xml_path)
                       self._create_channel_tree()
 
@@ -1063,7 +1069,13 @@ class TrackMate(object):
                       self.channel_xml_content = self.xml_content
                       self.xml_tree = et.parse(self.xml_path)
                       self.xml_root = self.xml_tree.getroot()
-                      self.channel_xml_name = 'second_channel_' + os.path.splitext(os.path.basename(self.xml_path))[0] + '.xml'
+                      base_name = os.path.splitext(os.path.basename(self.xml_path))[0]
+                      if base_name.contains('nuclei'):
+                             base_name.replace('nuclei', 'membrane')
+                             new_name = base_name
+                      else:
+                             new_name = base_name + '_membrane'              
+                      self.channel_xml_name = new_name + '.xml'
                       self.channel_xml_path = os.path.dirname(self.xml_path)
                       self._create_channel_tree()
                 if self.autoencoder_model is not None and self.seg_image is not None:
