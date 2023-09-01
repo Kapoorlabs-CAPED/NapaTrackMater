@@ -47,7 +47,7 @@ class PointCloudDataset(Dataset):
 
 class Clustering:
 
-    def __init__(self, accelerator: str, devices: List[int] | str | int,  label_image: np.ndarray, axes,  num_points: int, model: AutoLightningModel, key = 0,  min_size:tuple = (2,2,2), progress_bar = None, batch_size = 1, scale_z=1.0, scale_xy=1.0, center=True):
+    def __init__(self, accelerator: str, devices: List[int],  label_image: np.ndarray, axes,  num_points: int, model: AutoLightningModel, key = 0,  min_size:tuple = (2,2,2), progress_bar = None, batch_size = 1, scale_z=1.0, scale_xy=1.0, center=True):
 
 
         self.accelerator = accelerator
@@ -119,7 +119,7 @@ class Clustering:
             
                 return  output_labels,  output_cluster_centroid, output_cloud_eccentricity, output_largest_eigenvector, output_largest_eigenvalue, output_dimensions, output_cloud_surface_area
 
-def _model_output(model: torch.nn.Module, accelerator: str, devices: List[int] | str | int, clouds, labels, centroids, batch_size: int, scale_z:float=1.0, scale_xy:float=1.0):
+def _model_output(model: torch.nn.Module, accelerator: str, devices: List[int] , clouds, labels, centroids, batch_size: int, scale_z:float=1.0, scale_xy:float=1.0):
        
         output_labels = []
         output_cluster_centroid = []

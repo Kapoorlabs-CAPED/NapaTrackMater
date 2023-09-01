@@ -964,7 +964,13 @@ class TrackMate(object):
                       self.channel_xml_content = self.xml_content
                       self.xml_tree = et.parse(self.xml_path)
                       self.xml_root = self.xml_tree.getroot()
-                      self.channel_xml_name = 'second_channel_' + os.path.splitext(os.path.basename(self.xml_path))[0] + '.xml'
+                      base_name = os.path.splitext(os.path.basename(self.xml_path))[0]
+                      if base_name.contains('nuclei'):
+                             base_name.replace('nuclei', 'membrane')
+                             new_name = base_name
+                      else:
+                             new_name = base_name + '_membrane'              
+                      self.channel_xml_name = new_name + '.xml'
                       self.channel_xml_path = os.path.dirname(self.xml_path)
                       self._create_channel_tree()
 
@@ -1114,7 +1120,13 @@ class TrackMate(object):
                       self.channel_xml_content = self.xml_content
                       self.xml_tree = et.parse(self.xml_path)
                       self.xml_root = self.xml_tree.getroot()
-                      self.channel_xml_name = 'second_channel_' + os.path.splitext(os.path.basename(self.xml_path))[0] + '.xml'
+                      base_name = os.path.splitext(os.path.basename(self.xml_path))[0]
+                      if base_name.contains('nuclei'):
+                             base_name.replace('nuclei', 'membrane')
+                             new_name = base_name
+                      else:
+                             new_name = base_name + '_membrane'              
+                      self.channel_xml_name = new_name + '.xml'
                       self.channel_xml_path = os.path.dirname(self.xml_path)
                       self._create_channel_tree()
                 if self.autoencoder_model is not None and self.seg_image is not None:
