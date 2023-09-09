@@ -9,6 +9,7 @@ import trimesh
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
+import tempfile
 from scipy.spatial import ConvexHull
 from lightning import Trainer
 from typing import List
@@ -348,16 +349,24 @@ def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, mi
             vertices = None
         if vertices is not None:
             mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
-            data = {"pos": mesh_obj.vertices, "face": mesh_obj.faces}
-            points = sample_points(data=data, num=num_points).numpy()
-            if ndim == 2:
-                cloud = get_panda_cloud_xy(points)
-            if ndim == 3:
-                cloud = get_panda_cloud_xyz(points)
-            else:
-                cloud = get_panda_cloud_xyz(points)
 
-            return label, centroid, cloud
+            mesh_file = str(label)
+
+            with tempfile.TemporaryDirectory() as mesh_dir:
+                save_mesh_file = os.path.join(mesh_dir, mesh_file) + ".off"
+                mesh_obj.export(save_mesh_file)
+                data = read_off(save_mesh_file)
+            pos, face = data["pos"], data["face"]
+            if pos.size(1) == 3 and face.size(0) == 3:
+                points = sample_points(data=data, num=num_points).numpy()
+                if ndim == 2:
+                    cloud = get_panda_cloud_xy(points)
+                if ndim == 3:
+                    cloud = get_panda_cloud_xyz(points)
+                else:
+                    cloud = get_panda_cloud_xyz(points)
+
+                return label, centroid, cloud
 
 
 def get_panda_cloud_xy(points):
@@ -424,12 +433,60 @@ def get_current_label_binary(prop: regionprops):
     return binary_image, label, centroid
 
 
+def read_off(path):
+    r"""Reads an OFF (Object File Format) file, returning both the position of
+    nodes and their connectivity in a :class:`torch_geometric.data.Data`
+    object.
+    Args:
+        path (str): The path to the file.
+    """
+    with open(path) as f:
+        src = f.read().split("\n")[:-1]
+    return parse_off(src)
+
+
+def parse_off(src):
+    # Some files may contain a bug and do not have a carriage return after OFF.
+    if src[0] == "OFF":
+        src = src[1:]
+    else:
+        src[0] = src[0][3:]
+
+    num_nodes, num_faces = (int(float(item)) for item in src[0].split()[:2])
+
+    pos = parse_txt_array(src[1 : 1 + num_nodes])
+    face = src[1 + num_nodes : 1 + num_nodes + num_faces]
+    face = face_to_tri(face)
+    data = {"pos": pos, "face": face}
+
+    return data
+
+
+def parse_txt_array(src, sep=None, start=0, end=None, dtype=None):
+    src = [[float(x) for x in line.split(sep)[start:end]] for line in src]
+    src = torch.tensor(src, dtype=dtype).squeeze()
+    return src
+
+
+def face_to_tri(face):
+    face = [[int(float(x)) for x in line.strip().split()] for line in face]
+
+    triangle = torch.tensor([line[1:] for line in face if line[0] == 3])
+    triangle = triangle.to(torch.int64)
+
+    rect = torch.tensor([line[1:] for line in face if line[0] == 4])
+    rect = rect.to(torch.int64)
+
+    if rect.numel() > 0:
+        first, second = rect[:, [0, 1, 2]], rect[:, [0, 2, 3]]
+        return torch.cat([triangle, first, second], dim=0).t().contiguous()
+    else:
+        return triangle.t().contiguous()
+
+
 def sample_points(data, num):
     pos, face = data["pos"], data["face"]
-
-    # Check if the input mesh data has the expected dimensions
-    if pos.size(1) != 3 or face.size(0) != 3:
-        raise ValueError("Input mesh data has incorrect dimensions.")
+    assert pos.size(1) == 3 and face.size(0) == 3
 
     pos_max = pos.abs().max()
     pos = pos / pos_max
