@@ -1,5 +1,4 @@
 from kapoorlabs_lightning.lightning_trainer import AutoLightningModel
-from cellshape_helper.vendor.pytorch_geometric_files import read_off, sample_points
 import numpy as np
 import concurrent
 import os
@@ -350,15 +349,8 @@ def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, mi
             vertices = None
         if vertices is not None:
             mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
-
-            mesh_file = str(label)
-
-            with tempfile.TemporaryDirectory() as mesh_dir:
-                save_mesh_file = os.path.join(mesh_dir, mesh_file) + ".off"
-                mesh_obj.export(save_mesh_file)
-                data = read_off(save_mesh_file)
-            pos, face = data["pos"], data["face"]
-            if pos.size(1) == 3 and face.size(0) == 3:
+            data = {"pos": mesh_obj.vertices, "face": mesh_obj.faces}
+            if data["pos"].shape[1] == 3 and data["face"].shape[0] == 3:
                 points = sample_points(data=data, num=num_points).numpy()
                 if ndim == 2:
                     cloud = get_panda_cloud_xy(points)
@@ -432,3 +424,32 @@ def get_current_label_binary(prop: regionprops):
     centroid = np.asarray(prop.centroid)
 
     return binary_image, label, centroid
+
+def sample_points(data, num):
+    pos, face = data["pos"], data["face"]
+    assert pos.size(1) == 3 and face.size(0) == 3
+
+    pos_max = pos.abs().max()
+    pos = pos / pos_max
+
+    area = (pos[face[1]] - pos[face[0]]).cross(pos[face[2]] - pos[face[0]])
+    area = area.norm(p=2, dim=1).abs() / 2
+
+    prob = area / area.sum()
+    sample = torch.multinomial(prob, num, replacement=True)
+    face = face[:, sample]
+
+    frac = torch.rand(num, 2)
+    mask = frac.sum(dim=-1) > 1
+    frac[mask] = 1 - frac[mask]
+
+    vec1 = pos[face[1]] - pos[face[0]]
+    vec2 = pos[face[2]] - pos[face[0]]
+
+    pos_sampled = pos[face[0]]
+    pos_sampled += frac[:, :1] * vec1
+    pos_sampled += frac[:, 1:] * vec2
+
+    pos_sampled = pos_sampled * pos_max
+
+    return pos_sampled
