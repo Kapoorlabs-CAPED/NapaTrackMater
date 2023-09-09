@@ -9,7 +9,7 @@ import math
 from skimage.measure import label, regionprops
 from skimage.segmentation import find_boundaries
 from scipy import spatial
-from typing import List
+from typing import List, Union
 from scipy.fftpack import fft, fftfreq
 import os
 from pathlib import Path 
@@ -21,7 +21,7 @@ class TrackMate(object):
     
     def __init__(self, xml_path, spot_csv_path, track_csv_path, edges_csv_path, AttributeBoxname, TrackAttributeBoxname, TrackidBox, axes, 
                  scale_z = 1.0, scale_xy = 1.0, center = True, 
-                 progress_bar = None, accelerator: str = 'cuda', devices: List[int] | str | int = -1,
+                 progress_bar = None, accelerator: str = 'cuda', devices: Union[List[int], str, int] = -1,
                  master_xml_path: Path = None, master_extra_name = '', seg_image:np.ndarray = None, channel_seg_image:np.ndarray = None, 
                  image :np.ndarray = None, mask:np.ndarray = None, fourier = True, autoencoder_model = None, num_points = 2048, batch_size = 1):
         
