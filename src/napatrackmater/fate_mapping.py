@@ -67,10 +67,32 @@ class FateMapping:
         bind_to_existing : bool, optional
             Binds sample to existing data point at starting time, by default True
         """
-        self._base_colnames = [ 'Track ID','t', 'z', 'y', 'x']
-        self._spatial_columns = ['z', 'y', 'x','Radius', 'Volume', 'Eccentricity Comp First', 'Eccentricity Comp Second', 'Surface Area', 'Cluster Class']
-        self._dynamic_columns = ['Speed', 'Motion_Angle', 'Acceleration', 'Distance_Cell_mask', 'Radial_Angle', 'Cell_Axis_Mask']
-        self._label_columns = ['Dividing', 'Number_Dividing', 'Touching Neighbours', 'Nearest Neighbours']
+        self._base_colnames = ["Track ID", "t", "z", "y", "x"]
+        self._spatial_columns = [
+            "z",
+            "y",
+            "x",
+            "Radius",
+            "Volume",
+            "Eccentricity Comp First",
+            "Eccentricity Comp Second",
+            "Surface Area",
+            "Cluster Class",
+        ]
+        self._dynamic_columns = [
+            "Speed",
+            "Motion_Angle",
+            "Acceleration",
+            "Distance_Cell_mask",
+            "Radial_Angle",
+            "Cell_Axis_Mask",
+        ]
+        self._label_columns = [
+            "Dividing",
+            "Number_Dividing",
+            "Touching Neighbours",
+            "Nearest Neighbours",
+        ]
         self.reverse = reverse
         self.radius = radius
         self.data = data
@@ -80,15 +102,11 @@ class FateMapping:
         self.n_samples = n_samples
         self.bind_to_existing = bind_to_existing
 
-    def _validate_data(
-        self, value: Union[np.ndarray, pd.DataFrame]
-    ) -> pd.DataFrame:
+    def _validate_data(self, value: Union[np.ndarray, pd.DataFrame]) -> pd.DataFrame:
         """Sanity checks the data and converts to df if necessary"""
         if value.ndim != 2:
-            raise ValueError(
-                f"data must be 2-dim array, found {value.ndim}-dim"
-            )
-      
+            raise ValueError(f"data must be 2-dim array, found {value.ndim}-dim")
+
             value_spatial = pd.DataFrame(
                 value, columns=self._base_colnames[:2] + self._spatial_columns
             )
@@ -189,18 +207,14 @@ class FateMapping:
 
         # connect disconnected pairs to their nearest neighbors in the subsequent time point
         split_df = df.loc[np.logical_not(connected)]
-        split_df = split_df[split_df["t"] == time][
-            self._spatial_columns
-        ].values
+        split_df = split_df[split_df["t"] == time][self._spatial_columns].values
         next_df = self._tracks_by_time.get_group(time + self.step)[
             self._spatial_columns
         ].values
         if split_df.shape[0] > 0 and next_df.shape[0] > 0:
             nn = KNeighborsTransformer(n_neighbors=1)
             nn.fit(next_df)
-            neighbors = nn.kneighbors(
-                split_df, return_distance=False
-            ).squeeze()
+            neighbors = nn.kneighbors(split_df, return_distance=False).squeeze()
 
             if X is None:
                 X = (split_df,)
@@ -266,12 +280,9 @@ class FateMapping:
         for t, group in tqdm(df.groupby("t"), "Computing heatmap"):
             coords = group[self._spatial_columns].round().astype(int)
             coords["w"] = 1
-            coords = coords.groupby(
-                self._spatial_columns, as_index=False
-            ).sum()
+            coords = coords.groupby(self._spatial_columns, as_index=False).sum()
             heatmap.vindex[
-                (int(round(t)),)
-                + tuple(coords[self._spatial_columns].values.T)
+                (int(round(t)),) + tuple(coords[self._spatial_columns].values.T)
             ] = coords["w"]
         return heatmap
 
@@ -310,12 +321,8 @@ class FateMapping:
             current = coords[coords[:, 0] == t]
             df = self._tracks_by_time.get_group(int(round(t)))
             X = df[["t"] + self._spatial_columns].values
-            nn = KNeighborsTransformer(n_neighbors=self.n_samples).fit(
-                X[:, 1:]
-            )
-            neighbors = nn.kneighbors(
-                current[:, 1:], return_distance=False
-            ).reshape(-1)
+            nn = KNeighborsTransformer(n_neighbors=self.n_samples).fit(X[:, 1:])
+            neighbors = nn.kneighbors(current[:, 1:], return_distance=False).reshape(-1)
             samples.append(X[neighbors])
         return np.concatenate(samples, axis=0, dtype=float)
 
@@ -333,9 +340,7 @@ class FateMapping:
         source = np.atleast_2d(source)
 
         if source.ndim > 2:
-            raise ValueError(
-                f"Coordinates must be a 2-dim array. Found {source.ndim}"
-            )
+            raise ValueError(f"Coordinates must be a 2-dim array. Found {source.ndim}")
 
         if source.shape[1] != len(self._spatial_columns) + 1:
             raise ValueError(

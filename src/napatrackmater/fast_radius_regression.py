@@ -61,7 +61,9 @@ class FastRadiusRegressor(RadiusNeighborsRegressor):
         sparse.csr_matrix
             Output weight matrix.
         """
-        dist_zero_constant = 1e10  # high value number to emulate identity function when dist == 0.0
+        dist_zero_constant = (
+            1e10  # high value number to emulate identity function when dist == 0.0
+        )
 
         size = len(neigh_ind)
         lengths = np.asarray([len(ind) for ind in neigh_ind])
