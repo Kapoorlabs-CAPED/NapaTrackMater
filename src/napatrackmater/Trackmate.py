@@ -1668,16 +1668,17 @@ class TrackMate:
                 center=self.center,
             )
             cluster_eval._create_cluster_labels()
-            timed_cluster_label = cluster_eval.timed_cluster_label
-            (
-                output_labels,
-                output_cluster_centroid,
-                output_cloud_eccentricity,
-                output_largest_eigenvector,
-                output_largest_eigenvalue,
-                output_dimensions,
-                output_cloud_surface_area,
-            ) = timed_cluster_label[time_key]
+            if time_key in timed_cluster_label.keys():
+                timed_cluster_label = cluster_eval.timed_cluster_label
+                (
+                    output_labels,
+                    output_cluster_centroid,
+                    output_cloud_eccentricity,
+                    output_largest_eigenvector,
+                    output_largest_eigenvalue,
+                    output_dimensions,
+                    output_cloud_surface_area,
+                ) = timed_cluster_label[time_key]
             scale_1 = 1
             scale_2 = 1
             for i in range(len(output_cluster_centroid)):
