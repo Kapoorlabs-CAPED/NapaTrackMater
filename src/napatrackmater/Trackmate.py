@@ -1668,8 +1668,9 @@ class TrackMate:
                 center=self.center,
             )
             cluster_eval._create_cluster_labels()
+
+            timed_cluster_label = cluster_eval.timed_cluster_label
             if time_key in timed_cluster_label.keys():
-                timed_cluster_label = cluster_eval.timed_cluster_label
                 (
                     output_labels,
                     output_cluster_centroid,
