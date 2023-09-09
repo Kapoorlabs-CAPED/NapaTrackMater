@@ -426,7 +426,10 @@ def get_current_label_binary(prop: regionprops):
 
 def sample_points(data, num):
     pos, face = data["pos"], data["face"]
-    assert pos.size(1) == 3 and face.size(0) == 3
+
+    # Check if the input mesh data has the expected dimensions
+    if pos.size(1) != 3 or face.size(0) != 3:
+        raise ValueError("Input mesh data has incorrect dimensions.")
 
     pos_max = pos.abs().max()
     pos = pos / pos_max
