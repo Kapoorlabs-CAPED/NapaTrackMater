@@ -4,7 +4,6 @@ Created on Tue Dec 21 16:54:50 2021
 @author: stardist devs
 """
 
-# -*- coding: utf-8 -*-
 
 from collections import OrderedDict
 from warnings import warn
