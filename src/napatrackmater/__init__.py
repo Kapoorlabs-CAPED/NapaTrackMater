@@ -11,7 +11,6 @@ def load_json(fpath):
 
 
 __all__ = (
-    # "DeepEmbeddedClustering",
     "CloudAutoEncoder",
     "Clustering",
 )
