@@ -9,7 +9,6 @@ import trimesh
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-import tempfile
 from scipy.spatial import ConvexHull
 from lightning import Trainer
 from typing import List
@@ -350,16 +349,15 @@ def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, mi
         if vertices is not None:
             mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
             data = {"pos": mesh_obj.vertices, "face": mesh_obj.faces}
-            if data["pos"].shape[1] == 3 and data["face"].shape[0] == 3:
-                points = sample_points(data=data, num=num_points).numpy()
-                if ndim == 2:
-                    cloud = get_panda_cloud_xy(points)
-                if ndim == 3:
-                    cloud = get_panda_cloud_xyz(points)
-                else:
-                    cloud = get_panda_cloud_xyz(points)
+            points = sample_points(data=data, num=num_points).numpy()
+            if ndim == 2:
+                cloud = get_panda_cloud_xy(points)
+            if ndim == 3:
+                cloud = get_panda_cloud_xyz(points)
+            else:
+                cloud = get_panda_cloud_xyz(points)
 
-                return label, centroid, cloud
+            return label, centroid, cloud
 
 
 def get_panda_cloud_xy(points):
@@ -424,6 +422,7 @@ def get_current_label_binary(prop: regionprops):
     centroid = np.asarray(prop.centroid)
 
     return binary_image, label, centroid
+
 
 def sample_points(data, num):
     pos, face = data["pos"], data["face"]
