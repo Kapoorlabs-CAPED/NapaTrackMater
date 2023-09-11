@@ -10,8 +10,8 @@ import napari
 class TrackVector(TrackMate):
     def __init__(
         self,
-        viewer,
-        image,
+        viewer: napari.Viewer,
+        image: np.ndarray,
         master_xml_path: Path,
         spot_csv_path: Path,
         track_csv_path: Path,
@@ -237,6 +237,10 @@ class TrackVector(TrackMate):
                     distance_cell_mask,
                     radial_angle,
                     cell_axis_mask,
+                    _,
+                    _,
+                    _,
+                    _,
                 ) = unique_dynamic_properties_tracklet
                 unique_shape_properties_tracklet = nested_unique_shape_properties[
                     current_unique_id
