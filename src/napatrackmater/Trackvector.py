@@ -1,4 +1,4 @@
-from . import TrackMate
+from .Trackmate import TrackMate
 from pathlib import Path
 import lxml.etree as et
 import concurrent
