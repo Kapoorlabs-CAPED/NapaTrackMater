@@ -1,5 +1,6 @@
 from .pretrained import register_model, register_aliases, clear_models_and_aliases
 from .clustering import Clustering
+from .Trackmate import Trackmate, get_feature_dict
 from .DeepEmbeddedClustering import DeepEmbeddedClustering
 from .CloudAutoEncoder import CloudAutoEncoder
 import json
@@ -13,6 +14,8 @@ def load_json(fpath):
 __all__ = (
     "CloudAutoEncoder",
     "Clustering",
+    "Trackmate",
+    "get_feature_dict"
 )
 
 clear_models_and_aliases(DeepEmbeddedClustering, CloudAutoEncoder)

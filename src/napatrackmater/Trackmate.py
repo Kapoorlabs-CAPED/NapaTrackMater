@@ -2744,3 +2744,55 @@ def check_and_update_mask(mask, image):
         update_mask = mask
 
     return update_mask
+
+
+def get_feature_dict(unique_tracks_properties):
+
+    features = {
+            "time": np.asarray(unique_tracks_properties, dtype="float16")[:, 0],
+            "generation": np.asarray(unique_tracks_properties, dtype="float16")[:, 2],
+            "radius": np.asarray(unique_tracks_properties, dtype="float16")[:, 3],
+            "volume_pixels": np.asarray(unique_tracks_properties, dtype="float16")[
+                :, 4
+            ],
+            "eccentricity_comp_first": np.asarray(
+                unique_tracks_properties, dtype="float16"
+            )[:, 5],
+            "eccentricity_comp_second": np.asarray(
+                unique_tracks_properties, dtype="float16"
+            )[:, 6],
+            "surface_area": np.asarray(unique_tracks_properties, dtype="float16")[:, 7],
+            "total_intensity": np.asarray(unique_tracks_properties, dtype="float16")[
+                :, 8
+            ],
+            "speed": np.asarray(unique_tracks_properties, dtype="float16")[:, 9],
+            "motion_angle": np.asarray(unique_tracks_properties, dtype="float16")[
+                :, 10
+            ],
+            "acceleration": np.asarray(unique_tracks_properties, dtype="float16")[
+                :, 11
+            ],
+            "distance_cell_mask": np.asarray(unique_tracks_properties, dtype="float16")[
+                :, 12
+            ],
+            "radial_angle": np.asarray(unique_tracks_properties, dtype="float16")[
+                :, 13
+            ],
+            "cell_axis_mask": np.asarray(unique_tracks_properties, dtype="float16")[
+                :, 14
+            ],
+            "track_displacement": np.asarray(unique_tracks_properties, dtype="float16")[
+                :, 15
+            ],
+            "total_track_distance": np.asarray(
+                unique_tracks_properties, dtype="float16"
+            )[:, 16],
+            "max_track_distance": np.asarray(unique_tracks_properties, dtype="float16")[
+                :, 17
+            ],
+            "track_duration": np.asarray(unique_tracks_properties, dtype="float16")[
+                :, 18
+            ],
+        }
+    
+    return features

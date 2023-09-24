@@ -5,7 +5,7 @@ import concurrent
 import os
 import numpy as np
 import napari
-
+import pandas as pd
 
 class TrackVector(TrackMate):
     def __init__(
@@ -337,25 +337,50 @@ class TrackVector(TrackMate):
                 )
 
                 features = {
-                    "time": np.asarray(unique_tracks_properties, dtype="float64")[:, 0],
-                    "generation": np.asarray(unique_tracks_properties, dtype="float64")[
-                        :, 2
+                    "time": np.asarray(unique_tracks_properties, dtype="float16")[:, 0],
+                    "generation": np.asarray(unique_tracks_properties, dtype="float16")[:, 2],
+                    "radius": np.asarray(unique_tracks_properties, dtype="float16")[:, 3],
+                    "volume_pixels": np.asarray(unique_tracks_properties, dtype="float16")[
+                        :, 4
                     ],
-                    "speed": np.asarray(unique_tracks_properties, dtype="float64")[
-                        :, 3
-                    ],
-                    "directional_change_rate": np.asarray(
-                        unique_tracks_properties, dtype="float64"
-                    )[:, 4],
-                    "total-intensity": np.asarray(
-                        unique_tracks_properties, dtype="float64"
+                    "eccentricity_comp_first": np.asarray(
+                        unique_tracks_properties, dtype="float16"
                     )[:, 5],
-                    "volume_pixels": np.asarray(
-                        unique_tracks_properties, dtype="float64"
+                    "eccentricity_comp_second": np.asarray(
+                        unique_tracks_properties, dtype="float16"
                     )[:, 6],
-                    "acceleration": np.asarray(
-                        unique_tracks_properties, dtype="float64"
-                    )[:, 7],
+                    "surface_area": np.asarray(unique_tracks_properties, dtype="float16")[:, 7],
+                    "total_intensity": np.asarray(unique_tracks_properties, dtype="float16")[
+                        :, 8
+                    ],
+                    "speed": np.asarray(unique_tracks_properties, dtype="float16")[:, 9],
+                    "motion_angle": np.asarray(unique_tracks_properties, dtype="float16")[
+                        :, 10
+                    ],
+                    "acceleration": np.asarray(unique_tracks_properties, dtype="float16")[
+                        :, 11
+                    ],
+                    "distance_cell_mask": np.asarray(unique_tracks_properties, dtype="float16")[
+                        :, 12
+                    ],
+                    "radial_angle": np.asarray(unique_tracks_properties, dtype="float16")[
+                        :, 13
+                    ],
+                    "cell_axis_mask": np.asarray(unique_tracks_properties, dtype="float16")[
+                        :, 14
+                    ],
+                    "track_displacement": np.asarray(unique_tracks_properties, dtype="float16")[
+                        :, 15
+                    ],
+                    "total_track_distance": np.asarray(
+                        unique_tracks_properties, dtype="float16"
+                    )[:, 16],
+                    "max_track_distance": np.asarray(unique_tracks_properties, dtype="float16")[
+                        :, 17
+                    ],
+                    "track_duration": np.asarray(unique_tracks_properties, dtype="float16")[
+                        :, 18
+                    ],
                 }
                 for layer in list(self._viewer.layers):
                     if (
@@ -367,7 +392,7 @@ class TrackVector(TrackMate):
                     vertices = unique_tracks[:, 1:]
                 self._viewer.add_points(vertices, name="Track_points", size=1)
                 self._viewer.add_tracks(unique_tracks, name="Track", features=features)
-
+    
     def _final_morphological_dynamic_vectors(self, track_id):
 
         current_cell_ids = self.all_current_cell_ids[int(track_id)]
@@ -416,3 +441,80 @@ class TrackVector(TrackMate):
             if len(current_tracklets.shape) == 2:
                 self.unique_tracks[track_id] = current_tracklets
                 self.unique_track_properties[track_id] = current_tracklets_properties
+    
+    def get_shape_dynamic_feature_dataframe(self):
+
+        current_shape_dynamic_vectors = self.current_shape_dynamic_vectors
+        global_shape_dynamic_dataframe = []
+
+        for i in range(len(current_shape_dynamic_vectors)):
+            vector_list = list(zip(current_shape_dynamic_vectors[i]))
+            data_frame_list = np.transpose(
+                np.asarray([vector_list[i] for i in range(len(vector_list))])[:, 0, :])
+
+            shape_dynamic_dataframe = pd.DataFrame(data_frame_list, columns=[
+                'Track ID', 't', 'z', 'y', 'x', 'Dividing', 'Number_Dividing', 'Radius', 'Volume',
+                'Eccentricity Comp First', 'Eccentricity Comp Second', 'Surface Area', 'Speed',
+                'Motion_Angle', 'Acceleration', 'Distance_Cell_mask', 'Radial_Angle', 'Cell_Axis_Mask'
+            ])
+
+            if len(global_shape_dynamic_dataframe) == 0:
+                global_shape_dynamic_dataframe = shape_dynamic_dataframe
+            else:
+                global_shape_dynamic_dataframe = pd.concat(
+                    [global_shape_dynamic_dataframe, shape_dynamic_dataframe], ignore_index=True)
+
+        global_shape_dynamic_dataframe = global_shape_dynamic_dataframe.sort_values(by=['Track ID'])
+        global_shape_dynamic_dataframe = global_shape_dynamic_dataframe.sort_values(by=['t'])
+
+       
+        return global_shape_dynamic_dataframe
+    
+    def create_analysis_vectors_dict(self,  global_shape_dynamic_dataframe: pd.DataFrame):
+        analysis_vectors = {}
+        for track_id in global_shape_dynamic_dataframe['Track ID'].unique():
+            track_data = global_shape_dynamic_dataframe[global_shape_dynamic_dataframe['Track ID'] == track_id].sort_values(
+                by='t')
+            shape_dynamic_dataframe = track_data[['Radius', 'Volume', 'Eccentricity Comp First', 'Eccentricity Comp Second',
+                                         'Surface Area', 'Speed', 'Motion_Angle', 'Acceleration', 'Distance_Cell_mask',
+                                         'Radial_Angle', 'Cell_Axis_Mask']]
+            shape_dataframe = track_data[['Radius', 'Volume', 'Eccentricity Comp First', 'Eccentricity Comp Second',
+                                            'Surface Area']]
+            dynamic_dataframe = track_data[['Speed', 'Motion_Angle', 'Acceleration', 'Distance_Cell_mask',
+                                            'Radial_Angle', 'Cell_Axis_Mask']]
+            full_dataframe = track_data[['Track ID', 't', 'z', 'y', 'x', 'Dividing', 'Number_Dividing', 'Radius', 'Volume',
+                                    'Eccentricity Comp First', 'Eccentricity Comp Second', 'Surface Area', 'Speed',
+                                    'Motion_Angle', 'Acceleration', 'Distance_Cell_mask', 'Radial_Angle', 'Cell_Axis_Mask']]
+            
+            shape_dynamic_dataframe_list = shape_dynamic_dataframe.to_dict(orient='records')
+            shape_dataframe_list = shape_dataframe.to_dict(orient='records')
+            dynamic_dataframe_list = dynamic_dataframe.to_dict(orient='records')
+            full_dataframe_list = full_dataframe.to_dict(orient='records')
+            analysis_vectors[track_id] = ( shape_dynamic_dataframe_list, shape_dataframe_list, dynamic_dataframe_list, full_dataframe_list)
+            
+        return analysis_vectors 
+
+    def convert_tracks_to_arrays(self, analysis_vectors, min_track_length=0):
+
+        filtered_track_ids = []
+        shape_dynamic_track_arrays = []
+        shape_track_arrays = []
+        dynamic_track_arrays = []
+        for track_id, (shape_dynamic_dataframe_list, shape_dataframe_list, dynamic_dataframe_list, full_dataframe_list) in analysis_vectors.items():
+            shape_dynamic_track_array = np.array([[item for item in record.values()] for record in shape_dynamic_dataframe_list])
+            shape_track_array = np.array([[item for item in record.values()] for record in shape_dataframe_list])
+            dynamic_track_array = np.array([[item for item in record.values()] for record in dynamic_dataframe_list])
+            assert shape_dynamic_track_array.shape[0] == shape_track_array.shape[0] == dynamic_track_array.shape[0], "Shape dynamic, shape and dynamic track arrays must have the same length"
+            if shape_dynamic_track_array.shape[0] > min_track_length:  
+                shape_dynamic_track_arrays.append(shape_dynamic_track_array.astype(np.float32))
+                shape_track_arrays.append(shape_track_array.astype(np.float32))
+                dynamic_track_arrays.append(dynamic_track_array.astype(np.float32))
+                filtered_track_ids.append(track_id)
+        shape_dynamic_track_array_array = np.vstack(shape_dynamic_track_arrays)
+        shape_track_array_array = np.vstack(shape_track_arrays)
+        dynamic_track_array_array = np.vstack(dynamic_track_arrays)
+
+        return shape_dynamic_track_array_array, shape_track_array_array, dynamic_track_array_array, filtered_track_ids
+
+            
+
