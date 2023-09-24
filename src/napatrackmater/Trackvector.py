@@ -539,10 +539,10 @@ def perform_pca(shape_dynamic_dataframe, shape_dataframe, dynamic_dataframe,  nu
     shape_dataframe_scaled = scaler.fit_transform(shape_dataframe)
     dynamic_dataframe_scaled = scaler.fit_transform(dynamic_dataframe)
     reducer = PCA(n_components=num_components)
-    embedding_shape_dynamic = reducer.fit_transform(shape_dynamic_dataframe_scaled.to_numpy())   
+    embedding_shape_dynamic = reducer.fit_transform(shape_dynamic_dataframe_scaled)   
        
-    embedding_shape = reducer.fit_transform(shape_dataframe_scaled.to_numpy())
-    embedding_dynamic = reducer.fit_transform(dynamic_dataframe_scaled.to_numpy())
+    embedding_shape = reducer.fit_transform(shape_dataframe_scaled)
+    embedding_dynamic = reducer.fit_transform(dynamic_dataframe_scaled)
 
     column_names = [f'pca dimension {i}' for i in range(1, num_components + 1)]
     pca_embedding_shape_dynamic = pd.DataFrame(embedding_shape_dynamic, columns=column_names)  
