@@ -1,6 +1,7 @@
 from .pretrained import register_model, register_aliases, clear_models_and_aliases
 from .clustering import Clustering
 from .Trackmate import Trackmate, get_feature_dict
+from .Trackvector import Trackvector, create_analysis_vectors_dict, convert_tracks_to_arrays,perform_cosine_similarity, perform_umap, plot_umap
 from .DeepEmbeddedClustering import DeepEmbeddedClustering
 from .CloudAutoEncoder import CloudAutoEncoder
 import json
@@ -15,7 +16,8 @@ __all__ = (
     "CloudAutoEncoder",
     "Clustering",
     "Trackmate",
-    "get_feature_dict"
+    "get_feature_dict",
+    "Trackvector"
 )
 
 clear_models_and_aliases(DeepEmbeddedClustering, CloudAutoEncoder)
