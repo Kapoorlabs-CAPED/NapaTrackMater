@@ -8,8 +8,6 @@ import napari
 import pandas as pd
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-import seaborn as sns
-import plotly.express as px
 from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import linkage, fcluster
 from sklearn.ensemble import RandomForestClassifier
@@ -532,7 +530,7 @@ def perform_cosine_similarity(full_dataframe, csv_file_name, shape_dynamic_track
 
 
 
-def perform_pca(shape_dynamic_dataframe, shape_dataframe, dynamic_dataframe,  num_neighbours, min_dist, num_components ):
+def perform_pca(shape_dynamic_dataframe, shape_dataframe, dynamic_dataframe, num_components ):
 
     scaler = StandardScaler()
     shape_dynamic_dataframe_scaled = scaler.fit_transform(shape_dynamic_dataframe)
@@ -558,15 +556,33 @@ def plot_pca(pca_embedding_shape_dynamic, pca_embedding_shape, pca_embedding_dyn
         plt.figure(figsize=(12, 10))
 
         if num_components == 2:
-            sns.scatterplot(x=column_names[0], y=column_names[1], hue=pca[column_names[0]], data=pca, palette='viridis', s=60)
+            plt.scatter(x=pca[column_names[0]], y=pca[column_names[1]], c=pca[column_names[0]], cmap='viridis', s=60)
             plt.title(f'PCA Projection of the Dataset {titles[pcas.index(pca)]}')
+            plt.xlabel(column_names[0])
+            plt.ylabel(column_names[1])
+            plt.colorbar()
             plt.show()
         elif num_components == 1:
-            sns.stripplot(x=column_names[0], hue=pca[column_names[0]], data=pca, palette='viridis', jitter=0.05, size=6)
+            plt.scatter(x=pca[column_names[0]], c=pca[column_names[0]], cmap='viridis', s=60)
             plt.title(f'PCA Projection of the Dataset {titles[pcas.index(pca)]}')
+            plt.xlabel(column_names[0])
+            plt.ylabel('Values')
+            plt.colorbar()
             plt.show()
         else:
-            fig = px.scatter_3d(pca, x='pca dimension 1', y='pca dimension 2', z='pca dimension 3', color=pca[column_names[0]])
-            for trace in fig.data:
-                trace.marker.size = 2
-            fig.show()
+            fig = plt.figure(figsize=(12, 10))
+            ax = fig.add_subplot(111, projection='3d')
+            sc = ax.scatter(
+                xs=pca[column_names[0]],
+                ys=pca[column_names[1]],
+                zs=pca[column_names[2]],
+                c=pca[column_names[0]],
+                cmap='viridis',
+                s=60,
+            )
+            plt.title(f'PCA Projection of the Dataset {titles[pcas.index(pca)]}')
+            ax.set_xlabel(column_names[0])
+            ax.set_ylabel(column_names[1])
+            ax.set_zlabel(column_names[2])
+            fig.colorbar(sc)
+            plt.show()
