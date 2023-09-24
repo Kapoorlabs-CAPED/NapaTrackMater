@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import linkage, fcluster
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 
 class TrackVector(TrackMate):
@@ -531,11 +530,9 @@ def perform_cosine_similarity(full_dataframe, csv_file_name, shape_dynamic_track
                 result_dataframe.to_csv(csv_file_name, index=False)
 
 def _perform_pca_clustering(track_arrays, num_clusters, num_components=3):
-    # Step 1: Apply PCA for Dimensionality Reduction
     pca = PCA(n_components=num_components)
     reduced_data = pca.fit_transform(track_arrays)
 
-    # Step 2: Perform K-Means Clustering on PCA-Reduced Data
     kmeans = KMeans(n_clusters=num_clusters)
     cluster_labels = kmeans.fit_predict(reduced_data)
 
@@ -558,7 +555,7 @@ def perform_pca(full_dataframe, csv_file_name, shape_dynamic_track_arrays_array,
         
 
     for track_arrays in track_arrays_array:
-        cluster_labels, pca_components = _perform_pca_clustering(track_arrays, num_clusters, num_components, n_estimators)
+        cluster_labels, pca_components = _perform_pca_clustering(track_arrays, num_clusters, num_components)
 
         model = RandomForestClassifier(n_estimators=n_estimators)
         model.fit(track_arrays, cluster_labels)
