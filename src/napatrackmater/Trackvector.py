@@ -560,7 +560,7 @@ def perform_pca(full_dataframe, csv_file_name, shape_dynamic_track_arrays_array,
         model = RandomForestClassifier(n_estimators=n_estimators)
         model.fit(track_arrays, cluster_labels)
 
-        selected_features = selected_features_all[track_arrays_array.index(track_arrays_array_names)]
+        selected_features = selected_features_all[track_arrays_array.index(track_arrays)]
         feature_importances = model.feature_importances_
         feature_names = selected_features
         sorted_features = sorted(zip(feature_names, feature_importances), key=lambda x: x[1], reverse=True)
