@@ -12,6 +12,8 @@ from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import linkage, fcluster
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+
 class TrackVector(TrackMate):
     def __init__(
         self,
@@ -528,61 +530,67 @@ def perform_cosine_similarity(full_dataframe, csv_file_name, shape_dynamic_track
                     os.remove(csv_file_name)
                 result_dataframe.to_csv(csv_file_name, index=False)
 
+def _perform_pca_clustering(track_arrays, num_clusters, num_components=3):
+    # Step 1: Apply PCA for Dimensionality Reduction
+    pca = PCA(n_components=num_components)
+    reduced_data = pca.fit_transform(track_arrays)
 
+    # Step 2: Perform K-Means Clustering on PCA-Reduced Data
+    kmeans = KMeans(n_clusters=num_clusters)
+    cluster_labels = kmeans.fit_predict(reduced_data)
 
-def perform_pca(shape_dynamic_dataframe, shape_dataframe, dynamic_dataframe, num_components ):
+    return cluster_labels, pca.components_
 
-    scaler = StandardScaler()
-    shape_dynamic_dataframe_scaled = scaler.fit_transform(shape_dynamic_dataframe)
-    shape_dataframe_scaled = scaler.fit_transform(shape_dataframe)
-    dynamic_dataframe_scaled = scaler.fit_transform(dynamic_dataframe)
-    reducer = PCA(n_components=num_components)
-    embedding_shape_dynamic = reducer.fit_transform(shape_dynamic_dataframe_scaled)   
-       
-    embedding_shape = reducer.fit_transform(shape_dataframe_scaled)
-    embedding_dynamic = reducer.fit_transform(dynamic_dataframe_scaled)
+def perform_pca(full_dataframe, csv_file_name, shape_dynamic_track_arrays_array, shape_track_arrays_array, dynamic_track_arrays_array, filtered_track_ids, num_clusters,
+                              num_components=3, num_runs = 10, n_estimators = 100):
+    track_arrays_array = [shape_dynamic_track_arrays_array,shape_track_arrays_array, dynamic_track_arrays_array] 
+    track_arrays_array_names = ['shape_dynamic', 'shape', 'dynamic']
+    selected_features_all = [
+                ['Radius', 'Volume', 'Eccentricity Comp First', 'Eccentricity Comp Second',
+                            'Surface Area', 'Speed', 'Motion_Angle', 'Acceleration', 'Distance_Cell_mask',
+                            'Radial_Angle', 'Cell_Axis_Mask'],
+                ['Radius', 'Volume', 'Eccentricity Comp First', 'Eccentricity Comp Second',
+                                    'Surface Area'],
+                ['Speed', 'Motion_Angle', 'Acceleration', 'Distance_Cell_mask',
+                                    'Radial_Angle', 'Cell_Axis_Mask']                         
+                    
+    ]
+        
 
-    column_names = [f'pca dimension {i}' for i in range(1, num_components + 1)]
-    pca_embedding_shape_dynamic = pd.DataFrame(embedding_shape_dynamic, columns=column_names)  
-    pca_embedding_shape = pd.DataFrame(embedding_shape, columns=column_names)
-    pca_embedding_dynamic = pd.DataFrame(embedding_dynamic, columns=column_names)
+    for track_arrays in track_arrays_array:
+        cluster_labels, pca_components = _perform_pca_clustering(track_arrays, num_clusters, num_components, n_estimators)
 
-    return pca_embedding_shape_dynamic, pca_embedding_shape, pca_embedding_dynamic , column_names
+        model = RandomForestClassifier(n_estimators=n_estimators)
+        model.fit(track_arrays, cluster_labels)
 
-def plot_pca(pca_embedding_shape_dynamic, pca_embedding_shape, pca_embedding_dynamic, column_names, num_components):
-    pcas = [pca_embedding_shape_dynamic, pca_embedding_shape, pca_embedding_dynamic]
-    titles = ['Shape and Dynamic', 'Shape', 'Dynamic']
-    for pca in pcas:
-        plt.figure(figsize=(12, 10))
+        selected_features = selected_features_all[track_arrays_array_names.index(track_arrays_array_names)]
+        feature_importances = model.feature_importances_
+        feature_names = selected_features
+        sorted_features = sorted(zip(feature_names, feature_importances), key=lambda x: x[1], reverse=True)
+        sorted_feature_names, sorted_importances = zip(*sorted_features)
 
-        if num_components == 2:
-            plt.scatter(x=pca[column_names[0]], y=pca[column_names[1]], c=pca[column_names[0]], cmap='viridis', s=60)
-            plt.title(f'PCA Projection of the Dataset {titles[pcas.index(pca)]}')
-            plt.xlabel(column_names[0])
-            plt.ylabel(column_names[1])
-            plt.colorbar()
-            plt.show()
-        elif num_components == 1:
-            plt.scatter(x=pca[column_names[0]], c=pca[column_names[0]], cmap='viridis', s=60)
-            plt.title(f'PCA Projection of the Dataset {titles[pcas.index(pca)]}')
-            plt.xlabel(column_names[0])
-            plt.ylabel('Values')
-            plt.colorbar()
-            plt.show()
-        else:
-            fig = plt.figure(figsize=(12, 10))
-            ax = fig.add_subplot(111, projection='3d')
-            sc = ax.scatter(
-                xs=pca[column_names[0]],
-                ys=pca[column_names[1]],
-                zs=pca[column_names[2]],
-                c=pca[column_names[0]],
-                cmap='viridis',
-                s=60,
-            )
-            plt.title(f'PCA Projection of the Dataset {titles[pcas.index(pca)]}')
-            ax.set_xlabel(column_names[0])
-            ax.set_ylabel(column_names[1])
-            ax.set_zlabel(column_names[2])
-            fig.colorbar(sc)
-            plt.show()
+        normalized_importances = np.array(sorted_importances) / np.sum(sorted_importances)
+        total_feature_importances = np.zeros(len(feature_names))
+
+        for _ in range(num_runs):
+            model = RandomForestClassifier(n_estimators=n_estimators)
+            model.fit(track_arrays, cluster_labels)
+            total_feature_importances += model.feature_importances_
+
+        average_feature_importances = total_feature_importances / num_runs
+
+        sorted_features = sorted(zip(feature_names, average_feature_importances), key=lambda x: x[1], reverse=True)
+        sorted_feature_names, sorted_importances = zip(*sorted_features)
+        print("Sorted Feature Importances:")
+        for feature, importance in zip(sorted_feature_names, normalized_importances):
+            print(f"{feature}: {importance}")
+
+        track_id_to_cluster = {track_id: cluster_label for track_id, cluster_label in zip(filtered_track_ids, cluster_labels)}
+        full_dataframe['Cluster'] = full_dataframe['Track ID'].map(track_id_to_cluster)
+        result_dataframe = full_dataframe[['Track ID', 't', 'z', 'y', 'x', 'Cluster']]
+        csv_file_name = csv_file_name +  track_arrays_array_names[track_arrays_array.index(track_arrays)] + '.csv'
+
+        if os.path.exists(csv_file_name):
+            os.remove(csv_file_name)
+        result_dataframe.to_csv(csv_file_name, index=False)
+
