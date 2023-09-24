@@ -558,15 +558,15 @@ def plot_pca(pca_embedding_shape_dynamic, pca_embedding_shape, pca_embedding_dyn
         plt.figure(figsize=(12, 10))
 
         if num_components == 2:
-            sns.scatterplot(x=column_names[0], y=column_names[1], hue=pca['Category'], data=pca, palette='viridis', s=60)
+            sns.scatterplot(x=column_names[0], y=column_names[1], hue=pca[column_names[0]], data=pca, palette='viridis', s=60)
             plt.title(f'PCA Projection of the Dataset {titles[pcas.index(pca)]}')
             plt.show()
         elif num_components == 1:
-            sns.stripplot(x=column_names[0], hue=pca['Category'], data=pca, palette='viridis', jitter=0.05, size=6)
+            sns.stripplot(x=column_names[0], hue=pca[column_names[0]], data=pca, palette='viridis', jitter=0.05, size=6)
             plt.title(f'PCA Projection of the Dataset {titles[pcas.index(pca)]}')
             plt.show()
         else:
-            fig = px.scatter_3d(pca, x='pca dimension 1', y='pca dimension 2', z='pca dimension 3', color=pca['Category'])
+            fig = px.scatter_3d(pca, x='pca dimension 1', y='pca dimension 2', z='pca dimension 3', color=pca[column_names[0]])
             for trace in fig.data:
                 trace.marker.size = 2
             fig.show()
