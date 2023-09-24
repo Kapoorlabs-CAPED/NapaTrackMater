@@ -551,30 +551,22 @@ def perform_pca(shape_dynamic_dataframe, shape_dataframe, dynamic_dataframe,  nu
 
     return pca_embedding_shape_dynamic, pca_embedding_shape, pca_embedding_dynamic , column_names
 
-def plot_pca( pca_embedding_shape_dynamic, pca_embedding_shape, pca_embedding_dynamic, column_names, num_components):
-
+def plot_pca(pca_embedding_shape_dynamic, pca_embedding_shape, pca_embedding_dynamic, column_names, num_components):
     pcas = [pca_embedding_shape_dynamic, pca_embedding_shape, pca_embedding_dynamic]
     titles = ['Shape and Dynamic', 'Shape', 'Dynamic']
     for pca in pcas:
-            plt.figure(figsize=(12, 10))
-            
-            if num_components == 2:
-                sns.scatterplot(x=column_names[0], y=column_names[1], hue='Condition', data=pca, palette='viridis', s=60)
-                plt.title(f'pca Projection of the Dataset {titles[pcas.index(pca)]}')
-                plt.show()
-            elif num_components == 1:
-                sns.stripplot(x=column_names[0], hue='Condition', data=pca, palette='viridis', jitter=0.05, size=6)
-                plt.title(f'pca Projection of the Dataset {titles[pcas.index(pca)]}')
-                plt.show()
-            else:
+        plt.figure(figsize=(12, 10))
 
-                fig = px.scatter_3d(pca,
-                                x='pca dimension 1',
-                                y='pca dimension 2',
-                                z='pca dimension 3',
-                                color='Condition')
-
-                for trace in fig.data:
-                  trace.marker.size = 2  
-
-                fig.show()
+        if num_components == 2:
+            sns.scatterplot(x=column_names[0], y=column_names[1], hue=pca['Category'], data=pca, palette='viridis', s=60)
+            plt.title(f'PCA Projection of the Dataset {titles[pcas.index(pca)]}')
+            plt.show()
+        elif num_components == 1:
+            sns.stripplot(x=column_names[0], hue=pca['Category'], data=pca, palette='viridis', jitter=0.05, size=6)
+            plt.title(f'PCA Projection of the Dataset {titles[pcas.index(pca)]}')
+            plt.show()
+        else:
+            fig = px.scatter_3d(pca, x='pca dimension 1', y='pca dimension 2', z='pca dimension 3', color=pca['Category'])
+            for trace in fig.data:
+                trace.marker.size = 2
+            fig.show()
