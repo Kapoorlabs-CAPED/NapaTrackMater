@@ -6,13 +6,14 @@ import os
 import numpy as np
 import napari
 import pandas as pd
-import umap 
+from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import linkage, fcluster
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import StandardScaler
 class TrackVector(TrackMate):
     def __init__(
         self,
@@ -531,41 +532,46 @@ def perform_cosine_similarity(full_dataframe, csv_file_name, shape_dynamic_track
 
 
 
-def perform_umap(shape_dynamic_dataframe, shape_dataframe, dynamic_dataframe,  num_neighbours, min_dist, num_components ):
+def perform_pca(shape_dynamic_dataframe, shape_dataframe, dynamic_dataframe,  num_neighbours, min_dist, num_components ):
 
-    reducer = umap.UMAP(n_neighbors=num_neighbours, min_dist=min_dist, n_components=num_components)
-    embedding_shape_dynamic = reducer.fit_transform(shape_dynamic_dataframe.to_numpy())      
-    embedding_shape = reducer.fit_transform(shape_dataframe.to_numpy())
-    embedding_dynamic = reducer.fit_transform(dynamic_dataframe.to_numpy())
+    scaler = StandardScaler()
+    shape_dynamic_dataframe_scaled = scaler.fit_transform(shape_dynamic_dataframe)
+    shape_dataframe_scaled = scaler.fit_transform(shape_dataframe)
+    dynamic_dataframe_scaled = scaler.fit_transform(dynamic_dataframe)
+    reducer = PCA(n_components=num_components)
+    embedding_shape_dynamic = reducer.fit_transform(shape_dynamic_dataframe_scaled.to_numpy())   
+       
+    embedding_shape = reducer.fit_transform(shape_dataframe_scaled.to_numpy())
+    embedding_dynamic = reducer.fit_transform(dynamic_dataframe_scaled.to_numpy())
 
-    column_names = [f'UMAP dimension {i}' for i in range(1, num_components + 1)]
-    umap_embedding_shape_dynamic = pd.DataFrame(embedding_shape_dynamic, columns=column_names)  
-    umap_embedding_shape = pd.DataFrame(embedding_shape, columns=column_names)
-    umap_embedding_dynamic = pd.DataFrame(embedding_dynamic, columns=column_names)
+    column_names = [f'pca dimension {i}' for i in range(1, num_components + 1)]
+    pca_embedding_shape_dynamic = pd.DataFrame(embedding_shape_dynamic, columns=column_names)  
+    pca_embedding_shape = pd.DataFrame(embedding_shape, columns=column_names)
+    pca_embedding_dynamic = pd.DataFrame(embedding_dynamic, columns=column_names)
 
-    return umap_embedding_shape_dynamic, umap_embedding_shape, umap_embedding_dynamic , column_names
+    return pca_embedding_shape_dynamic, pca_embedding_shape, pca_embedding_dynamic , column_names
 
-def plot_umap( umap_embedding_shape_dynamic, umap_embedding_shape, umap_embedding_dynamic, column_names, num_components):
+def plot_pca( pca_embedding_shape_dynamic, pca_embedding_shape, pca_embedding_dynamic, column_names, num_components):
 
-    umaps = [umap_embedding_shape_dynamic, umap_embedding_shape, umap_embedding_dynamic]
+    pcas = [pca_embedding_shape_dynamic, pca_embedding_shape, pca_embedding_dynamic]
     titles = ['Shape and Dynamic', 'Shape', 'Dynamic']
-    for umap in umaps:
+    for pca in pcas:
             plt.figure(figsize=(12, 10))
             
             if num_components == 2:
-                sns.scatterplot(x=column_names[0], y=column_names[1], hue='Condition', data=umap, palette='viridis', s=60)
-                plt.title(f'UMAP Projection of the Dataset {titles[umaps.index(umap)]}')
+                sns.scatterplot(x=column_names[0], y=column_names[1], hue='Condition', data=pca, palette='viridis', s=60)
+                plt.title(f'pca Projection of the Dataset {titles[pcas.index(pca)]}')
                 plt.show()
             elif num_components == 1:
-                sns.stripplot(x=column_names[0], hue='Condition', data=umap, palette='viridis', jitter=0.05, size=6)
-                plt.title(f'UMAP Projection of the Dataset {titles[umaps.index(umap)]}')
+                sns.stripplot(x=column_names[0], hue='Condition', data=pca, palette='viridis', jitter=0.05, size=6)
+                plt.title(f'pca Projection of the Dataset {titles[pcas.index(pca)]}')
                 plt.show()
             else:
 
-                fig = px.scatter_3d(umap,
-                                x='UMAP dimension 1',
-                                y='UMAP dimension 2',
-                                z='UMAP dimension 3',
+                fig = px.scatter_3d(pca,
+                                x='pca dimension 1',
+                                y='pca dimension 2',
+                                z='pca dimension 3',
                                 color='Condition')
 
                 for trace in fig.data:
