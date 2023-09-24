@@ -1,4 +1,4 @@
-from .Trackmate import TrackMate
+from .Trackmate import TrackMate, get_feature_dict
 from pathlib import Path
 import lxml.etree as et
 import concurrent
@@ -341,53 +341,8 @@ class TrackVector(TrackMate):
                         for unique_track_id in self.unique_track_properties.keys()
                     ]
                 )
-
-                features = {
-                    "time": np.asarray(unique_tracks_properties, dtype="float16")[:, 0],
-                    "generation": np.asarray(unique_tracks_properties, dtype="float16")[:, 2],
-                    "radius": np.asarray(unique_tracks_properties, dtype="float16")[:, 3],
-                    "volume_pixels": np.asarray(unique_tracks_properties, dtype="float16")[
-                        :, 4
-                    ],
-                    "eccentricity_comp_first": np.asarray(
-                        unique_tracks_properties, dtype="float16"
-                    )[:, 5],
-                    "eccentricity_comp_second": np.asarray(
-                        unique_tracks_properties, dtype="float16"
-                    )[:, 6],
-                    "surface_area": np.asarray(unique_tracks_properties, dtype="float16")[:, 7],
-                    "total_intensity": np.asarray(unique_tracks_properties, dtype="float16")[
-                        :, 8
-                    ],
-                    "speed": np.asarray(unique_tracks_properties, dtype="float16")[:, 9],
-                    "motion_angle": np.asarray(unique_tracks_properties, dtype="float16")[
-                        :, 10
-                    ],
-                    "acceleration": np.asarray(unique_tracks_properties, dtype="float16")[
-                        :, 11
-                    ],
-                    "distance_cell_mask": np.asarray(unique_tracks_properties, dtype="float16")[
-                        :, 12
-                    ],
-                    "radial_angle": np.asarray(unique_tracks_properties, dtype="float16")[
-                        :, 13
-                    ],
-                    "cell_axis_mask": np.asarray(unique_tracks_properties, dtype="float16")[
-                        :, 14
-                    ],
-                    "track_displacement": np.asarray(unique_tracks_properties, dtype="float16")[
-                        :, 15
-                    ],
-                    "total_track_distance": np.asarray(
-                        unique_tracks_properties, dtype="float16"
-                    )[:, 16],
-                    "max_track_distance": np.asarray(unique_tracks_properties, dtype="float16")[
-                        :, 17
-                    ],
-                    "track_duration": np.asarray(unique_tracks_properties, dtype="float16")[
-                        :, 18
-                    ],
-                }
+                features = get_feature_dict(unique_tracks_properties)
+                
                 for layer in list(self._viewer.layers):
                     if (
                         "Track" == layer.name
@@ -578,10 +533,10 @@ def perform_cosine_similarity(full_dataframe, csv_file_name, shape_dynamic_track
 
 def perform_umap(shape_dynamic_dataframe, shape_dataframe, dynamic_dataframe,  num_neighbours, min_dist, num_components ):
 
-    reducer = umap.UMAP(n_neighbors=num_neighbours, min_dist=min_dist, n_components=num_components, random_state=42)
-    embedding_shape_dynamic = reducer.fit_transform(shape_dynamic_dataframe)      
-    embedding_shape = reducer.fit_transform(shape_dataframe)
-    embedding_dynamic = reducer.fit_transform(dynamic_dataframe)
+    reducer = umap.UMAP(n_neighbors=num_neighbours, min_dist=min_dist, n_components=num_components)
+    embedding_shape_dynamic = reducer.fit_transform(shape_dynamic_dataframe.to_numpy())      
+    embedding_shape = reducer.fit_transform(shape_dataframe.to_numpy())
+    embedding_dynamic = reducer.fit_transform(dynamic_dataframe.to_numpy())
 
     column_names = [f'UMAP dimension {i}' for i in range(1, num_components + 1)]
     umap_embedding_shape_dynamic = pd.DataFrame(embedding_shape_dynamic, columns=column_names)  
