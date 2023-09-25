@@ -531,11 +531,7 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
         )
 
     return (
-        analysis_vectors,
-        shape_dynamic_dataframe,
-        shape_dataframe,
-        dynamic_dataframe,
-        full_dataframe,
+        analysis_vectors
     )
 
 
@@ -762,6 +758,7 @@ def perform_pca(
 
     for track_arrays in track_arrays_array:
         print(f"Performing PCA on {track_arrays_array_names[track_arrays_array.index(track_arrays)]}, {track_arrays.shape}")
+        print(full_dataframe)
         cluster_labels, pca_components = _perform_pca_clustering(
             track_arrays, num_clusters, num_components
         )
