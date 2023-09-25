@@ -601,6 +601,7 @@ def perform_cosine_similarity(
     num_runs=10,
     n_estimators=100,
 ):
+    csv_file_name_original = csv_file_name
     track_arrays_array = [
         shape_dynamic_track_arrays_array,
         shape_track_arrays_array,
@@ -689,7 +690,7 @@ def perform_cosine_similarity(
         full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
         result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
         csv_file_name = (
-            csv_file_name
+            csv_file_name_original
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
             + ".csv"
         )
@@ -721,6 +722,7 @@ def perform_pca(
     num_runs=10,
     n_estimators=100,
 ):
+    csv_file_name_original = csv_file_name
     track_arrays_array = [
         shape_dynamic_track_arrays_array,
         shape_track_arrays_array,
@@ -805,7 +807,7 @@ def perform_pca(
         full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
         result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
         csv_file_name = (
-            csv_file_name
+            csv_file_name_original
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
             + ".csv"
         )
