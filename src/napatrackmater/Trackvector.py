@@ -648,16 +648,15 @@ def perform_cosine_similarity(
             track_arrays_array.index(track_arrays)
         ]
         feature_importances = model.feature_importances_
-        feature_names = selected_features
         sorted_features = sorted(
-            zip(feature_names, feature_importances), key=lambda x: x[1], reverse=True
+            zip(selected_features, feature_importances), key=lambda x: x[1], reverse=True
         )
         sorted_feature_names, sorted_importances = zip(*sorted_features)
 
         normalized_importances = np.array(sorted_importances) / np.sum(
             sorted_importances
         )
-        total_feature_importances = np.zeros(len(feature_names))
+        total_feature_importances = np.zeros(len(selected_features))
 
         for _ in range(num_runs):
             model = RandomForestClassifier(n_estimators=n_estimators)
@@ -668,7 +667,7 @@ def perform_cosine_similarity(
 
         # Sort and display the averaged feature importances
         sorted_features = sorted(
-            zip(feature_names, average_feature_importances),
+            zip(selected_features, average_feature_importances),
             key=lambda x: x[1],
             reverse=True,
         )
