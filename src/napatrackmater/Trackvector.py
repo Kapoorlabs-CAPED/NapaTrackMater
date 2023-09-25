@@ -805,8 +805,10 @@ def perform_pca(
             track_id: cluster_label
             for track_id, cluster_label in zip(filtered_track_ids, cluster_labels)
         }
+        print(track_id_to_cluster)
         full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
         result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
+        print(result_dataframe)
         csv_file_name = (
             csv_file_name_original
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
