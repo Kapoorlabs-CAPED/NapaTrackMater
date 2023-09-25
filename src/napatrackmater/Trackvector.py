@@ -657,7 +657,7 @@ def perform_cosine_similarity(
             sorted_importances
         )
         total_feature_importances = np.zeros(len(selected_features))
-
+        print(total_feature_importances, selected_features)
         for _ in range(num_runs):
             model = RandomForestClassifier(n_estimators=n_estimators)
             model.fit(shape_dynamic_track_arrays_array, shape_dynamic_cluster_labels)
