@@ -2716,16 +2716,6 @@ def angular_change(vec_0, vec_1):
     return angle
 
 
-def eval_bool(value):
-
-    if value == "True":
-        div_key = True
-    else:
-        div_key = False
-
-    return div_key
-
-
 def check_and_update_mask(mask, image):
     if len(mask.shape) < len(image.shape):
         update_mask = np.zeros_like(image, dtype="uint8")
