@@ -11,6 +11,7 @@ from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import linkage, fcluster
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.cluster import KMeans
+import csv
 
 
 class TrackVector(TrackMate):
@@ -672,6 +673,15 @@ def perform_cosine_similarity(
         )
         sorted_feature_names, sorted_importances = zip(*sorted_features)
         print("Sorted Feature Importances:")
+        _save_feature_importance(
+            sorted_feature_names,
+            normalized_importances,
+            csv_file_name_original,
+            track_arrays_array_names,
+            track_arrays_array,
+            track_arrays,
+        )
+
         for feature, importance in zip(sorted_feature_names, normalized_importances):
             print(f"{feature}: {importance}")
 
@@ -692,6 +702,28 @@ def perform_cosine_similarity(
         if os.path.exists(csv_file_name):
             os.remove(csv_file_name)
         result_dataframe.to_csv(csv_file_name, index=False)
+
+
+def _save_feature_importance(
+    sorted_feature_names,
+    normalized_importances,
+    csv_file_name_original,
+    track_arrays_array_names,
+    track_arrays_array,
+    track_arrays,
+):
+    data = list(zip(sorted_feature_names, normalized_importances))
+    csv_file_name = (
+        csv_file_name_original
+        + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+        + "_feature_importance"
+        + ".csv"
+    )
+    with open(csv_file_name, mode="w", newline="") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(["Feature", "Importance"])
+        for feature, importance in data:
+            writer.writerow([feature, importance])
 
 
 def _perform_pca_clustering(track_arrays, num_clusters, num_components=3):
@@ -794,8 +826,17 @@ def perform_pca(
         )
         sorted_feature_names, sorted_importances = zip(*sorted_features)
         print("Sorted Feature Importances:")
+        _save_feature_importance(
+            sorted_feature_names,
+            normalized_importances,
+            csv_file_name_original,
+            track_arrays_array_names,
+            track_arrays_array,
+            track_arrays,
+        )
         for feature, importance in zip(sorted_feature_names, normalized_importances):
             print(f"{feature}: {importance}")
+
         print(f"filtered tracks {len(filtered_track_ids), len(cluster_labels)}")
         track_id_to_cluster = {
             track_id: cluster_label
