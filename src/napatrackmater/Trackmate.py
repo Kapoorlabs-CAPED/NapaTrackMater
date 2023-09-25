@@ -5,7 +5,7 @@ import lxml.etree as et
 # import xml.etree.ElementTree as et
 import pandas as pd
 import math
-from skimage.measure import regionprops
+from skimage import measure
 from skimage.segmentation import find_boundaries
 from scipy import spatial
 from typing import List, Union
@@ -303,7 +303,9 @@ class TrackMate:
         else:
             intensity_image = self.channel_seg_image
 
-        properties = regionprops(self.channel_seg_image[i, :], intensity_image[i, :])
+        properties = measure.regionprops(
+            self.channel_seg_image[i, :], intensity_image[i, :]
+        )
         centroids = [prop.centroid for prop in properties]
         labels = [prop.label for prop in properties]
         volume = [prop.area for prop in properties]
@@ -2725,23 +2727,26 @@ def eval_bool(value):
 
 
 def check_and_update_mask(mask, image):
-
     if len(mask.shape) < len(image.shape):
-        update_mask = np.zeros(
-            [
-                image.shape[0],
-                image.shape[1],
-                image.shape[2],
-                image.shape[3],
-            ],
-            dtype="uint8",
-        )
-        for i in range(0, update_mask.shape[0]):
-            for j in range(0, update_mask.shape[1]):
-
-                update_mask[i, j, :, :] = mask[i, :, :]
+        update_mask = np.zeros_like(image, dtype="uint8")
+        for i in range(image.shape[0]):
+            labeled_mask, num_features = measure.label(
+                mask[i], background=0, return_num=True
+            )
+            if num_features > 0:
+                props = measure.regionprops(labeled_mask)
+                largest_region = max(props, key=lambda prop: prop.area)
+                largest_label = largest_region.label
+                update_mask[i] = (labeled_mask == largest_label).astype("uint8")
     else:
-        update_mask = mask
+        labeled_mask, num_features = measure.label(mask, background=0, return_num=True)
+        if num_features > 0:
+            props = measure.regionprops(labeled_mask)
+            largest_region = max(props, key=lambda prop: prop.area)
+            largest_label = largest_region.label
+            update_mask = (labeled_mask == largest_label).astype("uint8")
+        else:
+            update_mask = mask
 
     return update_mask
 
@@ -2749,50 +2754,36 @@ def check_and_update_mask(mask, image):
 def get_feature_dict(unique_tracks_properties):
 
     features = {
-            "time": np.asarray(unique_tracks_properties, dtype="float16")[:, 0],
-            "generation": np.asarray(unique_tracks_properties, dtype="float16")[:, 2],
-            "radius": np.asarray(unique_tracks_properties, dtype="float16")[:, 3],
-            "volume_pixels": np.asarray(unique_tracks_properties, dtype="float16")[
-                :, 4
-            ],
-            "eccentricity_comp_first": np.asarray(
-                unique_tracks_properties, dtype="float16"
-            )[:, 5],
-            "eccentricity_comp_second": np.asarray(
-                unique_tracks_properties, dtype="float16"
-            )[:, 6],
-            "surface_area": np.asarray(unique_tracks_properties, dtype="float16")[:, 7],
-            "total_intensity": np.asarray(unique_tracks_properties, dtype="float16")[
-                :, 8
-            ],
-            "speed": np.asarray(unique_tracks_properties, dtype="float16")[:, 9],
-            "motion_angle": np.asarray(unique_tracks_properties, dtype="float16")[
-                :, 10
-            ],
-            "acceleration": np.asarray(unique_tracks_properties, dtype="float16")[
-                :, 11
-            ],
-            "distance_cell_mask": np.asarray(unique_tracks_properties, dtype="float16")[
-                :, 12
-            ],
-            "radial_angle": np.asarray(unique_tracks_properties, dtype="float16")[
-                :, 13
-            ],
-            "cell_axis_mask": np.asarray(unique_tracks_properties, dtype="float16")[
-                :, 14
-            ],
-            "track_displacement": np.asarray(unique_tracks_properties, dtype="float16")[
-                :, 15
-            ],
-            "total_track_distance": np.asarray(
-                unique_tracks_properties, dtype="float16"
-            )[:, 16],
-            "max_track_distance": np.asarray(unique_tracks_properties, dtype="float16")[
-                :, 17
-            ],
-            "track_duration": np.asarray(unique_tracks_properties, dtype="float16")[
-                :, 18
-            ],
-        }
-    
+        "time": np.asarray(unique_tracks_properties, dtype="float16")[:, 0],
+        "generation": np.asarray(unique_tracks_properties, dtype="float16")[:, 2],
+        "radius": np.asarray(unique_tracks_properties, dtype="float16")[:, 3],
+        "volume_pixels": np.asarray(unique_tracks_properties, dtype="float16")[:, 4],
+        "eccentricity_comp_first": np.asarray(
+            unique_tracks_properties, dtype="float16"
+        )[:, 5],
+        "eccentricity_comp_second": np.asarray(
+            unique_tracks_properties, dtype="float16"
+        )[:, 6],
+        "surface_area": np.asarray(unique_tracks_properties, dtype="float16")[:, 7],
+        "total_intensity": np.asarray(unique_tracks_properties, dtype="float16")[:, 8],
+        "speed": np.asarray(unique_tracks_properties, dtype="float16")[:, 9],
+        "motion_angle": np.asarray(unique_tracks_properties, dtype="float16")[:, 10],
+        "acceleration": np.asarray(unique_tracks_properties, dtype="float16")[:, 11],
+        "distance_cell_mask": np.asarray(unique_tracks_properties, dtype="float16")[
+            :, 12
+        ],
+        "radial_angle": np.asarray(unique_tracks_properties, dtype="float16")[:, 13],
+        "cell_axis_mask": np.asarray(unique_tracks_properties, dtype="float16")[:, 14],
+        "track_displacement": np.asarray(unique_tracks_properties, dtype="float16")[
+            :, 15
+        ],
+        "total_track_distance": np.asarray(unique_tracks_properties, dtype="float16")[
+            :, 16
+        ],
+        "max_track_distance": np.asarray(unique_tracks_properties, dtype="float16")[
+            :, 17
+        ],
+        "track_duration": np.asarray(unique_tracks_properties, dtype="float16")[:, 18],
+    }
+
     return features

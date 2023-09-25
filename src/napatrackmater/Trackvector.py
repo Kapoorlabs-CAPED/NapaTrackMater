@@ -7,11 +7,11 @@ import numpy as np
 import napari
 import pandas as pd
 from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
 from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import linkage, fcluster
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.cluster import KMeans
+
 
 class TrackVector(TrackMate):
     def __init__(
@@ -342,7 +342,7 @@ class TrackVector(TrackMate):
                     ]
                 )
                 features = get_feature_dict(unique_tracks_properties)
-                
+
                 for layer in list(self._viewer.layers):
                     if (
                         "Track" == layer.name
@@ -353,7 +353,7 @@ class TrackVector(TrackMate):
                     vertices = unique_tracks[:, 1:]
                 self._viewer.add_points(vertices, name="Track_points", size=1)
                 self._viewer.add_tracks(unique_tracks, name="Track", features=features)
-    
+
     def _final_morphological_dynamic_vectors(self, track_id):
 
         current_cell_ids = self.all_current_cell_ids[int(track_id)]
@@ -402,7 +402,7 @@ class TrackVector(TrackMate):
             if len(current_tracklets.shape) == 2:
                 self.unique_tracks[track_id] = current_tracklets
                 self.unique_track_properties[track_id] = current_tracklets_properties
-    
+
     def get_shape_dynamic_feature_dataframe(self):
 
         current_shape_dynamic_vectors = self.current_shape_dynamic_vectors
@@ -411,63 +411,167 @@ class TrackVector(TrackMate):
         for i in range(len(current_shape_dynamic_vectors)):
             vector_list = list(zip(current_shape_dynamic_vectors[i]))
             data_frame_list = np.transpose(
-                np.asarray([vector_list[i] for i in range(len(vector_list))])[:, 0, :])
+                np.asarray([vector_list[i] for i in range(len(vector_list))])[:, 0, :]
+            )
 
-            shape_dynamic_dataframe = pd.DataFrame(data_frame_list, columns=[
-                'Track ID', 't', 'z', 'y', 'x', 'Dividing', 'Number_Dividing', 'Radius', 'Volume',
-                'Eccentricity Comp First', 'Eccentricity Comp Second', 'Surface Area', 'Speed',
-                'Motion_Angle', 'Acceleration', 'Distance_Cell_mask', 'Radial_Angle', 'Cell_Axis_Mask'
-            ])
+            shape_dynamic_dataframe = pd.DataFrame(
+                data_frame_list,
+                columns=[
+                    "Track ID",
+                    "t",
+                    "z",
+                    "y",
+                    "x",
+                    "Dividing",
+                    "Number_Dividing",
+                    "Radius",
+                    "Volume",
+                    "Eccentricity Comp First",
+                    "Eccentricity Comp Second",
+                    "Surface Area",
+                    "Speed",
+                    "Motion_Angle",
+                    "Acceleration",
+                    "Distance_Cell_mask",
+                    "Radial_Angle",
+                    "Cell_Axis_Mask",
+                ],
+            )
 
             if len(global_shape_dynamic_dataframe) == 0:
                 global_shape_dynamic_dataframe = shape_dynamic_dataframe
             else:
                 global_shape_dynamic_dataframe = pd.concat(
-                    [global_shape_dynamic_dataframe, shape_dynamic_dataframe], ignore_index=True)
+                    [global_shape_dynamic_dataframe, shape_dynamic_dataframe],
+                    ignore_index=True,
+                )
 
-        global_shape_dynamic_dataframe = global_shape_dynamic_dataframe.sort_values(by=['Track ID'])
-        global_shape_dynamic_dataframe = global_shape_dynamic_dataframe.sort_values(by=['t'])
+        global_shape_dynamic_dataframe = global_shape_dynamic_dataframe.sort_values(
+            by=["Track ID"]
+        )
+        global_shape_dynamic_dataframe = global_shape_dynamic_dataframe.sort_values(
+            by=["t"]
+        )
 
-       
         return global_shape_dynamic_dataframe
-    
-def create_analysis_vectors_dict( global_shape_dynamic_dataframe: pd.DataFrame):
-    analysis_vectors = {}
-    for track_id in global_shape_dynamic_dataframe['Track ID'].unique():
-        track_data = global_shape_dynamic_dataframe[global_shape_dynamic_dataframe['Track ID'] == track_id].sort_values(
-            by='t')
-        shape_dynamic_dataframe = track_data[['Radius', 'Volume', 'Eccentricity Comp First', 'Eccentricity Comp Second',
-                                        'Surface Area', 'Speed', 'Motion_Angle', 'Acceleration', 'Distance_Cell_mask',
-                                        'Radial_Angle', 'Cell_Axis_Mask']]
-        shape_dataframe = track_data[['Radius', 'Volume', 'Eccentricity Comp First', 'Eccentricity Comp Second',
-                                        'Surface Area']]
-        dynamic_dataframe = track_data[['Speed', 'Motion_Angle', 'Acceleration', 'Distance_Cell_mask',
-                                        'Radial_Angle', 'Cell_Axis_Mask']]
-        full_dataframe = track_data[['Track ID', 't', 'z', 'y', 'x', 'Dividing', 'Number_Dividing', 'Radius', 'Volume',
-                                'Eccentricity Comp First', 'Eccentricity Comp Second', 'Surface Area', 'Speed',
-                                'Motion_Angle', 'Acceleration', 'Distance_Cell_mask', 'Radial_Angle', 'Cell_Axis_Mask']]
-        
-        shape_dynamic_dataframe_list = shape_dynamic_dataframe.to_dict(orient='records')
-        shape_dataframe_list = shape_dataframe.to_dict(orient='records')
-        dynamic_dataframe_list = dynamic_dataframe.to_dict(orient='records')
-        full_dataframe_list = full_dataframe.to_dict(orient='records')
-        analysis_vectors[track_id] = ( shape_dynamic_dataframe_list, shape_dataframe_list, dynamic_dataframe_list, full_dataframe_list)
-        
-    return analysis_vectors, shape_dynamic_dataframe, shape_dataframe, dynamic_dataframe, full_dataframe 
 
-def convert_tracks_to_arrays( analysis_vectors, min_track_length=0):
+
+def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
+    analysis_vectors = {}
+    for track_id in global_shape_dynamic_dataframe["Track ID"].unique():
+        track_data = global_shape_dynamic_dataframe[
+            global_shape_dynamic_dataframe["Track ID"] == track_id
+        ].sort_values(by="t")
+        shape_dynamic_dataframe = track_data[
+            [
+                "Radius",
+                "Volume",
+                "Eccentricity Comp First",
+                "Eccentricity Comp Second",
+                "Surface Area",
+                "Speed",
+                "Motion_Angle",
+                "Acceleration",
+                "Distance_Cell_mask",
+                "Radial_Angle",
+                "Cell_Axis_Mask",
+            ]
+        ]
+        shape_dataframe = track_data[
+            [
+                "Radius",
+                "Volume",
+                "Eccentricity Comp First",
+                "Eccentricity Comp Second",
+                "Surface Area",
+            ]
+        ]
+        dynamic_dataframe = track_data[
+            [
+                "Speed",
+                "Motion_Angle",
+                "Acceleration",
+                "Distance_Cell_mask",
+                "Radial_Angle",
+                "Cell_Axis_Mask",
+            ]
+        ]
+        full_dataframe = track_data[
+            [
+                "Track ID",
+                "t",
+                "z",
+                "y",
+                "x",
+                "Dividing",
+                "Number_Dividing",
+                "Radius",
+                "Volume",
+                "Eccentricity Comp First",
+                "Eccentricity Comp Second",
+                "Surface Area",
+                "Speed",
+                "Motion_Angle",
+                "Acceleration",
+                "Distance_Cell_mask",
+                "Radial_Angle",
+                "Cell_Axis_Mask",
+            ]
+        ]
+
+        shape_dynamic_dataframe_list = shape_dynamic_dataframe.to_dict(orient="records")
+        shape_dataframe_list = shape_dataframe.to_dict(orient="records")
+        dynamic_dataframe_list = dynamic_dataframe.to_dict(orient="records")
+        full_dataframe_list = full_dataframe.to_dict(orient="records")
+        analysis_vectors[track_id] = (
+            shape_dynamic_dataframe_list,
+            shape_dataframe_list,
+            dynamic_dataframe_list,
+            full_dataframe_list,
+        )
+
+    return (
+        analysis_vectors,
+        shape_dynamic_dataframe,
+        shape_dataframe,
+        dynamic_dataframe,
+        full_dataframe,
+    )
+
+
+def convert_tracks_to_arrays(analysis_vectors, min_track_length=0):
 
     filtered_track_ids = []
     shape_dynamic_track_arrays = []
     shape_track_arrays = []
     dynamic_track_arrays = []
-    for track_id, (shape_dynamic_dataframe_list, shape_dataframe_list, dynamic_dataframe_list, full_dataframe_list) in analysis_vectors.items():
-        shape_dynamic_track_array = np.array([[item for item in record.values()] for record in shape_dynamic_dataframe_list])
-        shape_track_array = np.array([[item for item in record.values()] for record in shape_dataframe_list])
-        dynamic_track_array = np.array([[item for item in record.values()] for record in dynamic_dataframe_list])
-        assert shape_dynamic_track_array.shape[0] == shape_track_array.shape[0] == dynamic_track_array.shape[0], "Shape dynamic, shape and dynamic track arrays must have the same length"
-        if shape_dynamic_track_array.shape[0] > min_track_length:  
-            shape_dynamic_track_arrays.append(shape_dynamic_track_array.astype(np.float32))
+    for track_id, (
+        shape_dynamic_dataframe_list,
+        shape_dataframe_list,
+        dynamic_dataframe_list,
+        full_dataframe_list,
+    ) in analysis_vectors.items():
+        shape_dynamic_track_array = np.array(
+            [
+                [item for item in record.values()]
+                for record in shape_dynamic_dataframe_list
+            ]
+        )
+        shape_track_array = np.array(
+            [[item for item in record.values()] for record in shape_dataframe_list]
+        )
+        dynamic_track_array = np.array(
+            [[item for item in record.values()] for record in dynamic_dataframe_list]
+        )
+        assert (
+            shape_dynamic_track_array.shape[0]
+            == shape_track_array.shape[0]
+            == dynamic_track_array.shape[0]
+        ), "Shape dynamic, shape and dynamic track arrays must have the same length"
+        if shape_dynamic_track_array.shape[0] > min_track_length:
+            shape_dynamic_track_arrays.append(
+                shape_dynamic_track_array.astype(np.float32)
+            )
             shape_track_arrays.append(shape_track_array.astype(np.float32))
             dynamic_track_arrays.append(dynamic_track_array.astype(np.float32))
             filtered_track_ids.append(track_id)
@@ -475,59 +579,125 @@ def convert_tracks_to_arrays( analysis_vectors, min_track_length=0):
     shape_track_arrays_array = np.vstack(shape_track_arrays)
     dynamic_track_arrays_array = np.vstack(dynamic_track_arrays)
 
-    return shape_dynamic_track_arrays_array, shape_track_arrays_array, dynamic_track_arrays_array, filtered_track_ids
+    return (
+        shape_dynamic_track_arrays_array,
+        shape_track_arrays_array,
+        dynamic_track_arrays_array,
+        filtered_track_ids,
+    )
 
-def perform_cosine_similarity(full_dataframe, csv_file_name, shape_dynamic_track_arrays_array, shape_track_arrays_array, dynamic_track_arrays_array, filtered_track_ids, num_clusters,
-                              metric='cosine', method='average', criterion='maxclust', num_runs = 10, n_estimators = 100):
-        track_arrays_array = [shape_dynamic_track_arrays_array,shape_track_arrays_array, dynamic_track_arrays_array] 
-        track_arrays_array_names = ['shape_dynamic', 'shape', 'dynamic']
-        selected_features_all = [
-                 ['Radius', 'Volume', 'Eccentricity Comp First', 'Eccentricity Comp Second',
-                                'Surface Area', 'Speed', 'Motion_Angle', 'Acceleration', 'Distance_Cell_mask',
-                                'Radial_Angle', 'Cell_Axis_Mask'],
-                 ['Radius', 'Volume', 'Eccentricity Comp First', 'Eccentricity Comp Second',
-                                        'Surface Area'],
-                 ['Speed', 'Motion_Angle', 'Acceleration', 'Distance_Cell_mask',
-                                        'Radial_Angle', 'Cell_Axis_Mask']                         
-                     
+
+def perform_cosine_similarity(
+    full_dataframe,
+    csv_file_name,
+    shape_dynamic_track_arrays_array,
+    shape_track_arrays_array,
+    dynamic_track_arrays_array,
+    filtered_track_ids,
+    num_clusters,
+    metric="cosine",
+    method="average",
+    criterion="maxclust",
+    num_runs=10,
+    n_estimators=100,
+):
+    track_arrays_array = [
+        shape_dynamic_track_arrays_array,
+        shape_track_arrays_array,
+        dynamic_track_arrays_array,
+    ]
+    track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
+    selected_features_all = [
+        [
+            "Radius",
+            "Volume",
+            "Eccentricity Comp First",
+            "Eccentricity Comp Second",
+            "Surface Area",
+            "Speed",
+            "Motion_Angle",
+            "Acceleration",
+            "Distance_Cell_mask",
+            "Radial_Angle",
+            "Cell_Axis_Mask",
+        ],
+        [
+            "Radius",
+            "Volume",
+            "Eccentricity Comp First",
+            "Eccentricity Comp Second",
+            "Surface Area",
+        ],
+        [
+            "Speed",
+            "Motion_Angle",
+            "Acceleration",
+            "Distance_Cell_mask",
+            "Radial_Angle",
+            "Cell_Axis_Mask",
+        ],
+    ]
+    for track_arrays in track_arrays_array:
+        shape_dynamic_cosine_distance = pdist(track_arrays, metric=metric)
+        shape_dynamic_linkage_matrix = linkage(
+            shape_dynamic_cosine_distance, method=method
+        )
+        shape_dynamic_cluster_labels = fcluster(
+            shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
+        )
+        model = RandomForestClassifier(n_estimators=n_estimators)
+        model.fit(shape_dynamic_track_arrays_array, shape_dynamic_cluster_labels)
+        selected_features = selected_features_all[
+            track_arrays_array.index(track_arrays)
         ]
-        for track_arrays in track_arrays_array:
-                shape_dynamic_cosine_distance = pdist(track_arrays, metric=metric)
-                shape_dynamic_linkage_matrix = linkage(shape_dynamic_cosine_distance, method=method)
-                shape_dynamic_cluster_labels = fcluster(shape_dynamic_linkage_matrix, num_clusters, criterion=criterion)
-                model = RandomForestClassifier(n_estimators=n_estimators)
-                model.fit(shape_dynamic_track_arrays_array, shape_dynamic_cluster_labels)
-                selected_features = selected_features_all[track_arrays_array.index(track_arrays)]
-                feature_importances = model.feature_importances_
-                feature_names = selected_features
-                sorted_features = sorted(zip(feature_names, feature_importances), key=lambda x: x[1], reverse=True)
-                sorted_feature_names, sorted_importances = zip(*sorted_features)
+        feature_importances = model.feature_importances_
+        feature_names = selected_features
+        sorted_features = sorted(
+            zip(feature_names, feature_importances), key=lambda x: x[1], reverse=True
+        )
+        sorted_feature_names, sorted_importances = zip(*sorted_features)
 
-                normalized_importances = np.array(sorted_importances) / np.sum(sorted_importances)
-                total_feature_importances = np.zeros(len(feature_names))
+        normalized_importances = np.array(sorted_importances) / np.sum(
+            sorted_importances
+        )
+        total_feature_importances = np.zeros(len(feature_names))
 
-                for _ in range(num_runs):
-                    model = RandomForestClassifier(n_estimators=n_estimators)
-                    model.fit(shape_dynamic_track_arrays_array, shape_dynamic_cluster_labels)
-                    total_feature_importances += model.feature_importances_
+        for _ in range(num_runs):
+            model = RandomForestClassifier(n_estimators=n_estimators)
+            model.fit(shape_dynamic_track_arrays_array, shape_dynamic_cluster_labels)
+            total_feature_importances += model.feature_importances_
 
-                average_feature_importances = total_feature_importances / num_runs
+        average_feature_importances = total_feature_importances / num_runs
 
-                # Sort and display the averaged feature importances
-                sorted_features = sorted(zip(feature_names, average_feature_importances), key=lambda x: x[1], reverse=True)
-                sorted_feature_names, sorted_importances = zip(*sorted_features)
-                print("Sorted Feature Importances:")
-                for feature, importance in zip(sorted_feature_names, normalized_importances):
-                    print(f"{feature}: {importance}")
+        # Sort and display the averaged feature importances
+        sorted_features = sorted(
+            zip(feature_names, average_feature_importances),
+            key=lambda x: x[1],
+            reverse=True,
+        )
+        sorted_feature_names, sorted_importances = zip(*sorted_features)
+        print("Sorted Feature Importances:")
+        for feature, importance in zip(sorted_feature_names, normalized_importances):
+            print(f"{feature}: {importance}")
 
-                track_id_to_cluster = {track_id: cluster_label for track_id, cluster_label in zip(filtered_track_ids, shape_dynamic_cluster_labels)}
-                full_dataframe['Cluster'] = full_dataframe['Track ID'].map(track_id_to_cluster)
-                result_dataframe = full_dataframe[['Track ID', 't', 'z', 'y', 'x', 'Cluster']]
-                csv_file_name = csv_file_name + track_arrays_array_names[track_arrays_array.index(track_arrays)] + '.csv'
+        track_id_to_cluster = {
+            track_id: cluster_label
+            for track_id, cluster_label in zip(
+                filtered_track_ids, shape_dynamic_cluster_labels
+            )
+        }
+        full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
+        result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
+        csv_file_name = (
+            csv_file_name
+            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+            + ".csv"
+        )
 
-                if os.path.exists(csv_file_name):
-                    os.remove(csv_file_name)
-                result_dataframe.to_csv(csv_file_name, index=False)
+        if os.path.exists(csv_file_name):
+            os.remove(csv_file_name)
+        result_dataframe.to_csv(csv_file_name, index=False)
+
 
 def _perform_pca_clustering(track_arrays, num_clusters, num_components=3):
     pca = PCA(n_components=num_components)
@@ -538,35 +708,77 @@ def _perform_pca_clustering(track_arrays, num_clusters, num_components=3):
 
     return cluster_labels, pca.components_
 
-def perform_pca(full_dataframe, csv_file_name, shape_dynamic_track_arrays_array, shape_track_arrays_array, dynamic_track_arrays_array, filtered_track_ids, num_clusters,
-                              num_components=3, num_runs = 10, n_estimators = 100):
-    track_arrays_array = [shape_dynamic_track_arrays_array,shape_track_arrays_array, dynamic_track_arrays_array] 
-    track_arrays_array_names = ['shape_dynamic', 'shape', 'dynamic']
-    selected_features_all = [
-                ['Radius', 'Volume', 'Eccentricity Comp First', 'Eccentricity Comp Second',
-                            'Surface Area', 'Speed', 'Motion_Angle', 'Acceleration', 'Distance_Cell_mask',
-                            'Radial_Angle', 'Cell_Axis_Mask'],
-                ['Radius', 'Volume', 'Eccentricity Comp First', 'Eccentricity Comp Second',
-                                    'Surface Area'],
-                ['Speed', 'Motion_Angle', 'Acceleration', 'Distance_Cell_mask',
-                                    'Radial_Angle', 'Cell_Axis_Mask']                         
-                    
+
+def perform_pca(
+    full_dataframe,
+    csv_file_name,
+    shape_dynamic_track_arrays_array,
+    shape_track_arrays_array,
+    dynamic_track_arrays_array,
+    filtered_track_ids,
+    num_clusters,
+    num_components=3,
+    num_runs=10,
+    n_estimators=100,
+):
+    track_arrays_array = [
+        shape_dynamic_track_arrays_array,
+        shape_track_arrays_array,
+        dynamic_track_arrays_array,
     ]
-        
+    track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
+    selected_features_all = [
+        [
+            "Radius",
+            "Volume",
+            "Eccentricity Comp First",
+            "Eccentricity Comp Second",
+            "Surface Area",
+            "Speed",
+            "Motion_Angle",
+            "Acceleration",
+            "Distance_Cell_mask",
+            "Radial_Angle",
+            "Cell_Axis_Mask",
+        ],
+        [
+            "Radius",
+            "Volume",
+            "Eccentricity Comp First",
+            "Eccentricity Comp Second",
+            "Surface Area",
+        ],
+        [
+            "Speed",
+            "Motion_Angle",
+            "Acceleration",
+            "Distance_Cell_mask",
+            "Radial_Angle",
+            "Cell_Axis_Mask",
+        ],
+    ]
 
     for track_arrays in track_arrays_array:
-        cluster_labels, pca_components = _perform_pca_clustering(track_arrays, num_clusters, num_components)
+        cluster_labels, pca_components = _perform_pca_clustering(
+            track_arrays, num_clusters, num_components
+        )
 
         model = RandomForestClassifier(n_estimators=n_estimators)
         model.fit(track_arrays, cluster_labels)
 
-        selected_features = selected_features_all[track_arrays_array.index(track_arrays)]
+        selected_features = selected_features_all[
+            track_arrays_array.index(track_arrays)
+        ]
         feature_importances = model.feature_importances_
         feature_names = selected_features
-        sorted_features = sorted(zip(feature_names, feature_importances), key=lambda x: x[1], reverse=True)
+        sorted_features = sorted(
+            zip(feature_names, feature_importances), key=lambda x: x[1], reverse=True
+        )
         sorted_feature_names, sorted_importances = zip(*sorted_features)
 
-        normalized_importances = np.array(sorted_importances) / np.sum(sorted_importances)
+        normalized_importances = np.array(sorted_importances) / np.sum(
+            sorted_importances
+        )
         total_feature_importances = np.zeros(len(feature_names))
 
         for _ in range(num_runs):
@@ -576,18 +788,28 @@ def perform_pca(full_dataframe, csv_file_name, shape_dynamic_track_arrays_array,
 
         average_feature_importances = total_feature_importances / num_runs
 
-        sorted_features = sorted(zip(feature_names, average_feature_importances), key=lambda x: x[1], reverse=True)
+        sorted_features = sorted(
+            zip(feature_names, average_feature_importances),
+            key=lambda x: x[1],
+            reverse=True,
+        )
         sorted_feature_names, sorted_importances = zip(*sorted_features)
         print("Sorted Feature Importances:")
         for feature, importance in zip(sorted_feature_names, normalized_importances):
             print(f"{feature}: {importance}")
 
-        track_id_to_cluster = {track_id: cluster_label for track_id, cluster_label in zip(filtered_track_ids, cluster_labels)}
-        full_dataframe['Cluster'] = full_dataframe['Track ID'].map(track_id_to_cluster)
-        result_dataframe = full_dataframe[['Track ID', 't', 'z', 'y', 'x', 'Cluster']]
-        csv_file_name = csv_file_name +  track_arrays_array_names[track_arrays_array.index(track_arrays)] + '.csv'
+        track_id_to_cluster = {
+            track_id: cluster_label
+            for track_id, cluster_label in zip(filtered_track_ids, cluster_labels)
+        }
+        full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
+        result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
+        csv_file_name = (
+            csv_file_name
+            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+            + ".csv"
+        )
 
         if os.path.exists(csv_file_name):
             os.remove(csv_file_name)
         result_dataframe.to_csv(csv_file_name, index=False)
-
