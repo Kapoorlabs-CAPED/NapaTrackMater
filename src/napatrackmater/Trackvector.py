@@ -530,9 +530,7 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
             full_dataframe_list,
         )
 
-    return (
-        analysis_vectors
-    )
+    return analysis_vectors
 
 
 def convert_tracks_to_arrays(analysis_vectors, min_track_length=0):
@@ -643,13 +641,15 @@ def perform_cosine_similarity(
             shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
         )
         model = RandomForestClassifier(n_estimators=n_estimators)
-        model.fit(shape_dynamic_track_arrays_array, shape_dynamic_cluster_labels)
+        model.fit(track_arrays, shape_dynamic_cluster_labels)
         selected_features = selected_features_all[
             track_arrays_array.index(track_arrays)
         ]
         feature_importances = model.feature_importances_
         sorted_features = sorted(
-            zip(selected_features, feature_importances), key=lambda x: x[1], reverse=True
+            zip(selected_features, feature_importances),
+            key=lambda x: x[1],
+            reverse=True,
         )
         sorted_feature_names, sorted_importances = zip(*sorted_features)
 
@@ -657,10 +657,9 @@ def perform_cosine_similarity(
             sorted_importances
         )
         total_feature_importances = np.zeros(len(selected_features))
-        print(total_feature_importances, selected_features)
         for _ in range(num_runs):
             model = RandomForestClassifier(n_estimators=n_estimators)
-            model.fit(shape_dynamic_track_arrays_array, shape_dynamic_cluster_labels)
+            model.fit(track_arrays, shape_dynamic_cluster_labels)
             total_feature_importances += model.feature_importances_
 
         average_feature_importances = total_feature_importances / num_runs
@@ -756,12 +755,13 @@ def perform_pca(
     ]
 
     for track_arrays in track_arrays_array:
-        print(f"Performing PCA on {track_arrays_array_names[track_arrays_array.index(track_arrays)]}, {track_arrays.shape}")
-        print(full_dataframe)
+        print(
+            f"Performing PCA on {track_arrays_array_names[track_arrays_array.index(track_arrays)]}, {track_arrays.shape}"
+        )
         cluster_labels, pca_components = _perform_pca_clustering(
             track_arrays, num_clusters, num_components
         )
-        print(f'PCA components: {pca_components.shape}, {cluster_labels.shape}')
+        print(f"PCA components: {pca_components.shape}, {cluster_labels.shape}")
         model = RandomForestClassifier(n_estimators=n_estimators)
         model.fit(track_arrays, cluster_labels)
 
@@ -796,15 +796,13 @@ def perform_pca(
         print("Sorted Feature Importances:")
         for feature, importance in zip(sorted_feature_names, normalized_importances):
             print(f"{feature}: {importance}")
-        print(f'filtered tracks {len(filtered_track_ids), len(cluster_labels)}')
+        print(f"filtered tracks {len(filtered_track_ids), len(cluster_labels)}")
         track_id_to_cluster = {
             track_id: cluster_label
             for track_id, cluster_label in zip(filtered_track_ids, cluster_labels)
         }
-        print(track_id_to_cluster)
         full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
         result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
-        print(result_dataframe)
         csv_file_name = (
             csv_file_name_original
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
