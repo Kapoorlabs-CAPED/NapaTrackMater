@@ -761,10 +761,11 @@ def perform_pca(
     ]
 
     for track_arrays in track_arrays_array:
+        print(f"Performing PCA on {track_arrays_array_names[track_arrays_array.index(track_arrays)]}, {track_arrays.shape}")
         cluster_labels, pca_components = _perform_pca_clustering(
             track_arrays, num_clusters, num_components
         )
-
+        print(f'PCA components: {pca_components.shape}, {cluster_labels.shape}')
         model = RandomForestClassifier(n_estimators=n_estimators)
         model.fit(track_arrays, cluster_labels)
 
@@ -799,7 +800,7 @@ def perform_pca(
         print("Sorted Feature Importances:")
         for feature, importance in zip(sorted_feature_names, normalized_importances):
             print(f"{feature}: {importance}")
-
+        print(f'filtered tracks {len(filtered_track_ids), len(cluster_labels)}')
         track_id_to_cluster = {
             track_id: cluster_label
             for track_id, cluster_label in zip(filtered_track_ids, cluster_labels)
