@@ -5,6 +5,15 @@ from .Trackvector import TrackVector, create_analysis_vectors_dict, convert_trac
 from .DeepEmbeddedClustering import DeepEmbeddedClustering
 from .CloudAutoEncoder import CloudAutoEncoder
 import json
+from csbdeep.utils.tf import keras_import
+get_file = keras_import("utils", "get_file")
+
+
+def test_tracks_xenopus():
+    url = 'https://zenodo.org/record/8417322/files/example_tracks_napari_trackmate.zip'
+    hash = '589c7b1834b995adb2ae183604961f48'
+    track_directory = get_file(fname='example_tracks_napari_trackmate',origin=url,file_hash=hash)
+    return track_directory
 
 
 def load_json(fpath):
