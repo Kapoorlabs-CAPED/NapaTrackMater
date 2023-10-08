@@ -1,78 +1,70 @@
 # NapaTrackMater
-Napari Visualization tool for Trackmate > 6.0 and bTrackmate XML files for 3D + time tracks.
 
-This repository is the bridge between the Fiji and Napari world for exporting and viewing the track XML files using [Napari track layer](https://napari.org/tutorials/fundamentals/tracks.html).
 
-[![Build Status](https://travis-ci.com/kapoorlab/napatrackmater.svg?branch=master)](https://travis-ci.com/github/kapoorlab/napatrackmater)
-[![PyPI version](https://img.shields.io/pypi/v/napatrackmater.svg?maxAge=2591000)](https://pypi.org/project/napatrackmater/)
+[![License BSD-3](https://img.shields.io/pypi/l/NapaTrackMater.svg?color=green)](https://github.com/Kapoorlabs-CAPED/NapaTrackMater/raw/main/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/NapaTrackMater.svg?color=green)](https://pypi.org/project/NapaTrackMater)
+[![Python Version](https://img.shields.io/pypi/pyversions/NapaTrackMater.svg?color=green)](https://python.org)
+[![tests](https://github.com/Kapoorlabs-CAPED/NapaTrackMater/workflows/tests/badge.svg)](https://github.com/Kapoorlabs-CAPED/NapaTrackMater/actions)
+[![codecov](https://codecov.io/gh/Kapoorlabs-CAPED/NapaTrackMater/branch/main/graph/badge.svg)](https://codecov.io/gh/Kapoorlabs-CAPED/NapaTrackMater)
+
+
+Napari Visualization tool for Trackmate > 6.0 XML files for 3D + time tracks.
+
+----------------------------------
+
+This [caped] package was generated with [Cookiecutter] using [@caped]'s [cookiecutter-template] template.
+
+
 
 ## Installation
-This package can be installed with:
 
-`pip install --user napatrackmater`
+You can install `NapaTrackMater` via [pip]:
 
-If you are building this from the source, clone the repository and install via
-
-```bash
-git clone https://github.com/kapoorlab/NapaTrackMater/
-
-cd NapaTrackMater
-
-pip install --user -e .
-
-# or, to install in editable mode AND grab all of the developer tools
-# (this is required if you want to contribute code back to NapaTrackMater)
-pip install --user -r requirements.txt
-```
-
-### Pipenv install
-
-Pipenv allows you to install dependencies in a virtual environment.
-
-```bash
-# install pipenv if you don't already have it installed
-pip install --user pipenv
-
-# clone the repository and sync the dependencies
-git clone https://github.com/kapoorlab/NapaTrackMater/
-cd NapaTrackMater
-pipenv sync
-
-# make the current package available
-pipenv run python setup.py develop
-
-# you can run the example notebooks by starting the jupyter notebook inside the virtual env
-pipenv run jupyter notebook
-```
+    pip install NapaTrackMater
 
 
-## Docker
 
-A Docker image can be used to run the code in a container. Once inside the project's directory, build the image with:
+To install latest development version :
 
-~~~bash
-docker build -t kapoorlab/NapaTrackMater .
-~~~
+    pip install git+https://github.com/Kapoorlabs-CAPED/NapaTrackMater.git
 
-Now to run the `track` command:
 
-~~~bash
-# show help
-docker run --rm -it kapoorlab/NapaTrackMater
-# run it with example data
-docker run --rm -it -v $(pwd)/examples/data:/input kapoorlab/NapaTrackMater track -f /input -r /input/Raw.tif -s /input/Seg.tif -s /input/Mask.tif -n test
-~~~
+## Contributing
 
-## Requirements
-
-- Python 3.9 and above.
-
+Contributions are very welcome. Tests can be run with [tox], please ensure
+the coverage at least stays the same before you submit a pull request.
 
 ## License
 
-Under MIT license. See [LICENSE](LICENSE).
+Distributed under the terms of the [BSD-3] license,
+"NapaTrackMater" is free and open source software
+
+## Issues
+
+If you encounter any problems, please [file an issue] along with a detailed description.
+
+
+[pip]: https://pypi.org/project/pip/
+[caped]: https://github.com/Kapoorlabs-CAPED
+[Cookiecutter]: https://github.com/audreyr/cookiecutter
+[@caped]: https://github.com/Kapoorlabs-CAPED
+[MIT]: http://opensource.org/licenses/MIT
+[BSD-3]: http://opensource.org/licenses/BSD-3-Clause
+[GNU GPL v3.0]: http://www.gnu.org/licenses/gpl-3.0.txt
+[GNU LGPL v3.0]: http://www.gnu.org/licenses/lgpl-3.0.txt
+[Apache Software License 2.0]: http://www.apache.org/licenses/LICENSE-2.0
+[Mozilla Public License 2.0]: https://www.mozilla.org/media/MPL/2.0/index.txt
+[cookiecutter-template]: https://github.com/Kapoorlabs-CAPED/cookiecutter-template
+
+[file an issue]: https://github.com/Kapoorlabs-CAPED/NapaTrackMater/issues
+
+[caped]: https://github.com/Kapoorlabs-CAPED/
+[tox]: https://tox.readthedocs.io/en/latest/
+[pip]: https://pypi.org/project/pip/
+[PyPI]: https://pypi.org/
 
 ## Authors
 
 - Varun Kapoor <randomaccessiblekapoor@gmail.com>
 - Mari Tolonen
+- Jakub Sedzinski
