@@ -12,6 +12,9 @@ from pathlib import Path
 import tensorflow as tf
 import os
 import json
+from kapoorlabs_lightning.lightning_trainer import AutoLightningModel
+from kapoorlabs_lightning.pytorch_losses import ChamferLoss
+from kapoorlabs_lightning.optimizers import Adam
 
 
 def _raise(e):
@@ -155,20 +158,33 @@ def get_autoencoder_instance(cls, key_or_alias):
     json_file = os.path.join(
         os.path.join(path.parent.as_posix(), path.name), key + ".json"
     )
-    checkpoint = torch.load(
-        os.path.join(os.path.join(path.parent.as_posix(), path.name), key + ".pt")
-    )
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
     if Path(json_file).is_file():
 
-        config = load_json(json_file)
-        autoencoder = cls(
-            num_features=config["num_features"],
-            k=config["k_nearest_neighbours"],
-            encoder_type=config["encoder_type"],
-            decoder_type=config["decoder_type"],
+        modelconfig = load_json(json_file)
+        scale_z = modelconfig["scale_z"]
+        scale_xy = modelconfig["scale_xy"]
+        loss = ChamferLoss()
+        optimizer = Adam(lr=0.001)
+        cloud_autoencoder = cls(
+            num_features=modelconfig["num_features"],
+            k=modelconfig["k_nearest_neighbours"],
+            encoder_type=modelconfig["encoder_type"],
+            decoder_type=modelconfig["decoder_type"],
         )
-        autoencoder.load_state_dict(checkpoint["model_state_dict"])
-        return autoencoder
+        autoencoder_model = AutoLightningModel.load_from_checkpoint(
+            os.path.join(
+                os.path.join(path.parent.as_posix(), path.name), key + ".ckpt"
+            ),
+            map_location=device,
+            network=cloud_autoencoder,
+            loss_func=loss,
+            optim_func=optimizer,
+            scale_z=scale_z,
+            scale_xy=scale_xy,
+        )
+        return autoencoder_model
     else:
         print(
             f"Expected a json file of model attributes with name {key}.json in the folder {path.parent}"
@@ -180,7 +196,7 @@ def get_cluster_instance(cls, key_or_alias, autoencoder):
     path, key = get_model_folder(cls, key_or_alias)
 
     checkpoint = torch.load(
-        os.path.join(os.path.join(path.parent.as_posix(), path.name), key + ".pt")
+        os.path.join(os.path.join(path.parent.as_posix(), path.name), key + ".ckpt")
     )
     num_clusters = checkpoint["model_state_dict"]["clustering_layer.weight"].shape[0]
     print(f"The number of clusters in the loaded model is: {num_clusters}")
