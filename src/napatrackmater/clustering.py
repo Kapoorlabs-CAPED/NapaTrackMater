@@ -308,7 +308,7 @@ def _model_output(
 
         print("Computing shape features using classical marching cubes ")
         for cloud_inputs in marching_cube_points:
-
+            print('h', cloud_inputs.shape)
             output_cloud_eccentricity = output_cloud_eccentricity + [
                 tuple(get_eccentricity(cloud_input.detach().cpu().numpy()))[0]
                 for cloud_input in cloud_inputs
@@ -393,7 +393,7 @@ def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, mi
         if vertices is not None:
             mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
             simple_clouds = mesh_obj.sample(num_points).data
-            print(simple_clouds.shape)
+            
             if compute_with_autoencoder:
                 mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
 
