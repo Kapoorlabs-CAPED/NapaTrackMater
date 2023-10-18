@@ -310,16 +310,16 @@ def _model_output(
         for cloud_input in marching_cube_points:
            
             output_cloud_eccentricity.append(
-                tuple(get_eccentricity(cloud_input.detach().cpu().numpy()))[0])
+                tuple(get_eccentricity(cloud_input))[0])
                 
             output_largest_eigenvector.append(
-                get_eccentricity(cloud_input.detach().cpu().numpy())[1])
+                get_eccentricity(cloud_input)[1])
             output_largest_eigenvalue.append(
-                get_eccentricity(cloud_input.detach().cpu().numpy())[2])
+                get_eccentricity(cloud_input)[2])
             output_dimensions.append(
-                get_eccentricity(cloud_input.detach().cpu().numpy())[3])
+                get_eccentricity(cloud_input)[3])
             output_cloud_surface_area.append(
-                float(get_surface_area(cloud_input.detach().cpu().numpy())))
+                float(get_surface_area(cloud_input)))
 
     return (
         output_labels,
