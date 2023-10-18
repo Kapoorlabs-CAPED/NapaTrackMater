@@ -266,18 +266,19 @@ def _model_output(
     output_dimensions = []
     dataset = PointCloudDataset(clouds, scale_z=scale_z, scale_xy=scale_xy)
     dataloader = DataLoader(dataset, batch_size=batch_size)
+
+    output_cluster_centroid = output_cluster_centroid + [
+        tuple(centroid_input) for centroid_input in centroids
+    ]
+    output_labels = output_labels + [int(float(label_input)) for label_input in labels]
+
     if compute_with_autoencoder:
 
         model.eval()
         print(f"Predicting {len(dataset)} clouds..., {len(centroids)} centroids...")
         pretrainer = Trainer(accelerator=accelerator, devices=devices)
         outputs_list = pretrainer.predict(model=model, dataloaders=dataloader)
-        output_cluster_centroid = output_cluster_centroid + [
-            tuple(centroid_input) for centroid_input in centroids
-        ]
-        output_labels = output_labels + [
-            int(float(label_input)) for label_input in labels
-        ]
+
         for outputs in outputs_list:
             output_cloud_eccentricity = output_cloud_eccentricity + [
                 tuple(get_eccentricity(cloud_input.detach().cpu().numpy()))[0]
@@ -305,7 +306,7 @@ def _model_output(
         print("Computing shape features using classical marching cubes ")
         for data in tqdm(dataloader):
 
-            cloud_inputs, label_inputs, centroid_inputs = data
+            cloud_inputs = data
             output_cloud_eccentricity = output_cloud_eccentricity + [
                 tuple(get_eccentricity(cloud_input.detach().cpu().numpy()))[0]
                 for cloud_input in cloud_inputs
