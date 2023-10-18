@@ -84,7 +84,7 @@ class Clustering:
         if ndim == 2:
 
             labels, centroids, clouds, marching_cube_points = _label_cluster(
-                self.label_image, self.num_points, self.min_size, ndim
+                self.label_image, self.num_points, self.min_size, ndim, self.compute_with_autoencoder
             )
 
             (
@@ -122,7 +122,7 @@ class Clustering:
         if ndim == 3 and "T" not in self.axes:
 
             labels, centroids, clouds, marching_cube_points = _label_cluster(
-                self.label_image, self.num_points, self.min_size, ndim
+                self.label_image, self.num_points, self.min_size, ndim, self.compute_with_autoencoder
             )
             if len(labels) > 1:
 
@@ -209,7 +209,7 @@ class Clustering:
 
         xyz_label_image = self.label_image[i, :]
         labels, centroids, clouds, marching_cube_points = _label_cluster(
-            xyz_label_image, self.num_points, self.min_size, dim
+            xyz_label_image, self.num_points, self.min_size, dim, self.compute_with_autoencoder
         )
         if len(labels) > 1:
 
@@ -341,7 +341,7 @@ def _model_output(
     )
 
 
-def _label_cluster(label_image, num_points, min_size, ndim):
+def _label_cluster(label_image, num_points, min_size, ndim, compute_with_autoencoder):
 
     labels = []
     centroids = []
@@ -356,7 +356,7 @@ def _label_cluster(label_image, num_points, min_size, ndim):
         for r in concurrent.futures.as_completed(futures):
             binary_image, label, centroid = r.result()
             results = get_label_centroid_cloud(
-                binary_image, num_points, ndim, label, centroid, min_size
+                binary_image, num_points, ndim, label, centroid, min_size, compute_with_autoencoder
             )
 
             if results is not None:
