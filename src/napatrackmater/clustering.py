@@ -391,8 +391,8 @@ def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, mi
             print("Marching cubes failed for label: ", label)
             vertices = None
         if vertices is not None:
-            mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
-            simple_clouds = mesh.sample(num_points).numpy()
+            mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
+            simple_clouds = mesh_obj.sample(num_points).numpy()
             if compute_with_autoencoder:
                 mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
 
