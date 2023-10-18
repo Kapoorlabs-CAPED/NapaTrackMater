@@ -307,28 +307,19 @@ def _model_output(
     else:
 
         print("Computing shape features using classical marching cubes ")
-        for cloud_inputs in marching_cube_points:
-            print('h', cloud_inputs.shape)
-            output_cloud_eccentricity = output_cloud_eccentricity + [
-                tuple(get_eccentricity(cloud_input.detach().cpu().numpy()))[0]
-                for cloud_input in cloud_inputs
-            ]
-            output_largest_eigenvector = output_largest_eigenvector + [
-                get_eccentricity(cloud_input.detach().cpu().numpy())[1]
-                for cloud_input in cloud_inputs
-            ]
-            output_largest_eigenvalue = output_largest_eigenvalue + [
-                get_eccentricity(cloud_input.detach().cpu().numpy())[2]
-                for cloud_input in cloud_inputs
-            ]
-            output_dimensions = output_dimensions + [
-                get_eccentricity(cloud_input.detach().cpu().numpy())[3]
-                for cloud_input in cloud_inputs
-            ]
-            output_cloud_surface_area = output_cloud_surface_area + [
-                float(get_surface_area(cloud_input.detach().cpu().numpy()))
-                for cloud_input in cloud_inputs
-            ]
+        for cloud_input in marching_cube_points:
+           
+            output_cloud_eccentricity.append(
+                tuple(get_eccentricity(cloud_input.detach().cpu().numpy()))[0])
+                
+            output_largest_eigenvector.append(
+                get_eccentricity(cloud_input.detach().cpu().numpy())[1])
+            output_largest_eigenvalue.append(
+                get_eccentricity(cloud_input.detach().cpu().numpy())[2])
+            output_dimensions.append(
+                get_eccentricity(cloud_input.detach().cpu().numpy())[3])
+            output_cloud_surface_area.append(
+                float(get_surface_area(cloud_input.detach().cpu().numpy())))
 
     return (
         output_labels,
