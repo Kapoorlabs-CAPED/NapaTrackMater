@@ -73,6 +73,8 @@ class Clustering:
         self.key = key
         self.batch_size = batch_size
         self.compute_with_autoencoder = compute_with_autoencoder
+        if not compute_with_autoencoder:
+            print("Computing shape features using classical marching cubes ")
         self.timed_cluster_label = {}
         self.count = 0
 
@@ -84,7 +86,11 @@ class Clustering:
         if ndim == 2:
 
             labels, centroids, clouds, marching_cube_points = _label_cluster(
-                self.label_image, self.num_points, self.min_size, ndim, self.compute_with_autoencoder
+                self.label_image,
+                self.num_points,
+                self.min_size,
+                ndim,
+                self.compute_with_autoencoder,
             )
 
             (
@@ -122,7 +128,11 @@ class Clustering:
         if ndim == 3 and "T" not in self.axes:
 
             labels, centroids, clouds, marching_cube_points = _label_cluster(
-                self.label_image, self.num_points, self.min_size, ndim, self.compute_with_autoencoder
+                self.label_image,
+                self.num_points,
+                self.min_size,
+                ndim,
+                self.compute_with_autoencoder,
             )
             if len(labels) > 1:
 
@@ -209,7 +219,11 @@ class Clustering:
 
         xyz_label_image = self.label_image[i, :]
         labels, centroids, clouds, marching_cube_points = _label_cluster(
-            xyz_label_image, self.num_points, self.min_size, dim, self.compute_with_autoencoder
+            xyz_label_image,
+            self.num_points,
+            self.min_size,
+            dim,
+            self.compute_with_autoencoder,
         )
         if len(labels) > 1:
 
@@ -306,20 +320,14 @@ def _model_output(
 
     else:
 
-        print("Computing shape features using classical marching cubes ")
         for cloud_input in marching_cube_points:
-           
-            output_cloud_eccentricity.append(
-                tuple(get_eccentricity(cloud_input))[0])
-                
-            output_largest_eigenvector.append(
-                get_eccentricity(cloud_input)[1])
-            output_largest_eigenvalue.append(
-                get_eccentricity(cloud_input)[2])
-            output_dimensions.append(
-                get_eccentricity(cloud_input)[3])
-            output_cloud_surface_area.append(
-                float(get_surface_area(cloud_input)))
+
+            output_cloud_eccentricity.append(tuple(get_eccentricity(cloud_input))[0])
+
+            output_largest_eigenvector.append(get_eccentricity(cloud_input)[1])
+            output_largest_eigenvalue.append(get_eccentricity(cloud_input)[2])
+            output_dimensions.append(get_eccentricity(cloud_input)[3])
+            output_cloud_surface_area.append(float(get_surface_area(cloud_input)))
 
     return (
         output_labels,
@@ -347,7 +355,13 @@ def _label_cluster(label_image, num_points, min_size, ndim, compute_with_autoenc
         for r in concurrent.futures.as_completed(futures):
             binary_image, label, centroid = r.result()
             results = get_label_centroid_cloud(
-                binary_image, num_points, ndim, label, centroid, min_size, compute_with_autoencoder
+                binary_image,
+                num_points,
+                ndim,
+                label,
+                centroid,
+                min_size,
+                compute_with_autoencoder,
             )
 
             if results is not None:
@@ -360,7 +374,9 @@ def _label_cluster(label_image, num_points, min_size, ndim, compute_with_autoenc
     return labels, centroids, clouds, marching_cube_points
 
 
-def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, min_size, compute_with_autoencoder):
+def get_label_centroid_cloud(
+    binary_image, num_points, ndim, label, centroid, min_size, compute_with_autoencoder
+):
 
     valid = []
 
@@ -384,9 +400,11 @@ def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, mi
         if vertices is not None:
             mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
             simple_clouds = np.asarray(mesh_obj.sample(num_points).data)
-            
+
             if compute_with_autoencoder:
-                mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
+                mesh_obj = trimesh.Trimesh(
+                    vertices=vertices, faces=faces, process=False
+                )
 
                 mesh_file = str(label)
 
@@ -404,7 +422,7 @@ def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, mi
                     else:
                         cloud = get_panda_cloud_xyz(points)
             else:
-                cloud = sample_points            
+                cloud = sample_points
 
                 return label, centroid, cloud, simple_clouds
 
