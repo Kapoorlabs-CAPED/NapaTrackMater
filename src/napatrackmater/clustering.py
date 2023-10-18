@@ -13,6 +13,7 @@ import tempfile
 from scipy.spatial import ConvexHull
 from lightning import Trainer
 from typing import List
+from tqdm import tqdm
 
 
 class PointCloudDataset(Dataset):
@@ -56,6 +57,7 @@ class Clustering:
         scale_z=1.0,
         scale_xy=1.0,
         center=True,
+        compute_with_autoencoder=True,
     ):
 
         self.accelerator = accelerator
@@ -71,6 +73,7 @@ class Clustering:
         self.progress_bar = progress_bar
         self.key = key
         self.batch_size = batch_size
+        self.compute_with_autoencoder = compute_with_autoencoder
         self.timed_cluster_label = {}
         self.count = 0
 
@@ -100,6 +103,7 @@ class Clustering:
                 clouds,
                 labels,
                 centroids,
+                self.compute_with_autoencoder,
                 self.batch_size,
                 self.scale_z,
                 self.scale_xy,
@@ -137,6 +141,7 @@ class Clustering:
                     clouds,
                     labels,
                     centroids,
+                    self.compute_with_autoencoder,
                     self.batch_size,
                     self.scale_z,
                     self.scale_xy,
@@ -222,6 +227,7 @@ class Clustering:
                 clouds,
                 labels,
                 centroids,
+                self.compute_with_autoencoder,
                 self.batch_size,
                 self.scale_z,
                 self.scale_xy,
@@ -245,6 +251,7 @@ def _model_output(
     clouds,
     labels,
     centroids,
+    compute_with_autoencoder,
     batch_size: int,
     scale_z: float = 1.0,
     scale_xy: float = 1.0,
@@ -259,35 +266,66 @@ def _model_output(
     output_dimensions = []
     dataset = PointCloudDataset(clouds, scale_z=scale_z, scale_xy=scale_xy)
     dataloader = DataLoader(dataset, batch_size=batch_size)
-    model.eval()
-    print(f"Predicting {len(dataset)} clouds..., {len(centroids)} centroids...")
-    pretrainer = Trainer(accelerator=accelerator, devices=devices)
-    outputs_list = pretrainer.predict(model=model, dataloaders=dataloader)
-    output_cluster_centroid = output_cluster_centroid + [
-        tuple(centroid_input) for centroid_input in centroids
-    ]
-    output_labels = output_labels + [int(float(label_input)) for label_input in labels]
-    for outputs in outputs_list:
-        output_cloud_eccentricity = output_cloud_eccentricity + [
-            tuple(get_eccentricity(cloud_input.detach().cpu().numpy()))[0]
-            for cloud_input in outputs
+    if compute_with_autoencoder:
+
+        model.eval()
+        print(f"Predicting {len(dataset)} clouds..., {len(centroids)} centroids...")
+        pretrainer = Trainer(accelerator=accelerator, devices=devices)
+        outputs_list = pretrainer.predict(model=model, dataloaders=dataloader)
+        output_cluster_centroid = output_cluster_centroid + [
+            tuple(centroid_input) for centroid_input in centroids
         ]
-        output_largest_eigenvector = output_largest_eigenvector + [
-            get_eccentricity(cloud_input.detach().cpu().numpy())[1]
-            for cloud_input in outputs
+        output_labels = output_labels + [
+            int(float(label_input)) for label_input in labels
         ]
-        output_largest_eigenvalue = output_largest_eigenvalue + [
-            get_eccentricity(cloud_input.detach().cpu().numpy())[2]
-            for cloud_input in outputs
-        ]
-        output_dimensions = output_dimensions + [
-            get_eccentricity(cloud_input.detach().cpu().numpy())[3]
-            for cloud_input in outputs
-        ]
-        output_cloud_surface_area = output_cloud_surface_area + [
-            float(get_surface_area(cloud_input.detach().cpu().numpy()))
-            for cloud_input in outputs
-        ]
+        for outputs in outputs_list:
+            output_cloud_eccentricity = output_cloud_eccentricity + [
+                tuple(get_eccentricity(cloud_input.detach().cpu().numpy()))[0]
+                for cloud_input in outputs
+            ]
+            output_largest_eigenvector = output_largest_eigenvector + [
+                get_eccentricity(cloud_input.detach().cpu().numpy())[1]
+                for cloud_input in outputs
+            ]
+            output_largest_eigenvalue = output_largest_eigenvalue + [
+                get_eccentricity(cloud_input.detach().cpu().numpy())[2]
+                for cloud_input in outputs
+            ]
+            output_dimensions = output_dimensions + [
+                get_eccentricity(cloud_input.detach().cpu().numpy())[3]
+                for cloud_input in outputs
+            ]
+            output_cloud_surface_area = output_cloud_surface_area + [
+                float(get_surface_area(cloud_input.detach().cpu().numpy()))
+                for cloud_input in outputs
+            ]
+
+    else:
+
+        print("Computing shape features using classical marching cubes ")
+        for data in tqdm(dataloader):
+
+            cloud_inputs, label_inputs, centroid_inputs = data
+            output_cloud_eccentricity = output_cloud_eccentricity + [
+                tuple(get_eccentricity(cloud_input.detach().cpu().numpy()))[0]
+                for cloud_input in cloud_inputs
+            ]
+            output_largest_eigenvector = output_largest_eigenvector + [
+                get_eccentricity(cloud_input.detach().cpu().numpy())[1]
+                for cloud_input in cloud_inputs
+            ]
+            output_largest_eigenvalue = output_largest_eigenvalue + [
+                get_eccentricity(cloud_input.detach().cpu().numpy())[2]
+                for cloud_input in cloud_inputs
+            ]
+            output_dimensions = output_dimensions + [
+                get_eccentricity(cloud_input.detach().cpu().numpy())[3]
+                for cloud_input in cloud_inputs
+            ]
+            output_cloud_surface_area = output_cloud_surface_area + [
+                float(get_surface_area(cloud_input.detach().cpu().numpy()))
+                for cloud_input in cloud_inputs
+            ]
 
     return (
         output_labels,

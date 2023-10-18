@@ -43,6 +43,7 @@ class TrackMate:
         autoencoder_model=None,
         num_points=2048,
         batch_size=1,
+        compute_with_autoencoder=True,
     ):
 
         self.xml_path = xml_path
@@ -55,6 +56,7 @@ class TrackMate:
         self.scale_z = scale_z
         self.scale_xy = scale_xy
         self.center = center
+        self.compute_with_autoencoder = compute_with_autoencoder
         if image is not None:
             self.image = image.astype(np.uint8)
         else:
@@ -1668,6 +1670,7 @@ class TrackMate:
                 scale_z=self.scale_z,
                 scale_xy=self.scale_xy,
                 center=self.center,
+                compute_with_autoencoder=self.compute_with_autoencoder,
             )
             cluster_eval._create_cluster_labels()
 
