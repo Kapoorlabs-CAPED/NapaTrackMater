@@ -369,7 +369,7 @@ def _label_cluster(label_image, num_points, min_size, ndim):
     return labels, centroids, clouds, marching_cube_points
 
 
-def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, min_size):
+def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, min_size, compute_with_autoencoder):
 
     valid = []
 
@@ -393,24 +393,26 @@ def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, mi
         if vertices is not None:
             mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
             sample_points = mesh.sample(num_points)
+            if compute_with_autoencoder:
+                mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
 
-            mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
+                mesh_file = str(label)
 
-            mesh_file = str(label)
-
-            with tempfile.TemporaryDirectory() as mesh_dir:
-                save_mesh_file = os.path.join(mesh_dir, mesh_file) + ".off"
-                mesh_obj.export(save_mesh_file)
-                data = read_off(save_mesh_file)
-            pos, face = data["pos"], data["face"]
-            if pos.size(1) == 3 and face.size(0) == 3:
-                points = sample_points(data=data, num=num_points).numpy()
-                if ndim == 2:
-                    cloud = get_panda_cloud_xy(points)
-                if ndim == 3:
-                    cloud = get_panda_cloud_xyz(points)
-                else:
-                    cloud = get_panda_cloud_xyz(points)
+                with tempfile.TemporaryDirectory() as mesh_dir:
+                    save_mesh_file = os.path.join(mesh_dir, mesh_file) + ".off"
+                    mesh_obj.export(save_mesh_file)
+                    data = read_off(save_mesh_file)
+                pos, face = data["pos"], data["face"]
+                if pos.size(1) == 3 and face.size(0) == 3:
+                    points = sample_points(data=data, num=num_points).numpy()
+                    if ndim == 2:
+                        cloud = get_panda_cloud_xy(points)
+                    if ndim == 3:
+                        cloud = get_panda_cloud_xyz(points)
+                    else:
+                        cloud = get_panda_cloud_xyz(points)
+            else:
+                cloud = sample_points            
 
                 return label, centroid, cloud, sample_points
 
