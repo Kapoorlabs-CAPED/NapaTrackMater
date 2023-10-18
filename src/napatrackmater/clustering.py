@@ -13,7 +13,6 @@ import tempfile
 from scipy.spatial import ConvexHull
 from lightning import Trainer
 from typing import List
-from tqdm import tqdm
 
 
 class PointCloudDataset(Dataset):
@@ -304,9 +303,8 @@ def _model_output(
     else:
 
         print("Computing shape features using classical marching cubes ")
-        for data in tqdm(dataloader):
+        for cloud_inputs in clouds:
 
-            cloud_inputs = data
             output_cloud_eccentricity = output_cloud_eccentricity + [
                 tuple(get_eccentricity(cloud_input.detach().cpu().numpy()))[0]
                 for cloud_input in cloud_inputs
