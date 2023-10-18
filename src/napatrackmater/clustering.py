@@ -83,7 +83,7 @@ class Clustering:
         # YX image
         if ndim == 2:
 
-            labels, centroids, clouds = _label_cluster(
+            labels, centroids, clouds, marching_cube_points = _label_cluster(
                 self.label_image, self.num_points, self.min_size, ndim
             )
 
@@ -99,6 +99,7 @@ class Clustering:
                 self.model,
                 self.accelerator,
                 self.devices,
+                marching_cube_points,
                 clouds,
                 labels,
                 centroids,
@@ -120,7 +121,7 @@ class Clustering:
         # ZYX image
         if ndim == 3 and "T" not in self.axes:
 
-            labels, centroids, clouds = _label_cluster(
+            labels, centroids, clouds, marching_cube_points = _label_cluster(
                 self.label_image, self.num_points, self.min_size, ndim
             )
             if len(labels) > 1:
@@ -137,6 +138,7 @@ class Clustering:
                     self.model,
                     self.accelerator,
                     self.devices,
+                    marching_cube_points,
                     clouds,
                     labels,
                     centroids,
@@ -206,7 +208,7 @@ class Clustering:
     def _label_computer(self, i, dim):
 
         xyz_label_image = self.label_image[i, :]
-        labels, centroids, clouds = _label_cluster(
+        labels, centroids, clouds, marching_cube_points = _label_cluster(
             xyz_label_image, self.num_points, self.min_size, dim
         )
         if len(labels) > 1:
@@ -223,6 +225,7 @@ class Clustering:
                 self.model,
                 self.accelerator,
                 self.devices,
+                marching_cube_points,
                 clouds,
                 labels,
                 centroids,
@@ -247,6 +250,7 @@ def _model_output(
     model: torch.nn.Module,
     accelerator: str,
     devices: List[int],
+    marching_cube_points,
     clouds,
     labels,
     centroids,
@@ -303,7 +307,7 @@ def _model_output(
     else:
 
         print("Computing shape features using classical marching cubes ")
-        for cloud_inputs in clouds:
+        for cloud_inputs in marching_cube_points:
 
             output_cloud_eccentricity = output_cloud_eccentricity + [
                 tuple(get_eccentricity(cloud_input.detach().cpu().numpy()))[0]
@@ -345,6 +349,7 @@ def _label_cluster(label_image, num_points, min_size, ndim):
     nthreads = os.cpu_count()
     properties = regionprops(label_image)
     futures = []
+    marching_cube_points = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=nthreads) as executor:
         for prop in properties:
             futures.append(executor.submit(get_current_label_binary, prop))
@@ -355,12 +360,13 @@ def _label_cluster(label_image, num_points, min_size, ndim):
             )
 
             if results is not None:
-                label, centroid, cloud = results
+                label, centroid, cloud, sample_points = results
                 clouds.append(cloud)
                 labels.append(label)
                 centroids.append(centroid)
+                marching_cube_points.append(sample_points)
 
-    return labels, centroids, clouds
+    return labels, centroids, clouds, marching_cube_points
 
 
 def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, min_size):
@@ -385,6 +391,9 @@ def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, mi
             print("Marching cubes failed for label: ", label)
             vertices = None
         if vertices is not None:
+            mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
+            sample_points = mesh.sample(num_points)
+
             mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
 
             mesh_file = str(label)
@@ -403,7 +412,7 @@ def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, mi
                 else:
                     cloud = get_panda_cloud_xyz(points)
 
-                return label, centroid, cloud
+                return label, centroid, cloud, sample_points
 
 
 def get_panda_cloud_xy(points):
