@@ -392,7 +392,7 @@ def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, mi
             vertices = None
         if vertices is not None:
             mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
-            sample_points = mesh.sample(num_points)
+            simple_clouds = mesh.sample(num_points).numpy()
             if compute_with_autoencoder:
                 mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
 
@@ -414,7 +414,7 @@ def get_label_centroid_cloud(binary_image, num_points, ndim, label, centroid, mi
             else:
                 cloud = sample_points            
 
-                return label, centroid, cloud, sample_points
+                return label, centroid, cloud, simple_clouds
 
 
 def get_panda_cloud_xy(points):
