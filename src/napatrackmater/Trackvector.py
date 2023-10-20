@@ -736,7 +736,7 @@ def _perform_pca_clustering(track_arrays, num_clusters, num_components=3):
     return cluster_labels, pca.components_
 
 
-def _perform_kmeans_clustering(track_arrays, num_clusters, num_components=3):
+def _perform_kmeans_clustering(track_arrays, num_clusters):
 
     kmeans = KMeans(n_clusters=num_clusters)
     cluster_labels = kmeans.fit_predict(track_arrays)
@@ -871,7 +871,6 @@ def perform_kmeans(
     dynamic_track_arrays_array,
     filtered_track_ids,
     num_clusters,
-    num_components=3,
     num_runs=10,
     n_estimators=100,
 ):
@@ -917,9 +916,7 @@ def perform_kmeans(
         print(
             f"Performing Kmeans on {track_arrays_array_names[track_arrays_array.index(track_arrays)]}, {track_arrays.shape}"
         )
-        cluster_labels = _perform_kmeans_clustering(
-            track_arrays, num_clusters, num_components
-        )
+        cluster_labels = _perform_kmeans_clustering(track_arrays, num_clusters)
         print(f"clusters {cluster_labels.shape}")
         model = RandomForestClassifier(n_estimators=n_estimators)
         model.fit(track_arrays, cluster_labels)

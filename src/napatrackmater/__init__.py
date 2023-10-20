@@ -7,6 +7,7 @@ from .Trackvector import (
     convert_tracks_to_arrays,
     perform_cosine_similarity,
     perform_pca,
+    perform_kmeans,
 )
 from .DeepEmbeddedClustering import DeepEmbeddedClustering
 from .CloudAutoEncoder import CloudAutoEncoder
@@ -59,6 +60,7 @@ __all__ = (
     "convert_tracks_to_arrays",
     "perform_cosine_similarity",
     "perform_pca",
+    "perform_kmeans",
     "DeepEmbeddedClustering",
     "load_json",
 )
