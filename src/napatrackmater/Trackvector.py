@@ -10,7 +10,7 @@ from sklearn.decomposition import PCA
 from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import linkage, fcluster
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, DBSCAN
 import csv
 
 
@@ -744,6 +744,13 @@ def _perform_kmeans_clustering(track_arrays, num_clusters):
     return cluster_labels
 
 
+def _perform_dbscan_clustering(track_arrays, eps=1, min_samples=50):
+
+    cluster_labels = DBSCAN(eps=eps, min_samples=min_samples).fit_predict(track_arrays)
+
+    return cluster_labels
+
+
 def perform_pca(
     full_dataframe,
     csv_file_name,
@@ -917,6 +924,123 @@ def perform_kmeans(
             f"Performing Kmeans on {track_arrays_array_names[track_arrays_array.index(track_arrays)]}, {track_arrays.shape}"
         )
         cluster_labels = _perform_kmeans_clustering(track_arrays, num_clusters)
+        print(f"clusters {cluster_labels.shape}")
+        model = RandomForestClassifier(n_estimators=n_estimators)
+        model.fit(track_arrays, cluster_labels)
+
+        selected_features = selected_features_all[
+            track_arrays_array.index(track_arrays)
+        ]
+        feature_importances = model.feature_importances_
+        feature_names = selected_features
+        sorted_features = sorted(
+            zip(feature_names, feature_importances), key=lambda x: x[1], reverse=True
+        )
+        sorted_feature_names, sorted_importances = zip(*sorted_features)
+
+        normalized_importances = np.array(sorted_importances) / np.sum(
+            sorted_importances
+        )
+        total_feature_importances = np.zeros(len(feature_names))
+
+        for _ in range(num_runs):
+            model = RandomForestClassifier(n_estimators=n_estimators)
+            model.fit(track_arrays, cluster_labels)
+            total_feature_importances += model.feature_importances_
+
+        average_feature_importances = total_feature_importances / num_runs
+
+        sorted_features = sorted(
+            zip(feature_names, average_feature_importances),
+            key=lambda x: x[1],
+            reverse=True,
+        )
+        sorted_feature_names, sorted_importances = zip(*sorted_features)
+        print("Sorted Feature Importances:")
+        _save_feature_importance(
+            sorted_feature_names,
+            normalized_importances,
+            csv_file_name_original,
+            track_arrays_array_names,
+            track_arrays_array,
+            track_arrays,
+        )
+        for feature, importance in zip(sorted_feature_names, normalized_importances):
+            print(f"{feature}: {importance}")
+
+        print(f"filtered tracks {len(filtered_track_ids), len(cluster_labels)}")
+        track_id_to_cluster = {
+            track_id: cluster_label
+            for track_id, cluster_label in zip(filtered_track_ids, cluster_labels)
+        }
+        full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
+        result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
+        csv_file_name = (
+            csv_file_name_original
+            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+            + ".csv"
+        )
+
+        if os.path.exists(csv_file_name):
+            os.remove(csv_file_name)
+        result_dataframe.to_csv(csv_file_name, index=False)
+
+
+def perform_dbscan(
+    full_dataframe,
+    csv_file_name,
+    shape_dynamic_track_arrays_array,
+    shape_track_arrays_array,
+    dynamic_track_arrays_array,
+    filtered_track_ids,
+    eps=1,
+    min_samples=50,
+    num_runs=10,
+    n_estimators=100,
+):
+    csv_file_name_original = csv_file_name
+    track_arrays_array = [
+        shape_dynamic_track_arrays_array,
+        shape_track_arrays_array,
+        dynamic_track_arrays_array,
+    ]
+    track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
+    selected_features_all = [
+        [
+            "Radius",
+            "Volume",
+            "Eccentricity Comp First",
+            "Eccentricity Comp Second",
+            "Surface Area",
+            "Speed",
+            "Motion_Angle",
+            "Acceleration",
+            "Distance_Cell_mask",
+            "Radial_Angle",
+            "Cell_Axis_Mask",
+        ],
+        [
+            "Radius",
+            "Volume",
+            "Eccentricity Comp First",
+            "Eccentricity Comp Second",
+            "Surface Area",
+        ],
+        [
+            "Speed",
+            "Motion_Angle",
+            "Acceleration",
+            "Distance_Cell_mask",
+            "Radial_Angle",
+            "Cell_Axis_Mask",
+        ],
+    ]
+
+    for track_arrays in track_arrays_array:
+        print(
+            f"Performing DBSCAN on {track_arrays_array_names[track_arrays_array.index(track_arrays)]}, {track_arrays.shape}"
+        )
+        cluster_labels = _perform_dbscan_clustering(track_arrays, eps, min_samples)
         print(f"clusters {cluster_labels.shape}")
         model = RandomForestClassifier(n_estimators=n_estimators)
         model.fit(track_arrays, cluster_labels)
