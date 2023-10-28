@@ -11,7 +11,7 @@ from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import linkage, fcluster
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, DBSCAN
 import csv
 
 
@@ -583,6 +583,125 @@ def convert_tracks_to_arrays(analysis_vectors, min_track_length=0):
     )
 
 
+def perform_pca_cosine(
+    full_dataframe,
+    csv_file_name,
+    shape_dynamic_track_arrays_array,
+    shape_track_arrays_array,
+    dynamic_track_arrays_array,
+    filtered_track_ids,
+    num_clusters,
+    num_components=3,
+    num_runs=10,
+    n_estimators=100,
+):
+    csv_file_name_original = csv_file_name
+    track_arrays_array = [
+        shape_dynamic_track_arrays_array,
+        shape_track_arrays_array,
+        dynamic_track_arrays_array,
+    ]
+    track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
+    selected_features_all = [
+        [
+            "Radius",
+            "Volume",
+            "Eccentricity Comp First",
+            "Eccentricity Comp Second",
+            "Surface Area",
+            "Speed",
+            "Motion_Angle",
+            "Acceleration",
+            "Distance_Cell_mask",
+            "Radial_Angle",
+            "Cell_Axis_Mask",
+        ],
+        [
+            "Radius",
+            "Volume",
+            "Eccentricity Comp First",
+            "Eccentricity Comp Second",
+            "Surface Area",
+        ],
+        [
+            "Speed",
+            "Motion_Angle",
+            "Acceleration",
+            "Distance_Cell_mask",
+            "Radial_Angle",
+            "Cell_Axis_Mask",
+        ],
+    ]
+
+    for track_arrays in track_arrays_array:
+        print(
+            f"Performing PCA on {track_arrays_array_names[track_arrays_array.index(track_arrays)]}, {track_arrays.shape}"
+        )
+        cluster_labels, pca_components = _perform_pca_cosine_clustering(
+            track_arrays, num_clusters, num_components
+        )
+        print(f"PCA components: {pca_components.shape}, {cluster_labels.shape}")
+        model = RandomForestClassifier(n_estimators=n_estimators)
+        model.fit(track_arrays, cluster_labels)
+
+        selected_features = selected_features_all[
+            track_arrays_array.index(track_arrays)
+        ]
+        feature_importances = model.feature_importances_
+        feature_names = selected_features
+        sorted_features = sorted(
+            zip(feature_names, feature_importances), key=lambda x: x[1], reverse=True
+        )
+        sorted_feature_names, sorted_importances = zip(*sorted_features)
+
+        normalized_importances = np.array(sorted_importances) / np.sum(
+            sorted_importances
+        )
+        total_feature_importances = np.zeros(len(feature_names))
+
+        for _ in range(num_runs):
+            model = RandomForestClassifier(n_estimators=n_estimators)
+            model.fit(track_arrays, cluster_labels)
+            total_feature_importances += model.feature_importances_
+
+        average_feature_importances = total_feature_importances / num_runs
+
+        sorted_features = sorted(
+            zip(feature_names, average_feature_importances),
+            key=lambda x: x[1],
+            reverse=True,
+        )
+        sorted_feature_names, sorted_importances = zip(*sorted_features)
+        print("Sorted Feature Importances:")
+        _save_feature_importance(
+            sorted_feature_names,
+            normalized_importances,
+            csv_file_name_original,
+            track_arrays_array_names,
+            track_arrays_array,
+            track_arrays,
+        )
+        for feature, importance in zip(sorted_feature_names, normalized_importances):
+            print(f"{feature}: {importance}")
+
+        print(f"filtered tracks {len(filtered_track_ids), len(cluster_labels)}")
+        track_id_to_cluster = {
+            track_id: cluster_label
+            for track_id, cluster_label in zip(filtered_track_ids, cluster_labels)
+        }
+        full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
+        result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
+        csv_file_name = (
+            csv_file_name_original
+            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+            + ".csv"
+        )
+
+        if os.path.exists(csv_file_name):
+            os.remove(csv_file_name)
+        result_dataframe.to_csv(csv_file_name, index=False)
+
+
 def perform_cosine_similarity(
     full_dataframe,
     csv_file_name,
@@ -737,6 +856,7 @@ def _perform_pca_clustering(track_arrays, num_clusters, num_components=3):
     return cluster_labels, pca.components_
 
 
+<<<<<<< HEAD
 def _perform_agg_clustering(track_arrays, num_clusters):
 
     model = AgglomerativeClustering(
@@ -748,6 +868,39 @@ def _perform_agg_clustering(track_arrays, num_clusters):
     clusters = model.labels_
 
     return clusters 
+=======
+def _perform_pca_cosine_clustering(track_arrays, num_clusters, num_components=3):
+    pca = PCA(n_components=num_components)
+    reduced_data = pca.fit_transform(track_arrays)
+
+    data_normalized = reduced_data / np.linalg.norm(reduced_data, axis=1)[:, np.newaxis]
+
+    cosine_sim = 1 - pdist(data_normalized, "cosine")
+
+    linkage_matrix = linkage(
+        cosine_sim, method="average"
+    )  # You can choose a different linkage method
+
+    # Cut the tree into three clusters
+    cluster_labels = fcluster(linkage_matrix, num_clusters, criterion="maxclust")
+
+    return cluster_labels, pca.components_
+
+
+def _perform_kmeans_clustering(track_arrays, num_clusters):
+
+    kmeans = KMeans(n_clusters=num_clusters)
+    cluster_labels = kmeans.fit_predict(track_arrays)
+
+    return cluster_labels
+
+
+def _perform_dbscan_clustering(track_arrays, eps=1, min_samples=50):
+
+    cluster_labels = DBSCAN(eps=eps, min_samples=min_samples).fit_predict(track_arrays)
+
+    return cluster_labels
+>>>>>>> 5845f6c97aa24520fc3314b698d123076cbcff45
 
 
 def perform_pca(
@@ -868,7 +1021,12 @@ def perform_pca(
             os.remove(csv_file_name)
         result_dataframe.to_csv(csv_file_name, index=False)
 
+<<<<<<< HEAD
 def perform_agg(
+=======
+
+def perform_kmeans(
+>>>>>>> 5845f6c97aa24520fc3314b698d123076cbcff45
     full_dataframe,
     csv_file_name,
     shape_dynamic_track_arrays_array,
@@ -876,7 +1034,10 @@ def perform_agg(
     dynamic_track_arrays_array,
     filtered_track_ids,
     num_clusters,
+<<<<<<< HEAD
     num_components=3,
+=======
+>>>>>>> 5845f6c97aa24520fc3314b698d123076cbcff45
     num_runs=10,
     n_estimators=100,
 ):
@@ -920,11 +1081,17 @@ def perform_agg(
 
     for track_arrays in track_arrays_array:
         print(
+<<<<<<< HEAD
             f"PerformingAGGlomerative Clustering on {track_arrays_array_names[track_arrays_array.index(track_arrays)]}, {track_arrays.shape}"
         )
         cluster_labels = _perform_agg_clustering(
             track_arrays, num_clusters, num_components
         )
+=======
+            f"Performing Kmeans on {track_arrays_array_names[track_arrays_array.index(track_arrays)]}, {track_arrays.shape}"
+        )
+        cluster_labels = _perform_kmeans_clustering(track_arrays, num_clusters)
+        print(f"clusters {cluster_labels.shape}")
         model = RandomForestClassifier(n_estimators=n_estimators)
         model.fit(track_arrays, cluster_labels)
 
@@ -984,3 +1151,125 @@ def perform_agg(
         if os.path.exists(csv_file_name):
             os.remove(csv_file_name)
         result_dataframe.to_csv(csv_file_name, index=False)
+
+
+def perform_dbscan(
+    full_dataframe,
+    csv_file_name,
+    shape_dynamic_track_arrays_array,
+    shape_track_arrays_array,
+    dynamic_track_arrays_array,
+    filtered_track_ids,
+    eps=1,
+    min_samples=50,
+    num_runs=10,
+    n_estimators=100,
+):
+    csv_file_name_original = csv_file_name
+    track_arrays_array = [
+        shape_dynamic_track_arrays_array,
+        shape_track_arrays_array,
+        dynamic_track_arrays_array,
+    ]
+    track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
+    selected_features_all = [
+        [
+            "Radius",
+            "Volume",
+            "Eccentricity Comp First",
+            "Eccentricity Comp Second",
+            "Surface Area",
+            "Speed",
+            "Motion_Angle",
+            "Acceleration",
+            "Distance_Cell_mask",
+            "Radial_Angle",
+            "Cell_Axis_Mask",
+        ],
+        [
+            "Radius",
+            "Volume",
+            "Eccentricity Comp First",
+            "Eccentricity Comp Second",
+            "Surface Area",
+        ],
+        [
+            "Speed",
+            "Motion_Angle",
+            "Acceleration",
+            "Distance_Cell_mask",
+            "Radial_Angle",
+            "Cell_Axis_Mask",
+        ],
+    ]
+
+    for track_arrays in track_arrays_array:
+        print(
+            f"Performing DBSCAN on {track_arrays_array_names[track_arrays_array.index(track_arrays)]}, {track_arrays.shape}"
+        )
+        cluster_labels = _perform_dbscan_clustering(track_arrays, eps, min_samples)
+        print(f"clusters {cluster_labels.shape}")
+>>>>>>> 5845f6c97aa24520fc3314b698d123076cbcff45
+        model = RandomForestClassifier(n_estimators=n_estimators)
+        model.fit(track_arrays, cluster_labels)
+
+        selected_features = selected_features_all[
+            track_arrays_array.index(track_arrays)
+        ]
+        feature_importances = model.feature_importances_
+        feature_names = selected_features
+        sorted_features = sorted(
+            zip(feature_names, feature_importances), key=lambda x: x[1], reverse=True
+        )
+        sorted_feature_names, sorted_importances = zip(*sorted_features)
+
+        normalized_importances = np.array(sorted_importances) / np.sum(
+            sorted_importances
+        )
+        total_feature_importances = np.zeros(len(feature_names))
+
+        for _ in range(num_runs):
+            model = RandomForestClassifier(n_estimators=n_estimators)
+            model.fit(track_arrays, cluster_labels)
+            total_feature_importances += model.feature_importances_
+
+        average_feature_importances = total_feature_importances / num_runs
+
+        sorted_features = sorted(
+            zip(feature_names, average_feature_importances),
+            key=lambda x: x[1],
+            reverse=True,
+        )
+        sorted_feature_names, sorted_importances = zip(*sorted_features)
+        print("Sorted Feature Importances:")
+        _save_feature_importance(
+            sorted_feature_names,
+            normalized_importances,
+            csv_file_name_original,
+            track_arrays_array_names,
+            track_arrays_array,
+            track_arrays,
+        )
+        for feature, importance in zip(sorted_feature_names, normalized_importances):
+            print(f"{feature}: {importance}")
+
+        print(f"filtered tracks {len(filtered_track_ids), len(cluster_labels)}")
+        track_id_to_cluster = {
+            track_id: cluster_label
+            for track_id, cluster_label in zip(filtered_track_ids, cluster_labels)
+        }
+        full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
+        result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
+        csv_file_name = (
+            csv_file_name_original
+            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+            + ".csv"
+        )
+
+        if os.path.exists(csv_file_name):
+            os.remove(csv_file_name)
+<<<<<<< HEAD
+        result_dataframe.to_csv(csv_file_name, index=False)
+=======
+        result_dataframe.to_csv(csv_file_name, index=False)
+>>>>>>> 5845f6c97aa24520fc3314b698d123076cbcff45
