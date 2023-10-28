@@ -1042,7 +1042,7 @@ def perform_agg(
             f"PerformingAGGlomerative Clustering on {track_arrays_array_names[track_arrays_array.index(track_arrays)]}, {track_arrays.shape}"
         )
         cluster_labels = _perform_agg_clustering(
-            track_arrays, num_clusters, num_components
+            track_arrays, num_clusters
         )
         model = RandomForestClassifier(n_estimators=n_estimators)
         model.fit(track_arrays, cluster_labels)
