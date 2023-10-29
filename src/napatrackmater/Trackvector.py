@@ -581,7 +581,9 @@ def unsupervised_clustering(
             dynamic_covariance_matrix.append(dynamic_covaraince)
             analysis_track_ids.append(track_id)
     
-    
+    shape_dynamic_covariance_matrix = np.mean(shape_dynamic_covariance_matrix, axis=0)
+    shape_covariance_matrix = np.mean(shape_covariance_matrix, axis=0)
+    dynamic_covariance_matrix = np.mean(dynamic_covariance_matrix, axis=0)
     track_arrays_array = [shape_dynamic_covariance_matrix, shape_covariance_matrix, dynamic_covariance_matrix]
     track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
     
