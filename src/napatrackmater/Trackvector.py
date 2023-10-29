@@ -7,7 +7,7 @@ import numpy as np
 import napari
 import pandas as pd
 from sklearn.decomposition import PCA
-from scipy.spatial.distance import pdist
+from scipy.spatial.distance import cdist
 from scipy.cluster.hierarchy import linkage, fcluster
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.ensemble import RandomForestClassifier
@@ -573,23 +573,20 @@ def unsupervised_clustering(
             == dynamic_track_array.shape[0]
         ), "Shape dynamic, shape and dynamic track arrays must have the same length"
         if shape_dynamic_track_array.shape[0] > 1:
-            shape_dynamic_eigenvectors = compute_covariance_matrix(shape_dynamic_track_array)
-            shape_eigenvectors = compute_covariance_matrix(shape_track_array)
-            dynamic_eigenvectors = compute_covariance_matrix(dynamic_track_array)
-            shape_dynamic_covariance_matrix.append(shape_dynamic_eigenvectors[:,0].flatten())
-            shape_covariance_matrix.append(shape_eigenvectors[:,0].flatten())
-            dynamic_covariance_matrix.append(dynamic_eigenvectors[:,0].flatten())
+            shape_dynamic_covariance, shape_dynamic_eigenvectors = compute_covariance_matrix(shape_dynamic_track_array)
+            shape_covariance, shape_eigenvectors = compute_covariance_matrix(shape_track_array)
+            dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(dynamic_track_array)
+            shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
+            shape_covariance_matrix.append(shape_covariance)
+            dynamic_covariance_matrix.append(dynamic_covaraince)
             analysis_track_ids.append(track_id)
     
-    shape_dynamic_covariance_matrices = np.vstack(shape_dynamic_covariance_matrix)
-    shape_covariance_matrices = np.vstack(shape_covariance_matrix)
-    dynamic_covariance_matrices = np.vstack(dynamic_covariance_matrix)
     
-    track_arrays_array = [shape_dynamic_covariance_matrices, shape_covariance_matrices, dynamic_covariance_matrices]
+    track_arrays_array = [shape_dynamic_covariance_matrix, shape_covariance_matrix, dynamic_covariance_matrix]
     track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
     
     for track_arrays in track_arrays_array:
-        shape_dynamic_cosine_distance = pdist(track_arrays, metric=metric)
+        shape_dynamic_cosine_distance = cdist(track_arrays, metric=metric)
         shape_dynamic_linkage_matrix = linkage(
             shape_dynamic_cosine_distance, method=method
         )
@@ -624,8 +621,14 @@ def unsupervised_clustering(
                 cluster_covariance_matrices[cluster_label] = []
             cluster_covariance_matrices[cluster_label].append(covariance_matrix)
 
+        # Calculate the mean covariance matrix for each cluster
+        mean_covariance_matrices = {}
+        for cluster_label, covariance_matrices in cluster_covariance_matrices.items():
+            mean_matrix = np.mean(covariance_matrices, axis=0)
+            mean_covariance_matrices[cluster_label] = mean_matrix
+
         # Save the mean covariance matrices to files
-        for cluster_label, mean_matrix in cluster_covariance_matrices.items():
+        for cluster_label, mean_matrix in mean_covariance_matrices.items():
            
             mean_matrix_file_name = csv_file_name_original  + track_arrays_array_names[track_arrays_array.index(track_arrays)] + f"cluster{cluster_label}_mean_covariance.npy"
             np.save(mean_matrix_file_name, mean_matrix)
@@ -689,7 +692,7 @@ def compute_covariance_matrix(track_arrays):
     eigenvalues = eigenvalues[eigenvalue_order]
     eigenvectors = eigenvectors[:, eigenvalue_order]
 
-    return eigenvectors
+    return covariance_matrix, eigenvectors
 
 
 
