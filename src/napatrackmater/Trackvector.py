@@ -609,7 +609,7 @@ def create_global_gt_dataframe(
         calibration_z,
         calibration_y,
         calibration_x,
-        time_veto_threshold=0.0, space_veto_threshold=5.0, cell_type_key = "Celltype_labels"
+        time_veto_threshold=0.0, space_veto_threshold=5.0, cell_type_key = "Celltype_label"
 ):
     
      ground_truth_data_frame = pd.read_csv(ground_truth_csv_file)
