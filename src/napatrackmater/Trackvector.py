@@ -576,6 +576,7 @@ def unsupervised_clustering(
         shape_covariance_matrix.append(compute_covariance_matrix(shape_track_array).astype(np.float32))
         dynamic_covariance_matrix.append(compute_covariance_matrix(dynamic_track_array).astype(np.float32))
         analysis_track_ids.append(track_id)
+    [print(matrix.shape) for matrix in shape_dynamic_covariance_matrix]    
     shape_dynamic_covariance_matrices = np.dstack(shape_dynamic_covariance_matrix)
     shape_covariance_matrices = np.dstack(shape_covariance_matrix)
     dynamic_covariance_matrices = np.dstack(dynamic_covariance_matrix)
