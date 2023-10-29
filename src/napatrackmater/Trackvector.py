@@ -7,7 +7,7 @@ import numpy as np
 import napari
 import pandas as pd
 from sklearn.decomposition import PCA
-from scipy.spatial.distance import cdist
+from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import linkage, fcluster
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.ensemble import RandomForestClassifier
@@ -586,7 +586,7 @@ def unsupervised_clustering(
     track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
     
     for track_arrays in track_arrays_array:
-        shape_dynamic_cosine_distance = cdist(track_arrays, metric=metric)
+        shape_dynamic_cosine_distance = pdist(track_arrays, metric=metric)
         shape_dynamic_linkage_matrix = linkage(
             shape_dynamic_cosine_distance, method=method
         )
