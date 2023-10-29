@@ -661,7 +661,7 @@ def create_global_gt_dataframe(
             )
         }
      full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
-
+     
      return full_dataframe
 
 def supervised_clustering(
@@ -690,7 +690,7 @@ def supervised_clustering(
             [[item for item in record.values()] for record in gt_dataframe_list]
         
         )
-        if gt_track_array.shape[0] > 0 and shape_dynamic_track_array.shape[0] > 1:
+        if not np.isnan(gt_track_array[0]) and shape_dynamic_track_array.shape[0] > 1:
             print(gt_track_array[0], shape_dynamic_track_array.shape)
             (
                 shape_dynamic_covariance,
@@ -702,7 +702,6 @@ def supervised_clustering(
             'Flattened_Covariance': flattened_covariance,
             'gt_label': gt_track_array[0]  
             })
-            print(flattened_covariance.shape, gt_track_array[0])
     result_dataframe = pd.DataFrame(data_list)
     if os.path.exists(csv_file_name_original):
             os.remove(csv_file_name_original)
