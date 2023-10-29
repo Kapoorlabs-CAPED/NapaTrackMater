@@ -573,9 +573,13 @@ def unsupervised_clustering(
             == dynamic_track_array.shape[0]
         ), "Shape dynamic, shape and dynamic track arrays must have the same length"
         if shape_dynamic_track_array.shape[0] > 1:
-            shape_dynamic_covariance_matrix.append(compute_covariance_matrix(shape_dynamic_track_array)[:,0].flatten().astype(np.float32))
-            shape_covariance_matrix.append(compute_covariance_matrix(shape_track_array)[:,0].flatten().astype(np.float32))
-            dynamic_covariance_matrix.append(compute_covariance_matrix(dynamic_track_array)[:,0].flatten().astype(np.float32))
+            shape_dynamic_eigenvectors = compute_covariance_matrix(shape_dynamic_track_array)
+            shape_eigenvectors = compute_covariance_matrix(shape_track_array)
+            dynamic_eigenvectors = compute_covariance_matrix(dynamic_track_array)
+            print(shape_dynamic_eigenvectors[:,0].flatten().shape)
+            shape_dynamic_covariance_matrix.append(shape_dynamic_eigenvectors[:,0].flatten().astype(np.float32))
+            shape_covariance_matrix.append(shape_eigenvectors[:,0].flatten().astype(np.float32))
+            dynamic_covariance_matrix.append(dynamic_eigenvectors[:,0].flatten().astype(np.float32))
             analysis_track_ids.append(track_id)
     
     shape_dynamic_covariance_matrices = np.dstack(shape_dynamic_covariance_matrix)
@@ -586,7 +590,7 @@ def unsupervised_clustering(
     track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
     
     for track_arrays in track_arrays_array:
-
+        print(track_arrays.shape)
         shape_dynamic_cosine_distance = pdist(track_arrays, metric=metric)
         shape_dynamic_linkage_matrix = linkage(
             shape_dynamic_cosine_distance, method=method
