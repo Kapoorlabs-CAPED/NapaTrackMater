@@ -691,7 +691,7 @@ def supervised_clustering(
             [[item for item in record.values()] for record in gt_dataframe_list]
         
         )
-        if gt_track_array.shape[0] > 0:
+        if gt_track_array.shape[0] > 0 and shape_dynamic_track_array.shape[0] > 1:
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
