@@ -613,8 +613,7 @@ def create_global_gt_dataframe(
 ):
     
      ground_truth_data_frame = pd.read_csv(ground_truth_csv_file)
-     ground_truth_data_frame = ground_truth_data_frame.dropna()
-     ground_truth_data_frame = ground_truth_data_frame.reset_index(drop=True)
+     ground_truth_data_frame.dropna(subset=['celltype_labels'], inplace=True)
     
      # Prepare ground truth tuples and labels
      ground_truth_tuples = np.array([
