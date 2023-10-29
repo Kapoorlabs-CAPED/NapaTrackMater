@@ -596,13 +596,14 @@ def unsupervised_clustering(
         shape_dynamic_cluster_labels = fcluster(
             shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
         )
-       
+        print(shape_dynamic_cluster_labels.shape)
         track_id_to_cluster = {
             track_id: cluster_label
             for track_id, cluster_label in zip(
                 analysis_track_ids, shape_dynamic_cluster_labels
             )
         }
+        print(track_id_to_cluster)
         full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
         result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
         csv_file_name = (
