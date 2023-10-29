@@ -6,7 +6,6 @@ from .Trackvector import (
     create_analysis_vectors_dict,
     convert_tracks_to_arrays,
     perform_cosine_similarity,
-    perform_pca_cosine,
     perform_pca,
     perform_agg
 )
@@ -60,7 +59,6 @@ __all__ = (
     "create_analysis_vectors_dict",
     "convert_tracks_to_arrays",
     "perform_cosine_similarity",
-    "perform_pca_cosine",
     "perform_pca",
     "perform_agg",
     "DeepEmbeddedClustering",
