@@ -585,18 +585,29 @@ def unsupervised_clustering(
     shape_dynamic_covariance_matrix = np.mean(shape_dynamic_covariance_matrix, axis=0)
     shape_covariance_matrix = np.mean(shape_covariance_matrix, axis=0)
     dynamic_covariance_matrix = np.mean(dynamic_covariance_matrix, axis=0)
+
+    shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
+    shape_covariance_3d = np.dstack(shape_covariance_matrix)
+    dynamic_covariance_3d = np.dstack(dynamic_covariance_matrix)
+
+    shape_dynamic_covariance_2d = shape_dynamic_covariance_3d.reshape(shape_dynamic_covariance_3d.shape[0], -1)
+    shape_covariance_2d = shape_covariance_3d.reshape(shape_covariance_3d.shape[0], -1)
+    dynamic_covariance_2d = dynamic_covariance_3d.reshape(dynamic_covariance_3d.shape[0], -1)
+
     track_arrays_array = [shape_dynamic_covariance_matrix, shape_covariance_matrix, dynamic_covariance_matrix]
     track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
+    clusterable_track_arrays = [shape_dynamic_covariance_2d, shape_covariance_2d, dynamic_covariance_2d]
     
     for track_arrays in track_arrays_array:
-        shape_dynamic_cosine_distance = pdist(track_arrays, metric=metric)
+        clusterable_track_array = clusterable_track_arrays[track_arrays_array.index(track_arrays)]
+        shape_dynamic_cosine_distance = pdist(clusterable_track_array, metric=metric)
         shape_dynamic_linkage_matrix = linkage(
             shape_dynamic_cosine_distance, method=method
         )
         shape_dynamic_cluster_labels = fcluster(
             shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
         )
-        print(shape_dynamic_cluster_labels.shape)
+        print(shape_dynamic_cluster_labels.shape, len(analysis_track_ids))
         track_id_to_cluster = {
             track_id: cluster_label
             for track_id, cluster_label in zip(
