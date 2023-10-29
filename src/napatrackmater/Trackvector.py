@@ -535,6 +535,102 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
     return analysis_vectors
 
 
+def unsupervised_clustering(
+    full_dataframe,
+    csv_file_name,
+    analysis_vectors,
+    num_clusters,
+    metric="cosine",
+    method="ward",
+    criterion="maxclust",
+):
+    csv_file_name_original = csv_file_name
+    analysis_track_ids = []
+    shape_dynamic_covariance_matrix = []
+    shape_covariance_matrix = []
+    dynamic_covariance_matrix = []
+    for track_id, (
+        shape_dynamic_dataframe_list,
+        shape_dataframe_list,
+        dynamic_dataframe_list,
+        full_dataframe_list,
+    ) in analysis_vectors.items():
+        shape_dynamic_track_array = np.array(
+            [
+                [item for item in record.values()]
+                for record in shape_dynamic_dataframe_list
+            ]
+        )
+        shape_track_array = np.array(
+            [[item for item in record.values()] for record in shape_dataframe_list]
+        )
+        dynamic_track_array = np.array(
+            [[item for item in record.values()] for record in dynamic_dataframe_list]
+        )
+
+        shape_dynamic_covariance_matrix.append(compute_covariance_matrix(shape_dynamic_track_array))
+        shape_covariance_matrix.append(compute_covariance_matrix(shape_track_array))
+        dynamic_covariance_matrix.append(compute_covariance_matrix(dynamic_track_array))
+        analysis_track_ids.append(track_id)
+    shape_dynamic_covariance_matrix = np.vstack(shape_dynamic_covariance_matrix)
+    shape_covariance_matrix = np.vstack(shape_covariance_matrix)
+    dynamic_covariance_matrix = np.vstack(dynamic_covariance_matrix)
+    
+    track_arrays_array = [shape_dynamic_covariance_matrix, shape_covariance_matrix, dynamic_covariance_matrix]
+    track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
+    
+    for track_arrays in track_arrays_array:
+
+        shape_dynamic_cosine_distance = pdist(track_arrays, metric=metric)
+        shape_dynamic_linkage_matrix = linkage(
+            shape_dynamic_cosine_distance, method=method
+        )
+        shape_dynamic_cluster_labels = fcluster(
+            shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
+        )
+       
+        track_id_to_cluster = {
+            track_id: cluster_label
+            for track_id, cluster_label in zip(
+                analysis_track_ids, shape_dynamic_cluster_labels
+            )
+        }
+        full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
+        result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
+        csv_file_name = (
+            csv_file_name_original
+            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+            + ".csv"
+        )
+
+        if os.path.exists(csv_file_name):
+            os.remove(csv_file_name)
+        result_dataframe.to_csv(csv_file_name, index=False)
+
+        cluster_covariance_matrices = {}
+
+        # Loop through track IDs and their covariance matrices
+        for track_id, covariance_matrix in zip(analysis_track_ids, track_arrays):
+            cluster_label = track_id_to_cluster[track_id]
+            if cluster_label not in cluster_covariance_matrices:
+                cluster_covariance_matrices[cluster_label] = []
+            cluster_covariance_matrices[cluster_label].append(covariance_matrix)
+
+        # Calculate the mean covariance matrix for each cluster
+        mean_covariance_matrices = {}
+        for cluster_label, covariance_matrices in cluster_covariance_matrices.items():
+            mean_matrix = np.mean(covariance_matrices, axis=0)
+            mean_covariance_matrices[cluster_label] = mean_matrix
+
+        # Save the mean covariance matrices to files
+        for cluster_label, mean_matrix in mean_covariance_matrices.items():
+            # Define a file name for the mean covariance matrix, e.g., "cluster1_mean_covariance.npy"
+            mean_matrix_file_name = csv_file_name_original + f"cluster{cluster_label}_mean_covariance.npy"
+            np.save(mean_matrix_file_name, mean_matrix)
+
+        return mean_covariance_matrices    
+
+
 def convert_tracks_to_arrays(analysis_vectors, min_track_length=0):
 
     filtered_track_ids = []
@@ -583,129 +679,13 @@ def convert_tracks_to_arrays(analysis_vectors, min_track_length=0):
     )
 
 
+def compute_covariance_matrix(track_arrays):
+
+    covariance_matrix = np.cov(track_arrays, rowvar=False)
+    return covariance_matrix
 
 
 
-def perform_cosine_similarity(
-    full_dataframe,
-    csv_file_name,
-    shape_dynamic_track_arrays_array,
-    shape_track_arrays_array,
-    dynamic_track_arrays_array,
-    filtered_track_ids,
-    num_clusters,
-    metric="cosine",
-    method="average",
-    criterion="maxclust",
-    num_runs=10,
-    n_estimators=100,
-):
-    csv_file_name_original = csv_file_name
-    track_arrays_array = [
-        shape_dynamic_track_arrays_array,
-        shape_track_arrays_array,
-        dynamic_track_arrays_array,
-    ]
-    track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
-    selected_features_all = [
-        [
-            "Radius",
-            "Volume",
-            "Eccentricity Comp First",
-            "Eccentricity Comp Second",
-            "Surface Area",
-            "Speed",
-            "Motion_Angle",
-            "Acceleration",
-            "Distance_Cell_mask",
-            "Radial_Angle",
-            "Cell_Axis_Mask",
-        ],
-        [
-            "Radius",
-            "Volume",
-            "Eccentricity Comp First",
-            "Eccentricity Comp Second",
-            "Surface Area",
-        ],
-        [
-            "Speed",
-            "Motion_Angle",
-            "Acceleration",
-            "Distance_Cell_mask",
-            "Radial_Angle",
-            "Cell_Axis_Mask",
-        ],
-    ]
-    for track_arrays in track_arrays_array:
-        shape_dynamic_cosine_distance = pdist(track_arrays, metric=metric)
-        shape_dynamic_linkage_matrix = linkage(
-            shape_dynamic_cosine_distance, method=method
-        )
-        shape_dynamic_cluster_labels = fcluster(
-            shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
-        )
-        model = RandomForestClassifier(n_estimators=n_estimators)
-        model.fit(track_arrays, shape_dynamic_cluster_labels)
-        selected_features = selected_features_all[
-            track_arrays_array.index(track_arrays)
-        ]
-        feature_importances = model.feature_importances_
-        sorted_features = sorted(
-            zip(selected_features, feature_importances),
-            key=lambda x: x[1],
-            reverse=True,
-        )
-        sorted_feature_names, sorted_importances = zip(*sorted_features)
-
-        normalized_importances = np.array(sorted_importances) / np.sum(
-            sorted_importances
-        )
-        total_feature_importances = np.zeros(len(selected_features))
-        for _ in range(num_runs):
-            model = RandomForestClassifier(n_estimators=n_estimators)
-            model.fit(track_arrays, shape_dynamic_cluster_labels)
-            total_feature_importances += model.feature_importances_
-
-        average_feature_importances = total_feature_importances / num_runs
-
-        # Sort and display the averaged feature importances
-        sorted_features = sorted(
-            zip(selected_features, average_feature_importances),
-            key=lambda x: x[1],
-            reverse=True,
-        )
-        sorted_feature_names, sorted_importances = zip(*sorted_features)
-        print("Sorted Feature Importances:")
-        _save_feature_importance(
-            sorted_feature_names,
-            normalized_importances,
-            csv_file_name_original,
-            track_arrays_array_names,
-            track_arrays_array,
-            track_arrays,
-        )
-
-        for feature, importance in zip(sorted_feature_names, normalized_importances):
-            print(f"{feature}: {importance}")
-
-        track_id_to_cluster = {
-            track_id: cluster_label
-            for track_id, cluster_label in zip(
-                filtered_track_ids, shape_dynamic_cluster_labels
-            )
-        }
-        full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
-        result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
-        csv_file_name = (
-            csv_file_name_original
-            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-            + ".csv"
-        )
-
-        if os.path.exists(csv_file_name):
-            os.remove(csv_file_name)
-        result_dataframe.to_csv(csv_file_name, index=False)
 
 
 def _save_feature_importance(
@@ -753,239 +733,3 @@ def _perform_agg_clustering(track_arrays, num_clusters):
 
     return clusters 
 
-
-def perform_pca(
-    full_dataframe,
-    csv_file_name,
-    shape_dynamic_track_arrays_array,
-    shape_track_arrays_array,
-    dynamic_track_arrays_array,
-    filtered_track_ids,
-    num_clusters,
-    num_components=3,
-    num_runs=10,
-    n_estimators=100,
-):
-    csv_file_name_original = csv_file_name
-    track_arrays_array = [
-        shape_dynamic_track_arrays_array,
-        shape_track_arrays_array,
-        dynamic_track_arrays_array,
-    ]
-    track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
-    selected_features_all = [
-        [
-            "Radius",
-            "Volume",
-            "Eccentricity Comp First",
-            "Eccentricity Comp Second",
-            "Surface Area",
-            "Speed",
-            "Motion_Angle",
-            "Acceleration",
-            "Distance_Cell_mask",
-            "Radial_Angle",
-            "Cell_Axis_Mask",
-        ],
-        [
-            "Radius",
-            "Volume",
-            "Eccentricity Comp First",
-            "Eccentricity Comp Second",
-            "Surface Area",
-        ],
-        [
-            "Speed",
-            "Motion_Angle",
-            "Acceleration",
-            "Distance_Cell_mask",
-            "Radial_Angle",
-            "Cell_Axis_Mask",
-        ],
-    ]
-
-    for track_arrays in track_arrays_array:
-        print(
-            f"Performing PCA on {track_arrays_array_names[track_arrays_array.index(track_arrays)]}, {track_arrays.shape}"
-        )
-        cluster_labels, pca_components = _perform_pca_clustering(
-            track_arrays, num_clusters, num_components
-        )
-        print(f"PCA components: {pca_components.shape}, {cluster_labels.shape}")
-        model = RandomForestClassifier(n_estimators=n_estimators)
-        model.fit(track_arrays, cluster_labels)
-
-        selected_features = selected_features_all[
-            track_arrays_array.index(track_arrays)
-        ]
-        feature_importances = model.feature_importances_
-        feature_names = selected_features
-        sorted_features = sorted(
-            zip(feature_names, feature_importances), key=lambda x: x[1], reverse=True
-        )
-        sorted_feature_names, sorted_importances = zip(*sorted_features)
-
-        normalized_importances = np.array(sorted_importances) / np.sum(
-            sorted_importances
-        )
-        total_feature_importances = np.zeros(len(feature_names))
-
-        for _ in range(num_runs):
-            model = RandomForestClassifier(n_estimators=n_estimators)
-            model.fit(track_arrays, cluster_labels)
-            total_feature_importances += model.feature_importances_
-
-        average_feature_importances = total_feature_importances / num_runs
-
-        sorted_features = sorted(
-            zip(feature_names, average_feature_importances),
-            key=lambda x: x[1],
-            reverse=True,
-        )
-        sorted_feature_names, sorted_importances = zip(*sorted_features)
-        print("Sorted Feature Importances:")
-        _save_feature_importance(
-            sorted_feature_names,
-            normalized_importances,
-            csv_file_name_original,
-            track_arrays_array_names,
-            track_arrays_array,
-            track_arrays,
-        )
-        for feature, importance in zip(sorted_feature_names, normalized_importances):
-            print(f"{feature}: {importance}")
-
-        print(f"filtered tracks {len(filtered_track_ids), len(cluster_labels)}")
-        track_id_to_cluster = {
-            track_id: cluster_label
-            for track_id, cluster_label in zip(filtered_track_ids, cluster_labels)
-        }
-        full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
-        result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
-        csv_file_name = (
-            csv_file_name_original
-            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-            + ".csv"
-        )
-
-        if os.path.exists(csv_file_name):
-            os.remove(csv_file_name)
-        result_dataframe.to_csv(csv_file_name, index=False)
-
-def perform_agg(
-    full_dataframe,
-    csv_file_name,
-    shape_dynamic_track_arrays_array,
-    shape_track_arrays_array,
-    dynamic_track_arrays_array,
-    filtered_track_ids,
-    num_clusters,
-    num_components=3,
-    num_runs=10,
-    n_estimators=100,
-):
-    csv_file_name_original = csv_file_name
-    track_arrays_array = [
-        shape_dynamic_track_arrays_array,
-        shape_track_arrays_array,
-        dynamic_track_arrays_array,
-    ]
-    track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
-    selected_features_all = [
-        [
-            "Radius",
-            "Volume",
-            "Eccentricity Comp First",
-            "Eccentricity Comp Second",
-            "Surface Area",
-            "Speed",
-            "Motion_Angle",
-            "Acceleration",
-            "Distance_Cell_mask",
-            "Radial_Angle",
-            "Cell_Axis_Mask",
-        ],
-        [
-            "Radius",
-            "Volume",
-            "Eccentricity Comp First",
-            "Eccentricity Comp Second",
-            "Surface Area",
-        ],
-        [
-            "Speed",
-            "Motion_Angle",
-            "Acceleration",
-            "Distance_Cell_mask",
-            "Radial_Angle",
-            "Cell_Axis_Mask",
-        ],
-    ]
-
-    for track_arrays in track_arrays_array:
-        print(
-            f"PerformingAGGlomerative Clustering on {track_arrays_array_names[track_arrays_array.index(track_arrays)]}, {track_arrays.shape}"
-        )
-
-        cluster_labels = _perform_agg_clustering(
-            track_arrays, num_clusters
-        )
-        model = RandomForestClassifier(n_estimators=n_estimators)
-        model.fit(track_arrays, cluster_labels)
-
-        selected_features = selected_features_all[
-            track_arrays_array.index(track_arrays)
-        ]
-        feature_importances = model.feature_importances_
-        feature_names = selected_features
-        sorted_features = sorted(
-            zip(feature_names, feature_importances), key=lambda x: x[1], reverse=True
-        )
-        sorted_feature_names, sorted_importances = zip(*sorted_features)
-
-        normalized_importances = np.array(sorted_importances) / np.sum(
-            sorted_importances
-        )
-        total_feature_importances = np.zeros(len(feature_names))
-
-        for _ in range(num_runs):
-            model = RandomForestClassifier(n_estimators=n_estimators)
-            model.fit(track_arrays, cluster_labels)
-            total_feature_importances += model.feature_importances_
-
-        average_feature_importances = total_feature_importances / num_runs
-
-        sorted_features = sorted(
-            zip(feature_names, average_feature_importances),
-            key=lambda x: x[1],
-            reverse=True,
-        )
-        sorted_feature_names, sorted_importances = zip(*sorted_features)
-        print("Sorted Feature Importances:")
-        _save_feature_importance(
-            sorted_feature_names,
-            normalized_importances,
-            csv_file_name_original,
-            track_arrays_array_names,
-            track_arrays_array,
-            track_arrays,
-        )
-        for feature, importance in zip(sorted_feature_names, normalized_importances):
-            print(f"{feature}: {importance}")
-
-        print(f"filtered tracks {len(filtered_track_ids), len(cluster_labels)}")
-        track_id_to_cluster = {
-            track_id: cluster_label
-            for track_id, cluster_label in zip(filtered_track_ids, cluster_labels)
-        }
-        full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
-        result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
-        csv_file_name = (
-            csv_file_name_original
-            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-            + ".csv"
-        )
-
-        if os.path.exists(csv_file_name):
-            os.remove(csv_file_name)
-        result_dataframe.to_csv(csv_file_name, index=False)

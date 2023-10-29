@@ -5,9 +5,7 @@ from .Trackvector import (
     TrackVector,
     create_analysis_vectors_dict,
     convert_tracks_to_arrays,
-    perform_cosine_similarity,
-    perform_pca,
-    perform_agg
+    unsupervised_clustering
 )
 from .DeepEmbeddedClustering import DeepEmbeddedClustering
 from .CloudAutoEncoder import CloudAutoEncoder
@@ -58,9 +56,7 @@ __all__ = (
     "TrackVector",
     "create_analysis_vectors_dict",
     "convert_tracks_to_arrays",
-    "perform_cosine_similarity",
-    "perform_pca",
-    "perform_agg",
+    "unsupervised_clustering",
     "DeepEmbeddedClustering",
     "load_json",
 )
