@@ -687,6 +687,7 @@ def convert_tracks_to_arrays(analysis_vectors, min_track_length=0):
 def compute_covariance_matrix(track_arrays):
 
     covariance_matrix = np.cov(track_arrays, rowvar=False)
+    print('cov', covariance_matrix.shape)
     return covariance_matrix
 
 
