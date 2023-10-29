@@ -692,6 +692,7 @@ def supervised_clustering(
         
         )
         if gt_track_array.shape[0] > 0 and shape_dynamic_track_array.shape[0] > 1:
+            print(gt_track_array[0], shape_dynamic_track_array.shape)
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
@@ -701,8 +702,8 @@ def supervised_clustering(
             data_list.append({
             'Flattened_Covariance': flattened_covariance,
             'gt_label': gt_track_array[0]  
-        })
-            
+            })
+            print(flattened_covariance.shape, gt_track_array[0])
     result_dataframe = pd.DataFrame(data_list)
     if os.path.exists(csv_file_name_original):
             os.remove(csv_file_name_original)
