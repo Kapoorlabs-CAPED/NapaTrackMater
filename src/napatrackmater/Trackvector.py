@@ -585,16 +585,16 @@ def unsupervised_clustering(
     shape_covariance_3d = np.dstack(shape_covariance_matrix)
     dynamic_covariance_3d = np.dstack(dynamic_covariance_matrix)
 
-    
+
     shape_dynamic_covariance_matrix = np.mean(shape_dynamic_covariance_matrix, axis=0)
     shape_covariance_matrix = np.mean(shape_covariance_matrix, axis=0)
     dynamic_covariance_matrix = np.mean(dynamic_covariance_matrix, axis=0)
 
     
 
-    shape_dynamic_covariance_2d = shape_dynamic_covariance_3d.reshape(shape_dynamic_covariance_3d.shape[0], -1)
-    shape_covariance_2d = shape_covariance_3d.reshape(shape_covariance_3d.shape[0], -1)
-    dynamic_covariance_2d = dynamic_covariance_3d.reshape(dynamic_covariance_3d.shape[0], -1)
+    shape_dynamic_covariance_2d = shape_dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
+    shape_covariance_2d = shape_covariance_3d.reshape(len(analysis_track_ids), -1)
+    dynamic_covariance_2d = dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
     
     track_arrays_array = [shape_dynamic_covariance_matrix, shape_covariance_matrix, dynamic_covariance_matrix]
     track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
