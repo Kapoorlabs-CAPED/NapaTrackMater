@@ -691,7 +691,7 @@ def supervised_clustering(
         
         )
         if not np.isnan(gt_track_array[0]) and shape_dynamic_track_array.shape[0] > 1:
-            print(gt_track_array[0], shape_dynamic_track_array.shape)
+            print(gt_track_array[0][0], shape_dynamic_track_array.shape)
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
@@ -700,7 +700,7 @@ def supervised_clustering(
             flattened_covariance = shape_dynamic_covariance.flatten()
             data_list.append({
             'Flattened_Covariance': flattened_covariance,
-            'gt_label': gt_track_array[0]  
+            'gt_label': gt_track_array[0][0]  
             })
     result_dataframe = pd.DataFrame(data_list)
     if os.path.exists(csv_file_name_original):
