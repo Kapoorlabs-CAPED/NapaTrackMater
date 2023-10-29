@@ -624,14 +624,8 @@ def unsupervised_clustering(
                 cluster_covariance_matrices[cluster_label] = []
             cluster_covariance_matrices[cluster_label].append(covariance_matrix)
 
-        # Calculate the mean covariance matrix for each cluster
-        mean_covariance_matrices = {}
-        for cluster_label, covariance_matrices in cluster_covariance_matrices.items():
-            mean_matrix = np.mean(covariance_matrices, axis=0)
-            mean_covariance_matrices[cluster_label] = mean_matrix
-
         # Save the mean covariance matrices to files
-        for cluster_label, mean_matrix in mean_covariance_matrices.items():
+        for cluster_label, mean_matrix in cluster_covariance_matrices.items():
            
             mean_matrix_file_name = csv_file_name_original  + track_arrays_array_names[track_arrays_array.index(track_arrays)] + f"cluster{cluster_label}_mean_covariance.npy"
             np.save(mean_matrix_file_name, mean_matrix)
