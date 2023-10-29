@@ -14,6 +14,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.cluster import KMeans, DBSCAN
 import csv
 from sklearn.metrics import pairwise_distances
+from scipy.cluster.hierarchy import dendrogram
 
 class TrackVector(TrackMate):
     def __init__(
@@ -614,23 +615,12 @@ def unsupervised_clustering(
             os.remove(csv_file_name)
         result_dataframe.to_csv(csv_file_name, index=False)
 
-        cluster_covariance_matrices = {}
-
-        # Loop through track IDs and their covariance matrices
-        for track_id, covariance_matrix in zip(analysis_track_ids, track_arrays):
-            cluster_label = track_id_to_cluster[track_id]
-            if cluster_label not in cluster_covariance_matrices:
-                cluster_covariance_matrices[cluster_label] = []
-            cluster_covariance_matrices[cluster_label].append(covariance_matrix)
-
-
-
-        # Save the mean covariance matrices to files
-        for cluster_label, mean_matrix in cluster_covariance_matrices.items():
-           
-            mean_matrix_file_name = csv_file_name_original  + track_arrays_array_names[track_arrays_array.index(track_arrays)] + f"cluster{cluster_label}_mean_covariance.npy"
-            np.save(mean_matrix_file_name, mean_matrix)
-
+        mean_matrix_file_name = csv_file_name_original  + track_arrays_array_names[track_arrays_array.index(track_arrays)] + f"_covariance.npy"
+        np.save(mean_matrix_file_name, track_arrays)
+        
+        dendrogram_file_name = csv_file_name_original + track_arrays_array_names[track_arrays_array.index(track_arrays)] + "_dendrogram.npy"
+        dendrogram_dict = dendrogram(shape_dynamic_linkage_matrix, no_plot=True)  
+        np.save(dendrogram_file_name, dendrogram_dict)
         
 
 
