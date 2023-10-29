@@ -567,16 +567,20 @@ def unsupervised_clustering(
         dynamic_track_array = np.array(
             [[item for item in record.values()] for record in dynamic_dataframe_list]
         )
-
-        shape_dynamic_covariance_matrix.append(compute_covariance_matrix(shape_dynamic_track_array))
-        shape_covariance_matrix.append(compute_covariance_matrix(shape_track_array))
-        dynamic_covariance_matrix.append(compute_covariance_matrix(dynamic_track_array))
+        assert (
+            shape_dynamic_track_array.shape[0]
+            == shape_track_array.shape[0]
+            == dynamic_track_array.shape[0]
+        ), "Shape dynamic, shape and dynamic track arrays must have the same length"
+        shape_dynamic_covariance_matrix.append(compute_covariance_matrix(shape_dynamic_track_array).astype(np.float32))
+        shape_covariance_matrix.append(compute_covariance_matrix(shape_track_array).astype(np.float32))
+        dynamic_covariance_matrix.append(compute_covariance_matrix(dynamic_track_array).astype(np.float32))
         analysis_track_ids.append(track_id)
-    shape_dynamic_covariance_matrix = np.vstack(shape_dynamic_covariance_matrix)
-    shape_covariance_matrix = np.vstack(shape_covariance_matrix)
-    dynamic_covariance_matrix = np.vstack(dynamic_covariance_matrix)
+    shape_dynamic_covariance_matrices = np.vstack(shape_dynamic_covariance_matrix)
+    shape_covariance_matrices = np.vstack(shape_covariance_matrix)
+    dynamic_covariance_matrices = np.vstack(dynamic_covariance_matrix)
     
-    track_arrays_array = [shape_dynamic_covariance_matrix, shape_covariance_matrix, dynamic_covariance_matrix]
+    track_arrays_array = [shape_dynamic_covariance_matrices, shape_covariance_matrices, dynamic_covariance_matrices]
     track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
     
     for track_arrays in track_arrays_array:
