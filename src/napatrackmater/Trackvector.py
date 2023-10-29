@@ -593,13 +593,14 @@ def unsupervised_clustering(
     shape_dynamic_covariance_2d = shape_dynamic_covariance_3d.reshape(shape_dynamic_covariance_3d.shape[0], -1)
     shape_covariance_2d = shape_covariance_3d.reshape(shape_covariance_3d.shape[0], -1)
     dynamic_covariance_2d = dynamic_covariance_3d.reshape(dynamic_covariance_3d.shape[0], -1)
-
+    
     track_arrays_array = [shape_dynamic_covariance_matrix, shape_covariance_matrix, dynamic_covariance_matrix]
     track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
     clusterable_track_arrays = [shape_dynamic_covariance_2d, shape_covariance_2d, dynamic_covariance_2d]
     
     for track_arrays in track_arrays_array:
         clusterable_track_array = clusterable_track_arrays[track_arrays_array.index(track_arrays)]
+        print(clusterable_track_array.shape)
         shape_dynamic_cosine_distance = pdist(clusterable_track_array, metric=metric)
         shape_dynamic_linkage_matrix = linkage(
             shape_dynamic_cosine_distance, method=method
