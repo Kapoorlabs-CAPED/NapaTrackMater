@@ -609,11 +609,11 @@ def create_global_gt_dataframe(
         calibration_z,
         calibration_y,
         calibration_x,
-        time_veto_threshold=0.0, space_veto_threshold=5.0
+        time_veto_threshold=0.0, space_veto_threshold=5.0, cell_type_key = "Celltype_label"
 ):
     
      ground_truth_data_frame = pd.read_csv(ground_truth_csv_file)
-     ground_truth_data_frame.dropna(subset=['celltype_labels'], inplace=True)
+     ground_truth_data_frame.dropna(subset=[cell_type_key], inplace=True)
     
      # Prepare ground truth tuples and labels
      ground_truth_tuples = np.array([
@@ -622,7 +622,7 @@ def create_global_gt_dataframe(
         ground_truth_data_frame['POSITION_Y'].values / calibration_y,
         ground_truth_data_frame['POSITION_X'].values / calibration_x,
      ]).T
-     ground_truth_labels = ground_truth_data_frame['Celltype_label'].values
+     ground_truth_labels = ground_truth_data_frame[cell_type_key].values
      theory_tuples_spatial = full_dataframe[["t", "z", "y", "x"]].values
 
      tree_spatial = cKDTree(theory_tuples_spatial)
