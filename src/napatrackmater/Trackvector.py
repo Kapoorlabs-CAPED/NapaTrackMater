@@ -10,11 +10,10 @@ from sklearn.decomposition import PCA
 from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import linkage, fcluster
 from sklearn.cluster import AgglomerativeClustering
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.cluster import KMeans, DBSCAN
+from sklearn.cluster import KMeans
 import csv
 from sklearn.metrics import pairwise_distances
-from scipy.cluster.hierarchy import dendrogram
+
 
 class TrackVector(TrackMate):
     def __init__(
@@ -574,9 +573,16 @@ def unsupervised_clustering(
             == dynamic_track_array.shape[0]
         ), "Shape dynamic, shape and dynamic track arrays must have the same length"
         if shape_dynamic_track_array.shape[0] > 1:
-            shape_dynamic_covariance, shape_dynamic_eigenvectors = compute_covariance_matrix(shape_dynamic_track_array)
-            shape_covariance, shape_eigenvectors = compute_covariance_matrix(shape_track_array)
-            dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(dynamic_track_array)
+            (
+                shape_dynamic_covariance,
+                shape_dynamic_eigenvectors,
+            ) = compute_covariance_matrix(shape_dynamic_track_array)
+            shape_covariance, shape_eigenvectors = compute_covariance_matrix(
+                shape_track_array
+            )
+            dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
+                dynamic_track_array
+            )
             shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
             shape_covariance_matrix.append(shape_covariance)
             dynamic_covariance_matrix.append(dynamic_covaraince)
@@ -585,24 +591,32 @@ def unsupervised_clustering(
     shape_covariance_3d = np.dstack(shape_covariance_matrix)
     dynamic_covariance_3d = np.dstack(dynamic_covariance_matrix)
 
-
     shape_dynamic_covariance_matrix = np.mean(shape_dynamic_covariance_matrix, axis=0)
     shape_covariance_matrix = np.mean(shape_covariance_matrix, axis=0)
     dynamic_covariance_matrix = np.mean(dynamic_covariance_matrix, axis=0)
 
-    
-
-    shape_dynamic_covariance_2d = shape_dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
+    shape_dynamic_covariance_2d = shape_dynamic_covariance_3d.reshape(
+        len(analysis_track_ids), -1
+    )
     shape_covariance_2d = shape_covariance_3d.reshape(len(analysis_track_ids), -1)
     dynamic_covariance_2d = dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
-    
-    track_arrays_array = [shape_dynamic_covariance_matrix, shape_covariance_matrix, dynamic_covariance_matrix]
+
+    track_arrays_array = [
+        shape_dynamic_covariance_matrix,
+        shape_covariance_matrix,
+        dynamic_covariance_matrix,
+    ]
     track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
-    clusterable_track_arrays = [shape_dynamic_covariance_2d, shape_covariance_2d, dynamic_covariance_2d]
-    
+    clusterable_track_arrays = [
+        shape_dynamic_covariance_2d,
+        shape_covariance_2d,
+        dynamic_covariance_2d,
+    ]
+
     for track_arrays in track_arrays_array:
-        clusterable_track_array = clusterable_track_arrays[track_arrays_array.index(track_arrays)]
-        print(clusterable_track_array.shape)
+        clusterable_track_array = clusterable_track_arrays[
+            track_arrays_array.index(track_arrays)
+        ]
         shape_dynamic_cosine_distance = pdist(clusterable_track_array, metric=metric)
         shape_dynamic_linkage_matrix = linkage(
             shape_dynamic_cosine_distance, method=method
@@ -610,14 +624,12 @@ def unsupervised_clustering(
         shape_dynamic_cluster_labels = fcluster(
             shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
         )
-        print(shape_dynamic_cluster_labels.shape, len(analysis_track_ids))
         track_id_to_cluster = {
             track_id: cluster_label
             for track_id, cluster_label in zip(
                 analysis_track_ids, shape_dynamic_cluster_labels
             )
         }
-        print(track_id_to_cluster)
         full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
         result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
         csv_file_name = (
@@ -630,12 +642,19 @@ def unsupervised_clustering(
             os.remove(csv_file_name)
         result_dataframe.to_csv(csv_file_name, index=False)
 
-        mean_matrix_file_name = csv_file_name_original  + track_arrays_array_names[track_arrays_array.index(track_arrays)] + f"_covariance.npy"
+        mean_matrix_file_name = (
+            csv_file_name_original
+            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+            + "_covariance.npy"
+        )
         np.save(mean_matrix_file_name, track_arrays)
-        
-        linkage_npy_file_name = csv_file_name_original + track_arrays_array_names[track_arrays_array.index(track_arrays)] + "_linkage.npy"
+
+        linkage_npy_file_name = (
+            csv_file_name_original
+            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+            + "_linkage.npy"
+        )
         np.save(linkage_npy_file_name, shape_dynamic_linkage_matrix)
-        
 
 
 def convert_tracks_to_arrays(analysis_vectors, min_track_length=0):
@@ -697,9 +716,6 @@ def compute_covariance_matrix(track_arrays):
     return covariance_matrix, eigenvectors
 
 
-
-
-
 def _save_feature_importance(
     sorted_feature_names,
     normalized_importances,
@@ -734,14 +750,11 @@ def _perform_pca_clustering(track_arrays, num_clusters, num_components=3):
 
 def _perform_agg_clustering(track_arrays, num_clusters):
 
-    distance_matrix = pairwise_distances(track_arrays, metric='euclidean')
+    distance_matrix = pairwise_distances(track_arrays, metric="euclidean")
     model = AgglomerativeClustering(
-        affinity='precomputed',
-        n_clusters=num_clusters,
-        linkage='ward'
-        ).fit(distance_matrix)
-    
+        affinity="precomputed", n_clusters=num_clusters, linkage="ward"
+    ).fit(distance_matrix)
+
     clusters = model.labels_
 
-    return clusters 
-
+    return clusters
