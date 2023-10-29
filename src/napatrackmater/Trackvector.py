@@ -618,9 +618,8 @@ def unsupervised_clustering(
         mean_matrix_file_name = csv_file_name_original  + track_arrays_array_names[track_arrays_array.index(track_arrays)] + f"_covariance.npy"
         np.save(mean_matrix_file_name, track_arrays)
         
-        dendrogram_file_name = csv_file_name_original + track_arrays_array_names[track_arrays_array.index(track_arrays)] + "_dendrogram.npy"
-        dendrogram_dict = dendrogram(shape_dynamic_linkage_matrix, no_plot=True)  
-        np.save(dendrogram_file_name, dendrogram_dict)
+        linkage_npy_file_name = csv_file_name_original + track_arrays_array_names[track_arrays_array.index(track_arrays)] + "_linkage.npy"
+        np.save(linkage_npy_file_name, shape_dynamic_linkage_matrix)
         
 
 
