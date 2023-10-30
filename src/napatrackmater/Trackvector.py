@@ -713,7 +713,7 @@ def supervised_clustering(
             flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
             data_list.append(
                 {
-                    "Flattened_Covariance": flattened_covariance,
+                    "Flattened_Covariance": np.log(flattened_covariance),
                     "gt_label": gt_track_array[0][0],
                 }
             )
@@ -721,7 +721,7 @@ def supervised_clustering(
     if os.path.exists(csv_file_name_original):
         os.remove(csv_file_name_original)
     result_dataframe.to_csv(csv_file_name_original + '.csv', index=False)
-    X = np.vstack(np.log(result_dataframe["Flattened_Covariance"].values))
+    X = np.vstack(result_dataframe["Flattened_Covariance"].values)
     y = result_dataframe["gt_label"].values
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.1, random_state=42
@@ -792,14 +792,14 @@ def predict_supervised_clustering(model: KNeighborsClassifier,csv_file_name, ful
 
                 upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
 
-                flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
+                flattened_covariance = np.log(shape_dynamic_covariance[upper_triangle_indices])
                 data_list.append(
                 {
                     "Flattened_Covariance": flattened_covariance,
                 }
             ) 
         result_dataframe = pd.DataFrame(data_list)  
-        X = np.vstack(np.log(result_dataframe["Flattened_Covariance"].values))      
+        X = np.vstack(result_dataframe["Flattened_Covariance"].values))     
         class_labels = model.predict(X)
         
         track_id_to_cluster = {
