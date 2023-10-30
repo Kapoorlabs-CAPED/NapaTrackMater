@@ -723,11 +723,14 @@ def supervised_clustering(
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.01, random_state=42
     )
+    print(f'Training labels {np.unique(y_train)}, Testing labels {np.unique(y_test)}')
     print(f'Training data shape: {X_train.shape}, Testing data shape: {X_test.shape}')
     knn = KNeighborsClassifier(n_neighbors=n_neighbors, n_jobs=-1)
     knn.fit(X_train, y_train)
     accuracy = knn.score(X_test, y_test)
-    print(f"Model Accuracy: {accuracy:.2f}")
+    print(f"Model Accuracy on test: {accuracy:.2f}")
+    accuracy = knn.score(X_train, y_train)
+    print(f"Model Accuracy on train: {accuracy:.2f}")
 
     model_filename = csv_file_name + "_knn_model.joblib"
     dump(knn, model_filename)
