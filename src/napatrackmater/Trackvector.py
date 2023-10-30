@@ -17,7 +17,8 @@ from scipy.spatial import cKDTree
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from joblib import dump
-
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
 
 class TrackVector(TrackMate):
     def __init__(
@@ -734,17 +735,37 @@ def supervised_clustering(
     print(f"Testing labels: {unique_test_labels}")
     print(f"Testing label counts: {count_test_labels}")
     print(f'Training data shape: {X_train.shape}, Testing data shape: {X_test.shape}')
-    knn = KNeighborsClassifier(n_neighbors=n_neighbors, n_jobs=-1)
-    knn.fit(X_train, y_train)
-    accuracy = knn.score(X_test, y_test)
-    print(f"Model Accuracy on test: {accuracy:.2f}")
-    accuracy = knn.score(X_train, y_train)
-    print(f"Model Accuracy on train: {accuracy:.2f}")
+    #model = KNeighborsClassifier(n_neighbors=n_neighbors, n_jobs=-1)
+    #model.fit(X_train, y_train)
+    #accuracy = model.score(X_test, y_test)
+    #print(f"Model Accuracy on test: {accuracy:.2f}")
+    #accuracy = model.score(X_train, y_train)
+    #print(f"Model Accuracy on train: {accuracy:.2f}")
 
-    model_filename = csv_file_name + "_knn_model.joblib"
-    dump(knn, model_filename)
+    #model_filename = csv_file_name + "_knn_model.joblib"
+    #dump(model, model_filename)
+    n_estimators = 100  # You can adjust the number of estimators (trees) as needed
+    model = RandomForestClassifier(n_estimators=n_estimators, n_jobs=-1, random_state=42)
 
-    return knn
+    # Fit the Random Forest Classifier to the training data
+    model.fit(X_train, y_train)
+
+    # Make predictions on the test data
+    y_pred_test = model.predict(X_test)
+    y_pred_train = model.predict(X_train)
+
+    # Calculate and print the model accuracy on the test and training sets
+    accuracy_test = accuracy_score(y_test, y_pred_test)
+    accuracy_train = accuracy_score(y_train, y_pred_train)
+
+    print(f"Model Accuracy on test: {accuracy_test:.2f}")
+    print(f"Model Accuracy on train: {accuracy_train:.2f}")
+
+    # Save the trained model to a file
+    model_filename = "random_forest_model.joblib"
+    dump(model, model_filename)
+    
+    return model
 
 
 def predict_supervised_clustering(model: KNeighborsClassifier,csv_file_name, full_dataframe, analysis_vectors):
