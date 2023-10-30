@@ -744,8 +744,7 @@ def supervised_clustering(
 
     #model_filename = csv_file_name + "_knn_model.joblib"
     #dump(model, model_filename)
-    n_estimators = 100  # You can adjust the number of estimators (trees) as needed
-    model = RandomForestClassifier(n_estimators=n_estimators, n_jobs=-1, random_state=42)
+    model = RandomForestClassifier(n_estimators=n_neighbors, n_jobs=-1, random_state=42)
 
     # Fit the Random Forest Classifier to the training data
     model.fit(X_train, y_train)
