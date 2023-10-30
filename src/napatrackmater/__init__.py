@@ -8,7 +8,8 @@ from .Trackvector import (
     unsupervised_clustering,
     supervised_clustering,
     create_global_gt_dataframe,
-    create_gt_analysis_vectors_dict
+    create_gt_analysis_vectors_dict,
+    predict_supervised_clustering
 
 )
 from .DeepEmbeddedClustering import DeepEmbeddedClustering
@@ -61,6 +62,7 @@ __all__ = (
     "create_global_gt_dataframe",
     "supervised_clustering",
     "TrackVector",
+    "predict_supervised_clustering",
     "create_analysis_vectors_dict",
     "convert_tracks_to_arrays",
     "unsupervised_clustering",

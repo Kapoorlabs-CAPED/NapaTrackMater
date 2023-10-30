@@ -682,7 +682,7 @@ def supervised_clustering(
 ):
     csv_file_name_original = csv_file_name + "_training_data"
     data_list = []
-
+    track_ids = []
     for track_id, (
         shape_dynamic_dataframe_list,
         gt_dataframe_list,
@@ -699,6 +699,8 @@ def supervised_clustering(
         gt_track_array = np.array(
             [[item for item in record.values()] for record in gt_dataframe_list]
         )
+        if shape_dynamic_track_array.shape[0] > 1:
+            track_ids.append(track_id)
         if not np.isnan(gt_track_array[0]) and shape_dynamic_track_array.shape[0] > 1:
             (
                 shape_dynamic_covariance,
@@ -715,7 +717,7 @@ def supervised_clustering(
     result_dataframe = pd.DataFrame(data_list)
     if os.path.exists(csv_file_name_original):
         os.remove(csv_file_name_original)
-    result_dataframe.to_csv(csv_file_name_original, index=False)
+    result_dataframe.to_csv(csv_file_name_original + '.csv', index=False)
     X = np.vstack(result_dataframe["Flattened_Covariance"].values)
     y = result_dataframe["gt_label"].values
     X_train, X_test, y_train, y_test = train_test_split(
@@ -726,11 +728,61 @@ def supervised_clustering(
     accuracy = knn.score(X_test, y_test)
     print(f"Model Accuracy: {accuracy:.2f}")
 
-    model_filename = "knn_model.joblib"
+    model_filename = csv_file_name + "_knn_model.joblib"
     dump(knn, model_filename)
 
     return knn
 
+
+def predict_supervised_clustering(model,csv_file_name, full_dataframe, analysis_vectors):
+        track_ids = []
+        data_list = []
+        for track_id, (
+            shape_dynamic_dataframe_list,
+            shape_dataframe_list,
+            dynamic_dataframe_list,
+            full_dataframe_list,
+        ) in analysis_vectors.items():
+
+            shape_dynamic_track_array = np.array(
+                [
+                    [item for item in record.values()]
+                    for record in shape_dynamic_dataframe_list
+                ]
+            )
+            if shape_dynamic_track_array.shape[0] > 1:
+                track_ids.append(track_id)
+                (
+                    shape_dynamic_covariance,
+                    shape_dynamic_eigenvectors,
+                ) = compute_covariance_matrix(shape_dynamic_track_array)
+
+                flattened_covariance = shape_dynamic_covariance.flatten()
+                data_list.append(
+                {
+                    "Flattened_Covariance": flattened_covariance,
+                }
+            ) 
+        result_dataframe = pd.DataFrame(data_list)  
+        X = np.vstack(result_dataframe["Flattened_Covariance"].values)      
+        class_labels = model.predict(X)
+        track_id_to_cluster = {
+        track_id: cluster_label
+        for track_id, cluster_label in zip(
+            track_ids, class_labels
+        )
+        }
+        full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
+        result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
+        csv_file_name = (
+            csv_file_name
+            
+            + ".csv"
+        )
+
+        if os.path.exists(csv_file_name):
+            os.remove(csv_file_name)
+        result_dataframe.to_csv(csv_file_name, index=False)
 
 def unsupervised_clustering(
     full_dataframe,
