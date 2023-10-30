@@ -713,7 +713,7 @@ def supervised_clustering(
             flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
             data_list.append(
                 {
-                    "Flattened_Covariance": np.log1p(flattened_covariance),
+                    "Flattened_Covariance": flattened_covariance,
                     "gt_label": gt_track_array[0][0],
                 }
             )
@@ -792,7 +792,7 @@ def predict_supervised_clustering(model: KNeighborsClassifier,csv_file_name, ful
 
                 upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
 
-                flattened_covariance = np.log1p(shape_dynamic_covariance[upper_triangle_indices])
+                flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
                 data_list.append(
                 {
                     "Flattened_Covariance": flattened_covariance,
