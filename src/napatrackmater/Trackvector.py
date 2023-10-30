@@ -721,9 +721,16 @@ def supervised_clustering(
     X = np.vstack(result_dataframe["Flattened_Covariance"].values)
     y = result_dataframe["gt_label"].values
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.01, random_state=42
+        X, y, test_size=0.1, random_state=42
     )
-    print(f'Training labels {np.unique(y_train)}, Testing labels {np.unique(y_test)}')
+    unique_train_labels, count_train_labels = np.unique(y_train, return_counts=True)
+
+    unique_test_labels, count_test_labels = np.unique(y_test, return_counts=True)
+
+    print(f"Training labels: {unique_train_labels}")
+    print(f"Training label counts: {count_train_labels}")
+    print(f"Testing labels: {unique_test_labels}")
+    print(f"Testing label counts: {count_test_labels}")
     print(f'Training data shape: {X_train.shape}, Testing data shape: {X_test.shape}')
     knn = KNeighborsClassifier(n_neighbors=n_neighbors, n_jobs=-1)
     knn.fit(X_train, y_train)
