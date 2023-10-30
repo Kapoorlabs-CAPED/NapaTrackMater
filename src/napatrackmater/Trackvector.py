@@ -707,7 +707,9 @@ def supervised_clustering(
                 shape_dynamic_eigenvectors,
             ) = compute_covariance_matrix(shape_dynamic_track_array)
 
-            flattened_covariance = shape_dynamic_covariance.flatten()
+            upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
+
+            flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
             data_list.append(
                 {
                     "Flattened_Covariance": flattened_covariance,
@@ -768,7 +770,9 @@ def predict_supervised_clustering(model: KNeighborsClassifier,csv_file_name, ful
                     shape_dynamic_eigenvectors,
                 ) = compute_covariance_matrix(shape_dynamic_track_array)
 
-                flattened_covariance = shape_dynamic_covariance.flatten()
+                upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
+
+                flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
                 data_list.append(
                 {
                     "Flattened_Covariance": flattened_covariance,
