@@ -15,7 +15,7 @@ import csv
 from sklearn.metrics import pairwise_distances
 from scipy.spatial import cKDTree
 from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from joblib import dump
 
 
@@ -724,7 +724,7 @@ def supervised_clustering(
         X, y, test_size=0.01, random_state=42
     )
     print(f'Training data shape: {X_train.shape}, Testing data shape: {X_test.shape}')
-    knn = KNeighborsClassifier(n_neighbors=num_clusters, n_jobs=-1)
+    knn = KNeighborsRegressor(n_neighbors=num_clusters, n_jobs=-1)
     knn.fit(X_train, y_train)
     accuracy = knn.score(X_test, y_test)
     print(f"Model Accuracy: {accuracy:.2f}")
