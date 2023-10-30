@@ -721,7 +721,7 @@ def supervised_clustering(
     if os.path.exists(csv_file_name_original):
         os.remove(csv_file_name_original)
     result_dataframe.to_csv(csv_file_name_original + '.csv', index=False)
-    X = np.vstack(result_dataframe["Flattened_Covariance"].values)
+    X = np.vstack(np.log(result_dataframe["Flattened_Covariance"].values))
     y = result_dataframe["gt_label"].values
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.1, random_state=42
@@ -799,7 +799,7 @@ def predict_supervised_clustering(model: KNeighborsClassifier,csv_file_name, ful
                 }
             ) 
         result_dataframe = pd.DataFrame(data_list)  
-        X = np.vstack(result_dataframe["Flattened_Covariance"].values)      
+        X = np.vstack(np.log(result_dataframe["Flattened_Covariance"].values))      
         class_labels = model.predict(X)
         
         track_id_to_cluster = {
