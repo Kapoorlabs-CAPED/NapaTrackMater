@@ -799,7 +799,7 @@ def predict_supervised_clustering(model: KNeighborsClassifier,csv_file_name, ful
                 }
             ) 
         result_dataframe = pd.DataFrame(data_list)  
-        X = np.vstack(result_dataframe["Flattened_Covariance"].values))     
+        X = np.vstack(result_dataframe["Flattened_Covariance"].values)   
         class_labels = model.predict(X)
         
         track_id_to_cluster = {
