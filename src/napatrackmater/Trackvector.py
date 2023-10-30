@@ -712,8 +712,8 @@ def supervised_clustering(
 
             #flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
 
-            flattened_covariance = [np.linalg.det(shape_dynamic_covariance), np.trace(shape_dynamic_covariance)]
-            flattened_covariance = np.asarray(flattened_covariance)
+            #flattened_covariance = [np.linalg.det(shape_dynamic_covariance), np.trace(shape_dynamic_covariance)]
+            flattened_covariance = shape_dynamic_track_array #np.asarray(flattened_covariance)
             
             data_list.append(
                 {
@@ -798,8 +798,8 @@ def predict_supervised_clustering(model: KNeighborsClassifier,csv_file_name, ful
 
                 #flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
 
-                flattened_covariance = [np.linalg.det(shape_dynamic_covariance), np.trace(shape_dynamic_covariance)]
-                flattened_covariance = np.asarray(flattened_covariance)
+                #flattened_covariance = [np.linalg.det(shape_dynamic_covariance), np.trace(shape_dynamic_covariance)]
+                flattened_covariance = shape_dynamic_track_array #np.asarray(flattened_covariance)
             
                 data_list.append(
                 {
