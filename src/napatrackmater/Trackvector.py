@@ -15,10 +15,11 @@ import csv
 from sklearn.metrics import pairwise_distances
 from scipy.spatial import cKDTree
 from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
+from sklearn.neighbors import KNeighborsClassifier
 from joblib import dump
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
+
 
 class TrackVector(TrackMate):
     def __init__(
@@ -677,9 +678,7 @@ def create_global_gt_dataframe(
 
 
 def supervised_clustering(
-    csv_file_name,
-    gt_analysis_vectors,
-    n_neighbors=5,
+    csv_file_name, gt_analysis_vectors, n_neighbors=10, n_estimators=50, method="knn"
 ):
     csv_file_name_original = csv_file_name + "_training_data"
     data_list = []
@@ -708,9 +707,7 @@ def supervised_clustering(
                 shape_dynamic_eigenvectors,
             ) = compute_covariance_matrix(shape_dynamic_track_array)
 
-            upper_left_matrix = shape_dynamic_covariance[:5, :5]
-            lower_right_matrix = shape_dynamic_covariance[5:, 5:]
-            upper_triangle_indices = np.triu_indices_from(lower_right_matrix)
+            upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
 
             flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
             data_list.append(
@@ -722,109 +719,110 @@ def supervised_clustering(
     result_dataframe = pd.DataFrame(data_list)
     if os.path.exists(csv_file_name_original):
         os.remove(csv_file_name_original)
-    result_dataframe.to_csv(csv_file_name_original + '.csv', index=False)
-    X = np.vstack(result_dataframe["Flattened_Covariance"].values)
-    y = result_dataframe["gt_label"].values
-    
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.1, random_state=42
-    )
-    unique_train_labels, count_train_labels = np.unique(y_train, return_counts=True)
+    result_dataframe.to_csv(csv_file_name_original + ".csv", index=False)
+    if method == "knn":
+        X = np.vstack(result_dataframe["Flattened_Covariance"].values)
+        y = result_dataframe["gt_label"].values
 
-    unique_test_labels, count_test_labels = np.unique(y_test, return_counts=True)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.1, random_state=42
+        )
+        unique_train_labels, count_train_labels = np.unique(y_train, return_counts=True)
 
-    print(f"Training labels: {unique_train_labels}")
-    print(f"Training label counts: {count_train_labels}")
-    print(f"Testing labels: {unique_test_labels}")
-    print(f"Testing label counts: {count_test_labels}")
-    print(f'Training data shape: {X_train.shape}, Testing data shape: {X_test.shape}')
-    model = KNeighborsClassifier(n_neighbors=n_neighbors, n_jobs=-1)
-    model.fit(X_train, y_train)
-    accuracy = model.score(X_test, y_test)
-    print(f"Model Accuracy on test: {accuracy:.2f}")
-    accuracy = model.score(X_train, y_train)
-    print(f"Model Accuracy on train: {accuracy:.2f}")
+        unique_test_labels, count_test_labels = np.unique(y_test, return_counts=True)
 
-    model_filename = csv_file_name + "_knn_model.joblib"
-    dump(model, model_filename)
-    #model = RandomForestClassifier(n_estimators=n_neighbors, n_jobs=-1, random_state=42)
+        print(f"Training labels: {unique_train_labels}")
+        print(f"Training label counts: {count_train_labels}")
+        print(f"Testing labels: {unique_test_labels}")
+        print(f"Testing label counts: {count_test_labels}")
+        print(
+            f"Training data shape: {X_train.shape}, Testing data shape: {X_test.shape}"
+        )
+        model = KNeighborsClassifier(n_neighbors=n_neighbors, n_jobs=-1)
+        model.fit(X_train, y_train)
+        accuracy = model.score(X_test, y_test)
+        print(f"Model Accuracy on test: {accuracy:.2f}")
+        accuracy = model.score(X_train, y_train)
+        print(f"Model Accuracy on train: {accuracy:.2f}")
 
-    # Fit the Random Forest Classifier to the training data
-    #model.fit(X_train, y_train)
+        model_filename = csv_file_name + "_knn_model.joblib"
+        dump(model, model_filename)
+    else:
+        model = RandomForestClassifier(
+            n_estimators=n_estimators, n_jobs=-1, random_state=42
+        )
 
-    # Make predictions on the test data
-    #y_pred_test = model.predict(X_test)
-    #y_pred_train = model.predict(X_train)
+        # Fit the Random Forest Classifier to the training data
+        model.fit(X_train, y_train)
 
-    # Calculate and print the model accuracy on the test and training sets
-    #accuracy_test = accuracy_score(y_test, y_pred_test)
-    #accuracy_train = accuracy_score(y_train, y_pred_train)
+        # Make predictions on the test data
+        y_pred_test = model.predict(X_test)
+        y_pred_train = model.predict(X_train)
 
-    #print(f"Model Accuracy on test: {accuracy_test:.2f}")
-    #print(f"Model Accuracy on train: {accuracy_train:.2f}")
+        # Calculate and print the model accuracy on the test and training sets
+        accuracy_test = accuracy_score(y_test, y_pred_test)
+        accuracy_train = accuracy_score(y_train, y_pred_train)
 
-    # Save the trained model to a file
-    #model_filename = "random_forest_model.joblib"
-    #dump(model, model_filename)
-    
+        print(f"Model Accuracy on test: {accuracy_test:.2f}")
+        print(f"Model Accuracy on train: {accuracy_train:.2f}")
+
+        # Save the trained model to a file
+        model_filename = "random_forest_model.joblib"
+        dump(model, model_filename)
+
     return model
 
 
-def predict_supervised_clustering(model: KNeighborsClassifier,csv_file_name, full_dataframe, analysis_vectors):
-        track_ids = []
-        data_list = []
-        for track_id, (
-            shape_dynamic_dataframe_list,
-            shape_dataframe_list,
-            dynamic_dataframe_list,
-            full_dataframe_list,
-        ) in analysis_vectors.items():
+def predict_supervised_clustering(
+    model: KNeighborsClassifier, csv_file_name, full_dataframe, analysis_vectors
+):
+    track_ids = []
+    data_list = []
+    for track_id, (
+        shape_dynamic_dataframe_list,
+        shape_dataframe_list,
+        dynamic_dataframe_list,
+        full_dataframe_list,
+    ) in analysis_vectors.items():
 
-            shape_dynamic_track_array = np.array(
-                [
-                    [item for item in record.values()]
-                    for record in shape_dynamic_dataframe_list
-                ]
-            )
-            if shape_dynamic_track_array.shape[0] > 1:
-                track_ids.append(track_id)
-                (
-                    shape_dynamic_covariance,
-                    shape_dynamic_eigenvectors,
-                ) = compute_covariance_matrix(shape_dynamic_track_array)
+        shape_dynamic_track_array = np.array(
+            [
+                [item for item in record.values()]
+                for record in shape_dynamic_dataframe_list
+            ]
+        )
+        if shape_dynamic_track_array.shape[0] > 1:
+            track_ids.append(track_id)
+            (
+                shape_dynamic_covariance,
+                shape_dynamic_eigenvectors,
+            ) = compute_covariance_matrix(shape_dynamic_track_array)
 
-                upper_left_matrix = shape_dynamic_covariance[:5, :5]
-                lower_right_matrix = shape_dynamic_covariance[5:, 5:]
-                upper_triangle_indices = np.triu_indices_from(lower_right_matrix)
+            upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
 
-                flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
-                data_list.append(
+            flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
+            data_list.append(
                 {
                     "Flattened_Covariance": flattened_covariance,
                 }
-            ) 
-        result_dataframe = pd.DataFrame(data_list)  
-        X = np.vstack(result_dataframe["Flattened_Covariance"].values)  
-       
-        class_labels = model.predict(X)
-        
-        track_id_to_cluster = {
-        track_id: cluster_label
-        for track_id, cluster_label in zip(
-            track_ids, class_labels
-        )
-        }
-        full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
-        result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
-        csv_file_name = (
-            csv_file_name
-            
-            + ".csv"
-        )
+            )
+    result_dataframe = pd.DataFrame(data_list)
+    X = np.vstack(result_dataframe["Flattened_Covariance"].values)
 
-        if os.path.exists(csv_file_name):
-            os.remove(csv_file_name)
-        result_dataframe.to_csv(csv_file_name, index=False)
+    class_labels = model.predict(X)
+
+    track_id_to_cluster = {
+        track_id: cluster_label
+        for track_id, cluster_label in zip(track_ids, class_labels)
+    }
+    full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
+    result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
+    csv_file_name = csv_file_name + ".csv"
+
+    if os.path.exists(csv_file_name):
+        os.remove(csv_file_name)
+    result_dataframe.to_csv(csv_file_name, index=False)
+
 
 def unsupervised_clustering(
     full_dataframe,
