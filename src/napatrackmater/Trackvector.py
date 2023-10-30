@@ -735,34 +735,34 @@ def supervised_clustering(
     print(f"Testing labels: {unique_test_labels}")
     print(f"Testing label counts: {count_test_labels}")
     print(f'Training data shape: {X_train.shape}, Testing data shape: {X_test.shape}')
-    #model = KNeighborsClassifier(n_neighbors=n_neighbors, n_jobs=-1)
-    #model.fit(X_train, y_train)
-    #accuracy = model.score(X_test, y_test)
-    #print(f"Model Accuracy on test: {accuracy:.2f}")
-    #accuracy = model.score(X_train, y_train)
-    #print(f"Model Accuracy on train: {accuracy:.2f}")
+    model = KNeighborsClassifier(n_neighbors=n_neighbors, n_jobs=-1)
+    model.fit(X_train, y_train)
+    accuracy = model.score(X_test, y_test)
+    print(f"Model Accuracy on test: {accuracy:.2f}")
+    accuracy = model.score(X_train, y_train)
+    print(f"Model Accuracy on train: {accuracy:.2f}")
 
-    #model_filename = csv_file_name + "_knn_model.joblib"
-    #dump(model, model_filename)
-    model = RandomForestClassifier(n_estimators=n_neighbors, n_jobs=-1, random_state=42)
+    model_filename = csv_file_name + "_knn_model.joblib"
+    dump(model, model_filename)
+    #model = RandomForestClassifier(n_estimators=n_neighbors, n_jobs=-1, random_state=42)
 
     # Fit the Random Forest Classifier to the training data
-    model.fit(X_train, y_train)
+    #model.fit(X_train, y_train)
 
     # Make predictions on the test data
-    y_pred_test = model.predict(X_test)
-    y_pred_train = model.predict(X_train)
+    #y_pred_test = model.predict(X_test)
+    #y_pred_train = model.predict(X_train)
 
     # Calculate and print the model accuracy on the test and training sets
-    accuracy_test = accuracy_score(y_test, y_pred_test)
-    accuracy_train = accuracy_score(y_train, y_pred_train)
+    #accuracy_test = accuracy_score(y_test, y_pred_test)
+    #accuracy_train = accuracy_score(y_train, y_pred_train)
 
-    print(f"Model Accuracy on test: {accuracy_test:.2f}")
-    print(f"Model Accuracy on train: {accuracy_train:.2f}")
+    #print(f"Model Accuracy on test: {accuracy_test:.2f}")
+    #print(f"Model Accuracy on train: {accuracy_train:.2f}")
 
     # Save the trained model to a file
-    model_filename = "random_forest_model.joblib"
-    dump(model, model_filename)
+    #model_filename = "random_forest_model.joblib"
+    #dump(model, model_filename)
     
     return model
 
