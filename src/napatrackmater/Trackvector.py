@@ -718,11 +718,12 @@ def supervised_clustering(
     if os.path.exists(csv_file_name_original):
         os.remove(csv_file_name_original)
     result_dataframe.to_csv(csv_file_name_original + '.csv', index=False)
-    X = result_dataframe["Flattened_Covariance"].values
+    X = np.vstack(result_dataframe["Flattened_Covariance"].values)
     y = result_dataframe["gt_label"].values
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.01, random_state=42
     )
+    print(f'Training data shape: {X_train.shape}, Testing data shape: {X_test.shape}')
     knn = KNeighborsClassifier(n_neighbors=num_clusters, n_jobs=-1)
     knn.fit(X_train, y_train)
     accuracy = knn.score(X_test, y_test)
