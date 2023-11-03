@@ -19,6 +19,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from joblib import dump
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
+import umap
 
 
 class TrackVector(TrackMate):
@@ -838,6 +839,9 @@ def unsupervised_clustering(
     shape_dynamic_covariance_matrix = []
     shape_covariance_matrix = []
     dynamic_covariance_matrix = []
+    shape_dynamic_umap_matrix = []
+    shape_umap_matrix = []
+    dynamic_umap_matrix = []
     for track_id, (
         shape_dynamic_dataframe_list,
         shape_dataframe_list,
@@ -872,6 +876,12 @@ def unsupervised_clustering(
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
                 dynamic_track_array
             )
+            shape_dynamic_umap = compute_umap_matrix(shape_dynamic_track_array)
+            shape_umap = compute_umap_matrix(shape_track_array)
+            dynamic_umap = compute_umap_matrix(dynamic_track_array)
+            shape_dynamic_umap_matrix.append(shape_dynamic_umap)
+            shape_umap_matrix.append(shape_umap)
+            dynamic_umap_matrix.append(dynamic_umap)
             shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
             shape_covariance_matrix.append(shape_covariance)
             dynamic_covariance_matrix.append(dynamic_covaraince)
@@ -884,6 +894,10 @@ def unsupervised_clustering(
     shape_covariance_matrix = np.mean(shape_covariance_matrix, axis=0)
     dynamic_covariance_matrix = np.mean(dynamic_covariance_matrix, axis=0)
 
+    shape_dynamic_umap_matrix = np.mean(shape_dynamic_umap_matrix, axis=0)
+    shape_umap_matrix = np.mean(shape_umap_matrix, axis=0)
+    dynamic_umap_matrix = np.mean(dynamic_umap_matrix, axis=0)
+
     shape_dynamic_covariance_2d = shape_dynamic_covariance_3d.reshape(
         len(analysis_track_ids), -1
     )
@@ -894,6 +908,11 @@ def unsupervised_clustering(
         shape_dynamic_covariance_matrix,
         shape_covariance_matrix,
         dynamic_covariance_matrix,
+    ]
+    track_umap_array = [
+        shape_dynamic_umap_matrix,
+        shape_umap_matrix,
+        dynamic_umap_matrix,
     ]
     track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
     clusterable_track_arrays = [
@@ -946,6 +965,16 @@ def unsupervised_clustering(
             + "_covariance.npy"
         )
         np.save(mean_matrix_file_name, track_arrays)
+
+        umap_matrix_file_name = (
+            csv_file_name_original
+            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+            + "_umap.npy"
+        )
+        np.save(
+            umap_matrix_file_name,
+            track_umap_array[track_arrays_array.index(track_arrays)],
+        )
 
         linkage_npy_file_name = (
             csv_file_name_original
@@ -1019,6 +1048,14 @@ def compute_covariance_matrix(track_arrays):
     eigenvectors = eigenvectors[:, eigenvalue_order]
 
     return covariance_matrix, eigenvectors
+
+
+def compute_umap_matrix(track_arrays):
+
+    reducer = umap.UMAP()
+    umap_result = reducer.fit_transform(track_arrays)
+
+    return umap_result
 
 
 def _save_feature_importance(
