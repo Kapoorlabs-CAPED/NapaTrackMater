@@ -907,6 +907,15 @@ def unsupervised_clustering(
             track_arrays_array.index(track_arrays)
         ]
         shape_dynamic_cosine_distance = pdist(clusterable_track_array, metric=metric)
+        if (
+            np.isnan(shape_dynamic_cosine_distance).any()
+            or np.isinf(shape_dynamic_cosine_distance).any()
+        ):
+            print(
+                "Cosine distance matrix contains NaN or infinite values. Returning an empty linkage matrix."
+            )
+            return
+
         shape_dynamic_linkage_matrix = linkage(
             shape_dynamic_cosine_distance, method=method
         )
