@@ -954,6 +954,13 @@ def unsupervised_clustering(
         )
         np.save(linkage_npy_file_name, shape_dynamic_linkage_matrix)
 
+        cluster_labels_npy_file_name = (
+            csv_file_name_original
+            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+            + "_cluster_labels.npy"
+        )
+        np.save(cluster_labels_npy_file_name, shape_dynamic_cluster_labels)
+
 
 def convert_tracks_to_arrays(analysis_vectors, min_track_length=0):
 
