@@ -864,7 +864,7 @@ def unsupervised_clustering(
             shape_dynamic_track_array.shape[0]
             == shape_track_array.shape[0]
             == dynamic_track_array.shape[0]
-        ), "Shape dynamic, shape and dynamic track arrays must have the same length"
+        ), "Shape dynamic, shape and dynamic track arrays must have the same length."
         if shape_dynamic_track_array.shape[0] > 1:
             (
                 shape_dynamic_covariance,
