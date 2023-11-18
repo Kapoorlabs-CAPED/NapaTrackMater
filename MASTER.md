@@ -70,10 +70,11 @@ shape_dynamic_vectors = [] = [array(tracklet_id, t, z, y, x, shape properties (e
 
 Then we conver this to a pandas dataframe object and iterate over the tracklet_id to obtain for each tracklet ID the following Track Matrices:
 
-| time 1 | time 2 | time N |
-|----------|----------|----------|
-|   shape features      |    shape features     |    shape features     |
-|   dynamic features      |    dynamic features     |    dynamic features     |
 
+\[ \begin{bmatrix}
+time 1 & time 2 & time 3 \\
+shape features & shape features & shape features \\
+dynamic features & dynamic features & dynamic features \\
+\end{bmatrix} \]
 
 This breaks down each tracklet into a (T, 11) dimensional matrix and we apply machine learning techniques on (K,T,11) dimensional tensor as explained in the following sections, K being the number of tracks.
