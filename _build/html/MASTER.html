@@ -60,6 +60,7 @@ const thebe_selector_input = "pre"
 const thebe_selector_output = ".output, .cell_output"
 </script>
     <script async="async" src="_static/sphinx-thebe.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'MASTER';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -385,7 +386,7 @@ document.write(`
 </script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <!-- Your Markdown content -->
-<section class="tex2jax_ignore mathjax_ignore" id="converting-tracks-to-feature-matrices">
+<section id="converting-tracks-to-feature-matrices">
 <h1>Converting tracks to Feature Matrices<a class="headerlink" href="#converting-tracks-to-feature-matrices" title="Permalink to this headline">#</a></h1>
 <section id="structure-of-master-xml">
 <h2>Structure of Master XML<a class="headerlink" href="#structure-of-master-xml" title="Permalink to this headline">#</a></h2>
@@ -432,7 +433,7 @@ Used in the Napari plugin for coloring the tracks and segmentation labels</p></l
 </ul>
 </section>
 </section>
-<section class="tex2jax_ignore mathjax_ignore" id="trackvector">
+<section id="trackvector">
 <h1>TrackVector<a class="headerlink" href="#trackvector" title="Permalink to this headline">#</a></h1>
 <p>This is a class that converts the data from master xml file and spots, edges, tracks csv to feature matrices. A region of interest in TZYX can be entered and the tracks will only be extracted from the temporal voxel and it extracts the above mentioned dictionaries and lists and constructs new dictionaries:</p>
 <section id="unique-tracks">
@@ -462,14 +463,13 @@ Used in the Napari plugin for coloring the tracks and segmentation labels</p></l
 </ul>
 <p>These dictionaries ensure that we have full information of all the tracklets of a given TrackMate track ID. Then we construct the final data frame object that allows us to create the track matrices:</p>
 <p>shape_dynamic_vectors = [] = [array(tracklet_id, t, z, y, x, shape properties (extracted from unique_shape_properties), dynamic properties (extracted from unique_dynamic_properties))]</p>
-<p>Then we conver this to a pandas dataframe object and iterate over the tracklet_id to obtain for each tracklet ID the following Track Matrices:</p>
-<p>[
-\begin{bmatrix}
-\text{time 1} &amp; \text{time 2} &amp; \text{time 3} \
-\text{shape features} &amp; \text{shape features} &amp; \text{shape features} \
-\text{dynamic features} &amp; \text{dynamic features} &amp; \text{dynamic features} \
-\end{bmatrix}
-]</p>
+<p>Then we convert this to a pandas dataframe object and iterate over the tracklet_id to obtain for each tracklet ID the following Track Matrices:</p>
+<div class="amsmath math notranslate nohighlight" id="equation-1601205c-83c2-435d-99c2-be71def1b984">
+<span class="eqno">(1)<a class="headerlink" href="#equation-1601205c-83c2-435d-99c2-be71def1b984" title="Permalink to this equation">#</a></span>\[\begin{bmatrix}
+\text{time 1} &amp; \text{time 2} &amp; \text{time 3} &amp; \cdots \\
+\text{shape features} &amp; \text{shape features} &amp; \text{shape features} &amp; \cdots \\
+\text{dynamic features} &amp; \text{dynamic features} &amp; \text{dynamic features} &amp; \cdots \\
+\end{bmatrix}\]</div>
 <p>This breaks down each tracklet into a (T, 11) dimensional matrix and we apply machine learning techniques on (K,T,11) dimensional tensor as explained in the following sections, K being the number of tracks.</p>
 </section>
 </section>
