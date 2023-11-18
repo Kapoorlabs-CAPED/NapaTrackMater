@@ -101,6 +101,8 @@ Having breaken down tracks into tracklets and tracklets into feature matrix of s
 
 ![image](images/FeatureMatrixPlot_time_point_97.png)
 
+The plot is plotted in logscale and the diagonal elements show how much varaince is there in the tracks with respect to those features, for example in the plot above most of the variance is shown in surface area (brightest) and least by speed and acceleration (dimmest) showing that in the experiment the cells had varying surface areas but similar speed and acceleration. This also implies that while performing unsupervised clustering the features with the highest variance are the ones that matter the most. The non-diagonal elements show the relation of one feature vector with another. 
+
 We also divide the XY space into quadrants and then compute the cluster labels belonging to each class, the notebook comes with an interactive time slider that can be changed to update this plot. For example for time point 97 we have this plot of the distribution of cluster labels across the quadrants. This plot can be used to judge if there is a spatial and temporal symmetry in the experiment hence showing influence of any external or internal forces during the course of the experiment. 
 
 ![image](images/QuadrantDistributionPlot_time_point_97.png)
