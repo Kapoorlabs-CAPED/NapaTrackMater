@@ -97,6 +97,10 @@ This breaks down each tracklet into a (T, 11) dimensional matrix and we apply ma
 
 ## Unsupervised Learning
 
+[unsupervised clustering](https://github.com/kapoorlab/MTVKW/blob/main/07_unsupervised_clustering.py)
+
+[visualize clustering results](https://github.com/kapoorlab/MTVKW/blob/main/07_visualize_covaraince_matrices.ipynb)
+
 Having breaken down tracks into tracklets and tracklets into feature matrix of shape (K,T_k,11) 11 being the shape and dynamic features computed, T_k being the timepoints for tracklet number K. For each tracklet we compute the covariance matrix which converts the matric (T_k,11) to (11,11) matrix. For K tracks this gives us (K,11,11) dimensional matrix. To ascertain which features had the most variance we compute an averaged covaraince matrix of shape (11,11) as shown here  
 
 ![image](images/FeatureMatrixPlot_time_point_97.png)
@@ -126,5 +130,7 @@ After this we use linkage from scipy.cluster.hierarchy to perform clustering usi
 After this we use fcluster to extract clusters based on criteria 'maxclust' and it gives us the cluster labels for each tracklet K. We then create a dataframe object containing this information and save it as a csv file result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]], the track id here is the unique tracklet id. 
 
 ## Supervised Learning
+
+[supervised clustering](https://github.com/kapoorlab/MTVKW/blob/main/08_supervised_clustering.py)
 
 For supervised clustering we take the ground truth labels attached to the cells as labels for the tracks corresponding to those cells, the flattened covaraince matrix as explained in the previous step serves as the data for training and the ground truth labels as the labels for training either a K nearest neighbour algorithm or a random forest classifier. A trained model is returned by the function that can be used to predict the cell labels for unlabelled tracks. The model prediction returns a dataframe object result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]] and saves it as a csv file.

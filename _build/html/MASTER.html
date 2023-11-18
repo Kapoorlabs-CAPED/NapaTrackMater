@@ -470,8 +470,8 @@ Used in the Napari plugin for coloring the tracks and segmentation labels</p></l
 <p>These dictionaries ensure that we have full information of all the tracklets of a given TrackMate track ID. Then we construct the final data frame object that allows us to create the track matrices:</p>
 <p>shape_dynamic_vectors = [] = [array(tracklet_id, t, z, y, x, shape properties (extracted from unique_shape_properties), dynamic properties (extracted from unique_dynamic_properties))]</p>
 <p>Then we convert this to a pandas dataframe object and iterate over the tracklet_id to obtain for each tracklet ID the following Track Matrices:</p>
-<div class="amsmath math notranslate nohighlight" id="equation-adafe7de-b6e8-4fad-a9d7-8e68e5d6abd9">
-<span class="eqno">(1)<a class="headerlink" href="#equation-adafe7de-b6e8-4fad-a9d7-8e68e5d6abd9" title="Permalink to this equation">#</a></span>\[\begin{bmatrix}
+<div class="amsmath math notranslate nohighlight" id="equation-3b7215b7-e651-49fe-824c-55ac91d04349">
+<span class="eqno">(1)<a class="headerlink" href="#equation-3b7215b7-e651-49fe-824c-55ac91d04349" title="Permalink to this equation">#</a></span>\[\begin{bmatrix}
 \text{time 1} &amp; \text{time 2} &amp; \text{time 3} &amp; \cdots \\
 \text{shape features} &amp; \text{shape features} &amp; \text{shape features} &amp; \cdots \\
 \text{dynamic features} &amp; \text{dynamic features} &amp; \text{dynamic features} &amp; \cdots \\
@@ -483,6 +483,8 @@ Used in the Napari plugin for coloring the tracks and segmentation labels</p></l
 <h1>Machine Learning for cell fate quantification<a class="headerlink" href="#machine-learning-for-cell-fate-quantification" title="Permalink to this headline">#</a></h1>
 <section id="unsupervised-learning">
 <h2>Unsupervised Learning<a class="headerlink" href="#unsupervised-learning" title="Permalink to this headline">#</a></h2>
+<p><a class="reference external" href="https://github.com/kapoorlab/MTVKW/blob/main/07_unsupervised_clustering.py">unsupervised clustering</a></p>
+<p><a class="reference external" href="https://github.com/kapoorlab/MTVKW/blob/main/07_visualize_covaraince_matrices.ipynb">visualize clustering results</a></p>
 <p>Having breaken down tracks into tracklets and tracklets into feature matrix of shape (K,T_k,11) 11 being the shape and dynamic features computed, T_k being the timepoints for tracklet number K. For each tracklet we compute the covariance matrix which converts the matric (T_k,11) to (11,11) matrix. For K tracks this gives us (K,11,11) dimensional matrix. To ascertain which features had the most variance we compute an averaged covaraince matrix of shape (11,11) as shown here</p>
 <p><img alt="image" src="_images/FeatureMatrixPlot_time_point_97.png" /></p>
 <p>The plot is plotted in logscale and the diagonal elements show how much varaince is there in the tracks with respect to those features, for example in the plot above most of the variance is shown in surface area (brightest) and least by speed and acceleration (dimmest) showing that in the experiment the cells had varying surface areas but similar speed and acceleration. This also implies that while performing unsupervised clustering the features with the highest variance are the ones that matter the most. The non-diagonal elements show the relation of one feature vector with another.</p>
@@ -500,6 +502,7 @@ Used in the Napari plugin for coloring the tracks and segmentation labels</p></l
 </section>
 <section id="supervised-learning">
 <h2>Supervised Learning<a class="headerlink" href="#supervised-learning" title="Permalink to this headline">#</a></h2>
+<p><a class="reference external" href="https://github.com/kapoorlab/MTVKW/blob/main/08_supervised_clustering.py">supervised clustering</a></p>
 <p>For supervised clustering we take the ground truth labels attached to the cells as labels for the tracks corresponding to those cells, the flattened covaraince matrix as explained in the previous step serves as the data for training and the ground truth labels as the labels for training either a K nearest neighbour algorithm or a random forest classifier. A trained model is returned by the function that can be used to predict the cell labels for unlabelled tracks. The model prediction returns a dataframe object result_dataframe = full_dataframe[[“Track ID”, “t”, “z”, “y”, “x”, “Cluster”]] and saves it as a csv file.</p>
 </section>
 </section>
