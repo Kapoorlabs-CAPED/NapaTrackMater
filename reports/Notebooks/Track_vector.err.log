@@ -32,10 +32,10 @@ import matplotlib.pyplot as plt
 ------------------
 
 ----- stderr -----
-2023-11-18 13:45:32.341251: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+2023-11-18 14:08:24.729227: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
 To enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
 ----- stderr -----
-2023-11-18 13:45:33.534042: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+2023-11-18 14:08:25.358781: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
 ------------------
 
 [0;31m---------------------------------------------------------------------------[0m
