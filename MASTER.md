@@ -1,3 +1,15 @@
+<!-- MathJax configuration -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<!-- Your Markdown content -->
+
 # Converting tracks to Feature Matrices
 
 ## Structure of Master XML
@@ -71,10 +83,12 @@ shape_dynamic_vectors = [] = [array(tracklet_id, t, z, y, x, shape properties (e
 Then we conver this to a pandas dataframe object and iterate over the tracklet_id to obtain for each tracklet ID the following Track Matrices:
 
 
-\[ \begin{bmatrix}
-time 1 & time 2 & time 3 \\
-shape features & shape features & shape features \\
-dynamic features & dynamic features & dynamic features \\
-\end{bmatrix} \]
+\[
+\begin{bmatrix}
+\text{time 1} & \text{time 2} & \text{time 3} \\
+\text{shape features} & \text{shape features} & \text{shape features} \\
+\text{dynamic features} & \text{dynamic features} & \text{dynamic features} \\
+\end{bmatrix}
+\]
 
 This breaks down each tracklet into a (T, 11) dimensional matrix and we apply machine learning techniques on (K,T,11) dimensional tensor as explained in the following sections, K being the number of tracks.
