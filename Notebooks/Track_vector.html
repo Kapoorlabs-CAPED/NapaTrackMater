@@ -1,0 +1,800 @@
+
+
+<!DOCTYPE html>
+
+
+<html >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>&lt;no title&gt; &#8212; NapaTrackMater Blue Print</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../_static/sphinx-thebe.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'Notebooks/Track_vector';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../README.html">
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/kapoorlablogo.png" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="../_static/kapoorlablogo.png" class="logo__image only-dark" alt="Logo image"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../README.html">
+                    NapaTrackMater
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../MASTER.html">Converting tracks to Feature Matrices</a></li>
+
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/Kapoorlabs-CAPED/NapaTrackMater" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/Kapoorlabs-CAPED/NapaTrackMater/issues/new?title=Issue%20on%20page%20%2FNotebooks/Track_vector.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/Notebooks/Track_vector.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1><no title></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="simple visible nav section-nav flex-column">
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <p>In this notebook we read in the Master XML file made using NapaTrackMater and create N, Delta times Attribute dimensional vectors. N being the number of tracks present in the chosen region, R, Delta being the chosen time interval (t_minus + t_plus) {t - t_minus, t + t_plus} and Attributes being the morphological and the dynamic properties associated with cells in the tracks. We concatenate the Attribute componenets over the chosen time interval to create a Delta times Attribute dimensional vector and create a pandas dataframe with these vectors for further analysis.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">gui</span> qt5
+<span class="kn">from</span> <span class="nn">napatrackmater.Trackvector</span> <span class="kn">import</span> <span class="n">TrackVector</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">ipywidgets</span> <span class="kn">import</span> <span class="n">interactive</span><span class="p">,</span> <span class="n">widgets</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">display</span>
+<span class="kn">import</span> <span class="nn">napari</span> 
+<span class="kn">from</span> <span class="nn">tifffile</span> <span class="kn">import</span> <span class="n">imread</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial.distance</span> <span class="kn">import</span> <span class="n">pdist</span>
+<span class="kn">from</span> <span class="nn">scipy.cluster.hierarchy</span> <span class="kn">import</span> <span class="n">linkage</span><span class="p">,</span> <span class="n">fcluster</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-11-18 13:45:32.341251: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-11-18 13:45:33.534042: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+</pre></div>
+</div>
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">ModuleNotFoundError</span><span class="g g-Whitespace">                       </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">line</span> <span class="mi">2</span>
+<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="n">get_ipython</span><span class="p">()</span><span class="o">.</span><span class="n">run_line_magic</span><span class="p">(</span><span class="s1">&#39;gui&#39;</span><span class="p">,</span> <span class="s1">&#39;qt5&#39;</span><span class="p">)</span>
+<span class="ne">----&gt; </span><span class="mi">2</span> <span class="kn">from</span> <span class="nn">napatrackmater.Trackvector</span> <span class="kn">import</span> <span class="n">TrackVector</span>
+<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="g g-Whitespace">      </span><span class="mi">4</span> <span class="kn">from</span> <span class="nn">ipywidgets</span> <span class="kn">import</span> <span class="n">interactive</span><span class="p">,</span> <span class="n">widgets</span>
+
+<span class="n">File</span> <span class="o">~/</span><span class="n">anaconda3</span><span class="o">/</span><span class="n">envs</span><span class="o">/</span><span class="n">naparienv</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python3</span><span class="mf">.10</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">packages</span><span class="o">/</span><span class="n">napatrackmater</span><span class="o">/</span><span class="fm">__init__</span><span class="o">.</span><span class="n">py</span><span class="p">:</span><span class="mi">2</span>
+<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="kn">from</span> <span class="nn">.pretrained</span> <span class="kn">import</span> <span class="n">register_model</span><span class="p">,</span> <span class="n">register_aliases</span><span class="p">,</span> <span class="n">clear_models_and_aliases</span>
+<span class="ne">----&gt; </span><span class="mi">2</span> <span class="kn">from</span> <span class="nn">.clustering</span> <span class="kn">import</span> <span class="n">Clustering</span>
+<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="kn">from</span> <span class="nn">.DeepEmbeddedClustering</span> <span class="kn">import</span> <span class="n">DeepEmbeddedClustering</span>
+<span class="g g-Whitespace">      </span><span class="mi">4</span> <span class="kn">from</span> <span class="nn">.CloudAutoEncoder</span> <span class="kn">import</span> <span class="n">CloudAutoEncoder</span>
+
+<span class="n">File</span> <span class="o">~/</span><span class="n">anaconda3</span><span class="o">/</span><span class="n">envs</span><span class="o">/</span><span class="n">naparienv</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python3</span><span class="mf">.10</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">packages</span><span class="o">/</span><span class="n">napatrackmater</span><span class="o">/</span><span class="n">clustering</span><span class="o">.</span><span class="n">py</span><span class="p">:</span><span class="mi">1</span>
+<span class="ne">----&gt; </span><span class="mi">1</span> <span class="kn">from</span> <span class="nn">kapoorlabs_lightning.lightning_trainer</span> <span class="kn">import</span> <span class="n">AutoLightningModel</span>
+<span class="g g-Whitespace">      </span><span class="mi">2</span> <span class="kn">from</span> <span class="nn">cellshape_helper.vendor.pytorch_geometric_files</span> <span class="kn">import</span> <span class="n">read_off</span><span class="p">,</span> <span class="n">sample_points</span>
+<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="ne">ModuleNotFoundError</span>: No module named &#39;kapoorlabs_lightning&#39;
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">master_xml_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;C:/Users/rando/Downloads/Mari_project/master_test_tracks.xml&#39;</span><span class="p">)</span>
+<span class="n">spot_csv_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;C:/Users/rando/Downloads/Mari_project/test_spots.csv&#39;</span><span class="p">)</span>
+<span class="n">track_csv_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;C:/Users/rando/Downloads/Mari_project/test_tracks.csv&#39;</span><span class="p">)</span>
+<span class="n">edges_csv_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;C:/Users/rando/Downloads/Mari_project/test_edges.csv&#39;</span><span class="p">)</span>
+<span class="n">show_tracks</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">base_dir</span> <span class="o">=</span> <span class="s1">&#39;C:/Users/rando/Downloads/Mari_project/&#39;</span>
+<span class="n">plot_data_save_name</span> <span class="o">=</span> <span class="s1">&#39;test_plot_data.csv&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">show_tracks</span><span class="p">:</span>
+  <span class="n">viewer</span> <span class="o">=</span> <span class="n">napari</span><span class="o">.</span><span class="n">Viewer</span><span class="p">()</span>
+  <span class="n">image</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="s1">&#39;C:/Users/rando/Downloads/Mari_project/gt/rawk.tif&#39;</span><span class="p">)</span>
+
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">viewer</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">track_vectors</span> <span class="o">=</span> <span class="n">TrackVector</span><span class="p">(</span><span class="n">viewer</span><span class="p">,</span><span class="n">image</span><span class="p">,</span><span class="n">master_xml_path</span><span class="p">,</span><span class="n">spot_csv_path</span><span class="p">,</span> <span class="n">track_csv_path</span><span class="p">,</span> <span class="n">edges_csv_path</span><span class="p">,</span> <span class="n">show_tracks</span> <span class="o">=</span> <span class="n">show_tracks</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">track_setter</span><span class="p">(</span><span class="n">deltat</span><span class="p">,</span> <span class="n">deltax</span><span class="p">,</span> <span class="n">deltay</span><span class="p">):</span>
+    <span class="n">track_vectors</span><span class="o">.</span><span class="n">t_minus</span> <span class="o">=</span> <span class="n">deltat</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">track_vectors</span><span class="o">.</span><span class="n">t_plus</span> <span class="o">=</span> <span class="n">deltat</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="n">track_vectors</span><span class="o">.</span><span class="n">x_start</span> <span class="o">=</span> <span class="n">deltax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">track_vectors</span><span class="o">.</span><span class="n">x_end</span> <span class="o">=</span> <span class="n">deltax</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="n">track_vectors</span><span class="o">.</span><span class="n">y_start</span> <span class="o">=</span> <span class="n">deltay</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">track_vectors</span><span class="o">.</span><span class="n">y_end</span> <span class="o">=</span> <span class="n">deltay</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">plot_vectors</span><span class="p">(</span><span class="n">vector_dicts</span><span class="p">,</span> <span class="n">cluster_labels</span><span class="p">,</span> <span class="n">base_dir</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Number of clusters: </span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">cluster_labels</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">t_min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">vector</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">vector_dicts</span><span class="p">)</span>
+    <span class="n">t_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">vector</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">vector_dicts</span><span class="p">)</span>
+    <span class="n">y_min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">vector</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">vector_dicts</span><span class="p">)</span>
+    <span class="n">y_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">vector</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">vector_dicts</span><span class="p">)</span>
+    <span class="n">x_min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">vector</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">vector_dicts</span><span class="p">)</span>
+    <span class="n">x_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">vector</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">vector_dicts</span><span class="p">)</span>
+
+    <span class="n">t_step</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">y_step</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">x_step</span> <span class="o">=</span> <span class="mi">10</span>
+
+    <span class="n">t_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">t_min</span><span class="p">,</span> <span class="n">t_max</span> <span class="o">+</span> <span class="n">t_step</span><span class="p">,</span> <span class="n">t_step</span><span class="p">)</span>
+    <span class="n">y_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">+</span> <span class="n">y_step</span><span class="p">,</span> <span class="n">y_step</span><span class="p">)</span>
+    <span class="n">x_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span> <span class="o">+</span> <span class="n">x_step</span><span class="p">,</span> <span class="n">x_step</span><span class="p">)</span>
+
+    <span class="n">cluster_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">t_grid</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_grid</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_grid</span><span class="p">)))</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">vector</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vector_dicts</span><span class="p">):</span>
+        <span class="n">t_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">vector</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">t_min</span><span class="p">)</span> <span class="o">/</span> <span class="n">t_step</span><span class="p">)</span>
+        <span class="n">y_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">vector</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">y_min</span><span class="p">)</span> <span class="o">/</span> <span class="n">y_step</span><span class="p">)</span>
+        <span class="n">x_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">vector</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_min</span><span class="p">)</span> <span class="o">/</span> <span class="n">x_step</span><span class="p">)</span>
+        <span class="n">cluster_label</span> <span class="o">=</span> <span class="n">cluster_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  
+        <span class="n">cluster_grid</span><span class="p">[</span><span class="n">t_index</span><span class="p">,</span> <span class="n">y_index</span><span class="p">,</span> <span class="n">x_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_label</span>
+
+    <span class="c1"># Create a colormap for clusters (use &#39;jet&#39; colormap)</span>
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;jet&#39;</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">cluster_labels</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># Adding 1 for potential 0-based labels</span>
+
+    <span class="c1"># Create a 3D figure and axes</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Define a list of unique cluster labels</span>
+    <span class="n">unique_clusters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">cluster_labels</span><span class="p">)</span>
+
+    <span class="n">markers</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;^&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;P&#39;</span><span class="p">]</span>  <span class="c1"># Customize marker styles as needed</span>
+
+    <span class="k">for</span> <span class="n">cluster_label</span> <span class="ow">in</span> <span class="n">unique_clusters</span><span class="p">:</span>
+        <span class="c1"># Find indices of vectors in the current cluster</span>
+        <span class="n">cluster_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cluster_labels</span> <span class="o">==</span> <span class="n">cluster_label</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">t_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">vector_dicts</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;t&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">cluster_indices</span><span class="p">]</span>
+        <span class="n">y_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">vector_dicts</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">cluster_indices</span><span class="p">]</span>
+        <span class="n">x_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">vector_dicts</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">cluster_indices</span><span class="p">]</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">(</span><span class="n">cluster_label</span><span class="p">)</span>  <span class="c1"># Use cluster_label as color index</span>
+        <span class="n">marker</span> <span class="o">=</span> <span class="n">markers</span><span class="p">[</span><span class="n">cluster_label</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">markers</span><span class="p">)]</span>  <span class="c1"># Cycle through markers</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">t_values</span><span class="p">,</span> <span class="n">y_values</span><span class="p">,</span> <span class="n">x_values</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Cluster </span><span class="si">{</span><span class="n">cluster_label</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="n">marker</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Time (t)&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Y Coordinate&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;X Coordinate&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>  <span class="c1"># Add legend</span>
+
+    <span class="c1"># Customize plot title, labels, aspect ratio, etc. as needed</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">t_values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">y_values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">x_values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cluster_label_values</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">vector</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vector_dicts</span><span class="p">):</span>
+        <span class="n">t_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vector</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">])</span>
+        <span class="n">y_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vector</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">])</span>
+        <span class="n">x_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vector</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span>
+        <span class="n">cluster_label_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cluster_labels</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    
+    <span class="n">plot_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+        <span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="n">t_values</span><span class="p">,</span>
+        <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">y_values</span><span class="p">,</span>
+        <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">x_values</span><span class="p">,</span>
+        <span class="s1">&#39;cluster_label&#39;</span><span class="p">:</span> <span class="n">cluster_label_values</span>
+    <span class="p">})</span>
+    <span class="n">csv_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">plot_data_save_name</span> <span class="o">+</span> <span class="s1">&#39;_clusters.csv&#39;</span><span class="p">)</span>
+    <span class="n">plot_data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">csv_file_path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    
+
+<span class="k">def</span> <span class="nf">recreate_plot_from_csv</span><span class="p">(</span><span class="n">csv_path</span><span class="p">):</span>
+    <span class="c1"># Load the CSV file containing the plot data</span>
+    <span class="n">plot_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">csv_path</span><span class="p">)</span>
+
+    <span class="c1"># Extract data from the CSV</span>
+    <span class="n">t_values</span> <span class="o">=</span> <span class="n">plot_data</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span>
+    <span class="n">y_values</span> <span class="o">=</span> <span class="n">plot_data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+    <span class="n">x_values</span> <span class="o">=</span> <span class="n">plot_data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+    <span class="n">cluster_labels</span> <span class="o">=</span> <span class="n">plot_data</span><span class="p">[</span><span class="s1">&#39;cluster_label&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Create the 3D plot using the loaded data</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+
+    <span class="n">unique_clusters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">cluster_labels</span><span class="p">)</span>
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;tab20&#39;</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">cluster_labels</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">cluster_label</span> <span class="ow">in</span> <span class="n">unique_clusters</span><span class="p">:</span>
+        <span class="n">cluster_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cluster_labels</span> <span class="o">==</span> <span class="n">cluster_label</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">t_cluster</span> <span class="o">=</span> <span class="p">[</span><span class="n">t_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">cluster_indices</span><span class="p">]</span>
+        <span class="n">y_cluster</span> <span class="o">=</span> <span class="p">[</span><span class="n">y_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">cluster_indices</span><span class="p">]</span>
+        <span class="n">x_cluster</span> <span class="o">=</span> <span class="p">[</span><span class="n">x_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">cluster_indices</span><span class="p">]</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">(</span><span class="n">cluster_label</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">t_cluster</span><span class="p">,</span> <span class="n">y_cluster</span><span class="p">,</span> <span class="n">x_cluster</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Cluster </span><span class="si">{</span><span class="n">cluster_label</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Time (t)&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Y Coordinate&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;X Coordinate&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">cosine_similarity_without_tzyx</span><span class="p">(</span><span class="n">vector1</span><span class="p">,</span> <span class="n">vector2</span><span class="p">):</span>
+    <span class="n">vector1</span> <span class="o">=</span> <span class="n">vector1</span><span class="p">[</span><span class="mi">6</span><span class="p">:]</span>
+    <span class="n">vector2</span> <span class="o">=</span> <span class="n">vector2</span><span class="p">[</span><span class="mi">6</span><span class="p">:]</span>
+
+    <span class="n">dot_product</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">vector1</span><span class="p">,</span> <span class="n">vector2</span><span class="p">)</span>
+    <span class="n">norm_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">vector1</span><span class="p">)</span>
+    <span class="n">norm_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">vector2</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">norm_a</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">norm_b</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>  
+    
+    <span class="k">return</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">dot_product</span> <span class="o">/</span> <span class="p">(</span><span class="n">norm_a</span> <span class="o">*</span> <span class="n">norm_b</span><span class="p">)</span>      
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">track_vector_widgets</span> <span class="o">=</span> <span class="n">interactive</span><span class="p">(</span><span class="n">track_setter</span><span class="p">,</span> <span class="n">deltat</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">IntRangeSlider</span><span class="p">(</span>
+    <span class="n">value</span><span class="o">=</span><span class="p">[</span><span class="n">track_vectors</span><span class="o">.</span><span class="n">tstart</span><span class="p">,</span> <span class="n">track_vectors</span><span class="o">.</span><span class="n">tend</span><span class="p">],</span>
+    <span class="nb">min</span><span class="o">=</span> <span class="n">track_vectors</span><span class="o">.</span><span class="n">tstart</span><span class="p">,</span>
+    <span class="nb">max</span><span class="o">=</span><span class="n">track_vectors</span><span class="o">.</span><span class="n">tend</span><span class="p">,</span>
+    <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Delta Time&#39;</span><span class="p">,</span>
+    <span class="n">disabled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">continuous_update</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">,</span>
+    <span class="n">readout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">readout_format</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">,</span>
+<span class="p">),</span> 
+    <span class="n">deltax</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">IntRangeSlider</span><span class="p">(</span>
+    <span class="n">value</span><span class="o">=</span><span class="p">[</span><span class="n">track_vectors</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="n">track_vectors</span><span class="o">.</span><span class="n">xmax</span><span class="p">],</span>
+    <span class="nb">min</span><span class="o">=</span> <span class="n">track_vectors</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span>
+    <span class="nb">max</span><span class="o">=</span><span class="n">track_vectors</span><span class="o">.</span><span class="n">xmax</span><span class="p">,</span>
+    <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Delta X&#39;</span><span class="p">,</span>
+    <span class="n">disabled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">continuous_update</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">,</span>
+    <span class="n">readout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">readout_format</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">,</span>
+<span class="p">),</span> 
+    <span class="n">deltay</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">IntRangeSlider</span><span class="p">(</span>
+    <span class="n">value</span><span class="o">=</span><span class="p">[</span><span class="n">track_vectors</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="n">track_vectors</span><span class="o">.</span><span class="n">ymax</span><span class="p">],</span>
+    <span class="nb">min</span><span class="o">=</span> <span class="n">track_vectors</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span>
+    <span class="nb">max</span><span class="o">=</span><span class="n">track_vectors</span><span class="o">.</span><span class="n">ymax</span><span class="p">,</span>
+    <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Delta Y&#39;</span><span class="p">,</span>
+    <span class="n">disabled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">continuous_update</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">,</span>
+    <span class="n">readout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">readout_format</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">,</span>
+<span class="p">),</span>                               
+                                  
+                                  <span class="p">)</span>
+
+<span class="n">track_vector_widgets</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">track_vectors</span><span class="o">.</span><span class="n">_interactive_function</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">current_shape_dynamic_vectors</span> <span class="o">=</span> <span class="n">track_vectors</span><span class="o">.</span><span class="n">current_shape_dynamic_vectors</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">global_shape_dynamic_dataframe</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">current_shape_dynamic_vectors</span><span class="p">)):</span>
+   
+   <span class="n">vector_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">current_shape_dynamic_vectors</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+   <span class="n">data_frame_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">vector_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vector_list</span><span class="p">))])[:,</span><span class="mi">0</span><span class="p">,:])</span> 
+   
+   <span class="n">shape_dynamic_dataframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data_frame_list</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;Track ID&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;Dividing&#39;</span><span class="p">,</span> <span class="s1">&#39;Number_Dividing&#39;</span><span class="p">,</span>  <span class="s1">&#39;Radius&#39;</span><span class="p">,</span> <span class="s1">&#39;Volume&#39;</span><span class="p">,</span> <span class="s1">&#39;Eccentricity Comp First&#39;</span><span class="p">,</span> <span class="s1">&#39;Eccentricity Comp Second&#39;</span><span class="p">,</span> <span class="s1">&#39;Surface Area&#39;</span><span class="p">,</span> <span class="s1">&#39;Speed&#39;</span><span class="p">,</span> <span class="s1">&#39;Motion_Angle&#39;</span><span class="p">,</span> <span class="s1">&#39;Acceleration&#39;</span><span class="p">,</span> <span class="s1">&#39;Distance_Cell_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;Radial_Angle&#39;</span><span class="p">,</span> <span class="s1">&#39;Cell_Axis_Mask&#39;</span><span class="p">])</span>
+   <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">global_shape_dynamic_dataframe</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">global_shape_dynamic_dataframe</span> <span class="o">=</span> <span class="n">shape_dynamic_dataframe</span>
+   <span class="k">else</span><span class="p">:</span>
+        <span class="n">global_shape_dynamic_dataframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">global_shape_dynamic_dataframe</span><span class="p">,</span> <span class="n">shape_dynamic_dataframe</span><span class="p">],</span><span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">global_shape_dynamic_dataframe</span> <span class="o">=</span> <span class="n">global_shape_dynamic_dataframe</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;Track ID&#39;</span><span class="p">)</span>
+<span class="n">global_shape_dynamic_dataframe</span> <span class="o">=</span> <span class="n">global_shape_dynamic_dataframe</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Track ID&#39;</span><span class="p">])</span>
+<span class="n">global_shape_dynamic_dataframe</span> <span class="o">=</span> <span class="n">global_shape_dynamic_dataframe</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">analysis_vectors</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="n">unique_track_ids</span> <span class="o">=</span> <span class="n">global_shape_dynamic_dataframe</span><span class="p">[</span><span class="s1">&#39;Track ID&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">track_id</span> <span class="ow">in</span> <span class="n">unique_track_ids</span><span class="p">:</span>
+    <span class="n">track_data</span> <span class="o">=</span> <span class="n">global_shape_dynamic_dataframe</span><span class="p">[</span><span class="n">global_shape_dynamic_dataframe</span><span class="p">[</span><span class="s1">&#39;Track ID&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">track_id</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;t&#39;</span><span class="p">)</span>
+    
+    <span class="n">track_vector</span> <span class="o">=</span> <span class="n">track_data</span><span class="p">[[</span><span class="s1">&#39;t&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;Dividing&#39;</span><span class="p">,</span> <span class="s1">&#39;Number_Dividing&#39;</span><span class="p">,</span> <span class="s1">&#39;Radius&#39;</span><span class="p">,</span> <span class="s1">&#39;Volume&#39;</span><span class="p">,</span> <span class="s1">&#39;Eccentricity Comp First&#39;</span><span class="p">,</span> <span class="s1">&#39;Eccentricity Comp Second&#39;</span><span class="p">,</span> <span class="s1">&#39;Surface Area&#39;</span><span class="p">,</span> <span class="s1">&#39;Speed&#39;</span><span class="p">,</span> <span class="s1">&#39;Motion_Angle&#39;</span><span class="p">,</span> <span class="s1">&#39;Acceleration&#39;</span><span class="p">,</span> <span class="s1">&#39;Distance_Cell_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;Radial_Angle&#39;</span><span class="p">,</span> <span class="s1">&#39;Cell_Axis_Mask&#39;</span><span class="p">]]</span>
+    
+    <span class="n">track_vector_list</span> <span class="o">=</span> <span class="n">track_vector</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s1">&#39;records&#39;</span><span class="p">)</span>
+    
+    <span class="n">analysis_vectors</span><span class="p">[</span><span class="n">track_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">track_vector_list</span>
+
+<span class="n">vector_dicts</span> <span class="o">=</span> <span class="p">[</span><span class="n">analysis_vectors</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">analysis_vectors</span><span class="p">]</span>
+<span class="n">vector_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="n">vector</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">vector_dicts</span><span class="p">])</span>
+
+<span class="n">cosine_distance</span> <span class="o">=</span> <span class="n">pdist</span><span class="p">(</span><span class="n">vector_array</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">cosine_similarity_without_tzyx</span><span class="p">)</span>
+
+<span class="n">linkage_matrix</span> <span class="o">=</span> <span class="n">linkage</span><span class="p">(</span><span class="n">cosine_distance</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;average&#39;</span><span class="p">)</span>
+
+<span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.02</span>  
+
+<span class="n">cluster_labels</span> <span class="o">=</span> <span class="n">fcluster</span><span class="p">(</span><span class="n">linkage_matrix</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;distance&#39;</span><span class="p">)</span>
+    
+<span class="n">plot_vectors</span><span class="p">(</span><span class="n">vector_dicts</span><span class="p">,</span> <span class="n">cluster_labels</span><span class="p">,</span> <span class="n">base_dir</span><span class="p">)</span>  
+</pre></div>
+</div>
+</div>
+</div>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./Notebooks"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="simple visible nav section-nav flex-column">
+</ul>
+
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Varun Kapoor
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
