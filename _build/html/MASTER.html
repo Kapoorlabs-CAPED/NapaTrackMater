@@ -158,6 +158,7 @@ const thebe_selector_output = ".output, .cell_output"
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Converting tracks to Feature Matrices</a></li>
 
+
 </ul>
 
     </div>
@@ -364,6 +365,11 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tracklet-dictionaries">Tracklet Dictionaries</a></li>
 </ul>
 </li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#machine-learning-for-cell-fate-quantification">Machine Learning for cell fate quantification</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unsupervised-learning">Unsupervised Learning</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supervised-learning">Supervised Learning</a></li>
+</ul>
+</li>
 </ul>
 
             </nav>
@@ -464,13 +470,36 @@ Used in the Napari plugin for coloring the tracks and segmentation labels</p></l
 <p>These dictionaries ensure that we have full information of all the tracklets of a given TrackMate track ID. Then we construct the final data frame object that allows us to create the track matrices:</p>
 <p>shape_dynamic_vectors = [] = [array(tracklet_id, t, z, y, x, shape properties (extracted from unique_shape_properties), dynamic properties (extracted from unique_dynamic_properties))]</p>
 <p>Then we convert this to a pandas dataframe object and iterate over the tracklet_id to obtain for each tracklet ID the following Track Matrices:</p>
-<div class="amsmath math notranslate nohighlight" id="equation-1601205c-83c2-435d-99c2-be71def1b984">
-<span class="eqno">(1)<a class="headerlink" href="#equation-1601205c-83c2-435d-99c2-be71def1b984" title="Permalink to this equation">#</a></span>\[\begin{bmatrix}
+<div class="amsmath math notranslate nohighlight" id="equation-759d8c13-11c5-40b4-b2d9-040aaf2a2fc6">
+<span class="eqno">(1)<a class="headerlink" href="#equation-759d8c13-11c5-40b4-b2d9-040aaf2a2fc6" title="Permalink to this equation">#</a></span>\[\begin{bmatrix}
 \text{time 1} &amp; \text{time 2} &amp; \text{time 3} &amp; \cdots \\
 \text{shape features} &amp; \text{shape features} &amp; \text{shape features} &amp; \cdots \\
 \text{dynamic features} &amp; \text{dynamic features} &amp; \text{dynamic features} &amp; \cdots \\
 \end{bmatrix}\]</div>
-<p>This breaks down each tracklet into a (T, 11) dimensional matrix and we apply machine learning techniques on (K,T,11) dimensional tensor as explained in the following sections, K being the number of tracks.</p>
+<p>This breaks down each tracklet into a (T, 11) dimensional matrix and we apply machine learning techniques on (K,T_k,11) dimensional tensor as explained in the following sections, K being the number of tracks.</p>
+</section>
+</section>
+<section id="machine-learning-for-cell-fate-quantification">
+<h1>Machine Learning for cell fate quantification<a class="headerlink" href="#machine-learning-for-cell-fate-quantification" title="Permalink to this headline">#</a></h1>
+<section id="unsupervised-learning">
+<h2>Unsupervised Learning<a class="headerlink" href="#unsupervised-learning" title="Permalink to this headline">#</a></h2>
+<p>Having breaken down tracks into tracklets and tracklets into feature matrix of shape (K,T_k,11) 11 being the shape and dynamic features computed, T_k being the timepoints for tracklet number K. For each tracklet we compute the covariance matrix which converts the matric (T_k,11) to (11,11) matrix. For K tracks this gives us (K,11,11) dimensional matrix. To ascertain which features had the most variance we compute an averaged covaraince matrix of shape (11,11) as shown here</p>
+<p><img alt="image" src="_images/FeatureMatrixPlot_time_point_97.png" /></p>
+<p>We also divide the XY space into quadrants and then compute the cluster labels belonging to each class, the notebook comes with an interactive time slider that can be changed to update this plot. For example for time point 97 we have this plot of the distribution of cluster labels across the quadrants. This plot can be used to judge if there is a spatial and temporal symmetry in the experiment hence showing influence of any external or internal forces during the course of the experiment.</p>
+<p><img alt="image" src="_images/QuadrantDistributionPlot_time_point_97.png" /></p>
+<p>Another plot we create shows cluster nearnees that shows a cumulative score of how far different clusters are from each other. This plot can be used to judge if certain cell type prefer to be around each other during the early, mid or later stages of development.</p>
+<p><img alt="image" src="_images/ClusterNearnessPlot_time_point_97.png" /></p>
+<p>We also have a plot that shows the spatial distribution of cluster points.</p>
+<p><img alt="image" src="_images/ClusterPlot_time_point_97.png" /></p>
+<p>to get an idea of how cells are distributed in clusters we also create a histogram plot.</p>
+<p><img alt="image" src="ClusterDistributionPlot_time_point_97.png" /></p>
+<p>For performing unsupervised clustering the (K,11,11) matrix is flattened to be of the shape (K, 121), we then use pdist from from scipy.spatial.distance. This method computes the pairwise distance between the observations in (K,121) matrix and by default uses cosine similarity as a the metric to do so. It returns a lower triangular pairwaise distance matrix.</p>
+<p>After this we use linkage from scipy.cluster.hierarchy to perform clustering using ‘ward’ method by default. It takes the pairwise distance matrix of the previous step and merges similar data points into clusters.</p>
+<p>After this we use fcluster to extract clusters based on criteria ‘maxclust’ and it gives us the cluster labels for each tracklet K. We then create a dataframe object containing this information and save it as a csv file result_dataframe = full_dataframe[[“Track ID”, “t”, “z”, “y”, “x”, “Cluster”]], the track id here is the unique tracklet id.</p>
+</section>
+<section id="supervised-learning">
+<h2>Supervised Learning<a class="headerlink" href="#supervised-learning" title="Permalink to this headline">#</a></h2>
+<p>For supervised clustering we take the ground truth labels attached to the cells as labels for the tracks corresponding to those cells, the flattened covaraince matrix as explained in the previous step serves as the data for training and the ground truth labels as the labels for training either a K nearest neighbour algorithm or a random forest classifier. A trained model is returned by the function that can be used to predict the cell labels for unlabelled tracks. The model prediction returns a dataframe object result_dataframe = full_dataframe[[“Track ID”, “t”, “z”, “y”, “x”, “Cluster”]] and saves it as a csv file.</p>
 </section>
 </section>
 
@@ -543,6 +572,11 @@ Used in the Napari plugin for coloring the tracks and segmentation labels</p></l
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unique-tracks">Unique Tracks</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unique-track-properties">Unique Track Properties</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tracklet-dictionaries">Tracklet Dictionaries</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#machine-learning-for-cell-fate-quantification">Machine Learning for cell fate quantification</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unsupervised-learning">Unsupervised Learning</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supervised-learning">Supervised Learning</a></li>
 </ul>
 </li>
 </ul>

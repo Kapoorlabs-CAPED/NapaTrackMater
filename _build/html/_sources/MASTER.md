@@ -91,4 +91,38 @@ Then we convert this to a pandas dataframe object and iterate over the tracklet_
 \end{bmatrix}
 
 
-This breaks down each tracklet into a (T, 11) dimensional matrix and we apply machine learning techniques on (K,T,11) dimensional tensor as explained in the following sections, K being the number of tracks.
+This breaks down each tracklet into a (T, 11) dimensional matrix and we apply machine learning techniques on (K,T_k,11) dimensional tensor as explained in the following sections, K being the number of tracks.
+
+# Machine Learning for cell fate quantification
+
+## Unsupervised Learning
+
+Having breaken down tracks into tracklets and tracklets into feature matrix of shape (K,T_k,11) 11 being the shape and dynamic features computed, T_k being the timepoints for tracklet number K. For each tracklet we compute the covariance matrix which converts the matric (T_k,11) to (11,11) matrix. For K tracks this gives us (K,11,11) dimensional matrix. To ascertain which features had the most variance we compute an averaged covaraince matrix of shape (11,11) as shown here  
+
+![image](images/FeatureMatrixPlot_time_point_97.png)
+
+We also divide the XY space into quadrants and then compute the cluster labels belonging to each class, the notebook comes with an interactive time slider that can be changed to update this plot. For example for time point 97 we have this plot of the distribution of cluster labels across the quadrants. This plot can be used to judge if there is a spatial and temporal symmetry in the experiment hence showing influence of any external or internal forces during the course of the experiment. 
+
+![image](images/QuadrantDistributionPlot_time_point_97.png)
+
+Another plot we create shows cluster nearnees that shows a cumulative score of how far different clusters are from each other. This plot can be used to judge if certain cell type prefer to be around each other during the early, mid or later stages of development. 
+
+![image](images/ClusterNearnessPlot_time_point_97.png)
+
+We also have a plot that shows the spatial distribution of cluster points.
+
+![image](images/ClusterPlot_time_point_97.png)
+
+to get an idea of how cells are distributed in clusters we also create a histogram plot. 
+
+![image](ClusterDistributionPlot_time_point_97.png)
+
+For performing unsupervised clustering the (K,11,11) matrix is flattened to be of the shape (K, 121), we then use pdist from from scipy.spatial.distance. This method computes the pairwise distance between the observations in (K,121) matrix and by default uses cosine similarity as a the metric to do so. It returns a lower triangular pairwaise distance matrix. 
+
+After this we use linkage from scipy.cluster.hierarchy to perform clustering using 'ward' method by default. It takes the pairwise distance matrix of the previous step and merges similar data points into clusters. 
+
+After this we use fcluster to extract clusters based on criteria 'maxclust' and it gives us the cluster labels for each tracklet K. We then create a dataframe object containing this information and save it as a csv file result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]], the track id here is the unique tracklet id. 
+
+## Supervised Learning
+
+For supervised clustering we take the ground truth labels attached to the cells as labels for the tracks corresponding to those cells, the flattened covaraince matrix as explained in the previous step serves as the data for training and the ground truth labels as the labels for training either a K nearest neighbour algorithm or a random forest classifier. A trained model is returned by the function that can be used to predict the cell labels for unlabelled tracks. The model prediction returns a dataframe object result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]] and saves it as a csv file.
