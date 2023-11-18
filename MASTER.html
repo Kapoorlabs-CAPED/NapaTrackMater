@@ -453,24 +453,11 @@ Used in the Napari plugin for coloring the tracks and segmentation labels</p></l
 <p>These dictionaries ensure that we have full information of all the tracklets of a given TrackMate track ID. Then we construct the final data frame object that allows us to create the track matrices:</p>
 <p>shape_dynamic_vectors = [] = [array(tracklet_id, t, z, y, x, shape properties (extracted from unique_shape_properties), dynamic properties (extracted from unique_dynamic_properties))]</p>
 <p>Then we conver this to a pandas dataframe object and iterate over the tracklet_id to obtain for each tracklet ID the following Track Matrices:</p>
-<table class="colwidths-auto table">
-<thead>
-<tr class="row-odd"><th class="head"><p>time 1</p></th>
-<th class="head"><p>time 2</p></th>
-<th class="head"><p>time N</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>shape features</p></td>
-<td><p>shape features</p></td>
-<td><p>shape features</p></td>
-</tr>
-<tr class="row-odd"><td><p>dynamic features</p></td>
-<td><p>dynamic features</p></td>
-<td><p>dynamic features</p></td>
-</tr>
-</tbody>
-</table>
+<p>[ \begin{bmatrix}
+time 1 &amp; time 2 &amp; time 3 \
+shape features &amp; shape features &amp; shape features \
+dynamic features &amp; dynamic features &amp; dynamic features \
+\end{bmatrix} ]</p>
 <p>This breaks down each tracklet into a (T, 11) dimensional matrix and we apply machine learning techniques on (K,T,11) dimensional tensor as explained in the following sections, K being the number of tracks.</p>
 </section>
 </section>
