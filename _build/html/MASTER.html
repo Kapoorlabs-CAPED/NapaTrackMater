@@ -470,8 +470,8 @@ Used in the Napari plugin for coloring the tracks and segmentation labels</p></l
 <p>These dictionaries ensure that we have full information of all the tracklets of a given TrackMate track ID. Then we construct the final data frame object that allows us to create the track matrices:</p>
 <p>shape_dynamic_vectors = [] = [array(tracklet_id, t, z, y, x, shape properties (extracted from unique_shape_properties), dynamic properties (extracted from unique_dynamic_properties))]</p>
 <p>Then we convert this to a pandas dataframe object and iterate over the tracklet_id to obtain for each tracklet ID the following Track Matrices:</p>
-<div class="amsmath math notranslate nohighlight" id="equation-759d8c13-11c5-40b4-b2d9-040aaf2a2fc6">
-<span class="eqno">(1)<a class="headerlink" href="#equation-759d8c13-11c5-40b4-b2d9-040aaf2a2fc6" title="Permalink to this equation">#</a></span>\[\begin{bmatrix}
+<div class="amsmath math notranslate nohighlight" id="equation-e3701393-b1f7-454a-8eb2-9eff9092a446">
+<span class="eqno">(1)<a class="headerlink" href="#equation-e3701393-b1f7-454a-8eb2-9eff9092a446" title="Permalink to this equation">#</a></span>\[\begin{bmatrix}
 \text{time 1} &amp; \text{time 2} &amp; \text{time 3} &amp; \cdots \\
 \text{shape features} &amp; \text{shape features} &amp; \text{shape features} &amp; \cdots \\
 \text{dynamic features} &amp; \text{dynamic features} &amp; \text{dynamic features} &amp; \cdots \\
@@ -492,7 +492,7 @@ Used in the Napari plugin for coloring the tracks and segmentation labels</p></l
 <p>We also have a plot that shows the spatial distribution of cluster points.</p>
 <p><img alt="image" src="_images/ClusterPlot_time_point_97.png" /></p>
 <p>to get an idea of how cells are distributed in clusters we also create a histogram plot.</p>
-<p><img alt="image" src="ClusterDistributionPlot_time_point_97.png" /></p>
+<p><img alt="image" src="_images/ClusterDistributionPlot_time_point_97.png" /></p>
 <p>For performing unsupervised clustering the (K,11,11) matrix is flattened to be of the shape (K, 121), we then use pdist from from scipy.spatial.distance. This method computes the pairwise distance between the observations in (K,121) matrix and by default uses cosine similarity as a the metric to do so. It returns a lower triangular pairwaise distance matrix.</p>
 <p>After this we use linkage from scipy.cluster.hierarchy to perform clustering using ‘ward’ method by default. It takes the pairwise distance matrix of the previous step and merges similar data points into clusters.</p>
 <p>After this we use fcluster to extract clusters based on criteria ‘maxclust’ and it gives us the cluster labels for each tracklet K. We then create a dataframe object containing this information and save it as a csv file result_dataframe = full_dataframe[[“Track ID”, “t”, “z”, “y”, “x”, “Cluster”]], the track id here is the unique tracklet id.</p>

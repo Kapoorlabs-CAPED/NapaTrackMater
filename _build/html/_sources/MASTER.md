@@ -115,7 +115,7 @@ We also have a plot that shows the spatial distribution of cluster points.
 
 to get an idea of how cells are distributed in clusters we also create a histogram plot. 
 
-![image](ClusterDistributionPlot_time_point_97.png)
+![image](images/ClusterDistributionPlot_time_point_97.png)
 
 For performing unsupervised clustering the (K,11,11) matrix is flattened to be of the shape (K, 121), we then use pdist from from scipy.spatial.distance. This method computes the pairwise distance between the observations in (K,121) matrix and by default uses cosine similarity as a the metric to do so. It returns a lower triangular pairwaise distance matrix. 
 
