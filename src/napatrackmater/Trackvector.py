@@ -556,18 +556,14 @@ def create_mitosis_training_data(shape_dynamic_track_arrays, shape_track_arrays,
     training_data_shape = []
     training_data_dynamic = []
 
-    sequence_length = shape_dynamic_track_arrays.shape[1]
 
-    for idx in range(sequence_length):
-        for i, (shape_dynamic_record, shape_record, dynamic_record) in enumerate(
-            zip(shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays)
-        ):
+    for idx in range(len(full_records)):
             label_dividing = full_records[idx]["Dividing"]
             label_number_dividing = full_records[idx]["Number_Dividing"]
 
-            features_shape_dynamic = shape_dynamic_record[idx].tolist()
-            features_shape = shape_record[idx].tolist()
-            features_dynamic = dynamic_record[idx].tolist()
+            features_shape_dynamic = shape_dynamic_track_arrays[idx,:].tolist()
+            features_shape = shape_track_arrays[idx,:].tolist()
+            features_dynamic = dynamic_track_arrays[idx,:].tolist()
 
             # Appending to respective training datasets
             training_data_shape_dynamic.append((
