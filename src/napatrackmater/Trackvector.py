@@ -916,7 +916,7 @@ def calculate_wcss(data, labels, centroids):
 def calculate_cluster_centroids(data, labels):
     unique_labels = np.unique(labels)
     centroids = []
-    for label in unique_labels:
+    for label in range(1, len(unique_labels) + 1): 
         cluster_data = data[labels == label]
         centroid = np.mean(cluster_data, axis=0)
         centroids.append(centroid)
