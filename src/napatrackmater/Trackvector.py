@@ -911,18 +911,20 @@ def calculate_wcss(data, labels, centroids):
     wcss = 0
     for i in range(len(data)):
         cluster_label = labels[i]
-        centroid = centroids[cluster_label]
-        distance = np.linalg.norm(data[i] - centroid)
-        wcss += distance ** 2
+        if cluster_label != -1:  # Consider only data points with cluster labels
+            centroid = centroids[cluster_label]
+            distance = np.linalg.norm(data[i] - centroid)
+            wcss += distance ** 2
     return wcss
 
 def calculate_cluster_centroids(data, labels):
     unique_labels = np.unique(labels)
     centroids = []
-    for label in range(1, len(unique_labels) + 1): 
-        cluster_data = data[labels == label]
-        centroid = np.mean(cluster_data, axis=0)
-        centroids.append(centroid)
+    for label in unique_labels:
+        if label != -1:  # Consider only clusters that have assigned labels
+            cluster_data = data[labels == label]
+            centroid = np.mean(cluster_data, axis=0)
+            centroids.append(centroid)
     return np.array(centroids)
 
 
@@ -1154,7 +1156,7 @@ def convert_tracks_to_arrays(analysis_vectors):
     )
     shape_covariance_2d = shape_covariance_3d.reshape(len(analysis_track_ids), -1)
     dynamic_covariance_2d = dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
-
+    print(f'Shape dynamic covariance 2d shape: {shape_dynamic_covariance_2d.shape}, shape covariance 2d shape: {shape_covariance_2d.shape}, dynamic covariance 2d shape: {dynamic_covariance_2d.shape}')
     return (
         shape_dynamic_covariance_2d,
         shape_covariance_2d,
