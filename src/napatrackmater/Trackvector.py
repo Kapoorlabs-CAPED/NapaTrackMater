@@ -551,7 +551,7 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
 
     return analysis_vectors
 
-def create_mitosis_training_data(shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays, full_records):
+def attach_labels_to_matrices(shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays, full_records):
     training_data_shape_dynamic = []
     training_data_shape = []
     training_data_dynamic = []
@@ -559,19 +559,17 @@ def create_mitosis_training_data(shape_dynamic_track_arrays, shape_track_arrays,
     sequence_length = shape_dynamic_track_arrays.shape[1]
 
     for idx in range(sequence_length):
-        for shape_dynamic_record, shape_record, dynamic_record, full_record in zip(
-                shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays, full_records
+        for i, (shape_dynamic_record, shape_record, dynamic_record) in enumerate(
+            zip(shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays)
         ):
-            print(
-                f"Shapes - Shape Dynamic: {shape_dynamic_record.shape}, Shape: {shape_record.shape}, Dynamic: {dynamic_record.shape}, Full Record: {len(full_record)}"
-            )
-            features_shape_dynamic = shape_dynamic_record[:, idx].tolist()
-            features_shape = shape_record[:, idx].tolist()
-            features_dynamic = dynamic_record[:, idx].tolist()
+            label_dividing = full_records[i][idx]["Dividing"]
+            label_number_dividing = full_records[i][idx]["Number_Dividing"]
 
-            label_dividing = full_record[idx]["Dividing"]
-            label_number_dividing = full_record[idx]["Number_Dividing"]
+            features_shape_dynamic = shape_dynamic_record[idx].tolist()
+            features_shape = shape_record[idx].tolist()
+            features_dynamic = dynamic_record[idx].tolist()
 
+            # Appending to respective training datasets
             training_data_shape_dynamic.append((
                 features_shape_dynamic,
                 label_dividing,
@@ -911,8 +909,7 @@ def calculate_wcss(data, labels, centroids):
     wcss = 0
     for i in range(len(data)):
         cluster_label = labels[i]
-        if cluster_label != -1:  # Consider only data points with cluster labels
-            print(f'cluster_label: {cluster_label}, data[i]: {data[i]}, centroids[cluster_label]: {centroids[cluster_label]}')
+        if cluster_label != -1:  
             centroid = centroids[cluster_label]
             distance = np.linalg.norm(data[i] - centroid)
             wcss += distance ** 2
@@ -922,8 +919,7 @@ def calculate_cluster_centroids(data, labels):
     unique_labels = np.unique(labels)
     centroids = []
     for label in unique_labels:
-        print(f'label: {label}, centroid: {np.mean(data[labels == label], axis=0)}')
-        if label != -1:  # Consider only clusters that have assigned labels
+        if label != -1:  
             cluster_data = data[labels == label]
             centroid = np.mean(cluster_data, axis=0)
             centroids.append(centroid)
