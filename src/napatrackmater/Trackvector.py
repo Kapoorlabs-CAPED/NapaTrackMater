@@ -1141,14 +1141,11 @@ def convert_tracks_to_arrays(analysis_vectors):
             shape_covariance_matrix.append(shape_covariance)
             dynamic_covariance_matrix.append(dynamic_covaraince)
             analysis_track_ids.append(track_id)
-            full_records_for_track = []
-            for full_record_entry in full_dataframe_list:
-                full_record = {
-                    "Dividing": full_record_entry["Dividing"],
-                    "Number_Dividing": full_record_entry["Number_Dividing"],
+            full_record = {
+                    "Dividing": full_dataframe_list["Dividing"],
+                    "Number_Dividing": full_dataframe_list["Number_Dividing"],
                 }
-                full_records_for_track.append(full_record)
-            full_records.append(full_records_for_track)            
+            full_records.append(full_record)            
     shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
     shape_covariance_3d = np.dstack(shape_covariance_matrix)
     dynamic_covariance_3d = np.dstack(dynamic_covariance_matrix)
