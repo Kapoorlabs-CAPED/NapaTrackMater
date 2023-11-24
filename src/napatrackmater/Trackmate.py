@@ -89,6 +89,9 @@ class TrackMate:
         self.axes = axes
         self.batch_size = batch_size
 
+        self.cell_id_times = []
+        self.split_cell_ids = []
+
         self.track_analysis_spot_keys = dict(
             spot_id="ID",
             track_id="TRACK_ID",
@@ -450,18 +453,22 @@ class TrackMate:
         return root_root, root_splits, root_leaf
 
     def _sort_dividing_cells(self, root_splits):
-        self.cell_id_times = []
-        self.split_cell_ids = []
+        cell_id_times = []
+        split_cell_ids = []
         for root_split in root_splits:
             split_cell_id_time = self.unique_spot_properties[root_split][
                 self.frameid_key
             ]
             self.cell_id_times.append(split_cell_id_time)
             self.split_cell_ids.append(root_split)
+            
+            cell_id_times.append(split_cell_id_time)
+            split_cell_ids.append(root_split)
+
         sorted_indices = sorted(
-            range(len(self.cell_id_times)), key=lambda k: self.cell_id_times[k]
+            range(len(cell_id_times)), key=lambda k: cell_id_times[k]
         )
-        sorted_cell_ids = [self.split_cell_ids[i] for i in sorted_indices]
+        sorted_cell_ids = [split_cell_ids[i] for i in sorted_indices]
     
         return sorted_cell_ids
 
