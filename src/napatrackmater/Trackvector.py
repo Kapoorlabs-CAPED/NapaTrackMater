@@ -19,8 +19,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from joblib import dump
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
-
-
+from collections import Counter
+from sklearn.metrics import silhouette_score
 class TrackVector(TrackMate):
     def __init__(
         self,
@@ -410,7 +410,18 @@ class TrackVector(TrackMate):
             if len(current_tracklets.shape) == 2:
                 self.unique_tracks[track_id] = current_tracklets
                 self.unique_track_properties[track_id] = current_tracklets_properties
+    
+    def plot_mitosis_times(self, save_path = ''):
+        time_counter = Counter(self.cell_id_times)
+        times = list(time_counter.keys())
+        counts = list(time_counter.values())
+        data = {'Time': times, 'Count': counts}
+        df = pd.DataFrame(data)
+        np.save(save_path + '_counts.npy', df.to_numpy())
 
+        return df       
+
+        
     def get_shape_dynamic_feature_dataframe(self):
 
         current_shape_dynamic_vectors = self.current_shape_dynamic_vectors
@@ -823,15 +834,35 @@ def predict_supervised_clustering(
         os.remove(csv_file_name)
     result_dataframe.to_csv(csv_file_name, index=False)
 
+def calculate_wcss(data, labels, centroids):
+    wcss = 0
+    for i in range(len(data)):
+        cluster_label = labels[i]
+        centroid = centroids[cluster_label]
+        distance = np.linalg.norm(data[i] - centroid)
+        wcss += distance ** 2
+    return wcss
+
+def calculate_cluster_centroids(data, labels):
+    unique_labels = np.unique(labels)
+    centroids = []
+    for label in unique_labels:
+        cluster_data = data[labels == label]
+        centroid = np.mean(cluster_data, axis=0)
+        centroids.append(centroid)
+    return np.array(centroids)
+
 
 def unsupervised_clustering(
     full_dataframe,
     csv_file_name,
     analysis_vectors,
-    num_clusters,
-    metric="cosine",
+    threshold_distance=5.0,
+    num_clusters = None,
+    metric="euclidean",
     method="ward",
-    criterion="maxclust",
+    criterion="distance",
+
 ):
     csv_file_name_original = csv_file_name
     analysis_track_ids = []
@@ -921,15 +952,38 @@ def unsupervised_clustering(
         shape_dynamic_linkage_matrix = linkage(
             shape_dynamic_cosine_distance, method=method
         )
-        shape_dynamic_cluster_labels = fcluster(
-            shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
-        )
-        track_id_to_cluster = {
-            track_id: cluster_label
-            for track_id, cluster_label in zip(
-                analysis_track_ids, shape_dynamic_cluster_labels
+        if num_clusters is None:
+            shape_dynamic_cluster_labels = fcluster(
+                shape_dynamic_linkage_matrix, t=threshold_distance,  criterion=criterion
             )
-        }
+        else:
+            shape_dynamic_cluster_labels = fcluster(
+                shape_dynamic_linkage_matrix, num_clusters,  criterion=criterion
+            )   
+
+        cluster_centroids = calculate_cluster_centroids(clusterable_track_array, shape_dynamic_cluster_labels)
+        silhouette = silhouette_score(clusterable_track_array, shape_dynamic_cluster_labels, metric=metric)
+        wcss_value = calculate_wcss(clusterable_track_array, shape_dynamic_cluster_labels, cluster_centroids)
+
+        silhouette_file_name = os.path.join(
+        csv_file_name_original
+            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+            + f'_silhouette_{threshold_distance}.npy'
+        )
+        np.save(silhouette_file_name, silhouette)
+
+        wcss_file_name = os.path.join(
+            csv_file_name_original
+            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+            + f'_wcss_{threshold_distance}.npy'
+        )
+        np.save(wcss_file_name, wcss_value)
+        track_id_to_cluster = {
+                track_id: cluster_label
+                for track_id, cluster_label in zip(
+                    analysis_track_ids, shape_dynamic_cluster_labels
+                )
+            }
         full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
         result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
         csv_file_name = (
@@ -937,7 +991,7 @@ def unsupervised_clustering(
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
             + ".csv"
         )
-
+   
         if os.path.exists(csv_file_name):
             os.remove(csv_file_name)
         result_dataframe.to_csv(csv_file_name, index=False)
@@ -945,21 +999,21 @@ def unsupervised_clustering(
         mean_matrix_file_name = (
             csv_file_name_original
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-            + "_covariance.npy"
+            + f"_{metric}_covariance.npy"
         )
         np.save(mean_matrix_file_name, track_arrays)
 
         linkage_npy_file_name = (
             csv_file_name_original
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-            + "_linkage.npy"
+            + f"_{metric}_linkage.npy"
         )
         np.save(linkage_npy_file_name, shape_dynamic_linkage_matrix)
 
         cluster_labels_npy_file_name = (
             csv_file_name_original
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-            + "_cluster_labels.npy"
+            + f"_{metric}_cluster_labels.npy"
         )
         np.save(cluster_labels_npy_file_name, shape_dynamic_cluster_labels)
 

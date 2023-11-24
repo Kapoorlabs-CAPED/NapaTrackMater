@@ -450,19 +450,19 @@ class TrackMate:
         return root_root, root_splits, root_leaf
 
     def _sort_dividing_cells(self, root_splits):
-        cell_id_times = []
-        cell_ids = []
+        self.cell_id_times = []
+        self.split_cell_ids = []
         for root_split in root_splits:
             split_cell_id_time = self.unique_spot_properties[root_split][
                 self.frameid_key
             ]
-            cell_id_times.append(split_cell_id_time)
-            cell_ids.append(root_split)
+            self.cell_id_times.append(split_cell_id_time)
+            self.split_cell_ids.append(root_split)
         sorted_indices = sorted(
-            range(len(cell_id_times)), key=lambda k: cell_id_times[k]
+            range(len(self.cell_id_times)), key=lambda k: self.cell_id_times[k]
         )
-        sorted_cell_ids = [cell_ids[i] for i in sorted_indices]
-
+        sorted_cell_ids = [self.split_cell_ids[i] for i in sorted_indices]
+    
         return sorted_cell_ids
 
     def _iterate_dividing_recursive(
