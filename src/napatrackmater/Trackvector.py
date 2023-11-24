@@ -603,21 +603,24 @@ def extract_training_data(training_data):
 
     return features_array, labels_array
 
-def train_mitosis_classifier(features_array, labels_array, model_type='KNN', n_neighbors=5, random_state=42):
+def train_mitosis_classifier(features_array, labels_array,save_path, model_type='KNN', n_neighbors=5, random_state=42):
     X_train, X_test, y_train, y_test = train_test_split(features_array, labels_array, test_size=0.2, random_state=random_state)
 
     if model_type == 'KNN':
         knn = KNeighborsClassifier(n_neighbors=n_neighbors)
         knn.fit(X_train, y_train)
         accuracy = knn.score(X_test, y_test)
-        return knn, accuracy
+        dump(knn, save_path + 'knn_mitosis_model.joblib')  
+        return accuracy
     elif model_type == 'RandomForest':
         rf = RandomForestClassifier(random_state=random_state)
         rf.fit(X_train, y_train)
         accuracy = rf.score(X_test, y_test)
-        return rf, accuracy
+        dump(rf, save_path + 'random_forest_mitosis_model.joblib') 
+        return accuracy
     else:
         raise ValueError("Invalid model_type. Choose 'KNN' or 'RandomForest'.")
+
 
 def create_gt_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
     gt_analysis_vectors = {}
@@ -1091,6 +1094,7 @@ def convert_tracks_to_arrays(analysis_vectors):
     shape_dynamic_covariance_matrix = []
     shape_covariance_matrix = []
     dynamic_covariance_matrix = []
+    full_records = []
     for track_id, (
         shape_dynamic_dataframe_list,
         shape_dataframe_list,
@@ -1130,6 +1134,14 @@ def convert_tracks_to_arrays(analysis_vectors):
             shape_covariance_matrix.append(shape_covariance)
             dynamic_covariance_matrix.append(dynamic_covaraince)
             analysis_track_ids.append(track_id)
+            full_records_for_track = []
+            for full_record_entry in full_dataframe_list:
+                full_record = {
+                    "Dividing": full_record_entry["Dividing"],
+                    "Number_Dividing": full_record_entry["Number_Dividing"],
+                }
+                full_records_for_track.append(full_record)
+            full_records.append(full_records_for_track)            
     shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
     shape_covariance_3d = np.dstack(shape_covariance_matrix)
     dynamic_covariance_3d = np.dstack(dynamic_covariance_matrix)
@@ -1144,6 +1156,7 @@ def convert_tracks_to_arrays(analysis_vectors):
         shape_dynamic_covariance_2d,
         shape_covariance_2d,
         dynamic_covariance_2d,
+        full_records
     )
 
 
