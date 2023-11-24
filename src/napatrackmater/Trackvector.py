@@ -21,6 +21,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from collections import Counter
 from sklearn.metrics import silhouette_score
+from sklearn.preprocessing import MultiLabelBinarizer
 class TrackVector(TrackMate):
     def __init__(
         self,
@@ -592,11 +593,11 @@ def extract_training_data(training_data):
 
     for features, label_dividing, label_number_dividing in training_data:
         features_list.append(features)
-
         labels_list.append((label_dividing, label_number_dividing))
 
     features_array = np.array(features_list)
-    labels_array = np.array(labels_list)
+    mlb = MultiLabelBinarizer()
+    labels_array = mlb.fit_transform(labels_list)
 
     return features_array, labels_array
 
@@ -1148,7 +1149,6 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
     )
     shape_covariance_2d = shape_covariance_3d.reshape(len(analysis_track_ids), -1)
     dynamic_covariance_2d = dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
-    print(f'Shape dynamic covariance 2d shape: {shape_dynamic_covariance_2d.shape}, shape covariance 2d shape: {shape_covariance_2d.shape}, dynamic covariance 2d shape: {dynamic_covariance_2d.shape}, full records shape: {len(full_records)}')
     return (
         shape_dynamic_covariance_2d,
         shape_covariance_2d,
