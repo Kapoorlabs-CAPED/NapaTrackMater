@@ -9,7 +9,10 @@ from .Trackvector import (
     supervised_clustering,
     create_global_gt_dataframe,
     create_gt_analysis_vectors_dict,
-    predict_supervised_clustering
+    predict_supervised_clustering,
+    create_mitosis_training_data,
+    extract_training_data,
+    train_mitosis_classifier
 
 )
 from .DeepEmbeddedClustering import DeepEmbeddedClustering
@@ -68,6 +71,9 @@ __all__ = (
     "unsupervised_clustering",
     "DeepEmbeddedClustering",
     "load_json",
+    'create_mitosis_training_data',
+    'extract_training_data',
+    'train_mitosis_classifier'
 )
 
 clear_models_and_aliases(DeepEmbeddedClustering, CloudAutoEncoder)

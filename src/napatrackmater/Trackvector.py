@@ -551,6 +551,73 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
 
     return analysis_vectors
 
+def create_mitosis_training_data(shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays, full_records):
+    training_data_shape_dynamic = []
+    training_data_shape = []
+    training_data_dynamic = []
+
+    sequence_length = shape_dynamic_track_arrays.shape[1]  
+
+    for idx in range(sequence_length):
+        for shape_dynamic_record, shape_record, dynamic_record, full_record in zip(
+            shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays, full_records
+        ):
+            features_shape_dynamic = shape_dynamic_record[:, idx].tolist()  
+            features_shape = shape_record[:, idx].tolist() 
+            features_dynamic = dynamic_record[:, idx].tolist() 
+
+            label_dividing = full_record[idx]["Dividing"]
+            label_number_dividing = full_record[idx]["Number_Dividing"]
+
+            training_data_shape_dynamic.append((
+                features_shape_dynamic,
+                label_dividing,
+                label_number_dividing
+            ))
+
+            training_data_shape.append((
+                features_shape,
+                label_dividing,
+                label_number_dividing
+            ))
+
+            training_data_dynamic.append((
+                features_dynamic,
+                label_dividing,
+                label_number_dividing
+            ))
+
+    return training_data_shape_dynamic, training_data_shape, training_data_dynamic
+
+def extract_training_data(training_data):
+    features_list = []
+    labels_list = []
+
+    for features, label_dividing, label_number_dividing in training_data:
+        features_list.append(features)
+
+        labels_list.append((label_dividing, label_number_dividing))
+
+    features_array = np.array(features_list)
+    labels_array = np.array(labels_list)
+
+    return features_array, labels_array
+
+def train_mitosis_classifier(features_array, labels_array, model_type='KNN', n_neighbors=5, random_state=42):
+    X_train, X_test, y_train, y_test = train_test_split(features_array, labels_array, test_size=0.2, random_state=random_state)
+
+    if model_type == 'KNN':
+        knn = KNeighborsClassifier(n_neighbors=n_neighbors)
+        knn.fit(X_train, y_train)
+        accuracy = knn.score(X_test, y_test)
+        return knn, accuracy
+    elif model_type == 'RandomForest':
+        rf = RandomForestClassifier(random_state=random_state)
+        rf.fit(X_train, y_train)
+        accuracy = rf.score(X_test, y_test)
+        return rf, accuracy
+    else:
+        raise ValueError("Invalid model_type. Choose 'KNN' or 'RandomForest'.")
 
 def create_gt_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
     gt_analysis_vectors = {}
@@ -1018,12 +1085,12 @@ def unsupervised_clustering(
         np.save(cluster_labels_npy_file_name, shape_dynamic_cluster_labels)
 
 
-def convert_tracks_to_arrays(analysis_vectors, min_track_length=0):
+def convert_tracks_to_arrays(analysis_vectors):
 
-    filtered_track_ids = []
-    shape_dynamic_track_arrays = []
-    shape_track_arrays = []
-    dynamic_track_arrays = []
+    analysis_track_ids = []
+    shape_dynamic_covariance_matrix = []
+    shape_covariance_matrix = []
+    dynamic_covariance_matrix = []
     for track_id, (
         shape_dynamic_dataframe_list,
         shape_dataframe_list,
@@ -1046,23 +1113,37 @@ def convert_tracks_to_arrays(analysis_vectors, min_track_length=0):
             shape_dynamic_track_array.shape[0]
             == shape_track_array.shape[0]
             == dynamic_track_array.shape[0]
-        ), "Shape dynamic, shape and dynamic track arrays must have the same length"
-        if shape_dynamic_track_array.shape[0] > min_track_length:
-            shape_dynamic_track_arrays.append(
-                shape_dynamic_track_array.astype(np.float32)
+        ), "Shape dynamic, shape and dynamic track arrays must have the same length."
+        if shape_dynamic_track_array.shape[0] > 1:
+            (
+                shape_dynamic_covariance,
+                shape_dynamic_eigenvectors,
+            ) = compute_covariance_matrix(shape_dynamic_track_array)
+            shape_covariance, shape_eigenvectors = compute_covariance_matrix(
+                shape_track_array
             )
-            shape_track_arrays.append(shape_track_array.astype(np.float32))
-            dynamic_track_arrays.append(dynamic_track_array.astype(np.float32))
-            filtered_track_ids.append(track_id)
-    shape_dynamic_track_arrays_array = np.vstack(shape_dynamic_track_arrays)
-    shape_track_arrays_array = np.vstack(shape_track_arrays)
-    dynamic_track_arrays_array = np.vstack(dynamic_track_arrays)
+            dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
+                dynamic_track_array
+            )
+
+            shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
+            shape_covariance_matrix.append(shape_covariance)
+            dynamic_covariance_matrix.append(dynamic_covaraince)
+            analysis_track_ids.append(track_id)
+    shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
+    shape_covariance_3d = np.dstack(shape_covariance_matrix)
+    dynamic_covariance_3d = np.dstack(dynamic_covariance_matrix)
+
+    shape_dynamic_covariance_2d = shape_dynamic_covariance_3d.reshape(
+        len(analysis_track_ids), -1
+    )
+    shape_covariance_2d = shape_covariance_3d.reshape(len(analysis_track_ids), -1)
+    dynamic_covariance_2d = dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
 
     return (
-        shape_dynamic_track_arrays_array,
-        shape_track_arrays_array,
-        dynamic_track_arrays_array,
-        filtered_track_ids,
+        shape_dynamic_covariance_2d,
+        shape_covariance_2d,
+        dynamic_covariance_2d,
     )
 
 
