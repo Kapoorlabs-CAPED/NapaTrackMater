@@ -551,7 +551,7 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
 
     return analysis_vectors
 
-def attach_labels_to_matrices(shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays, full_records):
+def create_mitosis_training_data(shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays, full_records):
     training_data_shape_dynamic = []
     training_data_shape = []
     training_data_dynamic = []
