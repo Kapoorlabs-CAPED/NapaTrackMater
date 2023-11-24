@@ -562,8 +562,8 @@ def create_mitosis_training_data(shape_dynamic_track_arrays, shape_track_arrays,
         for i, (shape_dynamic_record, shape_record, dynamic_record) in enumerate(
             zip(shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays)
         ):
-            label_dividing = full_records[i][idx]["Dividing"]
-            label_number_dividing = full_records[i][idx]["Number_Dividing"]
+            label_dividing = full_records[idx]["Dividing"]
+            label_number_dividing = full_records[idx]["Number_Dividing"]
 
             features_shape_dynamic = shape_dynamic_record[idx].tolist()
             features_shape = shape_record[idx].tolist()
@@ -907,12 +907,13 @@ def predict_supervised_clustering(
 
 def calculate_wcss(data, labels, centroids):
     wcss = 0
+    label_to_index = {label: i for i, label in enumerate(np.unique(labels))}
     print("Data Shape:", data.shape)
     print("Centroids Shape:", centroids.shape)
     for i in range(len(data)):
         cluster_label = labels[i]
-        if cluster_label != -1:  
-            centroid = centroids[cluster_label]
+        if cluster_label != -1:
+            centroid = centroids[label_to_index[cluster_label]]
             distance = np.linalg.norm(data[i] - centroid)
             wcss += distance ** 2
     return wcss
@@ -1157,7 +1158,7 @@ def convert_tracks_to_arrays(analysis_vectors):
     )
     shape_covariance_2d = shape_covariance_3d.reshape(len(analysis_track_ids), -1)
     dynamic_covariance_2d = dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
-    print(f'Shape dynamic covariance 2d shape: {shape_dynamic_covariance_2d.shape}, shape covariance 2d shape: {shape_covariance_2d.shape}, dynamic covariance 2d shape: {dynamic_covariance_2d.shape}')
+    print(f'Shape dynamic covariance 2d shape: {shape_dynamic_covariance_2d.shape}, shape covariance 2d shape: {shape_covariance_2d.shape}, dynamic covariance 2d shape: {dynamic_covariance_2d.shape}, full records shape: {len(full_records)}')
     return (
         shape_dynamic_covariance_2d,
         shape_covariance_2d,
