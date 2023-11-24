@@ -562,6 +562,9 @@ def create_mitosis_training_data(shape_dynamic_track_arrays, shape_track_arrays,
         for shape_dynamic_record, shape_record, dynamic_record, full_record in zip(
             shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays, full_records
         ):
+            print(
+                f"Shapes - Shape Dynamic: {shape_dynamic_record.shape}, Shape: {shape_record.shape}, Dynamic: {dynamic_record.shape}, Full Record: {len(full_record)}"
+            )
             features_shape_dynamic = shape_dynamic_record[:, idx].tolist()  
             features_shape = shape_record[:, idx].tolist() 
             features_dynamic = dynamic_record[:, idx].tolist() 
