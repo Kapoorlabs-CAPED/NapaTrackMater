@@ -593,7 +593,7 @@ def extract_training_data(training_data):
 
     for features, label_dividing, label_number_dividing in training_data:
         features_list.append(features)
-        labels_list.append((label_dividing, label_number_dividing))
+        labels_list.append((tuple(label_dividing), tuple(label_number_dividing)))  # Convert Series to tuple
 
     features_array = np.array(features_list)
     mlb = MultiLabelBinarizer()
