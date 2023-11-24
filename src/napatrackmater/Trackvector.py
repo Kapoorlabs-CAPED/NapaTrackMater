@@ -907,6 +907,8 @@ def predict_supervised_clustering(
 
 def calculate_wcss(data, labels, centroids):
     wcss = 0
+    print("Data Shape:", data.shape)
+    print("Centroids Shape:", centroids.shape)
     for i in range(len(data)):
         cluster_label = labels[i]
         if cluster_label != -1:  
@@ -923,6 +925,7 @@ def calculate_cluster_centroids(data, labels):
             cluster_data = data[labels == label]
             centroid = np.mean(cluster_data, axis=0)
             centroids.append(centroid)
+    print("Unique Labels:", unique_labels)        
     return np.array(centroids)
 
 
