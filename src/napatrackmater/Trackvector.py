@@ -908,8 +908,6 @@ def predict_supervised_clustering(
 def calculate_wcss(data, labels, centroids):
     wcss = 0
     label_to_index = {label: i for i, label in enumerate(np.unique(labels))}
-    print("Data Shape:", data.shape)
-    print("Centroids Shape:", centroids.shape)
     for i in range(len(data)):
         cluster_label = labels[i]
         if cluster_label != -1:
@@ -926,7 +924,6 @@ def calculate_cluster_centroids(data, labels):
             cluster_data = data[labels == label]
             centroid = np.mean(cluster_data, axis=0)
             centroids.append(centroid)
-    print("Unique Labels:", unique_labels)        
     return np.array(centroids)
 
 
@@ -1095,7 +1092,7 @@ def unsupervised_clustering(
         np.save(cluster_labels_npy_file_name, shape_dynamic_cluster_labels)
 
 
-def convert_tracks_to_arrays(analysis_vectors):
+def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
 
     analysis_track_ids = []
     shape_dynamic_covariance_matrix = []
@@ -1142,8 +1139,8 @@ def convert_tracks_to_arrays(analysis_vectors):
             dynamic_covariance_matrix.append(dynamic_covaraince)
             analysis_track_ids.append(track_id)
             full_record = {
-                    "Dividing": full_dataframe_list["Dividing"],
-                    "Number_Dividing": full_dataframe_list["Number_Dividing"],
+                    "Dividing": full_dataframe["Dividing"],
+                    "Number_Dividing": full_dataframe["Number_Dividing"],
                 }
             full_records.append(full_record)            
     shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
