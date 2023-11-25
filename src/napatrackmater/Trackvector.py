@@ -1197,7 +1197,6 @@ class MitosisNet(nn.Module):
         self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3)
         self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
         self.pool = nn.MaxPool1d(kernel_size=2)
-        # Calculate the size of the linear layer input based on input_size
         conv_output_size = self._calculate_conv_output_size(input_size)
         self.fc1 = nn.Linear(conv_output_size, 128)
         self.fc2_class1 = nn.Linear(128, num_classes_class1) 
@@ -1220,25 +1219,32 @@ class MitosisNet(nn.Module):
         class_output2 = torch.softmax(self.fc3_class2(x), dim=1)  
         return class_output1, class_output2
 
+
+
 def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_class2, input_size, save_path, batch_size=64, learning_rate=0.001, epochs=10):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     X_train, X_val, y_train_class1, y_val_class1, y_train_class2, y_val_class2 = train_test_split(
-        features_array.astype(np.float16), 
-        labels_array_class1.astype(np.float16), 
-        labels_array_class2.astype(np.float16), 
+        features_array.astype(np.float32), 
+        labels_array_class1.astype(np.float32), 
+        labels_array_class2.astype(np.float32), 
         test_size=0.1, 
         random_state=42
     )
 
-    # Convert data to PyTorch tensors
-    X_train_tensor = torch.Tensor(X_train)
-    y_train_class1_tensor = torch.Tensor(y_train_class1)
-    y_train_class2_tensor = torch.Tensor(y_train_class2)
-    X_val_tensor = torch.Tensor(X_val)
-    y_val_class1_tensor = torch.Tensor(y_val_class1)
-    y_val_class2_tensor = torch.Tensor(y_val_class2)
+    # Convert data to PyTorch tensors and move them to GPU with precision float16
+    X_train_tensor = torch.tensor(X_train, dtype=torch.float16).to(device)
+    y_train_class1_tensor = torch.tensor(y_train_class1, dtype=torch.float16).to(device)
+    y_train_class2_tensor = torch.tensor(y_train_class2, dtype=torch.float16).to(device)
+    X_val_tensor = torch.tensor(X_val, dtype=torch.float16).to(device)
+    y_val_class1_tensor = torch.tensor(y_val_class1, dtype=torch.float16).to(device)
+    y_val_class2_tensor = torch.tensor(y_val_class2, dtype=torch.float16).to(device)
+    
     num_classes1 = int(torch.max(y_train_class1_tensor)) + 1
     num_classes2 = int(torch.max(y_train_class2_tensor)) + 1
+
     model = MitosisNet(input_size=input_size, num_classes_class1=num_classes1, num_classes_class2=num_classes2)
+    model.to(device)
 
     criterion_class1 = nn.CrossEntropyLoss()
     criterion_class2 = nn.CrossEntropyLoss()
