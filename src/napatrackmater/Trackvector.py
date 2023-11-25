@@ -28,6 +28,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
 import json
 from tqdm import tqdm 
+from torch.optim.lr_scheduler import MultiStepLR
 
 class TrackVector(TrackMate):
     def __init__(
@@ -1194,26 +1195,26 @@ class MitosisNet(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3)
         self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
-        self.conv3 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3)  # Additional conv layer
+        self.conv3 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3) 
         self.pool = nn.MaxPool1d(kernel_size=2)
         conv_output_size = self._calculate_conv_output_size(input_size)
         self.fc1 = nn.Linear(conv_output_size, 128)
         self.fc2_class1 = nn.Linear(128, num_classes_class1)
         self.fc3_class2 = nn.Linear(128, num_classes_class2)
-        self.dropout = nn.Dropout(0.5)  # Adding dropout layer
+        self.dropout = nn.Dropout(0.5) 
 
     def _calculate_conv_output_size(self, input_size):
         x = torch.randn(1, 1, input_size)
         x = self.pool(nn.functional.relu(self.conv1(x)))
         x = self.pool(nn.functional.relu(self.conv2(x)))
-        x = self.pool(nn.functional.relu(self.conv3(x)))  # Updated to include conv3
+        x = self.pool(nn.functional.relu(self.conv3(x)))  
         return x.view(1, -1).size(1)
 
     def forward(self, x):
         x = x.view(-1, 1, x.size(1))
         x = self.pool(nn.functional.relu(self.conv1(x)))
         x = self.pool(nn.functional.relu(self.conv2(x)))
-        x = self.pool(nn.functional.relu(self.conv3(x)))  # Updated to include conv3
+        x = self.pool(nn.functional.relu(self.conv3(x))) 
         x = x.view(x.size(0), -1)
         x = nn.functional.relu(self.fc1(x))
         x = self.dropout(x)  # Applying dropout
@@ -1257,6 +1258,9 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
     criterion_class1 = nn.CrossEntropyLoss()
     criterion_class2 = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    milestones = [int(epochs * 0.5), int(epochs * 0.75)] 
+    scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.1) 
+
 
     train_dataset = TensorDataset(X_train_tensor, y_train_class1_tensor, y_train_class2_tensor)
     val_dataset = TensorDataset(X_val_tensor, y_val_class1_tensor, y_val_class2_tensor)
@@ -1289,7 +1293,7 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
                 # Update the progress bar
                 pbar.update(1)
                 pbar.set_postfix({'Class1 Loss': running_loss_class1 / (i + 1), 'Class2 Loss': running_loss_class2 / (i + 1)})
-
+            scheduler.step()
 
         model.eval()
         correct_class1 = 0
