@@ -1236,7 +1236,7 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
         test_size=0.1, 
         random_state=42
     )
-
+    print(f"Training data shape: {X_train.shape}, Validation data shape: {X_val.shape}, Training labels shape: {y_train_class1.shape}, Validation labels shape: {y_val_class1.shape}")
     X_train_tensor = torch.tensor(X_train, dtype=torch.float32).to(device)
     y_train_class1_tensor = torch.tensor(y_train_class1, dtype=torch.uint8).to(device)
     y_train_class2_tensor = torch.tensor(y_train_class2, dtype=torch.uint8).to(device)
@@ -1267,6 +1267,7 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
 
         for i, data in enumerate(train_loader):
             inputs, labels_class1, labels_class2 = data
+            print(inputs.shape, labels_class1.shape, labels_class2.shape)
             optimizer.zero_grad()
             class_output1, class_output2 = model(inputs)
 
