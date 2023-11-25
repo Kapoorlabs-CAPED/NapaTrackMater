@@ -1229,14 +1229,13 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     X_train, X_val, y_train_class1, y_val_class1, y_train_class2, y_val_class2 = train_test_split(
-        features_array.astype(np.float32), 
-        labels_array_class1.astype(np.float32), 
-        labels_array_class2.astype(np.float32), 
+        features_array.astype(np.float16), 
+        labels_array_class1.astype(np.unit8), 
+        labels_array_class2.astype(np.uint8), 
         test_size=0.1, 
         random_state=42
     )
 
-    # Convert data to PyTorch tensors and move them to GPU with precision float16
     X_train_tensor = torch.tensor(X_train, dtype=torch.float16).to(device)
     y_train_class1_tensor = torch.tensor(y_train_class1, dtype=torch.uint8).to(device)
     y_train_class2_tensor = torch.tensor(y_train_class2, dtype=torch.uint8).to(device)
