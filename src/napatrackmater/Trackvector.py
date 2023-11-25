@@ -626,7 +626,11 @@ def extract_neural_training_data(training_data):
 
 def train_mitosis_classifier(features_array, labels_array,save_path, model_type='KNN', n_neighbors=5, random_state=42):
     X_train, X_test, y_train, y_test = train_test_split(features_array, labels_array, test_size=0.2, random_state=random_state)
+    X_train = X_train.astype(np.float16)
+    y_train = y_train.astype(np.uint8)
 
+    X_test = X_test.astype(np.float16)
+    y_test = y_test.astype(np.uint8)
     if model_type == 'KNN':
         knn = KNeighborsClassifier(n_neighbors=n_neighbors)
         knn.fit(X_train, y_train)
