@@ -11,7 +11,6 @@ from .Trackvector import (
     create_gt_analysis_vectors_dict,
     predict_supervised_clustering,
     create_mitosis_training_data,
-    extract_training_data,
     train_mitosis_classifier,
     train_mitosis_neural_net,
     extract_neural_training_data
@@ -74,7 +73,6 @@ __all__ = (
     "DeepEmbeddedClustering",
     "load_json",
     'create_mitosis_training_data',
-    'extract_training_data',
     'train_mitosis_classifier',
     'train_mitosis_neural_net',
     'extract_neural_training_data',
