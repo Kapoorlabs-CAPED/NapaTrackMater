@@ -1504,12 +1504,9 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
         features_tensor = features_tensor.unsqueeze(0)
     with torch.no_grad():
         outputs_class1, outputs_class2 = model(features_tensor)
-        print(outputs_class1, outputs_class2)
-        # Apply threshold to the probabilities
         predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
         predicted_probs_class2 = torch.softmax(outputs_class2, dim=1)
         
-        # Get the class with the highest probability
         predicted_class1 = torch.argmax(predicted_probs_class1, dim=1).cpu().numpy()
         predicted_class2 = torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
         
