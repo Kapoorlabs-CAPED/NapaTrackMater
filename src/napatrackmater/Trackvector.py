@@ -1235,7 +1235,11 @@ class MitosisNet(nn.Module):
 
 def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_class2, input_size, save_path, batch_size=64, learning_rate=0.001, epochs=10):
     X_train, X_val, y_train_class1, y_val_class1, y_train_class2, y_val_class2 = train_test_split(
-        features_array, labels_array_class1, labels_array_class2, test_size=0.2, random_state=42
+        features_array.astype(np.float32), 
+        labels_array_class1.astype(np.float32), 
+        labels_array_class2.astype(np.float32), 
+        test_size=0.2, 
+        random_state=42
     )
 
     # Convert data to PyTorch tensors
