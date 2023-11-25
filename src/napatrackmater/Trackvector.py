@@ -1191,30 +1191,33 @@ def compute_covariance_matrix(track_arrays):
 class MitosisNet(nn.Module):
     def __init__(self, input_size, num_classes_class1, num_classes_class2):
         super().__init__()
-        self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3) 
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3)
         self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
+        self.conv3 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3)  # Additional conv layer
         self.pool = nn.MaxPool1d(kernel_size=2)
         conv_output_size = self._calculate_conv_output_size(input_size)
-        self.fc1 = nn.Linear(conv_output_size, 128) 
-        self.fc2_class1 = nn.Linear(128, num_classes_class1) 
-        self.fc3_class2 = nn.Linear(128, num_classes_class2) 
- 
+        self.fc1 = nn.Linear(conv_output_size, 128)
+        self.fc2_class1 = nn.Linear(128, num_classes_class1)
+        self.fc3_class2 = nn.Linear(128, num_classes_class2)
+        self.dropout = nn.Dropout(0.5)  # Adding dropout layer
 
     def _calculate_conv_output_size(self, input_size):
-      
         x = torch.randn(1, 1, input_size)
         x = self.pool(nn.functional.relu(self.conv1(x)))
         x = self.pool(nn.functional.relu(self.conv2(x)))
+        x = self.pool(nn.functional.relu(self.conv3(x)))  # Updated to include conv3
         return x.view(1, -1).size(1)
 
     def forward(self, x):
-        x = x.view(-1, 1, x.size(1))  
+        x = x.view(-1, 1, x.size(1))
         x = self.pool(nn.functional.relu(self.conv1(x)))
         x = self.pool(nn.functional.relu(self.conv2(x)))
-        x = x.view(x.size(0), -1) 
+        x = self.pool(nn.functional.relu(self.conv3(x)))  # Updated to include conv3
+        x = x.view(x.size(0), -1)
         x = nn.functional.relu(self.fc1(x))
-        class_output1 = torch.softmax(self.fc2_class1(x), dim=1)  
-        class_output2 = torch.softmax(self.fc3_class2(x), dim=1)  
+        x = self.dropout(x)  # Applying dropout
+        class_output1 = torch.softmax(self.fc2_class1(x), dim=1)
+        class_output2 = torch.softmax(self.fc3_class2(x), dim=1)
         return class_output1, class_output2
 
 
@@ -1309,8 +1312,16 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
 
     torch.save(model.state_dict(), save_path + '_mitosis_track_model.pth')
 
-def predict_with_model(saved_model_path,input_size, num_classes_class1, num_classes_class2, features_array):
+def predict_with_model(saved_model_path, features_array):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    with open(saved_model_path + '_model_info.json', 'r') as json_file:
+        model_info = json.load(json_file)
+
+    input_size = model_info['input_size']
+    num_classes_class1 = model_info['num_classes1']
+    num_classes_class2 = model_info['num_classes2']
+
     model = MitosisNet(input_size=input_size, num_classes_class1=num_classes_class1, num_classes_class2=num_classes_class2)
     model.load_state_dict(torch.load(saved_model_path))
     model.to(device)
@@ -1324,7 +1335,6 @@ def predict_with_model(saved_model_path,input_size, num_classes_class1, num_clas
         _, predicted_class1 = torch.max(outputs_class1.data, 1)
         _, predicted_class2 = torch.max(outputs_class2.data, 1)
 
-    # Convert predictions to numpy arrays
     predicted_class1 = predicted_class1.cpu().numpy()
     predicted_class2 = predicted_class2.cpu().numpy()
 
