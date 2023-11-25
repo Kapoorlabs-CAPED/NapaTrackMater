@@ -1274,7 +1274,6 @@ def train_mitosis_neural_net(
 
     num_classes1 = int(torch.max(y_train_class1_tensor)) + 1
     num_classes2 = int(torch.max(y_train_class2_tensor)) + 1
-    print(f"classes1: {num_classes1}, classes2: {num_classes2}")
     model_info = {
         "input_size": input_size,
         "num_classes1": num_classes1,
@@ -1481,10 +1480,10 @@ def plot_metrics_from_npz(npz_file):
     plt.show()
 
 
-def predict_with_model(saved_model_path, features_array):
+def predict_with_model(saved_model_path, saved_model_json, features_array):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    with open(saved_model_path + "_model_info.json") as json_file:
+    with open(saved_model_json) as json_file:
         model_info = json.load(json_file)
 
     input_size = model_info["input_size"]

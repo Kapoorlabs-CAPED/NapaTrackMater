@@ -13,7 +13,8 @@ from .Trackvector import (
     create_mitosis_training_data,
     train_mitosis_classifier,
     train_mitosis_neural_net,
-    extract_neural_training_data
+    extract_neural_training_data,
+    predict_with_model
 
 )
 from .DeepEmbeddedClustering import DeepEmbeddedClustering
@@ -76,6 +77,7 @@ __all__ = (
     'train_mitosis_classifier',
     'train_mitosis_neural_net',
     'extract_neural_training_data',
+    'predict_with_model'
 )
 
 clear_models_and_aliases(DeepEmbeddedClustering, CloudAutoEncoder)
