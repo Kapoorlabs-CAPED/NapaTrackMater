@@ -412,7 +412,7 @@ class TrackVector(TrackMate):
                 self.unique_tracks[track_id] = current_tracklets
                 self.unique_track_properties[track_id] = current_tracklets_properties
     
-    def plot_mitosis_times(self, save_path = ''):
+    def plot_mitosis_times(self, full_dataframe, save_path = ''):
         time_counter = Counter(self.cell_id_times)
         times = list(time_counter.keys())
         counts = list(time_counter.values())
@@ -420,7 +420,17 @@ class TrackVector(TrackMate):
         df = pd.DataFrame(data)
         np.save(save_path + '_counts.npy', df.to_numpy())
 
-        return df       
+        max_number_dividing = full_dataframe["Number_Dividing"].max()
+        min_number_dividing = full_dataframe["Number_Dividing"].min()
+        excluded_keys = ['Track ID', 't', 'z', 'y', 'x']
+        for i in range(min_number_dividing, max_number_dividing + 1):
+            for column in full_dataframe.columns:
+                if column not in excluded_keys and isinstance(full_dataframe[column].iloc[0], list):
+                    data = full_dataframe[column][full_dataframe['Number_Dividing'] == i]
+                    for j, sublist in enumerate(data):
+                        np.save(f'{save_path}_{column}_histogram_sublist_{j}.npy', np.array(sublist))
+                            
+            
 
         
     def get_shape_dynamic_feature_dataframe(self):
