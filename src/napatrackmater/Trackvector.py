@@ -25,11 +25,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
-from sklearn.model_selection import train_test_split
 import json
-from tqdm import tqdm 
+from tqdm import tqdm
 from torch.optim.lr_scheduler import MultiStepLR
 import matplotlib.pyplot as plt
+
 
 class TrackVector(TrackMate):
     def __init__(
@@ -420,27 +420,30 @@ class TrackVector(TrackMate):
             if len(current_tracklets.shape) == 2:
                 self.unique_tracks[track_id] = current_tracklets
                 self.unique_track_properties[track_id] = current_tracklets_properties
-    
-    def plot_mitosis_times(self, full_dataframe, save_path = ''):
+
+    def plot_mitosis_times(self, full_dataframe, save_path=""):
         time_counter = Counter(self.cell_id_times)
         times = list(time_counter.keys())
         counts = list(time_counter.values())
-        data = {'Time': times, 'Count': counts}
+        data = {"Time": times, "Count": counts}
         df = pd.DataFrame(data)
-        np.save(save_path + '_counts.npy', df.to_numpy())
+        np.save(save_path + "_counts.npy", df.to_numpy())
 
         max_number_dividing = full_dataframe["Number_Dividing"].max()
         min_number_dividing = full_dataframe["Number_Dividing"].min()
-        excluded_keys = ['Track ID', 't', 'z', 'y', 'x']
-        for i in range(min_number_dividing.astype(int), max_number_dividing.astype(int) + 1):
+        excluded_keys = ["Track ID", "t", "z", "y", "x"]
+        for i in range(
+            min_number_dividing.astype(int), max_number_dividing.astype(int) + 1
+        ):
             for column in full_dataframe.columns:
                 if column not in excluded_keys:
-                    data = full_dataframe[column][full_dataframe['Number_Dividing'].astype(int) == i]
-                    np.save(f'{save_path}_{column}_Number_Dividing_{i}.npy', data.to_numpy())
-                            
-            
+                    data = full_dataframe[column][
+                        full_dataframe["Number_Dividing"].astype(int) == i
+                    ]
+                    np.save(
+                        f"{save_path}_{column}_Number_Dividing_{i}.npy", data.to_numpy()
+                    )
 
-        
     def get_shape_dynamic_feature_dataframe(self):
 
         current_shape_dynamic_vectors = self.current_shape_dynamic_vectors
@@ -570,38 +573,34 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
 
     return analysis_vectors
 
-def create_mitosis_training_data(shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays, full_records):
+
+def create_mitosis_training_data(
+    shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays, full_records
+):
     training_data_shape_dynamic = []
     training_data_shape = []
     training_data_dynamic = []
 
-
     for idx in range(shape_dynamic_track_arrays.shape[0]):
-            label_dividing = full_records["Dividing"][idx]
-            label_number_dividing = full_records["Number_Dividing"][idx]
+        label_dividing = full_records["Dividing"][idx]
+        label_number_dividing = full_records["Number_Dividing"][idx]
 
-            features_shape_dynamic = shape_dynamic_track_arrays[idx,:].tolist()
-            features_shape = shape_track_arrays[idx,:].tolist()
-            features_dynamic = dynamic_track_arrays[idx,:].tolist()
+        features_shape_dynamic = shape_dynamic_track_arrays[idx, :].tolist()
+        features_shape = shape_track_arrays[idx, :].tolist()
+        features_dynamic = dynamic_track_arrays[idx, :].tolist()
 
-            # Appending to respective training datasets
-            training_data_shape_dynamic.append((
-                features_shape_dynamic,
-                label_dividing,
-                label_number_dividing
-            ))
+        # Appending to respective training datasets
+        training_data_shape_dynamic.append(
+            (features_shape_dynamic, label_dividing, label_number_dividing)
+        )
 
-            training_data_shape.append((
-                features_shape,
-                label_dividing,
-                label_number_dividing
-            ))
+        training_data_shape.append(
+            (features_shape, label_dividing, label_number_dividing)
+        )
 
-            training_data_dynamic.append((
-                features_dynamic,
-                label_dividing,
-                label_number_dividing
-            ))
+        training_data_dynamic.append(
+            (features_dynamic, label_dividing, label_number_dividing)
+        )
 
     return training_data_shape_dynamic, training_data_shape, training_data_dynamic
 
@@ -626,27 +625,39 @@ def extract_neural_training_data(training_data):
 
     return features_array, labels_dividing_array, labels_number_dividing_array
 
-def train_mitosis_classifier(features_array, labels_array,save_path, model_type='KNN', n_neighbors=5, random_state=42):
-    X_train, X_test, y_train, y_test = train_test_split(features_array, labels_array, test_size=0.2, random_state=random_state)
+
+def train_mitosis_classifier(
+    features_array,
+    labels_array,
+    save_path,
+    model_type="KNN",
+    n_neighbors=5,
+    random_state=42,
+):
+    X_train, X_test, y_train, y_test = train_test_split(
+        features_array, labels_array, test_size=0.2, random_state=random_state
+    )
     X_train = X_train
     y_train = y_train.astype(np.uint8)
 
     X_test = X_test
     y_test = y_test.astype(np.uint8)
-    if model_type == 'KNN':
+    if model_type == "KNN":
         knn = KNeighborsClassifier(n_neighbors=n_neighbors)
         knn.fit(X_train, y_train)
         accuracy = knn.score(X_test, y_test)
-        dump(knn, save_path + 'knn_mitosis_model.joblib')  
+        dump(knn, save_path + "knn_mitosis_model.joblib")
         return accuracy
-    elif model_type == 'RandomForest':
+    elif model_type == "RandomForest":
         rf = RandomForestClassifier(random_state=random_state)
         rf.fit(X_train, y_train)
         accuracy = rf.score(X_test, y_test)
-        dump(rf, save_path + 'random_forest_mitosis_model.joblib') 
+        dump(rf, save_path + "random_forest_mitosis_model.joblib")
         return accuracy
     else:
-        raise ValueError("Invalid model_type. Choose 'KNN' or 'RandomForest'.")
+        raise ValueError(
+            "Invalid model_type. Choose 'KNN' or 'RandomForest Classifier'."
+        )
 
 
 def create_gt_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
@@ -931,6 +942,7 @@ def predict_supervised_clustering(
         os.remove(csv_file_name)
     result_dataframe.to_csv(csv_file_name, index=False)
 
+
 def calculate_wcss(data, labels, centroids):
     wcss = 0
     label_to_index = {label: i for i, label in enumerate(np.unique(labels))}
@@ -939,14 +951,15 @@ def calculate_wcss(data, labels, centroids):
         if cluster_label != -1:
             centroid = centroids[label_to_index[cluster_label]]
             distance = np.linalg.norm(data[i] - centroid)
-            wcss += distance ** 2
+            wcss += distance**2
     return wcss
+
 
 def calculate_cluster_centroids(data, labels):
     unique_labels = np.unique(labels)
     centroids = []
     for label in unique_labels:
-        if label != -1:  
+        if label != -1:
             cluster_data = data[labels == label]
             centroid = np.mean(cluster_data, axis=0)
             centroids.append(centroid)
@@ -958,11 +971,10 @@ def unsupervised_clustering(
     csv_file_name,
     analysis_vectors,
     threshold_distance=5.0,
-    num_clusters = None,
+    num_clusters=None,
     metric="euclidean",
     method="ward",
     criterion="distance",
-
 ):
     csv_file_name_original = csv_file_name
     analysis_track_ids = []
@@ -1054,36 +1066,42 @@ def unsupervised_clustering(
         )
         if num_clusters is None:
             shape_dynamic_cluster_labels = fcluster(
-                shape_dynamic_linkage_matrix, t=threshold_distance,  criterion=criterion
+                shape_dynamic_linkage_matrix, t=threshold_distance, criterion=criterion
             )
         else:
             shape_dynamic_cluster_labels = fcluster(
-                shape_dynamic_linkage_matrix, num_clusters,  criterion=criterion
-            )   
+                shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
+            )
 
-        cluster_centroids = calculate_cluster_centroids(clusterable_track_array, shape_dynamic_cluster_labels)
-        silhouette = silhouette_score(clusterable_track_array, shape_dynamic_cluster_labels, metric=metric)
-        wcss_value = calculate_wcss(clusterable_track_array, shape_dynamic_cluster_labels, cluster_centroids)
+        cluster_centroids = calculate_cluster_centroids(
+            clusterable_track_array, shape_dynamic_cluster_labels
+        )
+        silhouette = silhouette_score(
+            clusterable_track_array, shape_dynamic_cluster_labels, metric=metric
+        )
+        wcss_value = calculate_wcss(
+            clusterable_track_array, shape_dynamic_cluster_labels, cluster_centroids
+        )
 
         silhouette_file_name = os.path.join(
-        csv_file_name_original
+            csv_file_name_original
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-            + f'_silhouette_{threshold_distance}.npy'
+            + f"_silhouette_{threshold_distance}.npy"
         )
         np.save(silhouette_file_name, silhouette)
 
         wcss_file_name = os.path.join(
             csv_file_name_original
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-            + f'_wcss_{threshold_distance}.npy'
+            + f"_wcss_{threshold_distance}.npy"
         )
         np.save(wcss_file_name, wcss_value)
         track_id_to_cluster = {
-                track_id: cluster_label
-                for track_id, cluster_label in zip(
-                    analysis_track_ids, shape_dynamic_cluster_labels
-                )
-            }
+            track_id: cluster_label
+            for track_id, cluster_label in zip(
+                analysis_track_ids, shape_dynamic_cluster_labels
+            )
+        }
         full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
         result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
         csv_file_name = (
@@ -1091,7 +1109,7 @@ def unsupervised_clustering(
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
             + ".csv"
         )
-   
+
         if os.path.exists(csv_file_name):
             os.remove(csv_file_name)
         result_dataframe.to_csv(csv_file_name, index=False)
@@ -1163,7 +1181,7 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
             shape_covariance_matrix.append(shape_covariance)
             dynamic_covariance_matrix.append(dynamic_covaraince)
             analysis_track_ids.append(track_id)
-                    
+
     shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
     shape_covariance_3d = np.dstack(shape_covariance_matrix)
     dynamic_covariance_3d = np.dstack(dynamic_covariance_matrix)
@@ -1173,11 +1191,7 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
     )
     shape_covariance_2d = shape_covariance_3d.reshape(len(analysis_track_ids), -1)
     dynamic_covariance_2d = dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
-    return (
-        shape_dynamic_covariance_2d,
-        shape_covariance_2d,
-        dynamic_covariance_2d
-    )
+    return (shape_dynamic_covariance_2d, shape_covariance_2d, dynamic_covariance_2d)
 
 
 def compute_covariance_matrix(track_arrays):
@@ -1196,7 +1210,7 @@ class MitosisNet(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3)
         self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
-        self.conv3 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3) 
+        self.conv3 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3)
         self.pool = nn.MaxPool1d(kernel_size=2)
         conv_output_size = self._calculate_conv_output_size(input_size)
         self.fc1 = nn.Linear(conv_output_size, 128)
@@ -1207,14 +1221,14 @@ class MitosisNet(nn.Module):
         x = torch.randn(1, 1, input_size)
         x = self.pool(nn.functional.relu(self.conv1(x)))
         x = self.pool(nn.functional.relu(self.conv2(x)))
-        x = self.pool(nn.functional.relu(self.conv3(x)))  
+        x = self.pool(nn.functional.relu(self.conv3(x)))
         return x.view(1, -1).size(1)
 
     def forward(self, x):
         x = x.view(-1, 1, x.size(1))
         x = self.pool(nn.functional.relu(self.conv1(x)))
         x = self.pool(nn.functional.relu(self.conv2(x)))
-        x = self.pool(nn.functional.relu(self.conv3(x))) 
+        x = self.pool(nn.functional.relu(self.conv3(x)))
         x = x.view(x.size(0), -1)
         x = nn.functional.relu(self.fc1(x))
         class_output1 = torch.softmax(self.fc2_class1(x), dim=1)
@@ -1222,46 +1236,68 @@ class MitosisNet(nn.Module):
         return class_output1, class_output2
 
 
-
-def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_class2, input_size, save_path, batch_size=64, learning_rate=0.001, epochs=10):
+def train_mitosis_neural_net(
+    features_array,
+    labels_array_class1,
+    labels_array_class2,
+    input_size,
+    save_path,
+    batch_size=64,
+    learning_rate=0.001,
+    epochs=10,
+):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    X_train, X_val, y_train_class1, y_val_class1, y_train_class2, y_val_class2 = train_test_split(
-        features_array.astype(np.float32), 
-        labels_array_class1.astype(np.uint8), 
-        labels_array_class2.astype(np.uint8), 
-        test_size=0.1, 
-        random_state=42
+    (
+        X_train,
+        X_val,
+        y_train_class1,
+        y_val_class1,
+        y_train_class2,
+        y_val_class2,
+    ) = train_test_split(
+        features_array.astype(np.float32),
+        labels_array_class1.astype(np.uint8),
+        labels_array_class2.astype(np.uint8),
+        test_size=0.1,
+        random_state=42,
     )
-    print(f"Training data shape: {X_train.shape}, Validation data shape: {X_val.shape}, Training labels shape: {y_train_class1.shape}, Validation labels shape: {y_val_class1.shape}")
+    print(
+        f"Training data shape: {X_train.shape}, Validation data shape: {X_val.shape}, Training labels shape: {y_train_class1.shape}, Validation labels shape: {y_val_class1.shape}"
+    )
     X_train_tensor = torch.tensor(X_train, dtype=torch.float32).to(device)
     y_train_class1_tensor = torch.tensor(y_train_class1, dtype=torch.uint8).to(device)
     y_train_class2_tensor = torch.tensor(y_train_class2, dtype=torch.uint8).to(device)
     X_val_tensor = torch.tensor(X_val, dtype=torch.float32).to(device)
     y_val_class1_tensor = torch.tensor(y_val_class1, dtype=torch.uint8).to(device)
     y_val_class2_tensor = torch.tensor(y_val_class2, dtype=torch.uint8).to(device)
-    
+
     num_classes1 = int(torch.max(y_train_class1_tensor)) + 1
     num_classes2 = int(torch.max(y_train_class2_tensor)) + 1
-    print(f'classes1: {num_classes1}, classes2: {num_classes2}')
+    print(f"classes1: {num_classes1}, classes2: {num_classes2}")
     model_info = {
-        'input_size': input_size,
-        'num_classes1': num_classes1,
-        'num_classes2': num_classes2
+        "input_size": input_size,
+        "num_classes1": num_classes1,
+        "num_classes2": num_classes2,
     }
-    with open(save_path + '_model_info.json', 'w') as json_file:
+    with open(save_path + "_model_info.json", "w") as json_file:
         json.dump(model_info, json_file)
-    model = MitosisNet(input_size=input_size, num_classes_class1=num_classes1, num_classes_class2=num_classes2)
+    model = MitosisNet(
+        input_size=input_size,
+        num_classes_class1=num_classes1,
+        num_classes_class2=num_classes2,
+    )
     model.to(device)
 
     criterion_class1 = nn.CrossEntropyLoss()
     criterion_class2 = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    milestones = [int(epochs * 0.5), int(epochs * 0.75)] 
-    scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.1) 
+    milestones = [int(epochs * 0.5), int(epochs * 0.75)]
+    scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.1)
 
-
-    train_dataset = TensorDataset(X_train_tensor, y_train_class1_tensor, y_train_class2_tensor)
+    train_dataset = TensorDataset(
+        X_train_tensor, y_train_class1_tensor, y_train_class2_tensor
+    )
     val_dataset = TensorDataset(X_val_tensor, y_val_class1_tensor, y_val_class2_tensor)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -1278,9 +1314,9 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
         model.train()
         running_loss_class1 = 0.0
         running_loss_class2 = 0.0
-        correct_train_class1 = 0  
-        total_train_class1 = 0    
-        correct_train_class2 = 0  
+        correct_train_class1 = 0
+        total_train_class1 = 0
+        correct_train_class2 = 0
         total_train_class2 = 0
 
         with tqdm(total=len(train_loader), desc=f"Epoch {epoch + 1}/{epochs}") as pbar:
@@ -1296,7 +1332,7 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
                 loss_class2.backward()
 
                 optimizer.step()
-                
+
                 outputs_class1, outputs_class2 = model(inputs)
 
                 _, predicted_class1 = torch.max(outputs_class1.data, 1)
@@ -1309,14 +1345,27 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
                 correct_train_class2 += (predicted_class2 == labels_class2).sum().item()
                 total_train_class2 += labels_class2.size(0)
                 pbar.update(1)
-                pbar.set_postfix({'Acc Class1': correct_train_class1 / total_train_class1 if total_train_class1 > 0 else 0,
-                                   'Acc Class2': correct_train_class2 / total_train_class2 if total_train_class2 > 0 else 0,'Class1 Loss': running_loss_class1 / (i + 1), 'Class2 Loss': running_loss_class2 / (i + 1)})
+                pbar.set_postfix(
+                    {
+                        "Acc Class1": correct_train_class1 / total_train_class1
+                        if total_train_class1 > 0
+                        else 0,
+                        "Acc Class2": correct_train_class2 / total_train_class2
+                        if total_train_class2 > 0
+                        else 0,
+                        "Class1 Loss": running_loss_class1 / (i + 1),
+                        "Class2 Loss": running_loss_class2 / (i + 1),
+                    }
+                )
             scheduler.step()
         train_loss_class1_values.append(running_loss_class1 / len(train_loader))
         train_loss_class2_values.append(running_loss_class2 / len(train_loader))
-        train_acc_class1_values.append(correct_train_class1 / total_train_class1 if total_train_class1 > 0 else 0)
-        train_acc_class2_values.append(correct_train_class2 / total_train_class2 if total_train_class2 > 0 else 0)
-
+        train_acc_class1_values.append(
+            correct_train_class1 / total_train_class1 if total_train_class1 > 0 else 0
+        )
+        train_acc_class2_values.append(
+            correct_train_class2 / total_train_class2 if total_train_class2 > 0 else 0
+        )
 
         model.eval()
         running_val_loss_class1 = 0.0
@@ -1326,7 +1375,9 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
         correct_val_class2 = 0
         total_val_class2 = 0
 
-        with tqdm(total=len(val_loader), desc=f"Validation Epoch {epoch + 1}/{epochs}") as pbar_val:
+        with tqdm(
+            total=len(val_loader), desc=f"Validation Epoch {epoch + 1}/{epochs}"
+        ) as pbar_val:
             with torch.no_grad():
                 for i, data in enumerate(val_loader):
                     inputs, labels_class1, labels_class2 = data
@@ -1336,77 +1387,95 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
                     _, predicted_class2 = torch.max(outputs_class2.data, 1)
 
                     total_val_class1 += labels_class1.size(0)
-                    correct_val_class1 += (predicted_class1 == labels_class1).sum().item()
+                    correct_val_class1 += (
+                        (predicted_class1 == labels_class1).sum().item()
+                    )
 
                     total_val_class2 += labels_class2.size(0)
-                    correct_val_class2 += (predicted_class2 == labels_class2).sum().item()
+                    correct_val_class2 += (
+                        (predicted_class2 == labels_class2).sum().item()
+                    )
 
                     pbar_val.update(1)
-                    accuracy_class1 = correct_val_class1 / total_val_class1 if total_val_class1 > 0 else 0
-                    accuracy_class2 = correct_val_class2 / total_val_class2 if total_val_class2 > 0 else 0
-                    pbar_val.set_postfix({'Acc Class1': accuracy_class1, 'Acc Class2': accuracy_class2})
-        
+                    accuracy_class1 = (
+                        correct_val_class1 / total_val_class1
+                        if total_val_class1 > 0
+                        else 0
+                    )
+                    accuracy_class2 = (
+                        correct_val_class2 / total_val_class2
+                        if total_val_class2 > 0
+                        else 0
+                    )
+                    pbar_val.set_postfix(
+                        {"Acc Class1": accuracy_class1, "Acc Class2": accuracy_class2}
+                    )
+
         val_loss_class1_values.append(running_val_loss_class1 / len(val_loader))
         val_loss_class2_values.append(running_val_loss_class2 / len(val_loader))
-        val_acc_class1_values.append(correct_val_class1 / total_val_class1 if total_val_class1 > 0 else 0)
-        val_acc_class2_values.append(correct_val_class2 / total_val_class2 if total_val_class2 > 0 else 0)
+        val_acc_class1_values.append(
+            correct_val_class1 / total_val_class1 if total_val_class1 > 0 else 0
+        )
+        val_acc_class2_values.append(
+            correct_val_class2 / total_val_class2 if total_val_class2 > 0 else 0
+        )
 
-
-    np.savez(save_path + '_metrics.npz',
-         train_loss_class1=train_loss_class1_values,
-         train_loss_class2=train_loss_class2_values,
-         val_loss_class1=val_loss_class1_values,
-         val_loss_class2=val_loss_class2_values,
-         train_acc_class1=train_acc_class1_values,
-         train_acc_class2=train_acc_class2_values,
-         val_acc_class1=val_acc_class1_values,
-         val_acc_class2=val_acc_class2_values)   
-    torch.save(model.state_dict(), save_path + '_mitosis_track_model.pth')
-
+    np.savez(
+        save_path + "_metrics.npz",
+        train_loss_class1=train_loss_class1_values,
+        train_loss_class2=train_loss_class2_values,
+        val_loss_class1=val_loss_class1_values,
+        val_loss_class2=val_loss_class2_values,
+        train_acc_class1=train_acc_class1_values,
+        train_acc_class2=train_acc_class2_values,
+        val_acc_class1=val_acc_class1_values,
+        val_acc_class2=val_acc_class2_values,
+    )
+    torch.save(model.state_dict(), save_path + "_mitosis_track_model.pth")
 
 
 def plot_metrics_from_npz(npz_file):
     data = np.load(npz_file)
 
-    train_loss_class1 = data['train_loss_class1']
-    train_loss_class2 = data['train_loss_class2']
-    val_loss_class1 = data['val_loss_class1']
-    val_loss_class2 = data['val_loss_class2']
-    train_acc_class1 = data['train_acc_class1']
-    train_acc_class2 = data['train_acc_class2']
-    val_acc_class1 = data['val_acc_class1']
-    val_acc_class2 = data['val_acc_class2']
+    train_loss_class1 = data["train_loss_class1"]
+    train_loss_class2 = data["train_loss_class2"]
+    val_loss_class1 = data["val_loss_class1"]
+    val_loss_class2 = data["val_loss_class2"]
+    train_acc_class1 = data["train_acc_class1"]
+    train_acc_class2 = data["train_acc_class2"]
+    val_acc_class1 = data["val_acc_class1"]
+    val_acc_class2 = data["val_acc_class2"]
 
     epochs = len(train_loss_class1)
 
     plt.figure(figsize=(12, 4))
     plt.subplot(1, 2, 1)
-    plt.plot(range(epochs), train_loss_class1, label='Train Loss Class 1')
-    plt.plot(range(epochs), val_loss_class1, label='Validation Loss Class 1')
+    plt.plot(range(epochs), train_loss_class1, label="Train Loss Class 1")
+    plt.plot(range(epochs), val_loss_class1, label="Validation Loss Class 1")
     plt.legend()
-    plt.title('Loss for Class 1')
+    plt.title("Loss for Class 1")
 
     plt.subplot(1, 2, 2)
-    plt.plot(range(epochs), train_loss_class2, label='Train Loss Class 2')
-    plt.plot(range(epochs), val_loss_class2, label='Validation Loss Class 2')
+    plt.plot(range(epochs), train_loss_class2, label="Train Loss Class 2")
+    plt.plot(range(epochs), val_loss_class2, label="Validation Loss Class 2")
     plt.legend()
-    plt.title('Loss for Class 2')
+    plt.title("Loss for Class 2")
 
     plt.tight_layout()
     plt.show()
 
     plt.figure(figsize=(12, 4))
     plt.subplot(1, 2, 1)
-    plt.plot(range(epochs), train_acc_class1, label='Train Acc Class 1')
-    plt.plot(range(epochs), val_acc_class1, label='Validation Acc Class 1')
+    plt.plot(range(epochs), train_acc_class1, label="Train Acc Class 1")
+    plt.plot(range(epochs), val_acc_class1, label="Validation Acc Class 1")
     plt.legend()
-    plt.title('Accuracy for Class 1')
+    plt.title("Accuracy for Class 1")
 
     plt.subplot(1, 2, 2)
-    plt.plot(range(epochs), train_acc_class2, label='Train Acc Class 2')
-    plt.plot(range(epochs), val_acc_class2, label='Validation Acc Class 2')
+    plt.plot(range(epochs), train_acc_class2, label="Train Acc Class 2")
+    plt.plot(range(epochs), val_acc_class2, label="Validation Acc Class 2")
     plt.legend()
-    plt.title('Accuracy for Class 2')
+    plt.title("Accuracy for Class 2")
 
     plt.tight_layout()
     plt.show()
@@ -1415,14 +1484,18 @@ def plot_metrics_from_npz(npz_file):
 def predict_with_model(saved_model_path, features_array):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    with open(saved_model_path + '_model_info.json', 'r') as json_file:
+    with open(saved_model_path + "_model_info.json") as json_file:
         model_info = json.load(json_file)
 
-    input_size = model_info['input_size']
-    num_classes_class1 = model_info['num_classes1']
-    num_classes_class2 = model_info['num_classes2']
+    input_size = model_info["input_size"]
+    num_classes_class1 = model_info["num_classes1"]
+    num_classes_class2 = model_info["num_classes2"]
 
-    model = MitosisNet(input_size=input_size, num_classes_class1=num_classes_class1, num_classes_class2=num_classes_class2)
+    model = MitosisNet(
+        input_size=input_size,
+        num_classes_class1=num_classes_class1,
+        num_classes_class2=num_classes_class2,
+    )
     model.load_state_dict(torch.load(saved_model_path))
     model.to(device)
     model.eval()
@@ -1439,6 +1512,7 @@ def predict_with_model(saved_model_path, features_array):
     predicted_class2 = predicted_class2.cpu().numpy()
 
     return predicted_class1, predicted_class2
+
 
 def _save_feature_importance(
     sorted_feature_names,
