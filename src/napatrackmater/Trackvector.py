@@ -1201,7 +1201,6 @@ class MitosisNet(nn.Module):
         self.fc1 = nn.Linear(conv_output_size, 128)
         self.fc2_class1 = nn.Linear(128, num_classes_class1)
         self.fc3_class2 = nn.Linear(128, num_classes_class2)
-        self.dropout = nn.Dropout(0.5) 
 
     def _calculate_conv_output_size(self, input_size):
         x = torch.randn(1, 1, input_size)
@@ -1217,7 +1216,6 @@ class MitosisNet(nn.Module):
         x = self.pool(nn.functional.relu(self.conv3(x))) 
         x = x.view(x.size(0), -1)
         x = nn.functional.relu(self.fc1(x))
-        x = self.dropout(x)  # Applying dropout
         class_output1 = torch.softmax(self.fc2_class1(x), dim=1)
         class_output2 = torch.softmax(self.fc3_class2(x), dim=1)
         return class_output1, class_output2
