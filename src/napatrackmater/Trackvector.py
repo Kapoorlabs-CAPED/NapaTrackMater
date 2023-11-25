@@ -1261,14 +1261,13 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
 
         for i, data in enumerate(train_loader):
             inputs, labels_class1, labels_class2 = data
-            print(inputs.shape, labels_class1.shape, labels_class2.shape)
             optimizer.zero_grad()
             class_output1, class_output2 = model(inputs)
 
             loss_class1 = criterion_class1(class_output1, labels_class1)
-            loss_class2 = criterion_class2(class_output2, labels_class2)
+            loss_class1.backward(retain_graph=True)  # Retain the graph for the next backward pass
 
-            loss_class1.backward()
+            loss_class2 = criterion_class2(class_output2, labels_class2)
             loss_class2.backward()
 
             optimizer.step()
