@@ -603,19 +603,6 @@ def create_mitosis_training_data(shape_dynamic_track_arrays, shape_track_arrays,
 
     return training_data_shape_dynamic, training_data_shape, training_data_dynamic
 
-def extract_training_data(training_data):
-    features_list = []
-    labels_list = []
-
-    for features, label_dividing, label_number_dividing in training_data:
-        features_list.append(features)
-        labels_list.append((tuple(label_dividing), tuple(label_number_dividing)))  # Convert Series to tuple
-
-    features_array = np.array(features_list)
-    mlb = MultiLabelBinarizer()
-    labels_array = mlb.fit_transform(labels_list)
-
-    return features_array, labels_array
 
 def extract_neural_training_data(training_data):
     features_list = []
@@ -1205,7 +1192,7 @@ def compute_covariance_matrix(track_arrays):
 
 
 class MitosisNet(nn.Module):
-    def __init__(self, input_size):
+    def __init__(self, input_size, num_classes_class1, num_classes_class2):
         super().__init__()
         self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3)
         self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
@@ -1213,8 +1200,8 @@ class MitosisNet(nn.Module):
         # Calculate the size of the linear layer input based on input_size
         conv_output_size = self._calculate_conv_output_size(input_size)
         self.fc1 = nn.Linear(conv_output_size, 128)
-        self.fc2_class1 = nn.Linear(128, 1)  # Output for class 1 prediction
-        self.fc3_class2 = nn.Linear(128, 1)  # Output for class 2 prediction
+        self.fc2_class1 = nn.Linear(128, num_classes_class1)  # Output for class 1 prediction
+        self.fc3_class2 = nn.Linear(128, num_classes_class2)  # Output for class 2 prediction
 
     def _calculate_conv_output_size(self, input_size):
         # Assuming input_size is the number of features in your data
@@ -1229,8 +1216,8 @@ class MitosisNet(nn.Module):
         x = self.pool(nn.functional.relu(self.conv2(x)))
         x = x.view(x.size(0), -1)  # Flatten the convolutional output
         x = nn.functional.relu(self.fc1(x))
-        class_output1 = torch.sigmoid(self.fc2_class1(x))  # Sigmoid activation for class 1 prediction
-        class_output2 = torch.sigmoid(self.fc3_class2(x))  # Sigmoid activation for class 2 prediction
+        class_output1 = torch.softmax(self.fc2_class1(x), dim=1)  # Sigmoid activation for class 1 prediction
+        class_output2 = torch.softmax(self.fc3_class2(x), dim=1)  # Sigmoid activation for class 2 prediction
         return class_output1, class_output2
 
 def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_class2, input_size, save_path, batch_size=64, learning_rate=0.001, epochs=10):
@@ -1249,10 +1236,12 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
     X_val_tensor = torch.Tensor(X_val)
     y_val_class1_tensor = torch.Tensor(y_val_class1)
     y_val_class2_tensor = torch.Tensor(y_val_class2)
+    num_classes1 = int(torch.max(y_train_class1_tensor)) + 1
+    num_classes2 = int(torch.max(y_train_class2_tensor)) + 1
+    model = MitosisNet(input_size=input_size, num_classes_class1=num_classes1, num_classes_class2=num_classes2)
 
-    model = MitosisNet(input_size=input_size)
-
-    criterion = nn.BCELoss()
+    criterion_class1 = nn.CrossEntropyLoss()
+    criterion_class2 = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     train_dataset = TensorDataset(X_train_tensor, y_train_class1_tensor, y_train_class2_tensor)
@@ -1263,20 +1252,50 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
 
     for epoch in range(epochs):
         model.train()
-        running_loss = 0.0
+        running_loss_class1 = 0.0
+        running_loss_class2 = 0.0
+
         for i, data in enumerate(train_loader):
             inputs, labels_class1, labels_class2 = data
             optimizer.zero_grad()
             class_output1, class_output2 = model(inputs)
-            loss = criterion(class_output1, labels_class1) + criterion(class_output2, labels_class2)
-            loss.backward()
+
+            loss_class1 = criterion_class1(class_output1, labels_class1)
+            loss_class2 = criterion_class2(class_output2, labels_class2)
+
+            loss_class1.backward()
+            loss_class2.backward()
+
             optimizer.step()
-            running_loss += loss.item()
 
-        print(f"Epoch {epoch + 1}/{epochs}, Loss: {running_loss / len(train_loader)}")
+            running_loss_class1 += loss_class1.item()
+            running_loss_class2 += loss_class2.item()
 
-    model.eval()
-    # Evaluation logic for both class predictions
+        print(f"Epoch {epoch + 1}/{epochs}, Class1 Loss: {running_loss_class1 / len(train_loader)}, Class2 Loss: {running_loss_class2 / len(train_loader)}")
+        model.eval()
+        correct_class1 = 0
+        total_class1 = 0
+        correct_class2 = 0
+        total_class2 = 0
+
+        with torch.no_grad():
+            for data in val_loader:
+                inputs, labels_class1, labels_class2 = data
+                outputs_class1, outputs_class2 = model(inputs)
+
+                _, predicted_class1 = torch.max(outputs_class1.data, 1)
+                _, predicted_class2 = torch.max(outputs_class2.data, 1)
+
+                total_class1 += labels_class1.size(0)
+                correct_class1 += (predicted_class1 == labels_class1).sum().item()
+
+                total_class2 += labels_class2.size(0)
+                correct_class2 += (predicted_class2 == labels_class2).sum().item()
+
+        accuracy_class1 = correct_class1 / total_class1 if total_class1 > 0 else 0
+        accuracy_class2 = correct_class2 / total_class2 if total_class2 > 0 else 0
+
+        print(f"Validation Accuracy Class1: {accuracy_class1}, Validation Accuracy Class2: {accuracy_class2}")
 
     torch.save(model.state_dict(), save_path + '_mitosis_track_model.pth')
 
