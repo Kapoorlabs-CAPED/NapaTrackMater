@@ -1500,7 +1500,7 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     model.eval()
 
     features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
-    if len(features_tensor.shape) == 2:
+    if len(features_tensor.shape) == 1:
         features_tensor = features_tensor.unsqueeze(0)
     with torch.no_grad():
         outputs_class1, outputs_class2 = model(features_tensor)
