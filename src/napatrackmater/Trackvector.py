@@ -1238,11 +1238,11 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
 
     # Convert data to PyTorch tensors and move them to GPU with precision float16
     X_train_tensor = torch.tensor(X_train, dtype=torch.float16).to(device)
-    y_train_class1_tensor = torch.tensor(y_train_class1, dtype=torch.float16).to(device)
-    y_train_class2_tensor = torch.tensor(y_train_class2, dtype=torch.float16).to(device)
+    y_train_class1_tensor = torch.tensor(y_train_class1, dtype=torch.uint8).to(device)
+    y_train_class2_tensor = torch.tensor(y_train_class2, dtype=torch.uint8).to(device)
     X_val_tensor = torch.tensor(X_val, dtype=torch.float16).to(device)
-    y_val_class1_tensor = torch.tensor(y_val_class1, dtype=torch.float16).to(device)
-    y_val_class2_tensor = torch.tensor(y_val_class2, dtype=torch.float16).to(device)
+    y_val_class1_tensor = torch.tensor(y_val_class1, dtype=torch.uint8).to(device)
+    y_val_class2_tensor = torch.tensor(y_val_class2, dtype=torch.uint8).to(device)
     
     num_classes1 = int(torch.max(y_train_class1_tensor)) + 1
     num_classes2 = int(torch.max(y_train_class2_tensor)) + 1
