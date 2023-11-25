@@ -575,8 +575,8 @@ def create_mitosis_training_data(shape_dynamic_track_arrays, shape_track_arrays,
 
 
     for idx in range(len(full_records)):
-            label_dividing = full_records[idx]["Dividing"]
-            label_number_dividing = full_records[idx]["Number_Dividing"]
+            label_dividing = full_records["Dividing"][idx]
+            label_number_dividing = full_records["Number_Dividing"][idx]
 
             features_shape_dynamic = shape_dynamic_track_arrays[idx,:].tolist()
             features_shape = shape_track_arrays[idx,:].tolist()
