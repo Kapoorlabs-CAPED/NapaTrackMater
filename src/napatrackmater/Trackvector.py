@@ -21,13 +21,12 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from collections import Counter
 from sklearn.metrics import silhouette_score
-from sklearn.preprocessing import MultiLabelBinarizer
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
-
+import json
 
 class TrackVector(TrackMate):
     def __init__(
@@ -1240,7 +1239,14 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
     
     num_classes1 = int(torch.max(y_train_class1_tensor)) + 1
     num_classes2 = int(torch.max(y_train_class2_tensor)) + 1
-
+    print(f'classes1: {num_classes1}, classes2: {num_classes2}')
+    model_info = {
+        'input_size': input_size,
+        'num_classes1': num_classes1,
+        'num_classes2': num_classes2
+    }
+    with open(save_path + '_model_info.json', 'w') as json_file:
+        json.dump(model_info, json_file)
     model = MitosisNet(input_size=input_size, num_classes_class1=num_classes1, num_classes_class2=num_classes2)
     model.to(device)
 
@@ -1265,7 +1271,7 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
             class_output1, class_output2 = model(inputs)
 
             loss_class1 = criterion_class1(class_output1, labels_class1)
-            loss_class1.backward(retain_graph=True)  # Retain the graph for the next backward pass
+            loss_class1.backward(retain_graph=True)  
 
             loss_class2 = criterion_class2(class_output2, labels_class2)
             loss_class2.backward()
@@ -1303,6 +1309,26 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
 
     torch.save(model.state_dict(), save_path + '_mitosis_track_model.pth')
 
+def predict_with_model(saved_model_path,input_size, num_classes_class1, num_classes_class2, features_array):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = MitosisNet(input_size=input_size, num_classes_class1=num_classes_class1, num_classes_class2=num_classes_class2)
+    model.load_state_dict(torch.load(saved_model_path))
+    model.to(device)
+    model.eval()
+
+    features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
+
+    with torch.no_grad():
+        outputs_class1, outputs_class2 = model(features_tensor)
+
+        _, predicted_class1 = torch.max(outputs_class1.data, 1)
+        _, predicted_class2 = torch.max(outputs_class2.data, 1)
+
+    # Convert predictions to numpy arrays
+    predicted_class1 = predicted_class1.cpu().numpy()
+    predicted_class2 = predicted_class2.cpu().numpy()
+
+    return predicted_class1, predicted_class2
 
 def _save_feature_importance(
     sorted_feature_names,
