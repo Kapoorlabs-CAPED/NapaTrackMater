@@ -1297,24 +1297,27 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
         correct_class2 = 0
         total_class2 = 0
 
-        with torch.no_grad():
-            for data in val_loader:
-                inputs, labels_class1, labels_class2 = data
-                outputs_class1, outputs_class2 = model(inputs)
+        with tqdm(total=len(val_loader), desc=f"Validation Epoch {epoch + 1}/{epochs}") as pbar_val:
+            with torch.no_grad():
+                for i, data in enumerate(val_loader):
+                    inputs, labels_class1, labels_class2 = data
+                    outputs_class1, outputs_class2 = model(inputs)
 
-                _, predicted_class1 = torch.max(outputs_class1.data, 1)
-                _, predicted_class2 = torch.max(outputs_class2.data, 1)
+                    _, predicted_class1 = torch.max(outputs_class1.data, 1)
+                    _, predicted_class2 = torch.max(outputs_class2.data, 1)
 
-                total_class1 += labels_class1.size(0)
-                correct_class1 += (predicted_class1 == labels_class1).sum().item()
+                    total_class1 += labels_class1.size(0)
+                    correct_class1 += (predicted_class1 == labels_class1).sum().item()
 
-                total_class2 += labels_class2.size(0)
-                correct_class2 += (predicted_class2 == labels_class2).sum().item()
+                    total_class2 += labels_class2.size(0)
+                    correct_class2 += (predicted_class2 == labels_class2).sum().item()
 
-        accuracy_class1 = correct_class1 / total_class1 if total_class1 > 0 else 0
-        accuracy_class2 = correct_class2 / total_class2 if total_class2 > 0 else 0
+                    # Update the validation progress bar
+                    pbar_val.update(1)
+                    accuracy_class1 = correct_class1 / total_class1 if total_class1 > 0 else 0
+                    accuracy_class2 = correct_class2 / total_class2 if total_class2 > 0 else 0
+                    pbar_val.set_postfix({'Acc Class1': accuracy_class1, 'Acc Class2': accuracy_class2})
 
-        print(f"Validation Accuracy Class1: {accuracy_class1}, Validation Accuracy Class2: {accuracy_class2}")
 
     torch.save(model.state_dict(), save_path + '_mitosis_track_model.pth')
 
