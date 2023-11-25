@@ -22,6 +22,13 @@ from sklearn.metrics import accuracy_score
 from collections import Counter
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import MultiLabelBinarizer
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
+from sklearn.model_selection import train_test_split
+
+
 class TrackVector(TrackMate):
     def __init__(
         self,
@@ -423,10 +430,10 @@ class TrackVector(TrackMate):
         max_number_dividing = full_dataframe["Number_Dividing"].max()
         min_number_dividing = full_dataframe["Number_Dividing"].min()
         excluded_keys = ['Track ID', 't', 'z', 'y', 'x']
-        for i in range(min_number_dividing, max_number_dividing + 1):
+        for i in range(min_number_dividing.astype(int), max_number_dividing.astype(int) + 1):
             for column in full_dataframe.columns:
                 if column not in excluded_keys and isinstance(full_dataframe[column].iloc[0], list):
-                    data = full_dataframe[column][full_dataframe['Number_Dividing'] == i]
+                    data = full_dataframe[column][full_dataframe['Number_Dividing'].astype(int) == i]
                     for j, sublist in enumerate(data):
                         np.save(f'{save_path}_{column}_histogram_sublist_{j}_Number_Dividing_{i}.npy', np.array(sublist))
                             
@@ -1177,6 +1184,69 @@ def compute_covariance_matrix(track_arrays):
 
     return covariance_matrix, eigenvectors
 
+class MitosisNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3)
+        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
+        self.pool = nn.MaxPool1d(kernel_size=2)
+        self.fc1 = nn.Linear(64 * 28, 128)  # Adjust input size based on your data
+        self.fc2 = nn.Linear(128, 2)  # Adjust output size based on your labels
+
+    def forward(self, x):
+        x = x.view(-1, 1, 121)  # Reshape input data based on your data
+        x = self.pool(nn.functional.relu(self.conv1(x)))
+        x = self.pool(nn.functional.relu(self.conv2(x)))
+        x = x.view(-1, 64 * 28)  # Adjust input size based on your data
+        x = nn.functional.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+    
+def train_mitosis_neural_net(features_array, labels_array, save_path, batch_size = 64, leanring_rate=0.001, epochs=10):
+
+    X_train, X_val, y_train, y_val = train_test_split(features_array, labels_array, test_size=0.2, random_state=42)
+    X_train_tensor = torch.Tensor(X_train)
+    y_train_tensor = torch.Tensor(y_train)
+    X_val_tensor = torch.Tensor(X_val)
+    y_val_tensor = torch.Tensor(y_val)
+
+    model = MitosisNet()
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=leanring_rate)
+    train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
+    val_dataset = TensorDataset(X_val_tensor, y_val_tensor)
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size)
+
+    for epoch in range(epochs):
+        model.train()
+        running_loss = 0.0
+        for i, data in enumerate(train_loader):
+            inputs, labels = data
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item()
+    print(f"Epoch {epoch+1}/{epochs}, Loss: {running_loss / len(train_loader)}")
+
+    model.eval()
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for data in val_loader:
+            inputs, labels = data
+            outputs = model(inputs)
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+    accuracy = correct / total
+    print(f"Validation Accuracy: {accuracy}")
+
+    torch.save(model.state_dict(), save_path +'_mitosis_track_model.pth')
 
 def _save_feature_importance(
     sorted_feature_names,
