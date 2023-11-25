@@ -1200,32 +1200,32 @@ class MitosisNet(nn.Module):
         # Calculate the size of the linear layer input based on input_size
         conv_output_size = self._calculate_conv_output_size(input_size)
         self.fc1 = nn.Linear(conv_output_size, 128)
-        self.fc2_class1 = nn.Linear(128, num_classes_class1)  # Output for class 1 prediction
-        self.fc3_class2 = nn.Linear(128, num_classes_class2)  # Output for class 2 prediction
+        self.fc2_class1 = nn.Linear(128, num_classes_class1) 
+        self.fc3_class2 = nn.Linear(128, num_classes_class2) 
 
     def _calculate_conv_output_size(self, input_size):
-        # Assuming input_size is the number of features in your data
+      
         x = torch.randn(1, 1, input_size)
         x = self.pool(nn.functional.relu(self.conv1(x)))
         x = self.pool(nn.functional.relu(self.conv2(x)))
         return x.view(1, -1).size(1)
 
     def forward(self, x):
-        x = x.view(-1, 1, x.size(1))  # Reshape input data based on your data
+        x = x.view(-1, 1, x.size(1))  
         x = self.pool(nn.functional.relu(self.conv1(x)))
         x = self.pool(nn.functional.relu(self.conv2(x)))
-        x = x.view(x.size(0), -1)  # Flatten the convolutional output
+        x = x.view(x.size(0), -1) 
         x = nn.functional.relu(self.fc1(x))
-        class_output1 = torch.softmax(self.fc2_class1(x), dim=1)  # Sigmoid activation for class 1 prediction
-        class_output2 = torch.softmax(self.fc3_class2(x), dim=1)  # Sigmoid activation for class 2 prediction
+        class_output1 = torch.softmax(self.fc2_class1(x), dim=1)  
+        class_output2 = torch.softmax(self.fc3_class2(x), dim=1)  
         return class_output1, class_output2
 
 def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_class2, input_size, save_path, batch_size=64, learning_rate=0.001, epochs=10):
     X_train, X_val, y_train_class1, y_val_class1, y_train_class2, y_val_class2 = train_test_split(
-        features_array.astype(np.float32), 
-        labels_array_class1.astype(np.float32), 
-        labels_array_class2.astype(np.float32), 
-        test_size=0.2, 
+        features_array.astype(np.float16), 
+        labels_array_class1.astype(np.float16), 
+        labels_array_class2.astype(np.float16), 
+        test_size=0.1, 
         random_state=42
     )
 
