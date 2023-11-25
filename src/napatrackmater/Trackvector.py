@@ -1237,10 +1237,10 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
         random_state=42
     )
 
-    X_train_tensor = torch.tensor(X_train, dtype=torch.float16).to(device)
+    X_train_tensor = torch.tensor(X_train, dtype=torch.float32).to(device)
     y_train_class1_tensor = torch.tensor(y_train_class1, dtype=torch.uint8).to(device)
     y_train_class2_tensor = torch.tensor(y_train_class2, dtype=torch.uint8).to(device)
-    X_val_tensor = torch.tensor(X_val, dtype=torch.float16).to(device)
+    X_val_tensor = torch.tensor(X_val, dtype=torch.float32).to(device)
     y_val_class1_tensor = torch.tensor(y_val_class1, dtype=torch.uint8).to(device)
     y_val_class2_tensor = torch.tensor(y_val_class2, dtype=torch.uint8).to(device)
     
