@@ -27,6 +27,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
 import json
+from tqdm import tqdm 
 
 class TrackVector(TrackMate):
     def __init__(
@@ -1268,23 +1269,28 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
         running_loss_class1 = 0.0
         running_loss_class2 = 0.0
 
-        for i, data in enumerate(train_loader):
-            inputs, labels_class1, labels_class2 = data
-            optimizer.zero_grad()
-            class_output1, class_output2 = model(inputs)
+        with tqdm(total=len(train_loader), desc=f"Epoch {epoch + 1}/{epochs}") as pbar:
+            for i, data in enumerate(train_loader):
+                inputs, labels_class1, labels_class2 = data
+                optimizer.zero_grad()
+                class_output1, class_output2 = model(inputs)
 
-            loss_class1 = criterion_class1(class_output1, labels_class1)
-            loss_class1.backward(retain_graph=True)  
+                loss_class1 = criterion_class1(class_output1, labels_class1)
+                loss_class1.backward(retain_graph=True)
 
-            loss_class2 = criterion_class2(class_output2, labels_class2)
-            loss_class2.backward()
+                loss_class2 = criterion_class2(class_output2, labels_class2)
+                loss_class2.backward()
 
-            optimizer.step()
+                optimizer.step()
 
-            running_loss_class1 += loss_class1.item()
-            running_loss_class2 += loss_class2.item()
+                running_loss_class1 += loss_class1.item()
+                running_loss_class2 += loss_class2.item()
 
-        print(f"Epoch {epoch + 1}/{epochs}, Class1 Loss: {running_loss_class1 / len(train_loader)}, Class2 Loss: {running_loss_class2 / len(train_loader)}")
+                # Update the progress bar
+                pbar.update(1)
+                pbar.set_postfix({'Class1 Loss': running_loss_class1 / (i + 1), 'Class2 Loss': running_loss_class2 / (i + 1)})
+
+
         model.eval()
         correct_class1 = 0
         total_class1 = 0
