@@ -1480,7 +1480,7 @@ def plot_metrics_from_npz(npz_file):
     plt.show()
 
 
-def predict_with_model(saved_model_path, saved_model_json, features_array, threshold=0.5):
+def predict_with_model(saved_model_path, saved_model_json, features_array):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     with open(saved_model_json) as json_file:
@@ -1504,7 +1504,7 @@ def predict_with_model(saved_model_path, saved_model_json, features_array, thres
         features_tensor = features_tensor.unsqueeze(0)
     with torch.no_grad():
         outputs_class1, outputs_class2 = model(features_tensor)
-
+        print(outputs_class1, outputs_class2)
         # Apply threshold to the probabilities
         predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
         predicted_probs_class2 = torch.softmax(outputs_class2, dim=1)
@@ -1513,13 +1513,7 @@ def predict_with_model(saved_model_path, saved_model_json, features_array, thres
         predicted_class1 = torch.argmax(predicted_probs_class1, dim=1).cpu().numpy()
         predicted_class2 = torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
         
-        # Filter predictions based on the threshold
-        filtered_predicted_class1 = (predicted_probs_class1[:, 1] > threshold).cpu().numpy()
-        filtered_predicted_class2 = (predicted_probs_class2[:, 1] > threshold).cpu().numpy()
         
-        # Apply filtering to predictions
-        predicted_class1 *= filtered_predicted_class1
-        predicted_class2 *= filtered_predicted_class2
 
     return predicted_class1, predicted_class2
 
