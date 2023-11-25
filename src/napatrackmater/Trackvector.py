@@ -1230,7 +1230,7 @@ def train_mitosis_neural_net(features_array, labels_array_class1, labels_array_c
 
     X_train, X_val, y_train_class1, y_val_class1, y_train_class2, y_val_class2 = train_test_split(
         features_array.astype(np.float16), 
-        labels_array_class1.astype(np.unit8), 
+        labels_array_class1.astype(np.uint8), 
         labels_array_class2.astype(np.uint8), 
         test_size=0.1, 
         random_state=42
