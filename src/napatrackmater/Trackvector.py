@@ -626,10 +626,10 @@ def extract_neural_training_data(training_data):
 
 def train_mitosis_classifier(features_array, labels_array,save_path, model_type='KNN', n_neighbors=5, random_state=42):
     X_train, X_test, y_train, y_test = train_test_split(features_array, labels_array, test_size=0.2, random_state=random_state)
-    X_train = X_train.astype(np.float16)
+    X_train = X_train
     y_train = y_train.astype(np.uint8)
 
-    X_test = X_test.astype(np.float16)
+    X_test = X_test
     y_test = y_test.astype(np.uint8)
     if model_type == 'KNN':
         knn = KNeighborsClassifier(n_neighbors=n_neighbors)
@@ -1198,13 +1198,14 @@ def compute_covariance_matrix(track_arrays):
 class MitosisNet(nn.Module):
     def __init__(self, input_size, num_classes_class1, num_classes_class2):
         super().__init__()
-        self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3)
-        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3).to(torch.float16)  
+        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3).to(torch.float16)  
         self.pool = nn.MaxPool1d(kernel_size=2)
         conv_output_size = self._calculate_conv_output_size(input_size)
-        self.fc1 = nn.Linear(conv_output_size, 128)
-        self.fc2_class1 = nn.Linear(128, num_classes_class1) 
-        self.fc3_class2 = nn.Linear(128, num_classes_class2) 
+        self.fc1 = nn.Linear(conv_output_size, 128).to(torch.float16)  
+        self.fc2_class1 = nn.Linear(128, num_classes_class1).to(torch.float16)  
+        self.fc3_class2 = nn.Linear(128, num_classes_class2).to(torch.float16)  
+ 
 
     def _calculate_conv_output_size(self, input_size):
       
