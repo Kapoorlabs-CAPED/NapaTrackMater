@@ -428,7 +428,7 @@ class TrackVector(TrackMate):
                 if column not in excluded_keys and isinstance(full_dataframe[column].iloc[0], list):
                     data = full_dataframe[column][full_dataframe['Number_Dividing'] == i]
                     for j, sublist in enumerate(data):
-                        np.save(f'{save_path}_{column}_histogram_sublist_{j}.npy', np.array(sublist))
+                        np.save(f'{save_path}_{column}_histogram_sublist_{j}_Number_Dividing_{i}.npy', np.array(sublist))
                             
             
 
