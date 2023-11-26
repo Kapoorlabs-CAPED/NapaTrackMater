@@ -1482,7 +1482,6 @@ def plot_metrics_from_npz(npz_file):
 
 def predict_with_model(saved_model_path, saved_model_json, features_array):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(device)
     with open(saved_model_json) as json_file:
         model_info = json.load(json_file)
 
