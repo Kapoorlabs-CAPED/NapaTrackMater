@@ -444,6 +444,47 @@ class TrackVector(TrackMate):
                         f"{save_path}_{column}_Number_Dividing_{i}.npy", data.to_numpy()
                     )
 
+        all_split_data = []            
+        for split_id in self.split_cell_ids:
+            spot_properties = self.unique_spot_properties[split_id]
+            track_id = spot_properties[self.trackid_key]
+            unique_id = spot_properties[self.uniqueid_key]
+            tracklet_id = spot_properties[self.trackletid_key]
+            number_times_divided = spot_properties[self.number_dividing_key]    
+            surface_area = spot_properties[self.surface_area_key]
+            eccentricity_comp_first = spot_properties[self.eccentricity_comp_firstkey]
+            eccentricity_comp_second = spot_properties[self.eccentricity_comp_secondkey]
+            volume = spot_properties[self.quality_key]
+            radius = spot_properties[self.radius_key]
+            speed = spot_properties[self.speed_key]
+            motion_angle = spot_properties[self.motion_angle_key]
+            acceleration = spot_properties[self.acceleration_key]
+            distance_cell_mask = spot_properties[self.distance_cell_mask_key]
+            radial_angle = spot_properties[self.radial_angle_key]
+            cell_axis_mask = spot_properties[self.cellaxis_mask_key]
+            data = {
+                "Track ID": track_id,
+                "Unique ID": unique_id,
+                "Tracklet ID": tracklet_id,
+                "Number Times Divided": number_times_divided,
+                "Surface Area": surface_area,
+                "Eccentricity Comp First": eccentricity_comp_first,
+                "Eccentricity Comp Second": eccentricity_comp_second,
+                "Volume": volume,
+                "Radius": radius,
+                "Speed": speed,
+                "Motion Angle": motion_angle,
+                "Acceleration": acceleration,
+                "Distance Cell Mask": distance_cell_mask,
+                "Radial Angle": radial_angle,
+                "Cell Axis Mask": cell_axis_mask,
+            }
+            all_split_data.append(data)
+
+        np.save(
+                        f"{save_path}_{column}_data_at_mitosis_time.npy", data
+                    )            
+
     def get_shape_dynamic_feature_dataframe(self):
 
         current_shape_dynamic_vectors = self.current_shape_dynamic_vectors
