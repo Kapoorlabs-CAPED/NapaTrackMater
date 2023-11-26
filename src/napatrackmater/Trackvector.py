@@ -1406,6 +1406,11 @@ def train_mitosis_neural_net(
                         if total_val_class2 > 0
                         else 0
                     )
+                    loss_class1 = criterion_class1(outputs_class1, labels_class1)
+                    loss_class2 = criterion_class2(outputs_class2, labels_class2)
+
+                    running_val_loss_class1 += loss_class1.item()
+                    running_val_loss_class2 += loss_class2.item()
                     pbar_val.set_postfix(
                         {"Acc Class1": accuracy_class1, "Acc Class2": accuracy_class2}
                     )
@@ -1494,7 +1499,9 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
         num_classes_class1=num_classes_class1,
         num_classes_class2=num_classes_class2,
     )
-    model.load_state_dict(torch.load(saved_model_path, map_location=torch.device(device)))
+    model.load_state_dict(
+        torch.load(saved_model_path, map_location=torch.device(device))
+    )
     model.to(device)
     model.eval()
 
@@ -1505,11 +1512,9 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
         outputs_class1, outputs_class2 = model(features_tensor)
         predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
         predicted_probs_class2 = torch.softmax(outputs_class2, dim=1)
-        
+
         predicted_class1 = torch.argmax(predicted_probs_class1, dim=1).cpu().numpy()
         predicted_class2 = torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
-        
-        
 
     return predicted_class1, predicted_class2
 

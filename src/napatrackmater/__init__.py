@@ -14,8 +14,8 @@ from .Trackvector import (
     train_mitosis_classifier,
     train_mitosis_neural_net,
     extract_neural_training_data,
-    predict_with_model
-
+    predict_with_model,
+    plot_metrics_from_npz,
 )
 from .DeepEmbeddedClustering import DeepEmbeddedClustering
 from .CloudAutoEncoder import CloudAutoEncoder
@@ -73,11 +73,12 @@ __all__ = (
     "unsupervised_clustering",
     "DeepEmbeddedClustering",
     "load_json",
-    'create_mitosis_training_data',
-    'train_mitosis_classifier',
-    'train_mitosis_neural_net',
-    'extract_neural_training_data',
-    'predict_with_model'
+    "create_mitosis_training_data",
+    "train_mitosis_classifier",
+    "train_mitosis_neural_net",
+    "extract_neural_training_data",
+    "predict_with_model",
+    "plot_metrics_from_npz",
 )
 
 clear_models_and_aliases(DeepEmbeddedClustering, CloudAutoEncoder)
