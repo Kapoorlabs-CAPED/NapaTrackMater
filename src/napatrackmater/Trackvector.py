@@ -1495,7 +1495,7 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
         num_classes_class1=num_classes_class1,
         num_classes_class2=num_classes_class2,
     )
-    model.load_state_dict(torch.load(saved_model_path))
+    model.load_state_dict(torch.load(saved_model_path), map_location=device)
     model.to(device)
     model.eval()
 
