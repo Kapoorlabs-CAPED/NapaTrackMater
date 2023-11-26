@@ -482,7 +482,7 @@ class TrackVector(TrackMate):
             all_split_data.append(data)
 
         np.save(
-                        f"{save_path}_{column}_data_at_mitosis_time.npy", data
+                        f"{save_path}_data_at_mitosis_time.npy", all_split_data
                     )            
 
     def get_shape_dynamic_feature_dataframe(self):
