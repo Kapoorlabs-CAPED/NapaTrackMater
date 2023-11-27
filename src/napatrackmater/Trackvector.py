@@ -444,13 +444,13 @@ class TrackVector(TrackMate):
                         f"{save_path}_{column}_Number_Dividing_{i}.npy", data.to_numpy()
                     )
 
-        all_split_data = []            
+        all_split_data = []
         for split_id in self.split_cell_ids:
             spot_properties = self.unique_spot_properties[split_id]
             track_id = spot_properties[self.trackid_key]
             unique_id = spot_properties[self.uniqueid_key]
             tracklet_id = spot_properties[self.trackletid_key]
-            number_times_divided = spot_properties[self.number_dividing_key]    
+            number_times_divided = spot_properties[self.number_dividing_key]
             surface_area = spot_properties[self.surface_area_key]
             eccentricity_comp_first = spot_properties[self.eccentricity_comp_firstkey]
             eccentricity_comp_second = spot_properties[self.eccentricity_comp_secondkey]
@@ -481,9 +481,7 @@ class TrackVector(TrackMate):
             }
             all_split_data.append(data)
 
-        np.save(
-                        f"{save_path}_data_at_mitosis_time.npy", all_split_data
-                    )            
+        np.save(f"{save_path}_data_at_mitosis_time.npy", all_split_data)
 
     def get_shape_dynamic_feature_dataframe(self):
 
@@ -1453,7 +1451,12 @@ def train_mitosis_neural_net(
                     running_val_loss_class1 += loss_class1.item()
                     running_val_loss_class2 += loss_class2.item()
                     pbar_val.set_postfix(
-                        {"Acc Class1": accuracy_class1, "Acc Class2": accuracy_class2}
+                        {
+                            "Acc Class1": accuracy_class1,
+                            "Acc Class2": accuracy_class2,
+                            "Class1 Loss": running_val_loss_class1 / (i + 1),
+                            "Class2 Loss": running_val_loss_class2 / (i + 1),
+                        }
                     )
 
         val_loss_class1_values.append(running_val_loss_class1 / len(val_loader))
