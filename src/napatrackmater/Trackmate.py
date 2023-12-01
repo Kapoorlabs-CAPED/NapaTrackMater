@@ -1405,7 +1405,8 @@ class TrackMate:
 
         print("getting attributes")
         self._get_attributes()
-
+        if self.autoencoder_model is not None:
+            self._compute_latent_space()
         self.count = 0
         for index, track_id in enumerate(self.filtered_track_ids):
             if self.progress_bar is not None:
@@ -1419,7 +1420,7 @@ class TrackMate:
                 self.progress_bar.value = self.count
             track = self.filtered_tracks[index]
             self._final_tracks(track_id)
-
+        
         if self.fourier:
             print("computing Fourier")
             self._compute_phenotypes()
@@ -1614,7 +1615,7 @@ class TrackMate:
         if self.autoencoder_model and self.seg_image is not None:
             print("Getting autoencoder clouds")
             self._assign_cluster_class()
-            self._compute_latent_space()
+            
             print("Creating master xml")
             self._create_master_xml()
         self.count = 0
@@ -1658,7 +1659,7 @@ class TrackMate:
 
             tree, spot_centroids = self._timed_centroid[time_key]
             if self.progress_bar is not None:
-                self.progress_bar.label = "Autoencoder for refining point clouds"
+                self.progress_bar.label = "Autoencoder for latent shape features"
                 self.progress_bar.range = (
                     0,
                     len(self._timed_centroid.keys()) + 1,
@@ -1681,6 +1682,8 @@ class TrackMate:
                 center=self.center,
                 compute_with_autoencoder=self.compute_with_autoencoder,
             )
+
+            cluster_eval._create_cluster_labels()
             cluster_eval._compute_latent_features()
 
             timed_cluster_label = cluster_eval.timed_cluster_label
