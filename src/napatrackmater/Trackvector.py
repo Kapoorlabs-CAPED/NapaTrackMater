@@ -279,6 +279,7 @@ class TrackVector(TrackMate):
                     eccentricity_comp_first,
                     eccentricity_comp_second,
                     surface_area,
+                    latent_features
                 ) = unique_shape_properties_tracklet
 
                 track_id_array = np.ones(current_time.shape)
@@ -310,7 +311,7 @@ class TrackVector(TrackMate):
                         distance_cell_mask,
                         radial_angle,
                         cell_axis_mask,
-                    ]
+                    ] + ([latent_features[i] for i in range(len(latent_features))] if len(latent_features) > 0 else [])
                 )
 
         print(
@@ -462,6 +463,8 @@ class TrackVector(TrackMate):
             distance_cell_mask = spot_properties[self.distance_cell_mask_key]
             radial_angle = spot_properties[self.radial_angle_key]
             cell_axis_mask = spot_properties[self.cellaxis_mask_key]
+            
+
             data = {
                 "Track ID": track_id,
                 "Unique ID": unique_id,
@@ -479,6 +482,7 @@ class TrackVector(TrackMate):
                 "Radial Angle": radial_angle,
                 "Cell Axis Mask": cell_axis_mask,
             }
+           
             all_split_data.append(data)
 
         np.save(f"{save_path}_data_at_mitosis_time.npy", all_split_data)
@@ -489,9 +493,12 @@ class TrackVector(TrackMate):
         global_shape_dynamic_dataframe = []
 
         for i in range(len(current_shape_dynamic_vectors)):
-            vector_list = list(zip(current_shape_dynamic_vectors[i]))
+            vector_list = current_shape_dynamic_vectors[i]
+            initial_array = np.array(vector_list[:18])
+            latent_shape_features = np.array(vector_list[18:]) if len(vector_list) > 18 else np.empty((0,))
+            zipped_initial_array  = list(zip(initial_array))
             data_frame_list = np.transpose(
-                np.asarray([vector_list[i] for i in range(len(vector_list))])[:, 0, :]
+                np.asarray([zipped_initial_array[i] for i in range(len(zipped_initial_array))])[:, 0, :]
             )
 
             shape_dynamic_dataframe = pd.DataFrame(
@@ -517,6 +524,12 @@ class TrackVector(TrackMate):
                     "Cell_Axis_Mask",
                 ],
             )
+
+            if len(latent_shape_features) > 0:
+                for idx, feature in enumerate(latent_shape_features):
+                    column_name = f'latent_feature_number_{idx}'
+                    shape_dynamic_dataframe[column_name] = feature
+
 
             if len(global_shape_dynamic_dataframe) == 0:
                 global_shape_dynamic_dataframe = shape_dynamic_dataframe
@@ -598,7 +611,13 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
                 "Cell_Axis_Mask",
             ]
         ]
-
+        latent_columns = [col for col in track_data.columns if col.startswith("latent_feature_number_")]
+        if latent_columns:
+            latent_features = track_data[latent_columns]
+            for col in latent_features.columns:
+                full_dataframe[col] = latent_features[col]
+                shape_dataframe[col] = latent_features[col]
+                
         shape_dynamic_dataframe_list = shape_dynamic_dataframe.to_dict(orient="records")
         shape_dataframe_list = shape_dataframe.to_dict(orient="records")
         dynamic_dataframe_list = dynamic_dataframe.to_dict(orient="records")

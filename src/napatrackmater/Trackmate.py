@@ -1434,9 +1434,8 @@ class TrackMate:
             track = self.filtered_tracks[index]
             self._final_tracks(track_id)
         
-        if self.fourier:
-            print("computing Fourier")
-            self._compute_phenotypes()
+        print("computing Phenotypes")
+        self._compute_phenotypes()
         self._temporal_plots_trackmate()
 
     def _create_second_channel_xml(self):
@@ -1645,9 +1644,8 @@ class TrackMate:
             track = self.filtered_tracks[index]
             self._final_tracks(track_id)
 
-        if self.fourier:
-            print("computing Fourier")
-            self._compute_phenotypes()
+        print("computing Phenotypes")
+        self._compute_phenotypes()
         self._temporal_plots_trackmate()
 
     def _create_master_xml(self):

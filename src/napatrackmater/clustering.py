@@ -14,7 +14,7 @@ import tempfile
 from scipy.spatial import ConvexHull
 from lightning import Trainer
 from typing import List
-
+from tqdm import tqdm
 
 class PointCloudDataset(Dataset):
     def __init__(self, clouds: PyntCloud, center=True, scale_z=1.0, scale_xy=1.0):
@@ -74,8 +74,6 @@ class Clustering:
         self.key = key
         self.batch_size = batch_size
         self.compute_with_autoencoder = compute_with_autoencoder
-        if not compute_with_autoencoder:
-            print("Computing shape features using classical marching cubes ")
         self.timed_cluster_label = {}
         self.timed_latent_features = {}
         self.count = 0
@@ -371,13 +369,12 @@ def _extract_latent_features(
         tuple(centroid_input) for centroid_input in centroids
     ]
     model.eval()
-    print(f"Extracting {len(dataset)} latent features...")
 
     pretrainer = Trainer(accelerator=accelerator, devices=devices)
     model = pretrainer.accelerator_backend.setup(model)
     
     latent_features = []
-    for batch in dataloader:
+    for batch in tqdm(dataloader, desc='Extracting Latent Features', unit='batch'):
         batch = pretrainer.accelerator_backend.to_device(batch)
         
         with torch.no_grad():
@@ -422,11 +419,10 @@ def _model_output(
     if compute_with_autoencoder:
 
         model.eval()
-        print(f"Predicting {len(dataset)} clouds..., {len(centroids)} centroids...")
         pretrainer = Trainer(accelerator=accelerator, devices=devices)
         outputs_list = pretrainer.predict(model=model, dataloaders=dataloader)
 
-        for outputs in outputs_list:
+        for outputs in tqdm(outputs_list, desc="Autoencoder model", unit="batch"):
             output_cloud_eccentricity = output_cloud_eccentricity + [
                 tuple(get_eccentricity(cloud_input.detach().cpu().numpy()))[0]
                 for cloud_input in outputs
