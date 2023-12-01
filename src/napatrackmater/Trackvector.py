@@ -617,7 +617,7 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
             for col in latent_features.columns:
                 full_dataframe[col] = latent_features[col]
                 shape_dataframe[col] = latent_features[col]
-                
+
         shape_dynamic_dataframe_list = shape_dynamic_dataframe.to_dict(orient="records")
         shape_dataframe_list = shape_dataframe.to_dict(orient="records")
         dynamic_dataframe_list = dynamic_dataframe.to_dict(orient="records")
@@ -769,6 +769,13 @@ def create_gt_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame
             ]
         ]
 
+        latent_columns = [col for col in track_data.columns if col.startswith("latent_feature_number_")]
+        if latent_columns:
+            latent_features = track_data[latent_columns]
+            for col in latent_features.columns:
+                full_dataframe[col] = latent_features[col]
+                gt_dataframe[col] = latent_features[col]
+                
         shape_dynamic_dataframe_list = shape_dynamic_dataframe.to_dict(orient="records")
         gt_dataframe_list = gt_dataframe.to_dict(orient="records")
         full_dataframe_list = full_dataframe.to_dict(orient="records")
