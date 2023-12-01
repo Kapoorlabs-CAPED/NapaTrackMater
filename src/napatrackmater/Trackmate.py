@@ -1943,6 +1943,11 @@ class TrackMate:
             max_track_distance = tracklet_properties[:, 17]
 
             track_duration = tracklet_properties[:, 18]
+            
+            if tracklet_properties.shape[1] > 19:
+                latent_shape_features = tracklet_properties[:, 19:]
+            else:
+                latent_shape_features = []    
 
             unique_fft_properties_tracklet = {}
             unique_cluster_properties_tracklet = {}
@@ -1975,7 +1980,7 @@ class TrackMate:
                 current_eccentricity_comp_first = []
                 current_eccentricity_comp_second = []
                 current_surface_area = []
-
+                current_latent_shape_features = []
                 current_radial_angle = []
                 current_cell_axis_mask = []
                 current_track_displacement = []
@@ -2004,6 +2009,7 @@ class TrackMate:
                             eccentricity_comp_second[j]
                         )
                         current_surface_area.append(surface_area[j])
+                        current_latent_shape_features.append(latent_shape_features[j])
                         current_radial_angle.append(radial_angle[j])
                         current_cell_axis_mask.append(cell_axis_mask[j])
                         current_track_displacement.append(track_displacement[j])
@@ -2024,6 +2030,10 @@ class TrackMate:
                 )
                 current_surface_area = np.asarray(
                     current_surface_area, dtype=np.float32
+                )
+
+                current_latent_shape_features = np.asarray(
+                    current_latent_shape_features, dtype=np.float32
                 )
 
                 current_speed = np.asarray(current_speed, dtype=np.float32)
@@ -2080,6 +2090,8 @@ class TrackMate:
                     current_eccentricity_comp_first,
                     current_eccentricity_comp_second,
                     current_surface_area,
+                    current_latent_shape_features
+                    
                 )
                 unique_dynamic_properties_tracklet[current_unique_id] = (
                     current_time,
