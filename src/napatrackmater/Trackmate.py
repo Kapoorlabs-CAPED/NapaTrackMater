@@ -1056,6 +1056,12 @@ class TrackMate:
         max_track_distance = float(all_dict_values[self.max_distance_traveled_key])
         track_duration = float(all_dict_values[self.track_duration_key])
 
+        if self.latent_shape_features_key in all_dict_values.keys():
+            latent_shape_features = list(all_dict_values[self.latent_shape_features_key])  
+        else:
+            latent_shape_features = []    
+
+
         if self.surface_area_key in all_dict_values.keys():
 
             eccentricity_comp_first = float(
@@ -1120,7 +1126,10 @@ class TrackMate:
                     track_duration,
                 ]
             )
+            latent_shape_features_array = np.array(latent_shape_features)
 
+            if len(latent_shape_features_array) > 0:
+                current_value_array = np.concatenate([current_value_array, latent_shape_features_array], axis=1)
             current_tracklets_properties[current_track_id] = np.vstack(
                 (value_array, current_value_array)
             )
@@ -1160,6 +1169,10 @@ class TrackMate:
                     track_duration,
                 ]
             )
+            latent_shape_features_array = np.array(latent_shape_features)
+
+            if len(latent_shape_features_array) > 0:
+                current_value_array = np.concatenate([current_value_array, latent_shape_features_array], axis=1)
             current_tracklets_properties[current_track_id] = current_value_array
 
         return current_tracklets, current_tracklets_properties
