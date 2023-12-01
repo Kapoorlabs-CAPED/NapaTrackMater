@@ -775,7 +775,7 @@ def create_gt_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame
             for col in latent_features.columns:
                 full_dataframe[col] = latent_features[col]
                 gt_dataframe[col] = latent_features[col]
-                
+
         shape_dynamic_dataframe_list = shape_dynamic_dataframe.to_dict(orient="records")
         gt_dataframe_list = gt_dataframe.to_dict(orient="records")
         full_dataframe_list = full_dataframe.to_dict(orient="records")
@@ -1589,45 +1589,3 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     return predicted_class1, predicted_class2
 
 
-def _save_feature_importance(
-    sorted_feature_names,
-    normalized_importances,
-    csv_file_name_original,
-    track_arrays_array_names,
-    track_arrays_array,
-    track_arrays,
-):
-    data = list(zip(sorted_feature_names, normalized_importances))
-    csv_file_name = (
-        csv_file_name_original
-        + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-        + "_feature_importance"
-        + ".csv"
-    )
-    with open(csv_file_name, mode="w", newline="") as csv_file:
-        writer = csv.writer(csv_file)
-        writer.writerow(["Feature", "Importance"])
-        for feature, importance in data:
-            writer.writerow([feature, importance])
-
-
-def _perform_pca_clustering(track_arrays, num_clusters, num_components=3):
-    pca = PCA(n_components=num_components)
-    reduced_data = pca.fit_transform(track_arrays)
-
-    kmeans = KMeans(n_clusters=num_clusters)
-    cluster_labels = kmeans.fit_predict(reduced_data)
-
-    return cluster_labels, pca.components_
-
-
-def _perform_agg_clustering(track_arrays, num_clusters):
-
-    distance_matrix = pairwise_distances(track_arrays, metric="euclidean")
-    model = AgglomerativeClustering(
-        affinity="precomputed", n_clusters=num_clusters, linkage="ward"
-    ).fit(distance_matrix)
-
-    clusters = model.labels_
-
-    return clusters
