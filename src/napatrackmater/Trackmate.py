@@ -1680,7 +1680,7 @@ class TrackMate:
                 scale_z=self.scale_z,
                 scale_xy=self.scale_xy,
                 center=self.center,
-                compute_with_autoencoder=self.compute_with_autoencoder,
+                compute_with_autoencoder=False,
             )
 
             cluster_eval._create_cluster_labels()
