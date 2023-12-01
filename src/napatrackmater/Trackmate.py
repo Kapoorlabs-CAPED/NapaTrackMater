@@ -172,6 +172,7 @@ class TrackMate:
         self.surface_area_key = "cloud_surfacearea"
         self.radial_angle_key = "radial_angle_key"
         self.motion_angle_key = "motion_angle"
+        self.latent_shape_features_key = "latent_shape_features"
 
         self.mean_intensity_ch1_key = self.track_analysis_spot_keys[
             "mean_intensity_ch1"
@@ -1613,6 +1614,7 @@ class TrackMate:
         if self.autoencoder_model and self.seg_image is not None:
             print("Getting autoencoder clouds")
             self._assign_cluster_class()
+            self._compute_latent_space()
             print("Creating master xml")
             self._create_master_xml()
         self.count = 0
@@ -1647,6 +1649,74 @@ class TrackMate:
         self.master_xml_tree.write(
             os.path.join(self.master_xml_path, self.master_xml_name)
         )
+        
+    def _compute_latent_space(self):
+
+        self.axes = self.axes.replace("T", "")
+
+        for count, time_key in enumerate(self._timed_centroid.keys()):
+
+            tree, spot_centroids = self._timed_centroid[time_key]
+            if self.progress_bar is not None:
+                self.progress_bar.label = "Autoencoder for refining point clouds"
+                self.progress_bar.range = (
+                    0,
+                    len(self._timed_centroid.keys()) + 1,
+                )
+                self.progress_bar.value = count
+                self.progress_bar.show()
+
+            cluster_eval = Clustering(
+                self.accelerator,
+                self.devices,
+                self.seg_image[int(time_key), :],
+                self.axes,
+                self.num_points,
+                self.autoencoder_model,
+                key=time_key,
+                progress_bar=self.progress_bar,
+                batch_size=self.batch_size,
+                scale_z=self.scale_z,
+                scale_xy=self.scale_xy,
+                center=self.center,
+                compute_with_autoencoder=self.compute_with_autoencoder,
+            )
+            cluster_eval._compute_latent_features()
+
+            timed_cluster_label = cluster_eval.timed_cluster_label
+            timed_latent_features = cluster_eval.timed_latent_features
+
+            (
+                output_labels,
+                output_cluster_centroid,
+                output_cloud_eccentricity,
+                output_largest_eigenvector,
+                output_largest_eigenvalue,
+                output_dimensions,
+                output_cloud_surface_area,
+            ) = timed_cluster_label[time_key] 
+            output_latent_features = timed_latent_features[time_key]
+
+            for i in range(len(output_latent_features)):
+                latent_feature_list = output_latent_features[i]
+                centroid = output_cluster_centroid[i]
+                quality = output_largest_eigenvalue[i]  
+                dist, index = tree.query(centroid)
+                
+                if dist < quality:
+                    closest_centroid = spot_centroids[index]
+                    frame_spot_centroid = (
+                        int(time_key),
+                        closest_centroid[0],
+                        closest_centroid[1],
+                        closest_centroid[2],
+                    )
+                    closest_cell_id = self.unique_spot_centroid[frame_spot_centroid]
+                    self.unique_spot_properties[int(closest_cell_id)].update(
+                        {self.latent_shape_features_key: latent_feature_list}
+                    )
+            for (k, v) in self.root_spots.items():
+                self.root_spots[k] = self.unique_spot_properties[k]        
 
     def _assign_cluster_class(self):
 

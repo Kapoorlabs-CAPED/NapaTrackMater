@@ -1,4 +1,5 @@
 from kapoorlabs_lightning.lightning_trainer import AutoLightningModel
+from kapoorlabs_lightning.pytorch_models import CloudAutoEncoder
 import numpy as np
 import concurrent
 import os
@@ -76,7 +77,101 @@ class Clustering:
         if not compute_with_autoencoder:
             print("Computing shape features using classical marching cubes ")
         self.timed_cluster_label = {}
+        self.timed_latent_features = {}
         self.count = 0
+    
+    def _compute_latent_features(self):
+        
+        ndim = len(self.label_image.shape)
+
+        # YX image
+        if ndim == 2:
+
+            labels, centroids, clouds, marching_cube_points = _label_cluster(
+                self.label_image,
+                self.num_points,
+                self.min_size,
+                ndim,
+                self.compute_with_autoencoder,
+            )
+            latent_features = _extract_latent_features(
+                self.model,
+                self.accelerator,
+                self.devices,
+                clouds,
+                centroids,
+                self.batch_size,
+                self.scale_z,
+                self.scale_xy,
+
+            )
+
+            self.timed_latent_features[str(self.key)] = latent_features
+
+        # ZYX image
+        if ndim == 3 and "T" not in self.axes:
+                
+                labels, centroids, clouds, marching_cube_points = _label_cluster(
+                    self.label_image,
+                    self.num_points,
+                    self.min_size,
+                    ndim,
+                    self.compute_with_autoencoder,
+                )
+                if len(labels) > 1:
+    
+                    latent_features = _extract_latent_features(
+                        self.model,
+                        self.accelerator,
+                        self.devices,
+                        clouds,
+                        centroids,
+                        self.batch_size,
+                        self.scale_z,
+                        self.scale_xy,
+                    )
+
+                    self.timed_latent_features[str(self.key)] = latent_features 
+
+        # TYX
+        if ndim == 3 and "T" in self.axes:
+                
+                for i in range(self.label_image.shape[0]):
+                    latent_features = self._latent_computer(i, ndim - 1)
+                    self.timed_latent_features[str(i)] = latent_features          
+
+
+        # TZYX image
+        if ndim == 4:
+                
+                for i in range(self.label_image.shape[0]):
+                    latent_features = self._latent_computer(i, ndim)
+                    self.timed_latent_features[str(i)] = latent_features            
+
+    def _latent_computer(self, i, dim):
+            
+            xyz_label_image = self.label_image[i, :]
+            labels, centroids, clouds, marching_cube_points = _label_cluster(
+                xyz_label_image,
+                self.num_points,
+                self.min_size,
+                dim,
+                self.compute_with_autoencoder,
+            )
+            if len(labels) > 1:
+    
+                latent_features = _extract_latent_features(
+                    self.model,
+                    self.accelerator,
+                    self.devices,
+                    clouds,
+                    centroids,
+                    self.batch_size,
+                    self.scale_z,
+                    self.scale_xy,
+                ) 
+                return latent_features
+    
 
     def _create_cluster_labels(self):
 
@@ -259,9 +354,44 @@ class Clustering:
                 output_cloud_surface_area,
             )
 
+def _extract_latent_features(
+    model: CloudAutoEncoder,
+    accelerator: str,
+    devices: List[int],
+    clouds,
+    centroids,
+    batch_size: int,
+    scale_z: float = 1.0,
+    scale_xy: float = 1.0,
+):
+    dataset = PointCloudDataset(clouds, scale_z=scale_z, scale_xy=scale_xy)
+    dataloader = DataLoader(dataset, batch_size=batch_size)
+    output_cluster_centroids = []
+    output_cluster_centroids = output_cluster_centroids + [
+        tuple(centroid_input) for centroid_input in centroids
+    ]
+    model.eval()
+    print(f"Extracting {len(dataset)} latent features...")
+
+    pretrainer = Trainer(accelerator=accelerator, devices=devices)
+    model = pretrainer.accelerator_backend.setup(model)
+    
+    latent_features = []
+    for batch in dataloader:
+        batch = pretrainer.accelerator_backend.to_device(batch)
+        
+        with torch.no_grad():
+            latent_representation_list = model.encoder(batch) 
+            
+            for latent_representation in latent_representation_list:
+               latent_features.append(latent_representation.cpu().numpy()) 
+    
+    
+    return latent_features, output_cluster_centroids
+     
 
 def _model_output(
-    model: torch.nn.Module,
+    model: CloudAutoEncoder,
     accelerator: str,
     devices: List[int],
     marching_cube_points,
