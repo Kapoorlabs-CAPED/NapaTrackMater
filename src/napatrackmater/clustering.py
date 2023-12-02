@@ -375,7 +375,9 @@ def _extract_latent_features(
     model.eval()
 
     pretrainer = Trainer(accelerator=accelerator, devices=devices)
-    model = pretrainer.accelerator_backend.setup(model)
+    
+    
+    model = pretrainer.accelerator.setup(model)
     
     latent_features = []
     output_largest_eigenvalue = []
@@ -383,7 +385,6 @@ def _extract_latent_features(
             output_largest_eigenvalue.append(get_eccentricity(cloud_input)[2])
 
     for batch in tqdm(dataloader, desc='Extracting Latent Features', unit='batch'):
-        batch = pretrainer.accelerator_backend.to_device(batch)
         
         with torch.no_grad():
             latent_representation_list = model.encoder(batch) 
