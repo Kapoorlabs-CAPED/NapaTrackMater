@@ -29,7 +29,7 @@ import json
 from tqdm import tqdm
 from torch.optim.lr_scheduler import MultiStepLR
 import matplotlib.pyplot as plt
-
+from typing import List, Union
 
 class TrackVector(TrackMate):
     def __init__(
@@ -47,6 +47,11 @@ class TrackVector(TrackMate):
         y_start: int = 0,
         y_end: int = 10,
         show_tracks: bool = True,
+        autoencoder_model=None,
+        scale_z=1.0,
+        scale_xy=1.0,
+        accelerator: str = "cuda",
+        devices: Union[List[int], str, int] = -1,
     ):
 
         super().__init__(
@@ -60,6 +65,11 @@ class TrackVector(TrackMate):
             TrackidBox="All",
             axes="TZYX",
             master_xml_path=None,
+            autoencoder_model=autoencoder_model,
+            scale_z=scale_z,
+            scale_xy=scale_xy,
+            accelerator = accelerator,
+            devices = devices,
         )
         self._viewer = viewer
         self._image = image
@@ -74,6 +84,11 @@ class TrackVector(TrackMate):
         self._y_start = y_start
         self._y_end = y_end
         self._show_tracks = show_tracks
+        self.autoencoder_model = autoencoder_model
+        self.scale_z = scale_z 
+        self.scale_xy = scale_xy
+        self.accelerator = accelerator
+        self.devices = devices
         xml_parser = et.XMLParser(huge_tree=True)
 
         self.unique_morphology_dynamic_properties = {}

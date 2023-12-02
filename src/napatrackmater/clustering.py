@@ -387,7 +387,7 @@ def _extract_latent_features(
         
         with torch.no_grad():
             latent_representation_list = model.encoder(batch) 
-            
+            print(f'latent_representation_list: {len(latent_representation_list)}')
             for latent_representation in latent_representation_list:
                latent_features.append(latent_representation.cpu().numpy()) 
     
