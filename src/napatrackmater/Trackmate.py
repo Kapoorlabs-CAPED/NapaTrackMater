@@ -32,7 +32,7 @@ class TrackMate:
         center=True,
         progress_bar=None,
         accelerator: str = "cuda",
-        devices: Union[List[int], str, int] = -1,
+        devices: Union[List[int], str, int] = 1,
         master_xml_path: Path = None,
         master_extra_name="",
         seg_image: np.ndarray = None,

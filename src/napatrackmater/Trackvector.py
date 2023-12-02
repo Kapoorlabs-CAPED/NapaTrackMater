@@ -54,7 +54,7 @@ class TrackVector(TrackMate):
         scale_z=1.0,
         scale_xy=1.0,
         accelerator: str = "cuda",
-        devices: Union[List[int], str, int] = -1,
+        devices: Union[List[int], str, int] = 1,
     ):
 
         super().__init__(
