@@ -380,7 +380,7 @@ def _extract_latent_features(
     for batch in tqdm(dataloader, desc='Extracting Latent Features', unit='batch'):
         
         with torch.no_grad():
-            batch = batch.to(device)
+            batch = batch.to(device).float()
             latent_representation_list = torch_model.encoder(batch) 
             print(f'latent_representation_list: {len(latent_representation_list)}')
             for latent_representation in latent_representation_list:
