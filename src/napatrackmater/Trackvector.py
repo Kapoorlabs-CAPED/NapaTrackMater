@@ -48,6 +48,8 @@ class TrackVector(TrackMate):
         y_end: int = 10,
         show_tracks: bool = True,
         autoencoder_model=None,
+        num_points = 2048,
+        batch_size = 1, 
         scale_z=1.0,
         scale_xy=1.0,
         accelerator: str = "cuda",
@@ -70,6 +72,8 @@ class TrackVector(TrackMate):
             scale_xy=scale_xy,
             accelerator = accelerator,
             devices = devices,
+            num_points=num_points,
+            batch_size=batch_size,
         )
         self._viewer = viewer
         self._image = image
@@ -89,6 +93,8 @@ class TrackVector(TrackMate):
         self.scale_xy = scale_xy
         self.accelerator = accelerator
         self.devices = devices
+        self.num_points = num_points
+        self.batch_size = batch_size
         xml_parser = et.XMLParser(huge_tree=True)
 
         self.unique_morphology_dynamic_properties = {}
