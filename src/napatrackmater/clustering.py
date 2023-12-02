@@ -94,7 +94,6 @@ class Clustering:
             latent_features, cluster_centroids, output_largest_eigenvalues = _extract_latent_features(
                 self.model,
                 self.accelerator,
-                self.devices,
                 clouds,
                 marching_cube_points,
                 centroids,
@@ -121,7 +120,6 @@ class Clustering:
                     latent_features, cluster_centroids, output_largest_eigenvalues = _extract_latent_features(
                         self.model,
                         self.accelerator,
-                        self.devices,
                         clouds,
                         marching_cube_points,
                         centroids,
@@ -162,7 +160,6 @@ class Clustering:
                 latent_features, cluster_centroids, output_largest_eigenvalues = _extract_latent_features(
                     self.model,
                     self.accelerator,
-                    self.devices,
                     clouds,
                     marching_cube_points,
                     centroids,
@@ -355,9 +352,8 @@ class Clustering:
             )
 
 def _extract_latent_features(
-    model: CloudAutoEncoder,
+    model: AutoLightningModel,
     accelerator: str,
-    devices: List[int],
     clouds,
     marching_cube_points,
     centroids,
@@ -371,13 +367,11 @@ def _extract_latent_features(
     output_cluster_centroids = output_cluster_centroids + [
         tuple(centroid_input) for centroid_input in centroids
     ]
-    model.eval()
 
-    pretrainer = Trainer(accelerator=accelerator, devices=devices)
-    
-    
-    model = pretrainer.accelerator.setup(model)
-    
+    torch_model = model.network
+    torch_model.eval()
+    device = accelerator
+    torch_model.to(device)
     latent_features = []
     output_largest_eigenvalue = []
     for cloud_input in marching_cube_points:
@@ -386,7 +380,8 @@ def _extract_latent_features(
     for batch in tqdm(dataloader, desc='Extracting Latent Features', unit='batch'):
         
         with torch.no_grad():
-            latent_representation_list = model.encoder(batch) 
+            batch = batch.to(device)
+            latent_representation_list = torch_model.encoder(batch) 
             print(f'latent_representation_list: {len(latent_representation_list)}')
             for latent_representation in latent_representation_list:
                latent_features.append(latent_representation.cpu().numpy()) 
@@ -396,7 +391,7 @@ def _extract_latent_features(
      
 
 def _model_output(
-    model: CloudAutoEncoder,
+    model: AutoLightningModel,
     accelerator: str,
     devices: List[int],
     marching_cube_points,
