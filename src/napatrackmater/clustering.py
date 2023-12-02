@@ -92,11 +92,12 @@ class Clustering:
                 ndim,
                 self.compute_with_autoencoder,
             )
-            latent_features = _extract_latent_features(
+            latent_features, cluster_centroids, output_largest_eigenvalues = _extract_latent_features(
                 self.model,
                 self.accelerator,
                 self.devices,
                 clouds,
+                marching_cube_points,
                 centroids,
                 self.batch_size,
                 self.scale_z,
@@ -104,7 +105,7 @@ class Clustering:
 
             )
 
-            self.timed_latent_features[str(self.key)] = latent_features
+            self.timed_latent_features[str(self.key)] = latent_features, cluster_centroids, output_largest_eigenvalues
 
         # ZYX image
         if ndim == 3 and "T" not in self.axes:
@@ -118,33 +119,34 @@ class Clustering:
                 )
                 if len(labels) > 1:
     
-                    latent_features = _extract_latent_features(
+                    latent_features, cluster_centroids, output_largest_eigenvalues = _extract_latent_features(
                         self.model,
                         self.accelerator,
                         self.devices,
                         clouds,
+                        marching_cube_points,
                         centroids,
                         self.batch_size,
                         self.scale_z,
                         self.scale_xy,
                     )
 
-                    self.timed_latent_features[str(self.key)] = latent_features 
+                    self.timed_latent_features[str(self.key)] = latent_features, cluster_centroids, output_largest_eigenvalues 
 
         # TYX
         if ndim == 3 and "T" in self.axes:
                 
                 for i in range(self.label_image.shape[0]):
-                    latent_features = self._latent_computer(i, ndim - 1)
-                    self.timed_latent_features[str(i)] = latent_features          
+                    latent_features, cluster_centroids, output_largest_eigenvalues = self._latent_computer(i, ndim - 1)
+                    self.timed_latent_features[str(i)] = latent_features , cluster_centroids,  output_largest_eigenvalues         
 
 
         # TZYX image
         if ndim == 4:
                 
                 for i in range(self.label_image.shape[0]):
-                    latent_features = self._latent_computer(i, ndim)
-                    self.timed_latent_features[str(i)] = latent_features            
+                    latent_features, cluster_centroids, output_largest_eigenvalues = self._latent_computer(i, ndim)
+                    self.timed_latent_features[str(i)] = latent_features, cluster_centroids, output_largest_eigenvalues            
 
     def _latent_computer(self, i, dim):
             
@@ -158,17 +160,18 @@ class Clustering:
             )
             if len(labels) > 1:
     
-                latent_features = _extract_latent_features(
+                latent_features, cluster_centroids, output_largest_eigenvalues = _extract_latent_features(
                     self.model,
                     self.accelerator,
                     self.devices,
                     clouds,
+                    marching_cube_points,
                     centroids,
                     self.batch_size,
                     self.scale_z,
                     self.scale_xy,
                 ) 
-                return latent_features
+                return latent_features, cluster_centroids, output_largest_eigenvalues
     
 
     def _create_cluster_labels(self):
@@ -357,6 +360,7 @@ def _extract_latent_features(
     accelerator: str,
     devices: List[int],
     clouds,
+    marching_cube_points,
     centroids,
     batch_size: int,
     scale_z: float = 1.0,
@@ -374,6 +378,10 @@ def _extract_latent_features(
     model = pretrainer.accelerator_backend.setup(model)
     
     latent_features = []
+    output_largest_eigenvalue = []
+    for cloud_input in marching_cube_points:
+            output_largest_eigenvalue.append(get_eccentricity(cloud_input)[2])
+
     for batch in tqdm(dataloader, desc='Extracting Latent Features', unit='batch'):
         batch = pretrainer.accelerator_backend.to_device(batch)
         
@@ -384,7 +392,7 @@ def _extract_latent_features(
                latent_features.append(latent_representation.cpu().numpy()) 
     
     
-    return latent_features, output_cluster_centroids
+    return latent_features, output_cluster_centroids, output_largest_eigenvalue
      
 
 def _model_output(

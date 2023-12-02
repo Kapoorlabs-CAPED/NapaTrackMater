@@ -1626,8 +1626,9 @@ class TrackMate:
         self._get_attributes()
         if self.autoencoder_model and self.seg_image is not None:
             print("Getting autoencoder clouds")
-            self._assign_cluster_class()
             
+            self._assign_cluster_class()
+            self._compute_latent_space()
             print("Creating master xml")
             self._create_master_xml()
         self.count = 0
@@ -1694,23 +1695,14 @@ class TrackMate:
                 compute_with_autoencoder=False,
             )
 
-            cluster_eval._create_cluster_labels()
             cluster_eval._compute_latent_features()
 
-            timed_cluster_label = cluster_eval.timed_cluster_label
-            timed_latent_features = cluster_eval.timed_latent_features
+            timed_latent_features, output_cluster_centroids, output_largest_eigenvalues = cluster_eval.timed_latent_features
 
-            (
-                output_labels,
-                output_cluster_centroid,
-                output_cloud_eccentricity,
-                output_largest_eigenvector,
-                output_largest_eigenvalue,
-                output_dimensions,
-                output_cloud_surface_area,
-            ) = timed_cluster_label[time_key] 
+           
             output_latent_features = timed_latent_features[time_key]
-
+            output_cluster_centroid = output_cluster_centroids[time_key]
+            output_largest_eigenvalue = output_largest_eigenvalues[time_key]
             for i in range(len(output_latent_features)):
                 latent_feature_list = output_latent_features[i]
                 centroid = output_cluster_centroid[i]
