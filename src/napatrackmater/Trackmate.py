@@ -2014,7 +2014,8 @@ class TrackMate:
                             eccentricity_comp_second[j]
                         )
                         current_surface_area.append(surface_area[j])
-                        current_latent_shape_features.append(latent_shape_features[j])
+                        if latent_shape_features != []: 
+                           current_latent_shape_features.append(latent_shape_features[j])
                         current_radial_angle.append(radial_angle[j])
                         current_cell_axis_mask.append(cell_axis_mask[j])
                         current_track_displacement.append(track_displacement[j])
