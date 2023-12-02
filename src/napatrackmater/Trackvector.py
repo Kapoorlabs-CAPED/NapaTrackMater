@@ -36,6 +36,7 @@ class TrackVector(TrackMate):
         self,
         viewer: napari.Viewer,
         image: np.ndarray,
+        seg_image: np.ndarray,
         master_xml_path: Path,
         spot_csv_path: Path,
         track_csv_path: Path,
@@ -62,6 +63,7 @@ class TrackVector(TrackMate):
             track_csv_path,
             edges_csv_path,
             image=image,
+            seg_image=seg_image,
             AttributeBoxname="AttributeIDBox",
             TrackAttributeBoxname="TrackAttributeIDBox",
             TrackidBox="All",
@@ -95,6 +97,7 @@ class TrackVector(TrackMate):
         self.devices = devices
         self.num_points = num_points
         self.batch_size = batch_size
+        self.seg_image = seg_image
         xml_parser = et.XMLParser(huge_tree=True)
 
         self.unique_morphology_dynamic_properties = {}
@@ -261,9 +264,7 @@ class TrackVector(TrackMate):
 
         print("getting attributes")
         self._get_attributes()
-        if self.autoencoder_model is not None:
-            
-            self._compute_latent_space()
+        
 
     def _compute_track_vectors(self):
 
