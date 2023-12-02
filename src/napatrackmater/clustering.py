@@ -17,7 +17,7 @@ from typing import List
 from tqdm import tqdm
 
 class PointCloudDataset(Dataset):
-    def __init__(self, clouds: PyntCloud, center=True, scale_z=1.0, scale_xy=1.0):
+    def __init__(self, clouds: List[PyntCloud], center=True, scale_z=1.0, scale_xy=1.0):
         self.clouds = clouds
         self.center = center
         self.scale_z = scale_z
@@ -27,10 +27,9 @@ class PointCloudDataset(Dataset):
         return len(self.clouds)
 
     def __getitem__(self, idx):
-        # read the image
-        point_cloud = self.clouds.xyz[idx]
+        point_cloud = self.clouds[idx]
         mean = 0
-        point_cloud = torch.tensor(point_cloud)
+        point_cloud = torch.tensor(point_cloud.points.values)
 
         if self.center:
             mean = torch.mean(point_cloud, 0)
@@ -557,9 +556,9 @@ def get_label_centroid_cloud(
                     else:
                         cloud = get_panda_cloud_xyz(points)
             else:
-                cloud = sample_points
+                cloud = simple_clouds
 
-                return label, centroid, cloud, simple_clouds
+            return label, centroid, cloud, simple_clouds
 
 
 def get_panda_cloud_xy(points):
