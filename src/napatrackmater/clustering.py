@@ -448,7 +448,7 @@ def _model_output(
 
     else:
 
-        for cloud_input in marching_cube_points:
+        for cloud_input in tqdm(marching_cube_points, desc="Marching cubes", unit="cloud_input"):
 
             output_cloud_eccentricity.append(tuple(get_eccentricity(cloud_input))[0])
 
