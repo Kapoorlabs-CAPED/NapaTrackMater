@@ -1643,7 +1643,7 @@ class TrackMate:
             print("Getting autoencoder clouds")
             
             self._assign_cluster_class()
-            self._compute_latent_space()
+            
             print("Creating master xml")
             self._create_master_xml()
         self.count = 0
