@@ -954,6 +954,11 @@ class TrackMate:
             y = float(all_dict_values[self.yposid_key])
             x = float(all_dict_values[self.xposid_key])
 
+            spot_centroid = (
+                round(z) / self.zcalibration,
+                round(y) / self.ycalibration,
+                round(x) / self.xcalibration,
+            )
             frame_spot_centroid = (
                 t,
                 round(z) / self.zcalibration,
@@ -963,7 +968,17 @@ class TrackMate:
 
             self.unique_spot_centroid[frame_spot_centroid] = k
             self.unique_track_centroid[frame_spot_centroid] = track_id
-
+            
+            if str(t) in self._timed_centroid:
+                tree, spot_centroids = self._timed_centroid[str(t)]
+                spot_centroids.append(spot_centroid)
+                tree = spatial.cKDTree(spot_centroids)
+                self._timed_centroid[str(t)] = tree, spot_centroids
+            else:
+                spot_centroids = []
+                spot_centroids.append(spot_centroid)
+                tree = spatial.cKDTree(spot_centroids)
+                self._timed_centroid[str(t)] = tree, spot_centroids
     def _second_channel_update(self, cell_id, track_id):
 
         if self.channel_seg_image is not None:

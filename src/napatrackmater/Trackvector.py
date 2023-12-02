@@ -256,7 +256,7 @@ class TrackVector(TrackMate):
         print("getting attributes")
         self._get_attributes()
         if self.autoencoder_model is not None:
-            print('ff')
+            
             self._compute_latent_space()
 
     def _compute_track_vectors(self):
