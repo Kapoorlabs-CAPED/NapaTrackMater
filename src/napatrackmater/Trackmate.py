@@ -1712,7 +1712,7 @@ class TrackMate:
 
             cluster_eval._compute_latent_features()
 
-            timed_latent_features, output_cluster_centroids, output_largest_eigenvalues = cluster_eval.timed_latent_features
+            timed_latent_features, output_cluster_centroids, output_largest_eigenvalues = cluster_eval.timed_latent_features[time_key]
 
            
             output_latent_features = timed_latent_features[time_key]
