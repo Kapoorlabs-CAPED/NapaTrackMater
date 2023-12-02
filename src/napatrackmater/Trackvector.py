@@ -660,7 +660,7 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
 
 
 def create_mitosis_training_data(
-    shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays, full_records
+    shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays, full_records, save_path
 ):
     training_data_shape_dynamic = []
     training_data_shape = []
@@ -674,7 +674,6 @@ def create_mitosis_training_data(
         features_shape = shape_track_arrays[idx, :].tolist()
         features_dynamic = dynamic_track_arrays[idx, :].tolist()
 
-        # Appending to respective training datasets
         training_data_shape_dynamic.append(
             (features_shape_dynamic, label_dividing, label_number_dividing)
         )
@@ -686,6 +685,16 @@ def create_mitosis_training_data(
         training_data_dynamic.append(
             (features_dynamic, label_dividing, label_number_dividing)
         )
+
+
+    np_training_data_shape_dynamic = np.array(training_data_shape_dynamic)
+    np_training_data_shape = np.array(training_data_shape)
+    np_training_data_dynamic = np.array(training_data_dynamic)
+
+    np.savez(save_path,
+             shape_dynamic=np_training_data_shape_dynamic,
+             shape=np_training_data_shape,
+             dynamic=np_training_data_dynamic)    
 
     return training_data_shape_dynamic, training_data_shape, training_data_dynamic
 
