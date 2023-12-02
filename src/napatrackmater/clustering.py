@@ -28,9 +28,9 @@ class PointCloudDataset(Dataset):
 
     def __getitem__(self, idx):
         # read the image
-        point_cloud = self.clouds[idx]
+        point_cloud = self.clouds.xyz[idx]
         mean = 0
-        point_cloud = torch.tensor(point_cloud.points.values)
+        point_cloud = torch.tensor(point_cloud)
 
         if self.center:
             mean = torch.mean(point_cloud, 0)
