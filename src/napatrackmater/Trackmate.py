@@ -1144,13 +1144,7 @@ class TrackMate:
             current_value_list.extend(latent_shape_features)
             
             current_value_array = np.array(current_value_list)
-
-          
-            diff = len(current_value_array) - len(value_array)
-            if diff > 0:
-                 value_array = np.pad(value_array, (0, diff), mode='constant', constant_values=-1)    
-            if diff < 0:
-                current_value_array = np.pad(current_value_array, (0, abs(diff)), mode='constant', constant_values=-1)     
+            print(value_array.shape, current_value_array.shape)
 
             current_tracklets_properties[current_track_id] = np.vstack(
                 (value_array, current_value_array)
@@ -1690,7 +1684,7 @@ class TrackMate:
                 self.unique_spot_properties[k].update(
                                 {self.latent_shape_features_key: latent_feature_list}
                             )
-        for count, time_key in tqdm(enumerate(self._timed_centroid.keys()) , desc='Extracting Latent Features', unit='time_key'):
+        for count, time_key in tqdm(enumerate(self._timed_centroid.keys()) , desc='Extracting Latent Features', unit='_time_frame'):
             tree, spot_centroids = self._timed_centroid[time_key]
             if self.progress_bar is not None:
                 self.progress_bar.label = "Autoencoder for latent shape features"
