@@ -554,6 +554,7 @@ class TrackVector(TrackMate):
                     "Cell_Axis_Mask",
                 ],
             )
+            print(f'length of shape features, {len(latent_shape_features)}')
             if len(latent_shape_features) > 0:
                 new_columns = []
                 for idx, feature_list in enumerate(latent_shape_features):
@@ -580,7 +581,6 @@ class TrackVector(TrackMate):
             by=["t"]
         )
 
-        print(global_shape_dynamic_dataframe.head())
 
         return global_shape_dynamic_dataframe
 
@@ -1030,7 +1030,7 @@ def predict_supervised_clustering(
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array)
+            ) = compute_covariance_matrix(shape_dynamic_track_array, mask_features=11)
 
             upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
 
@@ -1123,12 +1123,12 @@ def unsupervised_clustering(
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array)
+            ) = compute_covariance_matrix(shape_dynamic_track_array, mask_features=11)
             shape_covariance, shape_eigenvectors = compute_covariance_matrix(
-                shape_track_array
+                shape_track_array, mask_features=5
             )
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
-                dynamic_track_array
+                dynamic_track_array, mask_features=6
             )
 
             shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
@@ -1312,11 +1312,12 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
 def compute_covariance_matrix(track_arrays, mask_features = 5):
     
    
-    mask = np.ones(track_arrays.shape, dtype=bool)
-    mask[:, :mask_features] = False  
-    filtered_arrays = np.where(mask, track_arrays, np.nan)  
-    
-    filtered_arrays = filtered_arrays[~np.isnan(filtered_arrays).any(axis=1)]
+    negative_mask = np.any(track_arrays[:, :mask_features] < 0, axis=1)
+
+    track_arrays[negative_mask, mask_features:] = np.nan
+
+    filtered_arrays = track_arrays[~np.isnan(track_arrays).any(axis=1)]
+
     covariance_matrix = np.cov(filtered_arrays, rowvar=False)
     eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
     eigenvalue_order = np.argsort(eigenvalues)[::-1]
