@@ -1145,6 +1145,9 @@ class TrackMate:
 
             if len(latent_shape_features_array) > 0:
                 current_value_array = np.concatenate([current_value_array, latent_shape_features_array], axis=0)
+            diff = len(current_value_array) - len(value_array)
+            if diff > 0:
+                 value_array = np.pad(value_array, (0, diff), mode='constant')    
             current_tracklets_properties[current_track_id] = np.vstack(
                 (value_array, current_value_array)
             )
