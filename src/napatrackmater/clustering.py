@@ -12,6 +12,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import tempfile
 from scipy.spatial import ConvexHull
+from scipy.spatial.qhull import QhullError
 from lightning import Trainer
 from typing import List
 from tqdm import tqdm
@@ -449,14 +450,22 @@ def _model_output(
     else:
 
         for cloud_input in tqdm(marching_cube_points, desc="Marching cubes", unit="cloud_input"):
+            try:
+                ConvexHull(cloud_input)
+            
+                output_cloud_eccentricity.append(tuple(get_eccentricity(cloud_input))[0])
 
-            output_cloud_eccentricity.append(tuple(get_eccentricity(cloud_input))[0])
-
-            output_largest_eigenvector.append(get_eccentricity(cloud_input)[1])
-            output_largest_eigenvalue.append(get_eccentricity(cloud_input)[2])
-            output_dimensions.append(get_eccentricity(cloud_input)[3])
-            output_cloud_surface_area.append(float(get_surface_area(cloud_input)))
-
+                output_largest_eigenvector.append(get_eccentricity(cloud_input)[1])
+                output_largest_eigenvalue.append(get_eccentricity(cloud_input)[2])
+                output_dimensions.append(get_eccentricity(cloud_input)[3])
+                output_cloud_surface_area.append(float(get_surface_area(cloud_input)))
+            except QhullError:
+                print("Qhull error for cloud: ", cloud_input)
+                output_cloud_eccentricity.append(0)
+                output_largest_eigenvector.append(0)
+                output_largest_eigenvalue.append(0)
+                output_dimensions.append(0)
+                output_cloud_surface_area.append(0)
     return (
         output_labels,
         output_cluster_centroid,
