@@ -311,7 +311,9 @@ class TrackVector(TrackMate):
                     surface_area,
                     latent_features
                 ) = unique_shape_properties_tracklet
-                print(f'current unique id {current_unique_id}, latent features {len(latent_features)}')
+                print(f'current unique id {current_unique_id}, total time points, {len(current_time)}, latent features {len(latent_features)}')
+                for i in range(len(latent_features)):
+                    print(f'latent feature {i} {len(latent_features[i])}')
                 track_id_array = np.ones(current_time.shape)
                 dividing_array = np.ones(current_time.shape)
                 number_dividing_array = np.ones(current_time.shape)
