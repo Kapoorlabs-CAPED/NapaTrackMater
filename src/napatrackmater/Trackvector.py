@@ -592,6 +592,7 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
         track_data = global_shape_dynamic_dataframe[
             global_shape_dynamic_dataframe["Track ID"] == track_id
         ].sort_values(by="t")
+        
         shape_dynamic_dataframe = track_data[
             [
                 "Radius",
@@ -606,7 +607,8 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
                 "Radial_Angle",
                 "Cell_Axis_Mask",
             ]
-        ]
+        ].copy()
+        
         shape_dataframe = track_data[
             [
                 "Radius",
@@ -615,7 +617,8 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
                 "Eccentricity Comp Second",
                 "Surface Area",
             ]
-        ]
+        ].copy()
+        
         dynamic_dataframe = track_data[
             [
                 "Speed",
@@ -625,7 +628,8 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
                 "Radial_Angle",
                 "Cell_Axis_Mask",
             ]
-        ]
+        ].copy()
+        
         full_dataframe = track_data[
             [
                 "Track ID",
@@ -647,13 +651,14 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
                 "Radial_Angle",
                 "Cell_Axis_Mask",
             ]
-        ]
+        ].copy()
+        
         latent_columns = [col for col in track_data.columns if col.startswith("latent_feature_number_")]
         if latent_columns:
-            latent_features = track_data[latent_columns]
+            latent_features = track_data[latent_columns].copy()
             for col in latent_features.columns:
-                full_dataframe[col] = latent_features[col]
-                shape_dataframe[col] = latent_features[col]
+                full_dataframe.loc[:, col] = latent_features[col].copy()
+                shape_dataframe.loc[:, col] = latent_features[col].copy()
 
         shape_dynamic_dataframe_list = shape_dynamic_dataframe.to_dict(orient="records")
         shape_dataframe_list = shape_dataframe.to_dict(orient="records")
@@ -667,6 +672,7 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
         )
 
     return analysis_vectors
+
 
 
 def create_mitosis_training_data(
