@@ -554,10 +554,11 @@ class TrackVector(TrackMate):
                     "Cell_Axis_Mask",
                 ],
             )
-
+            print(len(latent_shape_features))
             if len(latent_shape_features) > 0:
                 for idx, feature in enumerate(latent_shape_features):
                     column_name = f'latent_feature_number_{idx}'
+                    print(column_name, feature, len(shape_dynamic_dataframe),idx)
                     shape_dynamic_dataframe[column_name] = feature
 
 
