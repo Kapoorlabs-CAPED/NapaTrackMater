@@ -1147,6 +1147,8 @@ class TrackMate:
             diff = value_array.shape[-1] - current_value_array.shape[-1]
             if diff > 0:
                 current_value_array = np.pad(current_value_array, (0, diff), mode='constant', constant_values=-1)
+            if diff < 0:
+                value_array = np.pad(value_array, (0, -diff), mode='constant', constant_values=-1)    
             current_tracklets_properties[current_track_id] = np.vstack(
                 (value_array, current_value_array)
             )
