@@ -1187,14 +1187,14 @@ def unsupervised_clustering(
         silhouette_file_name = os.path.join(
             csv_file_name_original
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-            + f"_silhouette_{threshold_distance}.npy"
+            + f"_silhouette_{metric}_{threshold_distance}.npy"
         )
         np.save(silhouette_file_name, silhouette)
 
         wcss_file_name = os.path.join(
             csv_file_name_original
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-            + f"_wcss_{threshold_distance}.npy"
+            + f"_wcss_{metric}_{threshold_distance}.npy"
         )
         np.save(wcss_file_name, wcss_value)
         track_id_to_cluster = {
