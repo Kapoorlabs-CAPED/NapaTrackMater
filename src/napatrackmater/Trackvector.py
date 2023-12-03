@@ -554,14 +554,12 @@ class TrackVector(TrackMate):
                     "Cell_Axis_Mask",
                 ],
             )
-            print(len(latent_shape_features))
             if len(latent_shape_features) > 0:
                 for idx, feature_list in enumerate(latent_shape_features):
                     column_name = f'latent_feature_number_{idx}'
-                    print(column_name,  len(shape_dynamic_dataframe),idx)
-                    for i in range(len(feature_list)):
-                        shape_dynamic_dataframe[f"{column_name}_{i}"] = pd.Series([item[i] for item in feature_list]).astype(float)
-
+                    print(column_name, len(shape_dynamic_dataframe), idx)
+                    for i, value in enumerate(feature_list):
+                        shape_dynamic_dataframe[f"{column_name}_{i}"] = pd.Series(value).astype(float)
 
             if len(global_shape_dynamic_dataframe) == 0:
                 global_shape_dynamic_dataframe = shape_dynamic_dataframe
