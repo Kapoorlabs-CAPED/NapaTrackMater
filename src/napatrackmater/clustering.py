@@ -461,11 +461,11 @@ def _model_output(
                 output_cloud_surface_area.append(float(get_surface_area(cloud_input)))
             except QhullError:
                 print("Qhull error for cloud: ", cloud_input)
-                output_cloud_eccentricity.append(0)
-                output_largest_eigenvector.append(0)
-                output_largest_eigenvalue.append(0)
-                output_dimensions.append(0)
-                output_cloud_surface_area.append(0)
+                output_cloud_eccentricity.append(-1)
+                output_largest_eigenvector.append(-1)
+                output_largest_eigenvalue.append(-1)
+                output_dimensions.append(-1)
+                output_cloud_surface_area.append(-1)
     return (
         output_labels,
         output_cluster_centroid,

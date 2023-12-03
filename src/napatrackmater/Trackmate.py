@@ -1147,9 +1147,9 @@ class TrackMate:
                 current_value_array = np.concatenate([current_value_array, latent_shape_features_array], axis=0)
             diff = len(current_value_array) - len(value_array)
             if diff > 0:
-                 value_array = np.pad(value_array, (0, diff), mode='constant')    
+                 value_array = np.pad(value_array, (0, diff), mode='constant', constant_values=-1)    
             if diff < 0:
-                current_value_array = np.pad(current_value_array, (0, abs(diff)), mode='constant')     
+                current_value_array = np.pad(current_value_array, (0, abs(diff)), mode='constant', constant_values=-1)     
             current_tracklets_properties[current_track_id] = np.vstack(
                 (value_array, current_value_array)
             )
@@ -1791,10 +1791,11 @@ class TrackMate:
             scale_1 = 1
             scale_2 = 1
             for i in range(len(output_cluster_centroid)):
-                centroid = output_cluster_centroid[i]
-                quality = output_largest_eigenvalue[i]
-                eccentricity_comp_firstyz = output_cloud_eccentricity[i]
-                essentricity_dimension = output_dimensions[i]
+              centroid = output_cluster_centroid[i]
+              quality = output_largest_eigenvalue[i]
+              eccentricity_comp_firstyz = output_cloud_eccentricity[i]
+              essentricity_dimension = output_dimensions[i]
+              if not isinstance(essentricity_dimension, int):
                 if essentricity_dimension[0] == 2:
                     scale_1 = self.zcalibration
                     if essentricity_dimension[1] == 1:
