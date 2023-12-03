@@ -1736,9 +1736,10 @@ class TrackMate:
                         closest_centroid[2],
                     )
                     closest_cell_id = self.unique_spot_centroid[frame_spot_centroid]
-                    self.unique_spot_properties[int(closest_cell_id)].update(
-                        {self.latent_shape_features_key: latent_feature_list}
-                    )
+                    if self.unique_spot_properties[int(closest_cell_id)][self.radius_key] > 0:
+                        self.unique_spot_properties[int(closest_cell_id)].update(
+                            {self.latent_shape_features_key: latent_feature_list}
+                        )
             for (k, v) in self.root_spots.items():
                 self.root_spots[k] = self.unique_spot_properties[k]        
 
