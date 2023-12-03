@@ -311,7 +311,7 @@ class TrackVector(TrackMate):
                     surface_area,
                     latent_features
                 ) = unique_shape_properties_tracklet
-
+                print(f'current unique id {current_unique_id}, latent features {len(latent_features)}')
                 track_id_array = np.ones(current_time.shape)
                 dividing_array = np.ones(current_time.shape)
                 number_dividing_array = np.ones(current_time.shape)
@@ -554,7 +554,6 @@ class TrackVector(TrackMate):
                     "Cell_Axis_Mask",
                 ],
             )
-            print(f'length of shape features, {len(latent_shape_features)}')
             if len(latent_shape_features) > 0:
                 new_columns = []
                 for idx, feature_list in enumerate(latent_shape_features):
