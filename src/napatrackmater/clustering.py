@@ -378,7 +378,7 @@ def _extract_latent_features(
     for cloud_input in marching_cube_points:
             output_largest_eigenvalue.append(get_eccentricity(cloud_input)[2])
 
-    for batch in tqdm(dataloader, desc='Extracting Latent Features', unit='batch'):
+    for batch in dataloader:
         
         with torch.no_grad():
             batch = batch.to(device).float()

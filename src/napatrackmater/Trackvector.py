@@ -50,6 +50,7 @@ class TrackVector(TrackMate):
         show_tracks: bool = True,
         autoencoder_model=None,
         num_points = 2048,
+        latent_features = 1,
         batch_size = 1, 
         scale_z=1.0,
         scale_xy=1.0,
@@ -72,6 +73,7 @@ class TrackVector(TrackMate):
             autoencoder_model=autoencoder_model,
             scale_z=scale_z,
             scale_xy=scale_xy,
+            latent_features=latent_features,
             accelerator = accelerator,
             devices = devices,
             num_points=num_points,
@@ -98,6 +100,7 @@ class TrackVector(TrackMate):
         self.num_points = num_points
         self.batch_size = batch_size
         self.seg_image = seg_image
+        self.latent_features = latent_features
         xml_parser = et.XMLParser(huge_tree=True)
 
         self.unique_morphology_dynamic_properties = {}

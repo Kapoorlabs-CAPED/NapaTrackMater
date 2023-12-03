@@ -29,6 +29,7 @@ class TrackMate:
         axes,
         scale_z=1.0,
         scale_xy=1.0,
+        latent_features = 1,
         center=True,
         progress_bar=None,
         accelerator: str = "cuda",
@@ -57,6 +58,7 @@ class TrackMate:
         self.scale_xy = scale_xy
         self.center = center
         self.compute_with_autoencoder = compute_with_autoencoder
+        self.latent_features = latent_features
         if image is not None:
             self.image = image.astype(np.uint8)
         else:
@@ -1074,7 +1076,7 @@ class TrackMate:
         if self.latent_shape_features_key in all_dict_values.keys():
             latent_shape_features = list(all_dict_values[self.latent_shape_features_key])  
         else:
-            latent_shape_features = []    
+            latent_shape_features = [-1]*self.latent_features 
 
 
         if self.surface_area_key in all_dict_values.keys():
@@ -1139,8 +1141,7 @@ class TrackMate:
                     max_track_distance,
                     track_duration,
                 ]
-            if len(latent_shape_features) > 0:
-                current_value_list.extend(latent_shape_features)
+            current_value_list.extend(latent_shape_features)
             
             current_value_array = np.array(current_value_list)
 
@@ -1188,8 +1189,7 @@ class TrackMate:
                     max_track_distance,
                     track_duration,
                 ]
-            if len(latent_shape_features) > 0:
-                current_value_list.extend(latent_shape_features)
+            current_value_list.extend(latent_shape_features)
             
             current_value_array = np.array(current_value_list)
             current_tracklets_properties[current_track_id] = current_value_array
@@ -1686,8 +1686,7 @@ class TrackMate:
 
         self.axes = self.axes.replace("T", "")
 
-        for count, time_key in enumerate(self._timed_centroid.keys()):
-
+        for count, time_key in tqdm(enumerate(self._timed_centroid.keys()) , desc='Extracting Latent Features', unit='time_key'):
             tree, spot_centroids = self._timed_centroid[time_key]
             if self.progress_bar is not None:
                 self.progress_bar.label = "Autoencoder for latent shape features"
@@ -1717,8 +1716,11 @@ class TrackMate:
             cluster_eval._compute_latent_features()
 
             timed_latent_features, output_cluster_centroids, output_largest_eigenvalues = cluster_eval.timed_latent_features[time_key]
-
-           
+            
+            latent_feature_list = [-1]*self.latent_features
+            self.unique_spot_properties[int(closest_cell_id)].update(
+                            {self.latent_shape_features_key: latent_feature_list}
+                        )
             output_latent_features = timed_latent_features
             output_cluster_centroid = output_cluster_centroids
             output_largest_eigenvalue = output_largest_eigenvalues
