@@ -1685,7 +1685,11 @@ class TrackMate:
     def _compute_latent_space(self):
 
         self.axes = self.axes.replace("T", "")
-
+        latent_feature_list = [-1]*self.latent_features
+        for (k,v) in self.unique_spot_properties.items():
+                self.unique_spot_properties[k].update(
+                                {self.latent_shape_features_key: latent_feature_list}
+                            )
         for count, time_key in tqdm(enumerate(self._timed_centroid.keys()) , desc='Extracting Latent Features', unit='time_key'):
             tree, spot_centroids = self._timed_centroid[time_key]
             if self.progress_bar is not None:
@@ -1717,10 +1721,7 @@ class TrackMate:
 
             timed_latent_features, output_cluster_centroids, output_largest_eigenvalues = cluster_eval.timed_latent_features[time_key]
             
-            latent_feature_list = [-1]*self.latent_features
-            self.unique_spot_properties[int(closest_cell_id)].update(
-                            {self.latent_shape_features_key: latent_feature_list}
-                        )
+            
             output_latent_features = timed_latent_features
             output_cluster_centroid = output_cluster_centroids
             output_largest_eigenvalue = output_largest_eigenvalues
