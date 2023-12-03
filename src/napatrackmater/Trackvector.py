@@ -556,10 +556,11 @@ class TrackVector(TrackMate):
             )
             print(len(latent_shape_features))
             if len(latent_shape_features) > 0:
-                for idx, feature in enumerate(latent_shape_features):
+                for idx, feature_list in enumerate(latent_shape_features):
                     column_name = f'latent_feature_number_{idx}'
-                    print(column_name, feature, len(shape_dynamic_dataframe),idx)
-                    shape_dynamic_dataframe[column_name] = feature
+                    print(column_name,  len(shape_dynamic_dataframe),idx)
+                    for i in range(len(feature_list)):
+                        shape_dynamic_dataframe[f"{column_name}_{i}"] = pd.Series([item[i] for item in feature_list]).astype(float)
 
 
             if len(global_shape_dynamic_dataframe) == 0:
@@ -1276,10 +1277,10 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
                 shape_dynamic_eigenvectors,
             ) = compute_covariance_matrix(shape_dynamic_track_array)
             shape_covariance, shape_eigenvectors = compute_covariance_matrix(
-                shape_track_array
+                shape_track_array, mask_features = 5
             )
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
-                dynamic_track_array
+                dynamic_track_array, mask_features = 6
             )
 
             shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
@@ -1299,11 +1300,14 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
     return (shape_dynamic_covariance_2d, shape_covariance_2d, dynamic_covariance_2d)
 
 
-def compute_covariance_matrix(track_arrays):
+def compute_covariance_matrix(track_arrays, mask_features = 5):
     
-    mask = (track_arrays >= 0)
-    filtered_arrays = track_arrays[mask]
-
+   
+    mask = np.ones(track_arrays.shape, dtype=bool)
+    mask[:, :mask_features] = False  
+    filtered_arrays = np.where(mask, track_arrays, np.nan)  
+    
+    filtered_arrays = filtered_arrays[~np.isnan(filtered_arrays).any(axis=1)]
     covariance_matrix = np.cov(filtered_arrays, rowvar=False)
     eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
     eigenvalue_order = np.argsort(eigenvalues)[::-1]
