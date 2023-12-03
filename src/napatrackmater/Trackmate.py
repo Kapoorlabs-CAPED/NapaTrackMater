@@ -1118,8 +1118,7 @@ class TrackMate:
             )
 
             value_array = current_tracklets_properties[current_track_id]
-            current_value_array = np.array(
-                [
+            current_value_list = [
                     t,
                     int(float(unique_id)),
                     gen_id,
@@ -1140,13 +1139,13 @@ class TrackMate:
                     max_track_distance,
                     track_duration,
                 ]
-            )
-            latent_shape_features_array = np.array(latent_shape_features)
+            if len(latent_shape_features) > 0:
+                current_value_list.extend(latent_shape_features)
+            
+            current_value_array = np.array(current_value_list)
 
-            if len(latent_shape_features_array) > 0:
-                current_value_array = np.concatenate([current_value_array, latent_shape_features_array], axis=0)
+          
             diff = len(current_value_array) - len(value_array)
-            print(diff)
             if diff > 0:
                  value_array = np.pad(value_array, (0, diff), mode='constant', constant_values=-1)    
             if diff < 0:
@@ -1168,8 +1167,7 @@ class TrackMate:
             )
             current_tracklets[current_track_id] = current_tracklet_array
 
-            current_value_array = np.array(
-                [
+            current_value_list = [
                     t,
                     int(float(unique_id)),
                     gen_id,
@@ -1190,11 +1188,10 @@ class TrackMate:
                     max_track_distance,
                     track_duration,
                 ]
-            )
-            latent_shape_features_array = np.array(latent_shape_features)
-
-            if len(latent_shape_features_array) > 0:
-                current_value_array = np.concatenate([current_value_array, latent_shape_features_array], axis=0)
+            if len(latent_shape_features) > 0:
+                current_value_list.extend(latent_shape_features)
+            
+            current_value_array = np.array(current_value_list)
             current_tracklets_properties[current_track_id] = current_value_array
 
         return current_tracklets, current_tracklets_properties
