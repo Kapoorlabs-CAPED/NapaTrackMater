@@ -558,7 +558,6 @@ class TrackVector(TrackMate):
                 new_columns = []
                 for idx, feature_list in enumerate(latent_shape_features):
                     column_name = f'latent_feature_number_{idx}'
-                    print(column_name, len(shape_dynamic_dataframe), idx)
                     new_columns.extend([f"{column_name}_{i}" for i, value in enumerate(feature_list)])
 
                 new_data = np.zeros((len(shape_dynamic_dataframe), len(new_columns)))
@@ -656,9 +655,8 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
         latent_columns = [col for col in track_data.columns if col.startswith("latent_feature_number_")]
         if latent_columns:
             latent_features = track_data[latent_columns].copy()
-            for col in latent_features.columns:
-                full_dataframe.loc[:, col] = latent_features[col].copy()
-                shape_dataframe.loc[:, col] = latent_features[col].copy()
+            full_dataframe = pd.concat([full_dataframe, latent_features], axis=1)
+            shape_dataframe = pd.concat([shape_dataframe, latent_features], axis=1)
 
         shape_dynamic_dataframe_list = shape_dynamic_dataframe.to_dict(orient="records")
         shape_dataframe_list = shape_dataframe.to_dict(orient="records")
