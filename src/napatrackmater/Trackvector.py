@@ -1296,8 +1296,11 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
 
 
 def compute_covariance_matrix(track_arrays):
+    
+    mask = (track_arrays >= 0)
+    filtered_arrays = track_arrays[mask]
 
-    covariance_matrix = np.cov(track_arrays, rowvar=False)
+    covariance_matrix = np.cov(filtered_arrays, rowvar=False)
     eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
     eigenvalue_order = np.argsort(eigenvalues)[::-1]
     eigenvalues = eigenvalues[eigenvalue_order]
