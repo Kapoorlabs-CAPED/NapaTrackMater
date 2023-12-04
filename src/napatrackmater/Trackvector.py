@@ -565,7 +565,7 @@ class TrackVector(TrackMate):
 
                 shape_dynamic_dataframe = pd.concat([shape_dynamic_dataframe, new_df], axis=1)
 
-            if global_shape_dynamic_dataframe.empty:
+            if len(global_shape_dynamic_dataframe) == 0:
                 global_shape_dynamic_dataframe = shape_dynamic_dataframe
             else:
                 global_shape_dynamic_dataframe = pd.concat(
