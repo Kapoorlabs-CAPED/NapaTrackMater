@@ -60,7 +60,10 @@ class Clustering(TrackMate):
         center=True,
         compute_with_autoencoder=True,
     ):
-        super().__init__(None, None, None, None, None, None, None, None, seg_image=label_image, autoencoder_model=model) 
+        super().__init__(xml_path=None, spot_csv_path=None, track_csv_path=None, 
+                         AttributeBoxname = None, TrackAttributeBoxname = None, 
+                         TrackidBox = None,  seg_image=label_image,
+                          autoencoder_model=model, accelerator=accelerator, devices=devices, axes=axes, key=key,) 
 
         self.accelerator = accelerator
         self.devices = devices
