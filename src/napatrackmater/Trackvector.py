@@ -579,8 +579,21 @@ class TrackVector(TrackMate):
         global_shape_dynamic_dataframe = global_shape_dynamic_dataframe.sort_values(
             by=["t"]
         )
+        
+        columns_to_print = [
+            "Track ID", "t", "z", "y", "x", "Dividing", "Number_Dividing",
+            "Radius", "Volume", "Eccentricity Comp First", "Eccentricity Comp Second"
+        ]
 
+        latent_feature_columns = [f'latent_feature_number_{i}' for i in range(5)]
 
+        columns_to_display = columns_to_print + latent_feature_columns
+
+        print(global_shape_dynamic_dataframe[columns_to_display].head())
+
+        negative_radius_df = global_shape_dynamic_dataframe[global_shape_dynamic_dataframe['Radius'] < 0]
+        print(negative_radius_df[columns_to_display].head())
+        print(global_shape_dynamic_dataframe)
         return global_shape_dynamic_dataframe
 
 
@@ -1124,7 +1137,7 @@ def unsupervised_clustering(
                 shape_dynamic_eigenvectors,
             ) = compute_covariance_matrix(shape_dynamic_track_array, mask_features=11)
             shape_covariance, shape_eigenvectors = compute_covariance_matrix(
-                shape_track_array, mask_features=5
+                shape_track_array
             )
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
                 dynamic_track_array, mask_features=6
@@ -1288,7 +1301,7 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
                 shape_track_array, mask_features = 5
             )
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
-                dynamic_track_array, mask_features = 6
+                dynamic_track_array
             )
 
             shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
@@ -1308,14 +1321,16 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
     return (shape_dynamic_covariance_2d, shape_covariance_2d, dynamic_covariance_2d)
 
 
-def compute_covariance_matrix(track_arrays, mask_features = 5):
+def compute_covariance_matrix(track_arrays, shape_features = 5, mask_features = None):
     
-   
-    negative_mask = np.any(track_arrays[:, :mask_features] < 0, axis=1)
+    if mask_features is not None:
+        negative_mask = np.any(track_arrays[:, :shape_features] < 0, axis=1)
 
-    track_arrays[negative_mask, mask_features:] = np.nan
+        track_arrays[negative_mask, mask_features:] = np.nan
 
-    filtered_arrays = track_arrays[~np.isnan(track_arrays).any(axis=1)]
+        filtered_arrays = track_arrays[~np.isnan(track_arrays).any(axis=1)]
+    else:
+        filtered_arrays = track_arrays
 
     covariance_matrix = np.cov(filtered_arrays, rowvar=False)
     eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
