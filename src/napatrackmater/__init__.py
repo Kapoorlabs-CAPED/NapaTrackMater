@@ -13,7 +13,8 @@ from .Trackvector import (
     create_mitosis_training_data,
     train_mitosis_classifier,
     train_mitosis_neural_net,
-    extract_neural_training_data,
+    load_training_data,
+    load_training_data_npz,
     predict_with_model,
     plot_metrics_from_npz,
 )
@@ -76,7 +77,8 @@ __all__ = (
     "create_mitosis_training_data",
     "train_mitosis_classifier",
     "train_mitosis_neural_net",
-    "extract_neural_training_data",
+    "load_training_data",
+    "load_training_data_npz",
     "predict_with_model",
     "plot_metrics_from_npz",
 )
