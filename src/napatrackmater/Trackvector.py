@@ -555,10 +555,7 @@ class TrackVector(TrackMate):
                 ],
             )
             if len(latent_shape_features) > 0:
-                new_columns = []
-                for idx, feature_list in enumerate(latent_shape_features):
-                    column_name = f'latent_feature_number_{idx}'
-                    new_columns.extend([column_name])
+                new_columns = [f"latent_feature_number_{i}" for i in range(latent_shape_features.shape[1])]
                 latent_features_df = pd.DataFrame(latent_shape_features, columns=new_columns)
                  
                 shape_dynamic_dataframe = pd.concat([shape_dynamic_dataframe, latent_features_df], axis=1)
