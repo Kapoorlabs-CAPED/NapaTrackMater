@@ -590,6 +590,13 @@ def get_label_centroid_cloud(
                         cloud = get_panda_cloud_xyz(points)
                     else:
                         cloud = get_panda_cloud_xyz(points)
+                else:
+                    if ndim == 2:
+                        cloud = get_panda_cloud_xy(simple_clouds)
+                    elif ndim == 3:
+                        cloud = get_panda_cloud_xyz(simple_clouds)
+                    else:
+                        cloud = get_panda_cloud_xyz(simple_clouds)
             else:
                 if ndim == 2:
                     cloud = get_panda_cloud_xy(simple_clouds)
