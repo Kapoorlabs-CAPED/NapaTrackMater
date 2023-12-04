@@ -696,21 +696,25 @@ def create_mitosis_training_data(
         features_shape = shape_track_arrays[idx, :].tolist()
         features_dynamic = dynamic_track_arrays[idx, :].tolist()
 
-        training_data_shape_dynamic.append(
-            (features_shape_dynamic, label_dividing, label_number_dividing)
-        )
+        training_data_shape_dynamic.append({
+            'features': features_shape_dynamic,
+            'label_dividing': label_dividing,
+            'label_number_dividing': label_number_dividing
+        })
 
-        training_data_shape.append(
-            (features_shape, label_dividing, label_number_dividing)
-        )
+        training_data_shape.append({
+            'features': features_shape,
+            'label_dividing': label_dividing,
+            'label_number_dividing': label_number_dividing
+        })
 
-        training_data_dynamic.append(
-            (features_dynamic, label_dividing, label_number_dividing)
-        )
+        training_data_dynamic.append({
+            'features': features_dynamic,
+            'label_dividing': label_dividing,
+            'label_number_dividing': label_number_dividing
+        })
 
-    print(training_data_shape_dynamic)
     np_training_data_shape_dynamic = np.array(training_data_shape_dynamic)
-    print(np_training_data_shape_dynamic.shape)
     np_training_data_shape = np.array(training_data_shape)
     np_training_data_dynamic = np.array(training_data_dynamic)
 
@@ -722,25 +726,16 @@ def create_mitosis_training_data(
     return training_data_shape_dynamic, training_data_shape, training_data_dynamic
 
 
-def extract_neural_training_data(training_data):
-    features_list = []
-    labels_dividing_list = []
-    labels_number_dividing_list = []
-
-    for data_point in training_data:
-        features = data_point[0]
-        label_dividing = data_point[1]
-        label_number_dividing = data_point[2]
-
-        features_list.append(features)
-        labels_dividing_list.append(label_dividing)
-        labels_number_dividing_list.append(label_number_dividing)
-
-    features_array = np.array(features_list)
-    labels_dividing_array = np.array(labels_dividing_list)
-    labels_number_dividing_array = np.array(labels_number_dividing_list)
-
-    return features_array, labels_dividing_array, labels_number_dividing_array
+def extract_neural_training_data(file_path):
+    npz_file = np.load(file_path)
+    
+    training_data_shape_dynamic = npz_file['shape_dynamic']
+    training_data_shape = npz_file['shape']
+    training_data_dynamic = npz_file['dynamic']
+    
+    npz_file.close()  
+    
+    return training_data_shape_dynamic, training_data_shape, training_data_dynamic
 
 
 def train_mitosis_classifier(
