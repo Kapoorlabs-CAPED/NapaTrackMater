@@ -528,11 +528,9 @@ def get_label_centroid_cloud(
             valid.append(True)
 
     if False not in valid:
-        # Apply the model prediction for getting clusters
         try:
             vertices, faces, normals, values = marching_cubes(binary_image)
         except RuntimeError:
-            print("Marching cubes failed for label: ", label)
             vertices = None
         if vertices is not None:
             mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
@@ -597,8 +595,9 @@ def get_eccentricity(point_cloud):
     eigenvalues = eigenvalues[idx]
     largest_eigen_vector = eigenvectors[:, idx[0]]
     largest_eigen_value = eigenvalues[idx[0]]
-    # Compute the eccentricity along each principal axis
-    eccentricities = np.sqrt(eigenvalues / eigenvalues.min())
+    if np.any(eigenvalues < 0):
+        return None
+    eccentricities = np.sqrt(eigenvalues / eigenvalues.min() + 1.0e-6)
     dimensions = idx
 
     return eccentricities, largest_eigen_vector, largest_eigen_value, dimensions
