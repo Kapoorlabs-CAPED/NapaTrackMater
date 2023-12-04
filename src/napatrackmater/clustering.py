@@ -374,9 +374,8 @@ def _extract_latent_features(
     device = accelerator
     torch_model.to(device)
     latent_features = []
-    output_largest_eigenvalue = []
-    for cloud_input in marching_cube_points:
-            output_largest_eigenvalue.append(get_eccentricity(cloud_input)[2])
+    output_largest_eigenvalue = [get_eccentricity(cloud_input)[2] if get_eccentricity(cloud_input) is not None else -1 for cloud_input in marching_cube_points]
+
 
     for batch in dataloader:
         
@@ -460,7 +459,6 @@ def _model_output(
                 output_dimensions.append(get_eccentricity(cloud_input)[3])
                 output_cloud_surface_area.append(float(get_surface_area(cloud_input)))
             except QhullError:
-                print("Qhull error for cloud: ", cloud_input)
                 output_cloud_eccentricity.append(-1)
                 output_largest_eigenvector.append(-1)
                 output_largest_eigenvalue.append(-1)
