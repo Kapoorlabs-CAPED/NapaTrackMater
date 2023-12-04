@@ -585,10 +585,9 @@ class TrackVector(TrackMate):
             "Radius", "Volume", "Eccentricity Comp First", "Eccentricity Comp Second"
         ]
 
-        latent_feature_columns = [f'latent_feature_number_{i}' for i in range(5)]
 
-        columns_to_display = columns_to_print + latent_feature_columns
-
+        columns_to_display = columns_to_print
+        print(global_shape_dynamic_dataframe.head())
         print(global_shape_dynamic_dataframe[columns_to_display].head())
 
         negative_radius_df = global_shape_dynamic_dataframe[global_shape_dynamic_dataframe['Radius'] < 0]
