@@ -174,7 +174,6 @@ class Clustering:
     def _create_cluster_labels(self):
 
         ndim = len(self.label_image.shape)
-        self.pretrainer = Trainer(accelerator=self.accelerator, devices=self.devices)
         if ndim == 2:
 
             labels, centroids, clouds, marching_cube_points = _label_cluster(
