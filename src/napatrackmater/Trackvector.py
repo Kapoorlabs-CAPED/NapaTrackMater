@@ -6,13 +6,8 @@ import os
 import numpy as np
 import napari
 import pandas as pd
-from sklearn.decomposition import PCA
 from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import linkage, fcluster
-from sklearn.cluster import AgglomerativeClustering
-from sklearn.cluster import KMeans
-import csv
-from sklearn.metrics import pairwise_distances
 from scipy.spatial import cKDTree
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
@@ -30,6 +25,7 @@ from tqdm import tqdm
 from torch.optim.lr_scheduler import MultiStepLR
 import matplotlib.pyplot as plt
 from typing import List, Union
+
 
 class TrackVector(TrackMate):
     def __init__(
@@ -49,9 +45,9 @@ class TrackVector(TrackMate):
         y_end: int = 10,
         show_tracks: bool = True,
         autoencoder_model=None,
-        num_points = 2048,
-        latent_features = 1,
-        batch_size = 1, 
+        num_points=2048,
+        latent_features=1,
+        batch_size=1,
         scale_z=1.0,
         scale_xy=1.0,
         accelerator: str = "cuda",
@@ -74,8 +70,8 @@ class TrackVector(TrackMate):
             scale_z=scale_z,
             scale_xy=scale_xy,
             latent_features=latent_features,
-            accelerator = accelerator,
-            devices = devices,
+            accelerator=accelerator,
+            devices=devices,
             num_points=num_points,
             batch_size=batch_size,
         )
@@ -93,7 +89,7 @@ class TrackVector(TrackMate):
         self._y_end = y_end
         self._show_tracks = show_tracks
         self.autoencoder_model = autoencoder_model
-        self.scale_z = scale_z 
+        self.scale_z = scale_z
         self.scale_xy = scale_xy
         self.accelerator = accelerator
         self.devices = devices
@@ -269,7 +265,6 @@ class TrackVector(TrackMate):
         self._get_attributes()
         if self.autoencoder_model is not None:
             self._compute_latent_space()
-        
 
     def _compute_track_vectors(self):
 
@@ -309,9 +304,9 @@ class TrackVector(TrackMate):
                     eccentricity_comp_first,
                     eccentricity_comp_second,
                     surface_area,
-                    latent_features
+                    latent_features,
                 ) = unique_shape_properties_tracklet
-                
+
                 track_id_array = np.ones(current_time.shape)
                 dividing_array = np.ones(current_time.shape)
                 number_dividing_array = np.ones(current_time.shape)
@@ -341,7 +336,12 @@ class TrackVector(TrackMate):
                         distance_cell_mask,
                         radial_angle,
                         cell_axis_mask,
-                    ] + ([latent_features[i] for i in range(len(latent_features))] if len(latent_features) > 0 else [])
+                    ]
+                    + (
+                        [latent_features[i] for i in range(len(latent_features))]
+                        if len(latent_features) > 0
+                        else []
+                    )
                 )
 
         print(
@@ -493,7 +493,6 @@ class TrackVector(TrackMate):
             distance_cell_mask = spot_properties[self.distance_cell_mask_key]
             radial_angle = spot_properties[self.radial_angle_key]
             cell_axis_mask = spot_properties[self.cellaxis_mask_key]
-            
 
             data = {
                 "Track ID": track_id,
@@ -512,7 +511,7 @@ class TrackVector(TrackMate):
                 "Radial Angle": radial_angle,
                 "Cell Axis Mask": cell_axis_mask,
             }
-           
+
             all_split_data.append(data)
 
         np.save(f"{save_path}_data_at_mitosis_time.npy", all_split_data)
@@ -526,9 +525,11 @@ class TrackVector(TrackMate):
             vector_list = current_shape_dynamic_vectors[i]
             initial_array = np.array(vector_list[:18])
             latent_shape_features = np.array(vector_list[18:])
-            zipped_initial_array  = list(zip(initial_array))
+            zipped_initial_array = list(zip(initial_array))
             data_frame_list = np.transpose(
-                np.asarray([zipped_initial_array[i] for i in range(len(zipped_initial_array))])[:, 0, :]
+                np.asarray(
+                    [zipped_initial_array[i] for i in range(len(zipped_initial_array))]
+                )[:, 0, :]
             )
 
             shape_dynamic_dataframe = pd.DataFrame(
@@ -555,10 +556,17 @@ class TrackVector(TrackMate):
                 ],
             )
             if len(latent_shape_features) > 0:
-                new_columns = [f"latent_feature_number_{i}" for i in range(latent_shape_features.shape[1])]
-                latent_features_df = pd.DataFrame(latent_shape_features, columns=new_columns)
-                 
-                shape_dynamic_dataframe = pd.concat([shape_dynamic_dataframe, latent_features_df], axis=1)
+                new_columns = [
+                    f"latent_feature_number_{i}"
+                    for i in range(latent_shape_features.shape[1])
+                ]
+                latent_features_df = pd.DataFrame(
+                    latent_shape_features, columns=new_columns
+                )
+
+                shape_dynamic_dataframe = pd.concat(
+                    [shape_dynamic_dataframe, latent_features_df], axis=1
+                )
 
             if len(global_shape_dynamic_dataframe) == 0:
                 global_shape_dynamic_dataframe = shape_dynamic_dataframe
@@ -574,22 +582,7 @@ class TrackVector(TrackMate):
         global_shape_dynamic_dataframe = global_shape_dynamic_dataframe.sort_values(
             by=["t"]
         )
-        
-        columns_to_print = [
-            "Track ID", "t", "z", "y", "x", "Dividing", "Number_Dividing",
-            "Radius", "Volume", "Eccentricity Comp First", "Eccentricity Comp Second"
-        ]
 
-
-        columns_to_display = columns_to_print
-        print(global_shape_dynamic_dataframe.head())
-        print(global_shape_dynamic_dataframe[columns_to_display].head())
-
-        negative_radius_df = global_shape_dynamic_dataframe[global_shape_dynamic_dataframe['Radius'] < 0]
-        if negative_radius_df.shape[0] > 0:
-            print('AHHH my radius is negaitve')
-            print(negative_radius_df[columns_to_display].head())
-            print(global_shape_dynamic_dataframe)
         return global_shape_dynamic_dataframe
 
 
@@ -599,7 +592,7 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
         track_data = global_shape_dynamic_dataframe[
             global_shape_dynamic_dataframe["Track ID"] == track_id
         ].sort_values(by="t")
-        
+
         shape_dynamic_dataframe = track_data[
             [
                 "Radius",
@@ -615,7 +608,7 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
                 "Cell_Axis_Mask",
             ]
         ].copy()
-        
+
         shape_dataframe = track_data[
             [
                 "Radius",
@@ -625,7 +618,7 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
                 "Surface Area",
             ]
         ].copy()
-        
+
         dynamic_dataframe = track_data[
             [
                 "Speed",
@@ -636,7 +629,7 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
                 "Cell_Axis_Mask",
             ]
         ].copy()
-        
+
         full_dataframe = track_data[
             [
                 "Track ID",
@@ -659,8 +652,12 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
                 "Cell_Axis_Mask",
             ]
         ].copy()
-        
-        latent_columns = [col for col in track_data.columns if col.startswith("latent_feature_number_")]
+
+        latent_columns = [
+            col
+            for col in track_data.columns
+            if col.startswith("latent_feature_number_")
+        ]
         if latent_columns:
             latent_features = track_data[latent_columns].copy()
             full_dataframe = pd.concat([full_dataframe, latent_features], axis=1)
@@ -680,9 +677,12 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
     return analysis_vectors
 
 
-
 def create_mitosis_training_data(
-    shape_dynamic_track_arrays, shape_track_arrays, dynamic_track_arrays, full_records, save_path
+    shape_dynamic_track_arrays,
+    shape_track_arrays,
+    dynamic_track_arrays,
+    full_records,
+    save_path,
 ):
     training_data_shape_dynamic = []
     training_data_shape = []
@@ -696,46 +696,60 @@ def create_mitosis_training_data(
         features_shape = shape_track_arrays[idx, :].tolist()
         features_dynamic = dynamic_track_arrays[idx, :].tolist()
 
-        training_data_shape_dynamic.append({
-            'features': features_shape_dynamic,
-            'label_dividing': label_dividing,
-            'label_number_dividing': label_number_dividing
-        })
+        training_data_shape_dynamic.append(
+            {
+                "features": features_shape_dynamic,
+                "label_dividing": label_dividing,
+                "label_number_dividing": label_number_dividing,
+            }
+        )
 
-        training_data_shape.append({
-            'features': features_shape,
-            'label_dividing': label_dividing,
-            'label_number_dividing': label_number_dividing
-        })
+        training_data_shape.append(
+            {
+                "features": features_shape,
+                "label_dividing": label_dividing,
+                "label_number_dividing": label_number_dividing,
+            }
+        )
 
-        training_data_dynamic.append({
-            'features': features_dynamic,
-            'label_dividing': label_dividing,
-            'label_number_dividing': label_number_dividing
-        })
+        training_data_dynamic.append(
+            {
+                "features": features_dynamic,
+                "label_dividing": label_dividing,
+                "label_number_dividing": label_number_dividing,
+            }
+        )
 
-    np_training_data_shape_dynamic = np.array(training_data_shape_dynamic)
-    np_training_data_shape = np.array(training_data_shape)
-    np_training_data_dynamic = np.array(training_data_dynamic)
-
-    np.savez(save_path,
-             shape_dynamic=np_training_data_shape_dynamic,
-             shape=np_training_data_shape,
-             dynamic=np_training_data_dynamic)    
+    np.savez(
+        os.path.join(save_path, "shape_dynamic.npz"),
+        shape_dynamic=np.array(training_data_shape_dynamic),
+    )
+    np.savez(os.path.join(save_path, "shape.npz"), shape=np.array(training_data_shape))
+    np.savez(
+        os.path.join(save_path, "dynamic.npz"), dynamic=np.array(training_data_dynamic)
+    )
 
     return training_data_shape_dynamic, training_data_shape, training_data_dynamic
 
 
-def extract_neural_training_data(file_path):
-    npz_file = np.load(file_path)
-    
-    training_data_shape_dynamic = npz_file['shape_dynamic']
-    training_data_shape = npz_file['shape']
-    training_data_dynamic = npz_file['dynamic']
-    
-    npz_file.close()  
-    
-    return training_data_shape_dynamic, training_data_shape, training_data_dynamic
+def load_training_data_npz(file_path):
+    loaded_data = np.load(file_path)
+    features = loaded_data["features"]
+    label_dividing = loaded_data["label_dividing"]
+    label_number_dividing = loaded_data["label_number_dividing"]
+    return features, label_dividing, label_number_dividing
+
+
+def load_training_data(save_path):
+    shape_dynamic_path = os.path.join(save_path, "shape_dynamic.npz")
+    shape_path = os.path.join(save_path, "shape.npz")
+    dynamic_path = os.path.join(save_path, "dynamic.npz")
+
+    shape_dynamic_data = load_training_data_npz(shape_dynamic_path)
+    shape_data = load_training_data_npz(shape_path)
+    dynamic_data = load_training_data_npz(dynamic_path)
+
+    return shape_dynamic_data, shape_data, dynamic_data
 
 
 def train_mitosis_classifier(
@@ -823,7 +837,11 @@ def create_gt_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame
             ]
         ]
 
-        latent_columns = [col for col in track_data.columns if col.startswith("latent_feature_number_")]
+        latent_columns = [
+            col
+            for col in track_data.columns
+            if col.startswith("latent_feature_number_")
+        ]
         if latent_columns:
             latent_features = track_data[latent_columns]
             for col in latent_features.columns:
@@ -1290,7 +1308,7 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
                 shape_dynamic_eigenvectors,
             ) = compute_covariance_matrix(shape_dynamic_track_array)
             shape_covariance, shape_eigenvectors = compute_covariance_matrix(
-                shape_track_array, mask_features = 5
+                shape_track_array, mask_features=5
             )
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
                 dynamic_track_array
@@ -1313,8 +1331,8 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
     return (shape_dynamic_covariance_2d, shape_covariance_2d, dynamic_covariance_2d)
 
 
-def compute_covariance_matrix(track_arrays, shape_features = 5, mask_features = None):
-    
+def compute_covariance_matrix(track_arrays, shape_features=5, mask_features=None):
+
     if mask_features is not None:
         negative_mask = np.any(track_arrays[:, :shape_features] < 0, axis=1)
 
@@ -1650,5 +1668,3 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
         predicted_class2 = torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
 
     return predicted_class1, predicted_class2
-
-
