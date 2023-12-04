@@ -586,8 +586,10 @@ class TrackVector(TrackMate):
         print(global_shape_dynamic_dataframe[columns_to_display].head())
 
         negative_radius_df = global_shape_dynamic_dataframe[global_shape_dynamic_dataframe['Radius'] < 0]
-        print(negative_radius_df[columns_to_display].head())
-        print(global_shape_dynamic_dataframe)
+        if negative_radius_df.shape[0] > 0:
+            print('AHHH my radius is negaitve')
+            print(negative_radius_df[columns_to_display].head())
+            print(global_shape_dynamic_dataframe)
         return global_shape_dynamic_dataframe
 
 
@@ -706,8 +708,9 @@ def create_mitosis_training_data(
             (features_dynamic, label_dividing, label_number_dividing)
         )
 
-
+    print(training_data_shape_dynamic)
     np_training_data_shape_dynamic = np.array(training_data_shape_dynamic)
+    print(np_training_data_shape_dynamic.shape)
     np_training_data_shape = np.array(training_data_shape)
     np_training_data_dynamic = np.array(training_data_dynamic)
 
