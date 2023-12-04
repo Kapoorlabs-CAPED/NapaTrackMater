@@ -44,6 +44,7 @@ class PointCloudDataset(Dataset):
 class Clustering:
     def __init__(
         self,
+        pretrainer: Trainer,
         accelerator: str,
         devices: List[int],
         label_image: np.ndarray,
@@ -59,7 +60,8 @@ class Clustering:
         center=True,
         compute_with_autoencoder=True,
     ):
-
+        
+        self.pretrainer = pretrainer
         self.accelerator = accelerator
         self.devices = devices
         self.label_image = label_image
@@ -174,7 +176,6 @@ class Clustering:
     def _create_cluster_labels(self):
 
         ndim = len(self.label_image.shape)
-        self.pretrainer = Trainer(accelerator=self.accelerator, devices=self.devices)
         if ndim == 2:
 
             labels, centroids, clouds, marching_cube_points = _label_cluster(
