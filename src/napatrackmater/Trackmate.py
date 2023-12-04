@@ -1074,9 +1074,11 @@ class TrackMate:
         track_duration = float(all_dict_values[self.track_duration_key])
 
         if self.latent_shape_features_key in all_dict_values.keys():
-            latent_shape_features = list(all_dict_values[self.latent_shape_features_key])  
+            latent_shape_features = list(all_dict_values[self.latent_shape_features_key])
+            compute_with_latent_features = True  
         else:
-            latent_shape_features = [-1]*self.latent_features 
+            latent_shape_features = [-1]*self.latent_features
+            compute_with_latent_features = False 
 
 
         if self.surface_area_key in all_dict_values.keys():
@@ -1141,7 +1143,9 @@ class TrackMate:
                     max_track_distance,
                     track_duration,
                 ]
-            current_value_list.extend(latent_shape_features)
+            
+            if compute_with_latent_features:
+               current_value_list.extend(latent_shape_features)
             
             current_value_array = np.array(current_value_list)
             diff = value_array.shape[-1] - current_value_array.shape[-1]
@@ -1186,7 +1190,8 @@ class TrackMate:
                     max_track_distance,
                     track_duration,
                 ]
-            current_value_list.extend(latent_shape_features)
+            if compute_with_latent_features:
+               current_value_list.extend(latent_shape_features)
             
             current_value_array = np.array(current_value_list)
             current_tracklets_properties[current_track_id] = current_value_array
