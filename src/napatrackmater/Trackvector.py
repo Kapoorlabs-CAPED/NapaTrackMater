@@ -311,9 +311,7 @@ class TrackVector(TrackMate):
                     surface_area,
                     latent_features
                 ) = unique_shape_properties_tracklet
-                print(f'current unique id {current_unique_id}, total time points, {len(current_time)}, latent features {len(latent_features)}')
-                for i in range(len(latent_features)):
-                    print(f'latent feature {i} {len(latent_features[i])}')
+                
                 track_id_array = np.ones(current_time.shape)
                 dividing_array = np.ones(current_time.shape)
                 number_dividing_array = np.ones(current_time.shape)
@@ -527,7 +525,7 @@ class TrackVector(TrackMate):
         for i in range(len(current_shape_dynamic_vectors)):
             vector_list = current_shape_dynamic_vectors[i]
             initial_array = np.array(vector_list[:18])
-            latent_shape_features = np.array(vector_list[18:]) if len(vector_list) > 18 else np.empty((0,))
+            latent_shape_features = np.array(vector_list[18:])
             zipped_initial_array  = list(zip(initial_array))
             data_frame_list = np.transpose(
                 np.asarray([zipped_initial_array[i] for i in range(len(zipped_initial_array))])[:, 0, :]
@@ -567,7 +565,7 @@ class TrackVector(TrackMate):
 
                 shape_dynamic_dataframe = pd.concat([shape_dynamic_dataframe, new_df], axis=1)
 
-            if len(global_shape_dynamic_dataframe) == 0:
+            if global_shape_dynamic_dataframe.empty:
                 global_shape_dynamic_dataframe = shape_dynamic_dataframe
             else:
                 global_shape_dynamic_dataframe = pd.concat(
