@@ -16,7 +16,6 @@ from scipy.spatial.qhull import QhullError
 from lightning import Trainer
 from typing import List
 from tqdm import tqdm
-from .Trackmate import TrackMate
 
 class PointCloudDataset(Dataset):
     def __init__(self, clouds: List[PyntCloud], center=True, scale_z=1.0, scale_xy=1.0):
@@ -42,7 +41,7 @@ class PointCloudDataset(Dataset):
         return point_cloud
 
 
-class Clustering(TrackMate):
+class Clustering:
     def __init__(
         self,
         accelerator: str,
@@ -60,10 +59,6 @@ class Clustering(TrackMate):
         center=True,
         compute_with_autoencoder=True,
     ):
-        super().__init__(xml_path=None, spot_csv_path=None, track_csv_path=None, 
-                         AttributeBoxname = None, TrackAttributeBoxname = None, 
-                         TrackidBox = None,  seg_image=label_image,
-                          autoencoder_model=model, accelerator=accelerator, devices=devices, axes=axes, key=key,) 
 
         self.accelerator = accelerator
         self.devices = devices
@@ -179,6 +174,7 @@ class Clustering(TrackMate):
     def _create_cluster_labels(self):
 
         ndim = len(self.label_image.shape)
+        self.pretrainer = Trainer(accelerator=self.accelerator, devices=self.devices)
         if ndim == 2:
 
             labels, centroids, clouds, marching_cube_points = _label_cluster(

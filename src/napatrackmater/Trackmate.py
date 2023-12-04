@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 import concurrent
 from .clustering import Clustering
-from lightning import Trainer
+
 
 class TrackMate:
     def __init__(
@@ -59,7 +59,7 @@ class TrackMate:
         self.center = center
         self.compute_with_autoencoder = compute_with_autoencoder
         self.latent_features = latent_features
-        self.pretrainer = Trainer(accelerator=self.accelerator, devices=self.devices)
+        
         if image is not None:
             self.image = image.astype(np.uint8)
         else:
