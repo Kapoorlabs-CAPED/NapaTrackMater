@@ -1646,7 +1646,7 @@ class TrackMate:
             self.graph_tracks[daughter_track_id] = parent_track_id
         self._get_attributes()
         if self.autoencoder_model and self.seg_image is not None:
-            print("Getting autoencoder clouds")
+            print("Getting clouds")
             
             self._assign_cluster_class()
             

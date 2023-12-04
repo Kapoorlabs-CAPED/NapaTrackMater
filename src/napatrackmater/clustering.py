@@ -174,8 +174,7 @@ class Clustering:
     def _create_cluster_labels(self):
 
         ndim = len(self.label_image.shape)
-
-        # YX image
+        self.pretrainer = Trainer(accelerator=self.accelerator, devices=self.devices)
         if ndim == 2:
 
             labels, centroids, clouds, marching_cube_points = _label_cluster(
@@ -196,8 +195,7 @@ class Clustering:
                 output_cloud_surface_area,
             ) = _model_output(
                 self.model,
-                self.accelerator,
-                self.devices,
+                self.pretrainer,
                 marching_cube_points,
                 clouds,
                 labels,
@@ -239,8 +237,7 @@ class Clustering:
                     output_cloud_surface_area,
                 ) = _model_output(
                     self.model,
-                    self.accelerator,
-                    self.devices,
+                    self.pretrainer,
                     marching_cube_points,
                     clouds,
                     labels,
@@ -330,8 +327,7 @@ class Clustering:
                 output_cloud_surface_area,
             ) = _model_output(
                 self.model,
-                self.accelerator,
-                self.devices,
+                self.pretrainer,
                 marching_cube_points,
                 clouds,
                 labels,
@@ -391,8 +387,7 @@ def _extract_latent_features(
 
 def _model_output(
     model: AutoLightningModel,
-    accelerator: str,
-    devices: List[int],
+    pretrainer: Trainer,
     marching_cube_points,
     clouds,
     labels,
@@ -421,7 +416,7 @@ def _model_output(
     if compute_with_autoencoder:
 
         model.eval()
-        pretrainer = Trainer(accelerator=accelerator, devices=devices)
+        
         outputs_list = pretrainer.predict(model=model, dataloaders=dataloader)
 
         for outputs in tqdm(outputs_list, desc="Autoencoder model", unit="batch"):
