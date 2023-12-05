@@ -29,16 +29,17 @@ class PointCloudDataset(Dataset):
 
     def __getitem__(self, idx):
         point_cloud = self.clouds[idx]
-        mean = 0
-        point_cloud = torch.tensor(point_cloud.points.values)
+        mean = 0.0  
+        point_cloud = torch.tensor(point_cloud.points.values).float()
 
         if self.center:
-            mean = torch.mean(point_cloud, 0)
+            mean = torch.mean(point_cloud, 0).float()  
 
-        scale = torch.tensor([[self.scale_z, self.scale_xy, self.scale_xy]])
+        scale = torch.tensor([[self.scale_z, self.scale_xy, self.scale_xy]]).float()
         point_cloud = (point_cloud - mean) / scale
 
         return point_cloud
+
 
 
 class Clustering:
