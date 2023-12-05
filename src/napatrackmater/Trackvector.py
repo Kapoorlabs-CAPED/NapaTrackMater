@@ -1335,7 +1335,7 @@ def compute_covariance_matrix(track_arrays, shape_features=5, mask_features=None
 
     if mask_features is not None:
         negative_column_indices = np.where(
-            (track_arrays[:, :shape_features] < 0).any(axis=0)
+            (track_arrays[:, :shape_features] == -1).any(axis=0)
         )[0]
         if len(negative_column_indices) > 0:
             track_arrays[:, negative_column_indices] = np.nan
@@ -1343,6 +1343,7 @@ def compute_covariance_matrix(track_arrays, shape_features=5, mask_features=None
             track_arrays[:, mask_features:] = np.nan
 
     covariance_matrix = np.cov(track_arrays, rowvar=False)
+    covariance_matrix = np.nan_to_num(covariance_matrix, nan=0.0)
     eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
     eigenvalue_order = np.argsort(eigenvalues)[::-1]
     eigenvalues = eigenvalues[eigenvalue_order]
