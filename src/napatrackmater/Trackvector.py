@@ -1504,40 +1504,87 @@ class LayerNorm(nn.Module):
         return '{features}, eps={eps}, ' \
             'center={center}, scale={scale}'.format(**self.__dict__)
 
+class DenseBlock(nn.Module):
+    def __init__(self, in_channels, growth_rate, num_layers):
+        super(DenseBlock, self).__init__()
+        self.layers = nn.ModuleList()
+        for i in range(num_layers):
+            self.layers.append(self._make_layer(in_channels + i * growth_rate, growth_rate))
+
+    def _make_layer(self, in_channels, out_channels):
+        return nn.Sequential(
+            nn.Conv1d(in_channels, out_channels, kernel_size=3, padding=1),
+            LayerNormTime(out_channels),  # Apply your LayerNorm here or BatchNorm if desired
+            nn.ReLU(inplace=True)
+        )
+
+    def forward(self, x):
+        features = [x]
+        for layer in self.layers:
+            out = layer(torch.cat(features, dim=1))
+            features.append(out)
+        return torch.cat(features, dim=1)
+
+class TransitionLayer(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(TransitionLayer, self).__init__()
+        self.conv = nn.Conv1d(in_channels, out_channels, kernel_size=1)
+        self.pool = nn.AvgPool1d(kernel_size=2, stride=2)
+
+    def forward(self, x):
+        out = self.conv(x)
+        out = self.pool(out)
+        return out
+
+class DenseNetTillLastLayers(nn.Module):
+    def __init__(self, input_size, growth_rate=32, block_layers=[6, 12, 24, 16]):
+        super(DenseNetTillLastLayers, self).__init__()
+        self.features = nn.Sequential()
+
+        num_features = 64  # Initial number of feature maps
+
+        # Initial convolutional layer
+        self.features.add_module('conv0', nn.Conv1d(input_size, num_features, kernel_size=7, stride=2, padding=3))
+        self.features.add_module('pool0', nn.MaxPool1d(kernel_size=3, stride=2, padding=1))
+
+        # Dense Blocks and Transition Layers
+        for i, num_layers in enumerate(block_layers):
+            block = DenseBlock(num_features, growth_rate, num_layers)
+            self.features.add_module(f'denseblock{i + 1}', block)
+            num_features = num_features + num_layers * growth_rate
+
+            if i != len(block_layers) - 1:
+                trans = TransitionLayer(num_features, num_features // 2)
+                self.features.add_module(f'transition{i + 1}', trans)
+                num_features = num_features // 2
+
+
+    def forward(self, x):
+        features = self.features(x)
+        return features
+    
 
 class MitosisNet(nn.Module):
     def __init__(self, input_size, num_classes_class1, num_classes_class2):
         super().__init__()
-        self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3)
-        self.bn1 = LayerNormTime(32)
-        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
-        self.bn2 = LayerNormTime(64)
-        self.conv3 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3)
-        self.bn3 = LayerNormTime(128)
-        self.pool = nn.MaxPool1d(kernel_size=2)
-        conv_output_size = self._calculate_conv_output_size(input_size)
-        self.fc1 = nn.Linear(conv_output_size, 128)
+        self.densenet = DenseNetTillLastLayers(input_size=input_size)
+        self.fc1 = nn.Linear(self._calculate_conv_output_size(input_size), 128)
         self.fc2_class1 = nn.Linear(128, num_classes_class1)
         self.fc3_class2 = nn.Linear(128, num_classes_class2)
 
     def _calculate_conv_output_size(self, input_size):
         x = torch.randn(1, 1, input_size)
-        x = self.pool(nn.functional.relu(self.bn1(self.conv1(x))))
-        x = self.pool(nn.functional.relu(self.bn2(self.conv2(x))))
-        x = self.pool(nn.functional.relu(self.bn3(self.conv3(x))))
+        x = self.densenet(x)
         return x.view(1, -1).size(1)
 
     def forward(self, x):
         x = x.view(-1, 1, x.size(1))
-        x = self.pool(nn.functional.relu(self.bn1(self.conv1(x))))
-        x = self.pool(nn.functional.relu(self.bn2(self.conv2(x))))
-        x = self.pool(nn.functional.relu(self.bn3(self.conv3(x))))
+        x = self.densenet(x)
         x = x.view(x.size(0), -1)
         x = nn.functional.relu(self.fc1(x))
         class_output1 = self.fc2_class1(x)
         class_output2 = self.fc3_class2(x)
         return class_output1, class_output2
-
 
 def train_mitosis_neural_net(
     features_array,
