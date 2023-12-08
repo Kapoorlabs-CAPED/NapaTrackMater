@@ -662,7 +662,7 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
             latent_features = track_data[latent_columns].copy()
             full_dataframe = pd.concat([full_dataframe, latent_features], axis=1)
             shape_dataframe = pd.concat([shape_dataframe, latent_features], axis=1)
-
+            shape_dynamic_dataframe = pd.concat([shape_dynamic_dataframe, latent_features], axis=1)
         shape_dynamic_dataframe_list = shape_dynamic_dataframe.to_dict(orient="records")
         shape_dataframe_list = shape_dataframe.to_dict(orient="records")
         dynamic_dataframe_list = dynamic_dataframe.to_dict(orient="records")
@@ -732,12 +732,26 @@ def create_mitosis_training_data(
     return training_data_shape_dynamic, training_data_shape, training_data_dynamic
 
 
-def load_training_data_npz(file_path):
-    loaded_data = np.load(file_path)
-    features = loaded_data["features"]
-    label_dividing = loaded_data["label_dividing"]
-    label_number_dividing = loaded_data["label_number_dividing"]
-    return features, label_dividing, label_number_dividing
+def load_training_data_npz(file_path, key):
+    loaded_data = np.load(file_path, allow_pickle=True)[key]
+    features_list = []
+    label_dividing_list = []
+    label_number_dividing_list = []
+
+    for entry in loaded_data:
+        features = entry['features']
+        label_dividing = entry['label_dividing']
+        label_number_dividing = entry['label_number_dividing']
+        
+        features_list.append(features)
+        label_dividing_list.append(label_dividing)
+        label_number_dividing_list.append(label_number_dividing)
+
+    features_array = np.array(features_list)
+    label_dividing_array = np.array(label_dividing_list)
+    label_number_dividing_array = np.array(label_number_dividing_list)
+
+    return features_array, label_dividing_array, label_number_dividing_array
 
 
 def load_training_data(save_path):
