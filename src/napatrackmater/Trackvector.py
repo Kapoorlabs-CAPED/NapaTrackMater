@@ -1366,7 +1366,23 @@ def compute_covariance_matrix(track_arrays, shape_features=5, mask_features=None
 
     return covariance_matrix, eigenvectors
 
+class MitosisNetLSTM(nn.Module):
+    def __init__(self, input_size, num_classes_class1, num_classes_class2, hidden_size=64, num_layers=2):
+        super().__init__()
+        self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
+        self.fc1 = nn.Linear(hidden_size, 128)
+        self.fc2_class1 = nn.Linear(128, num_classes_class1)
+        self.fc3_class2 = nn.Linear(128, num_classes_class2)
 
+    def forward(self, x):
+        lstm_out, _ = self.lstm(x)
+        
+        lstm_out = lstm_out[:, -1, :]
+        x = nn.functional.relu(self.fc1(lstm_out))
+        class_output1 = torch.softmax(self.fc2_class1(x), dim=1)
+        class_output2 = torch.softmax(self.fc3_class2(x), dim=1)
+        return class_output1, class_output2
+    
 class MitosisNet(nn.Module):
     def __init__(self, input_size, num_classes_class1, num_classes_class2):
         super().__init__()
@@ -1407,6 +1423,7 @@ def train_mitosis_neural_net(
     batch_size=64,
     learning_rate=0.001,
     epochs=10,
+    use_lstm= False,
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -1443,11 +1460,18 @@ def train_mitosis_neural_net(
     }
     with open(save_path + "_model_info.json", "w") as json_file:
         json.dump(model_info, json_file)
-    model = MitosisNet(
-        input_size=input_size,
-        num_classes_class1=num_classes1,
-        num_classes_class2=num_classes2,
-    )
+    if use_lstm:
+        model = MitosisNetLSTM(
+            input_size=input_size,
+            num_classes_class1=num_classes1,
+            num_classes_class2=num_classes2,
+        )
+    else:        
+        model = MitosisNet(
+            input_size=input_size,
+            num_classes_class1=num_classes1,
+            num_classes_class2=num_classes2,
+        )
     model.to(device)
 
     criterion_class1 = nn.CrossEntropyLoss()
