@@ -1389,6 +1389,7 @@ class MitosisNet(nn.Module):
         self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3)
         self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
         self.conv3 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3)
+        self.conv4 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3)
         self.pool = nn.MaxPool1d(kernel_size=2)
         conv_output_size = self._calculate_conv_output_size(input_size)
         self.fc1 = nn.Linear(conv_output_size, 128)
@@ -1400,6 +1401,7 @@ class MitosisNet(nn.Module):
         x = self.pool(nn.functional.relu(self.conv1(x)))
         x = self.pool(nn.functional.relu(self.conv2(x)))
         x = self.pool(nn.functional.relu(self.conv3(x)))
+        x = self.pool(nn.functional.relu(self.conv4(x)))
         return x.view(1, -1).size(1)
 
     def forward(self, x):
@@ -1407,6 +1409,7 @@ class MitosisNet(nn.Module):
         x = self.pool(nn.functional.relu(self.conv1(x)))
         x = self.pool(nn.functional.relu(self.conv2(x)))
         x = self.pool(nn.functional.relu(self.conv3(x)))
+        x = self.pool(nn.functional.relu(self.conv4(x)))
         x = x.view(x.size(0), -1)
         x = nn.functional.relu(self.fc1(x))
         class_output1 = torch.softmax(self.fc2_class1(x), dim=1)
