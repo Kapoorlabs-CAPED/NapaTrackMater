@@ -1398,6 +1398,8 @@ class MitosisNetLSTM(nn.Module):
         return class_output1, class_output2
     
 class LayerNormTime(nn.Module):
+    __constants__ = ['features', 'weight', 'bias', 'eps', 'center', 'scale']
+
     def __init__(self, features, eps=1e-5, center=True, scale=True):
         super().__init__()
         self.features = features
@@ -1424,24 +1426,29 @@ class LayerNormTime(nn.Module):
         if self.center:
             nn.init.zeros_(self.bias)
 
+    def adjust_parameter(self, tensor, parameter):
+        return torch.repeat_interleave(
+        torch.repeat_interleave(
+            parameter.view(-1, 1),
+            repeats=tensor.shape[2],
+            dim=1)
+    )
     def forward(self, input):
-        # Calculate mean and standard deviation across the time dimension
-        mean = input.mean(dim=-1, keepdim=True)
-        std = input.std(dim=-1, keepdim=True)
-        
-        # Normalize along the time dimension
-        normalized_input = (input - mean) / (std + self.eps)
-
-        if self.scale:
-            normalized_input = normalized_input * self.weight.unsqueeze(0)
-        if self.center:
-            normalized_input = normalized_input + self.bias.unsqueeze(0)
-
-        return normalized_input
+        if len(input.shape) > 1:
+          normalized_shape = (self.features, input.shape[2])
+          weight = self.adjust_parameter(input, self.weight)
+          bias = self.adjust_parameter(input, self.bias)
+        else:
+          normalized_shape = tuple([self.features])    
+          weight = self.weight
+          bias = self.bias
+        return F.layer_norm(
+            input, normalized_shape, weight, bias, self.eps)
 
     def extra_repr(self):
-        return '{features}, eps={eps}, center={center}, scale={scale}'.format(**self.__dict__)
-    
+        return '{features}, eps={eps}, ' \
+            'center={center}, scale={scale}'.format(**self.__dict__)
+
 class LayerNorm(nn.Module):
    
     __constants__ = ['features', 'weight', 'bias', 'eps', 'center', 'scale']
