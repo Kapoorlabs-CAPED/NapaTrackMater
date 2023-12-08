@@ -25,7 +25,7 @@ from tqdm import tqdm
 from torch.optim.lr_scheduler import MultiStepLR
 import matplotlib.pyplot as plt
 from typing import List, Union
-
+import torch.nn.functional as F
 
 class TrackVector(TrackMate):
     def __init__(
@@ -1396,17 +1396,117 @@ class MitosisNetLSTM(nn.Module):
         class_output1 = self.fc2_class1(x)
         class_output2 = self.fc3_class2(x)
         return class_output1, class_output2
+    
+class LayerNormTime(nn.Module):
+    def __init__(self, features, eps=1e-5, center=True, scale=True):
+        super().__init__()
+        self.features = features
+        self.eps = eps
+        self.center = center
+        self.scale = scale
+
+        if self.scale:
+            self.weight = nn.Parameter(torch.Tensor(self.features))
+        else:
+            self.register_parameter('weight', None)
+
+        if self.center:
+            self.bias = nn.Parameter(torch.Tensor(self.features))
+        else:
+            self.register_parameter('bias', None)
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        if self.scale:
+            nn.init.ones_(self.weight)
+
+        if self.center:
+            nn.init.zeros_(self.bias)
+
+    def forward(self, input):
+        # Calculate mean and standard deviation across the time dimension
+        mean = input.mean(dim=-1, keepdim=True)
+        std = input.std(dim=-1, keepdim=True)
+        
+        # Normalize along the time dimension
+        normalized_input = (input - mean) / (std + self.eps)
+
+        if self.scale:
+            normalized_input = normalized_input * self.weight.unsqueeze(0)
+        if self.center:
+            normalized_input = normalized_input + self.bias.unsqueeze(0)
+
+        return normalized_input
+
+    def extra_repr(self):
+        return '{features}, eps={eps}, center={center}, scale={scale}'.format(**self.__dict__)
+    
+class LayerNorm(nn.Module):
+   
+    __constants__ = ['features', 'weight', 'bias', 'eps', 'center', 'scale']
+
+    def __init__(self, features, eps=1e-5, center=True, scale=True):
+        super().__init__()
+        self.features = features
+        self.eps = eps
+        self.center = center
+        self.scale = scale
+
+        if self.scale:
+            self.weight = nn.Parameter(torch.Tensor(self.features))
+        else:
+            self.register_parameter('weight', None)
+
+        if self.center:
+            self.bias = nn.Parameter(torch.Tensor(self.features))
+        else:
+            self.register_parameter('bias', None)
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        if self.scale:
+            nn.init.ones_(self.weight)
+
+        if self.center:
+            nn.init.zeros_(self.bias)
+
+    def adjust_parameter(self, tensor, parameter):
+        return torch.repeat_interleave(
+        torch.repeat_interleave(
+            parameter.view(-1, 1, 1),
+            repeats=tensor.shape[2],
+            dim=1),
+        repeats=tensor.shape[3],
+        dim=2
+    )
+    def forward(self, input):
+        if len(input.shape) > 2:
+          normalized_shape = (self.features, input.shape[2], input.shape[3])
+          weight = self.adjust_parameter(input, self.weight)
+          bias = self.adjust_parameter(input, self.bias)
+        else:
+          normalized_shape = tuple([self.features])    
+          weight = self.weight
+          bias = self.bias
+        return F.layer_norm(
+            input, normalized_shape, weight, bias, self.eps)
+
+    def extra_repr(self):
+        return '{features}, eps={eps}, ' \
+            'center={center}, scale={scale}'.format(**self.__dict__)
 
 
 class MitosisNet(nn.Module):
     def __init__(self, input_size, num_classes_class1, num_classes_class2):
         super().__init__()
         self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3)
-        self.bn1 = nn.BatchNorm1d(32)
+        self.bn1 = LayerNormTime(32)
         self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
-        self.bn2 = nn.BatchNorm1d(64)
+        self.bn2 = LayerNormTime(64)
         self.conv3 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3)
-        self.bn3 = nn.BatchNorm1d(128)
+        self.bn3 = LayerNormTime(128)
         self.pool = nn.MaxPool1d(kernel_size=2)
         conv_output_size = self._calculate_conv_output_size(input_size)
         self.fc1 = nn.Linear(conv_output_size, 128)
