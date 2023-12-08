@@ -1368,120 +1368,175 @@ def compute_covariance_matrix(track_arrays, shape_features=5, mask_features=None
     return covariance_matrix, eigenvectors
 
 
-class MitosisNetLSTM(nn.Module):
-    def __init__(
-        self,
-        input_size,
-        num_classes_class1,
-        num_classes_class2,
-        hidden_size=32,
-        num_layers=1,
-    ):
+class DenseLayer(nn.Module):
+    '''
+    '''
+    def __init__(self, in_channels, growth_rate, bottleneck_size, kernel_size):
         super().__init__()
-        self.lstm = nn.LSTM(
-            input_size=input_size,
-            hidden_size=hidden_size,
-            num_layers=num_layers,
-            batch_first=True,
-        )
-        self.fc1 = nn.Linear(hidden_size, 128)
-        self.fc2_class1 = nn.Linear(128, num_classes_class1)
-        self.fc3_class2 = nn.Linear(128, num_classes_class2)
+        self.use_bottleneck = bottleneck_size > 0
+        self.num_bottleneck_output_filters = growth_rate * bottleneck_size
+        if self.use_bottleneck:
+            self.bn2 = nn.BatchNorm1d(in_channels)
+            self.act2 = nn.ReLU(inplace=True)
+            self.conv2 = nn.Conv1d(
+                in_channels, 
+                self.num_bottleneck_output_filters,
+                kernel_size=1,
+                stride=1)
+        self.bn1 = nn.BatchNorm1d(self.num_bottleneck_output_filters)
+        self.act1 = nn.ReLU(inplace=True)
+        self.conv1 = nn.Conv1d(
+            self.num_bottleneck_output_filters,
+            growth_rate,
+            kernel_size=kernel_size,
+            stride=1, 
+            dilation=1, 
+            padding=kernel_size // 2)
 
     def forward(self, x):
-        lstm_out, _ = self.lstm(x)
+        if self.use_bottleneck:
+            x = self.bn2(x)
+            x = self.act2(x)
+            x = self.conv2(x)
+        x = self.bn1(x)
+        x = self.act1(x)
+        x = self.conv1(x)
+        return x
 
-        lstm_out = lstm_out.reshape(lstm_out.size(0), -1)
-        x = nn.functional.relu(self.fc1(lstm_out))
-        class_output1 = self.fc2_class1(x)
-        class_output2 = self.fc3_class2(x)
-        return class_output1, class_output2
-    
 
-
-class DenseBlock(nn.Module):
-    def __init__(self, in_channels, growth_rate, num_layers):
+class DenseBlock(nn.ModuleDict):
+    '''
+    '''
+    def __init__(self, num_layers, in_channels, growth_rate, kernel_size, bottleneck_size):
         super().__init__()
-        self.layers = nn.ModuleList()
-        for i in range(num_layers):
-            self.layers.append(self._make_layer(in_channels + i * growth_rate, growth_rate))
-
-    def _make_layer(self, in_channels, out_channels):
-        return nn.Sequential(
-            nn.Conv1d(in_channels, out_channels, kernel_size=3, padding=1),
-            nn.BatchNorm1d(out_channels), 
-            nn.ReLU(inplace=True)
-        )
+        self.num_layers = num_layers
+        for i in range(self.num_layers):
+            self.add_module(f'denselayer{i}', 
+                DenseLayer(in_channels + i * growth_rate, 
+                           growth_rate, 
+                           bottleneck_size, 
+                           kernel_size))
 
     def forward(self, x):
-        features = [x]
-        for layer in self.layers:
-            out = layer(torch.cat(features, dim=1))
-            features.append(out)
-        return torch.cat(features, dim=1)
+        layer_outputs = [x]
+        for _, layer in self.items():
+            x = layer(x)
+            layer_outputs.append(x)
+            x = torch.cat(layer_outputs, dim=1)
+        return x
 
-class TransitionLayer(nn.Module):
+
+class TransitionBlock(nn.Module):
+    '''
+    '''
     def __init__(self, in_channels, out_channels):
         super().__init__()
-        self.conv = nn.Conv1d(in_channels, out_channels, kernel_size=1)
+        self.bn = nn.BatchNorm1d(in_channels)
+        self.act = nn.ReLU(inplace=True)
+        self.conv = nn.Conv1d(in_channels, out_channels, kernel_size=1, stride=1, dilation=1)
         self.pool = nn.AvgPool1d(kernel_size=2, stride=2)
-
+    
     def forward(self, x):
-        out = self.conv(x)
-        out = self.pool(out)
+        x = self.bn(x)
+        x = self.act(x)
+        x = self.conv(x)
+        x = self.pool(x)
+        return x
+        
+
+class DenseNet1d(nn.Module):
+
+    def __init__(
+        self, 
+        growth_rate: int = 32,
+        block_config: tuple = (6, 12, 24, 16),
+        num_init_features: int = 64,
+        bottleneck_size: int = 4,
+        kernel_size: int = 3, 
+        in_channels: int = 3,
+        num_classes: int = 1,
+        reinit: bool = True,
+    ):
+        super().__init__()
+
+        self.features = nn.Sequential(
+            nn.Conv1d(
+                in_channels, num_init_features, 
+                kernel_size=7, stride=2, padding=3, dilation=1),
+            nn.BatchNorm1d(num_init_features),
+            nn.ReLU(inplace=True),
+            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
+        )
+
+        num_features = num_init_features
+        for i, num_layers in enumerate(block_config):
+            block = DenseBlock(
+                num_layers=num_layers,
+                in_channels=num_features,
+                growth_rate=growth_rate,
+                kernel_size=kernel_size,
+                bottleneck_size=bottleneck_size,
+            )
+            self.features.add_module(f'denseblock{i}', block)
+            num_features = num_features + num_layers * growth_rate
+            if i != len(block_config) - 1:
+                trans = TransitionBlock(
+                    in_channels=num_features,
+                    out_channels=num_features // 2)
+                self.features.add_module(f'transition{i}', trans)
+                num_features = num_features // 2
+        
+        self.final_bn = nn.BatchNorm1d(num_features)
+        self.final_act = nn.ReLU(inplace=True)
+        self.final_pool = nn.AdaptiveAvgPool1d(1)
+        self.classifier = nn.Linear(num_features, num_classes)
+        
+        # init
+        if reinit:
+            for m in self.modules():
+                if isinstance(m, nn.Conv1d):
+                    nn.init.kaiming_normal_(m.weight)
+                elif isinstance(m, nn.BatchNorm1d):
+                    nn.init.constant_(m.weight, 1)
+                    nn.init.constant_(m.bias, 0)
+                elif isinstance(m, nn.Linear):
+                    nn.init.constant_(m.bias, 0)
+
+    def forward_features(self, x):
+        out = self.features(x)
+        out = self.final_bn(out)
+        out = self.final_act(out)
+        out = self.final_pool(out)
         return out
 
-class DenseNetTillLastLayers(nn.Module):
-    def __init__(self, input_size, growth_rate=32, block_layers=[6, 12, 24, 16]):
-        super().__init__()
-        self.features = nn.Sequential()
-
-        num_features = 64 
-
-       
-        self.features.add_module('conv0', nn.Conv1d(input_size, num_features, kernel_size=7, stride=2, padding=3))
-        self.features.add_module('pool0', nn.MaxPool1d(kernel_size=3, stride=2, padding=1))
-
-        # Dense Blocks and Transition Layers
-        for i, num_layers in enumerate(block_layers):
-            block = DenseBlock(num_features, growth_rate, num_layers)
-            self.features.add_module(f'denseblock{i + 1}', block)
-            num_features = num_features + num_layers * growth_rate
-
-            if i != len(block_layers) - 1:
-                trans = TransitionLayer(num_features, num_features // 2)
-                self.features.add_module(f'transition{i + 1}', trans)
-                num_features = num_features // 2
-
-
     def forward(self, x):
-        features = self.features(x)
-        return features
+        features = self.forward_features(x)
+        features = features.squeeze(-1)
+        out = self.classifier(features)
+        return out
+
+    def reset_classifier(self):
+        self.classifier = nn.Identity()
     
+    def get_classifier(self):
+        return self.classifier
 
 class MitosisNet(nn.Module):
-    def __init__(self, input_size, num_classes_class1, num_classes_class2):
+    def __init__(self, num_classes_class1, num_classes_class2):
         super().__init__()
-        self.densenet = DenseNetTillLastLayers(input_size=input_size)
-        self.fc1 = nn.Linear(self._calculate_dense_output_channels(input_size), 128)
-        self.fc2_class1 = nn.Linear(128, num_classes_class1)
-        self.fc3_class2 = nn.Linear(128, num_classes_class2)
-
-    def _calculate_dense_output_channels(self, input_size):
-        x = torch.randn(1, input_size)
-        with torch.no_grad():
-            dense_output = self.densenet(x.unsqueeze(0))  
-        return dense_output.size(1)
+        self.densenet = DenseNet1d(in_channels=1, num_classes=num_classes_class1 + num_classes_class2)
+        self.num_classes_class1 = num_classes_class1
+        self.num_classes_class2 = num_classes_class2
 
     def forward(self, x):
         x = x.unsqueeze(1) 
-        x = self.densenet(x)  
-        x = x.view(x.size(0), -1) 
-        x = nn.functional.relu(self.fc1(x))
-        class_output1 = self.fc2_class1(x)
-        class_output2 = self.fc3_class2(x)
-        return class_output1, class_output2
+        logits = self.densenet(x)
 
+        class_output1 = logits[:, :self.num_classes_class1]
+        class_output2 = logits[:, self.num_classes_class1:]
+
+        return class_output1, class_output2
+    
 def train_mitosis_neural_net(
     features_array,
     labels_array_class1,
@@ -1528,15 +1583,8 @@ def train_mitosis_neural_net(
     }
     with open(save_path + "_model_info.json", "w") as json_file:
         json.dump(model_info, json_file)
-    if use_lstm:
-        model = MitosisNetLSTM(
-            input_size=input_size,
-            num_classes_class1=num_classes1,
-            num_classes_class2=num_classes2,
-        )
-    else:
-        model = MitosisNet(
-            input_size=input_size,
+    
+    model = MitosisNet(
             num_classes_class1=num_classes1,
             num_classes_class2=num_classes2,
         )
