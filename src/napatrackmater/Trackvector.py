@@ -1443,62 +1443,7 @@ class TransitionBlock(nn.Module):
         x = self.pool(x)
         return x
         
-class DenseNetLSTM1d(nn.Module):
-    def __init__(
-        self, 
-        growth_rate=32,
-        block_config=(6, 12, 24, 16),
-        num_init_features=64,
-        bottleneck_size=4,
-        in_channels=3,
-        num_classes=1,
-        reinit=True,
-    ):
-        super().__init__()
 
-        self.features = nn.ModuleList([
-            nn.LSTM(
-                input_size=in_channels if i == 0 else num_init_features + i * growth_rate,
-                hidden_size=num_init_features if i == 0 else num_init_features + i * growth_rate,
-                num_layers=1,
-                batch_first=True
-            ) for i, num_layers in enumerate(block_config)
-        ])
-
-        self.final_bn = nn.BatchNorm1d(num_init_features + sum(block_config) * growth_rate)
-        self.final_act = nn.ReLU(inplace=True)
-        self.final_pool = nn.AdaptiveAvgPool1d(1)
-        self.classifier = nn.Linear(num_init_features + sum(block_config) * growth_rate, num_classes)
-
-        # Init
-        if reinit:
-            for m in self.modules():
-                if isinstance(m, nn.Linear):
-                    nn.init.constant_(m.bias, 0)
-                elif isinstance(m, nn.BatchNorm1d):
-                    nn.init.constant_(m.weight, 1)
-                    nn.init.constant_(m.bias, 0)
-
-    def forward_features(self, x):
-        for lstm in self.features:
-            output, _ = lstm(x)
-            x = output
-        return x
-
-    def forward(self, x):
-        features = self.forward_features(x)
-        features = self.final_bn(features)
-        features = self.final_act(features)
-        features = self.final_pool(features)
-        features = features.squeeze(-1)
-        out = self.classifier(features)
-        return out
-
-    def reset_classifier(self):
-        self.classifier = nn.Identity()
-
-    def get_classifier(self):
-        return self.classifier
     
 class DenseNet1d(nn.Module):
 
@@ -1593,21 +1538,7 @@ class MitosisNet(nn.Module):
 
         return class_output1, class_output2
     
-class MitosisLSTMNet(nn.Module):
-    def __init__(self, num_classes_class1, num_classes_class2):
-        super().__init__()
-        self.densenet = DenseNetLSTM1d(in_channels=1, num_classes=num_classes_class1 + num_classes_class2)
-        self.num_classes_class1 = num_classes_class1
-        self.num_classes_class2 = num_classes_class2
 
-    def forward(self, x):
-        x = x.unsqueeze(1) 
-        logits = self.densenet(x)
-
-        class_output1 = logits[:, :self.num_classes_class1]
-        class_output2 = logits[:, self.num_classes_class1:]
-
-        return class_output1, class_output2
 
 def train_mitosis_neural_net(
     features_array,
@@ -1618,7 +1549,6 @@ def train_mitosis_neural_net(
     batch_size=64,
     learning_rate=0.001,
     epochs=10,
-    use_lstm=False,
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -1655,13 +1585,8 @@ def train_mitosis_neural_net(
     }
     with open(save_path + "_model_info.json", "w") as json_file:
         json.dump(model_info, json_file)
-    if use_lstm:
-        model = MitosisLSTMNet(
-            num_classes_class1=num_classes1,
-            num_classes_class2=num_classes2,
-        )
-    else:    
-        model = MitosisNet(
+      
+    model = MitosisNet(
                 num_classes_class1=num_classes1,
                 num_classes_class2=num_classes2,
             )
