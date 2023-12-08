@@ -1386,8 +1386,8 @@ class MitosisNetLSTM(nn.Module):
 class MitosisNet(nn.Module):
     def __init__(self, input_size, num_classes_class1, num_classes_class2):
         super().__init__()
-        self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3)
-        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=7)
+        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=5)
         self.conv3 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3)
         self.pool = nn.MaxPool1d(kernel_size=2)
         conv_output_size = self._calculate_conv_output_size(input_size)
