@@ -759,9 +759,9 @@ def load_training_data(save_path):
     shape_path = os.path.join(save_path, "shape.npz")
     dynamic_path = os.path.join(save_path, "dynamic.npz")
 
-    shape_dynamic_data = load_training_data_npz(shape_dynamic_path)
-    shape_data = load_training_data_npz(shape_path)
-    dynamic_data = load_training_data_npz(dynamic_path)
+    shape_dynamic_data = load_training_data_npz(shape_dynamic_path, 'shape_dynamic')
+    shape_data = load_training_data_npz(shape_path, 'shape')
+    dynamic_data = load_training_data_npz(dynamic_path, 'dynamic')
 
     return shape_dynamic_data, shape_data, dynamic_data
 
