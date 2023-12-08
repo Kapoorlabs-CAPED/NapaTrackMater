@@ -1377,7 +1377,7 @@ class MitosisNetLSTM(nn.Module):
     def forward(self, x):
         lstm_out, _ = self.lstm(x)
         
-        lstm_out = lstm_out[:, -1, :]
+        lstm_out = lstm_out.reshape(lstm_out.size(0), -1)
         x = nn.functional.relu(self.fc1(lstm_out))
         class_output1 = torch.softmax(self.fc2_class1(x), dim=1)
         class_output2 = torch.softmax(self.fc3_class2(x), dim=1)
