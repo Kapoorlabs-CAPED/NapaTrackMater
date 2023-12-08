@@ -32,7 +32,7 @@ class TrackVector(TrackMate):
         self,
         viewer: napari.Viewer,
         image: np.ndarray,
-        seg_image: np.ndarray,
+       
         master_xml_path: Path,
         spot_csv_path: Path,
         track_csv_path: Path,
@@ -50,6 +50,7 @@ class TrackVector(TrackMate):
         batch_size=1,
         scale_z=1.0,
         scale_xy=1.0,
+        seg_image: np.ndarray = None,
         accelerator: str = "cuda",
         devices: Union[List[int], str, int] = 1,
     ):
