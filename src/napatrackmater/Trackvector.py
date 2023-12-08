@@ -32,7 +32,6 @@ class TrackVector(TrackMate):
         self,
         viewer: napari.Viewer,
         image: np.ndarray,
-       
         master_xml_path: Path,
         spot_csv_path: Path,
         track_csv_path: Path,
@@ -663,7 +662,9 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
             latent_features = track_data[latent_columns].copy()
             full_dataframe = pd.concat([full_dataframe, latent_features], axis=1)
             shape_dataframe = pd.concat([shape_dataframe, latent_features], axis=1)
-            shape_dynamic_dataframe = pd.concat([shape_dynamic_dataframe, latent_features], axis=1)
+            shape_dynamic_dataframe = pd.concat(
+                [shape_dynamic_dataframe, latent_features], axis=1
+            )
         shape_dynamic_dataframe_list = shape_dynamic_dataframe.to_dict(orient="records")
         shape_dataframe_list = shape_dataframe.to_dict(orient="records")
         dynamic_dataframe_list = dynamic_dataframe.to_dict(orient="records")
@@ -740,10 +741,10 @@ def load_training_data_npz(file_path, key):
     label_number_dividing_list = []
 
     for entry in loaded_data:
-        features = entry['features']
-        label_dividing = entry['label_dividing']
-        label_number_dividing = entry['label_number_dividing']
-        
+        features = entry["features"]
+        label_dividing = entry["label_dividing"]
+        label_number_dividing = entry["label_number_dividing"]
+
         features_list.append(features)
         label_dividing_list.append(label_dividing)
         label_number_dividing_list.append(label_number_dividing)
@@ -760,9 +761,9 @@ def load_training_data(save_path):
     shape_path = os.path.join(save_path, "shape.npz")
     dynamic_path = os.path.join(save_path, "dynamic.npz")
 
-    shape_dynamic_data = load_training_data_npz(shape_dynamic_path, 'shape_dynamic')
-    shape_data = load_training_data_npz(shape_path, 'shape')
-    dynamic_data = load_training_data_npz(dynamic_path, 'dynamic')
+    shape_dynamic_data = load_training_data_npz(shape_dynamic_path, "shape_dynamic")
+    shape_data = load_training_data_npz(shape_path, "shape")
+    dynamic_data = load_training_data_npz(dynamic_path, "dynamic")
 
     return shape_dynamic_data, shape_data, dynamic_data
 
@@ -1366,34 +1367,48 @@ def compute_covariance_matrix(track_arrays, shape_features=5, mask_features=None
 
     return covariance_matrix, eigenvectors
 
+
 class MitosisNetLSTM(nn.Module):
-    def __init__(self, input_size, num_classes_class1, num_classes_class2, hidden_size=32, num_layers=1):
+    def __init__(
+        self,
+        input_size,
+        num_classes_class1,
+        num_classes_class2,
+        hidden_size=32,
+        num_layers=1,
+    ):
         super().__init__()
-        self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
+        self.lstm = nn.LSTM(
+            input_size=input_size,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            batch_first=True,
+        )
         self.fc1 = nn.Linear(hidden_size, 128)
         self.fc2_class1 = nn.Linear(128, num_classes_class1)
         self.fc3_class2 = nn.Linear(128, num_classes_class2)
 
     def forward(self, x):
         lstm_out, _ = self.lstm(x)
-        
+
         lstm_out = lstm_out.reshape(lstm_out.size(0), -1)
         x = nn.functional.relu(self.fc1(lstm_out))
         class_output1 = self.fc2_class1(x)
         class_output2 = self.fc3_class2(x)
         return class_output1, class_output2
-    
+
+
 class MitosisNet(nn.Module):
     def __init__(self, input_size, num_classes_class1, num_classes_class2):
         super().__init__()
-        self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=7)
-        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=5)
-        self.conv3 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3)
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=64, kernel_size=7)
+        self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3)
+        self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3)
         self.pool = nn.MaxPool1d(kernel_size=2)
         conv_output_size = self._calculate_conv_output_size(input_size)
-        self.fc1 = nn.Linear(conv_output_size, 128)
-        self.fc2_class1 = nn.Linear(128, num_classes_class1)
-        self.fc3_class2 = nn.Linear(128, num_classes_class2)
+        self.fc1 = nn.Linear(conv_output_size, 256)
+        self.fc2_class1 = nn.Linear(256, num_classes_class1)
+        self.fc3_class2 = nn.Linear(256, num_classes_class2)
 
     def _calculate_conv_output_size(self, input_size):
         x = torch.randn(1, 1, input_size)
@@ -1423,7 +1438,7 @@ def train_mitosis_neural_net(
     batch_size=64,
     learning_rate=0.001,
     epochs=10,
-    use_lstm= False,
+    use_lstm=False,
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -1466,7 +1481,7 @@ def train_mitosis_neural_net(
             num_classes_class1=num_classes1,
             num_classes_class2=num_classes2,
         )
-    else:        
+    else:
         model = MitosisNet(
             input_size=input_size,
             num_classes_class1=num_classes1,
