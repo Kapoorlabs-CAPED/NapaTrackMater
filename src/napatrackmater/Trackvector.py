@@ -1401,7 +1401,7 @@ class MitosisNetLSTM(nn.Module):
 
 class DenseBlock(nn.Module):
     def __init__(self, in_channels, growth_rate, num_layers):
-        super(DenseBlock, self).__init__()
+        super().__init__()
         self.layers = nn.ModuleList()
         for i in range(num_layers):
             self.layers.append(self._make_layer(in_channels + i * growth_rate, growth_rate))
@@ -1422,7 +1422,7 @@ class DenseBlock(nn.Module):
 
 class TransitionLayer(nn.Module):
     def __init__(self, in_channels, out_channels):
-        super(TransitionLayer, self).__init__()
+        super().__init__()
         self.conv = nn.Conv1d(in_channels, out_channels, kernel_size=1)
         self.pool = nn.AvgPool1d(kernel_size=2, stride=2)
 
@@ -1433,12 +1433,12 @@ class TransitionLayer(nn.Module):
 
 class DenseNetTillLastLayers(nn.Module):
     def __init__(self, input_size, growth_rate=32, block_layers=[6, 12, 24, 16]):
-        super(DenseNetTillLastLayers, self).__init__()
+        super().__init__()
         self.features = nn.Sequential()
 
         num_features = 64 
 
-        # Initial convolutional layer
+       
         self.features.add_module('conv0', nn.Conv1d(input_size, num_features, kernel_size=7, stride=2, padding=3))
         self.features.add_module('pool0', nn.MaxPool1d(kernel_size=3, stride=2, padding=1))
 
@@ -1463,19 +1463,20 @@ class MitosisNet(nn.Module):
     def __init__(self, input_size, num_classes_class1, num_classes_class2):
         super().__init__()
         self.densenet = DenseNetTillLastLayers(input_size=input_size)
-        self.fc1 = nn.Linear(self._calculate_conv_output_size(input_size), 128)
+        self.fc1 = nn.Linear(self._calculate_dense_output_channels(input_size), 128)
         self.fc2_class1 = nn.Linear(128, num_classes_class1)
         self.fc3_class2 = nn.Linear(128, num_classes_class2)
 
-    def _calculate_conv_output_size(self, input_size):
-        x = torch.randn(1, 1, input_size)
-        x = self.densenet(x)
-        return x.view(1, -1).size(1)
+    def _calculate_dense_output_channels(self, input_size):
+        x = torch.randn(1, input_size)
+        with torch.no_grad():
+            dense_output = self.densenet(x.unsqueeze(0))  
+        return dense_output.size(1)
 
     def forward(self, x):
-        x = x.view(-1, 1, x.size(1))
-        x = self.densenet(x)
-        x = x.view(x.size(0), -1)
+        x = x.unsqueeze(1) 
+        x = self.densenet(x)  
+        x = x.view(x.size(0), -1) 
         x = nn.functional.relu(self.fc1(x))
         class_output1 = self.fc2_class1(x)
         class_output2 = self.fc3_class2(x)
