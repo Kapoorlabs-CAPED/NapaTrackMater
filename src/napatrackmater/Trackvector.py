@@ -1397,112 +1397,7 @@ class MitosisNetLSTM(nn.Module):
         class_output2 = self.fc3_class2(x)
         return class_output1, class_output2
     
-class LayerNormTime(nn.Module):
-    __constants__ = ['features', 'weight', 'bias', 'eps', 'center', 'scale']
 
-    def __init__(self, features, eps=1e-5, center=True, scale=True):
-        super().__init__()
-        self.features = features
-        self.eps = eps
-        self.center = center
-        self.scale = scale
-
-        if self.scale:
-            self.weight = nn.Parameter(torch.Tensor(self.features))
-        else:
-            self.register_parameter('weight', None)
-
-        if self.center:
-            self.bias = nn.Parameter(torch.Tensor(self.features))
-        else:
-            self.register_parameter('bias', None)
-
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        if self.scale:
-            nn.init.ones_(self.weight)
-
-        if self.center:
-            nn.init.zeros_(self.bias)
-
-    def adjust_parameter(self, tensor, parameter):
-        return torch.repeat_interleave(
-        torch.repeat_interleave(
-            parameter.view(-1, 1),
-            repeats=tensor.shape[2],
-            dim=1)
-    )
-    def forward(self, input):
-        if len(input.shape) > 1:
-          normalized_shape = (self.features, input.shape[2])
-          weight = self.adjust_parameter(input, self.weight)
-          bias = self.adjust_parameter(input, self.bias)
-        else:
-          normalized_shape = tuple([self.features])    
-          weight = self.weight
-          bias = self.bias
-        return F.layer_norm(
-            input, normalized_shape, weight, bias, self.eps)
-
-    def extra_repr(self):
-        return '{features}, eps={eps}, ' \
-            'center={center}, scale={scale}'.format(**self.__dict__)
-
-class LayerNorm(nn.Module):
-   
-    __constants__ = ['features', 'weight', 'bias', 'eps', 'center', 'scale']
-
-    def __init__(self, features, eps=1e-5, center=True, scale=True):
-        super().__init__()
-        self.features = features
-        self.eps = eps
-        self.center = center
-        self.scale = scale
-
-        if self.scale:
-            self.weight = nn.Parameter(torch.Tensor(self.features))
-        else:
-            self.register_parameter('weight', None)
-
-        if self.center:
-            self.bias = nn.Parameter(torch.Tensor(self.features))
-        else:
-            self.register_parameter('bias', None)
-
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        if self.scale:
-            nn.init.ones_(self.weight)
-
-        if self.center:
-            nn.init.zeros_(self.bias)
-
-    def adjust_parameter(self, tensor, parameter):
-        return torch.repeat_interleave(
-        torch.repeat_interleave(
-            parameter.view(-1, 1, 1),
-            repeats=tensor.shape[2],
-            dim=1),
-        repeats=tensor.shape[3],
-        dim=2
-    )
-    def forward(self, input):
-        if len(input.shape) > 2:
-          normalized_shape = (self.features, input.shape[2], input.shape[3])
-          weight = self.adjust_parameter(input, self.weight)
-          bias = self.adjust_parameter(input, self.bias)
-        else:
-          normalized_shape = tuple([self.features])    
-          weight = self.weight
-          bias = self.bias
-        return F.layer_norm(
-            input, normalized_shape, weight, bias, self.eps)
-
-    def extra_repr(self):
-        return '{features}, eps={eps}, ' \
-            'center={center}, scale={scale}'.format(**self.__dict__)
 
 class DenseBlock(nn.Module):
     def __init__(self, in_channels, growth_rate, num_layers):
@@ -1514,7 +1409,7 @@ class DenseBlock(nn.Module):
     def _make_layer(self, in_channels, out_channels):
         return nn.Sequential(
             nn.Conv1d(in_channels, out_channels, kernel_size=3, padding=1),
-            LayerNormTime(out_channels),  # Apply your LayerNorm here or BatchNorm if desired
+            nn.BatchNorm1d(out_channels), 
             nn.ReLU(inplace=True)
         )
 
@@ -1541,7 +1436,7 @@ class DenseNetTillLastLayers(nn.Module):
         super(DenseNetTillLastLayers, self).__init__()
         self.features = nn.Sequential()
 
-        num_features = 64  # Initial number of feature maps
+        num_features = 64 
 
         # Initial convolutional layer
         self.features.add_module('conv0', nn.Conv1d(input_size, num_features, kernel_size=7, stride=2, padding=3))
