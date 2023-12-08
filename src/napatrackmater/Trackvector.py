@@ -1402,8 +1402,11 @@ class MitosisNet(nn.Module):
     def __init__(self, input_size, num_classes_class1, num_classes_class2):
         super().__init__()
         self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3)
+        self.bn1 = nn.BatchNorm1d(32)
         self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
+        self.bn2 = nn.BatchNorm1d(64)
         self.conv3 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3)
+        self.bn3 = nn.BatchNorm1d(128)
         self.pool = nn.MaxPool1d(kernel_size=2)
         conv_output_size = self._calculate_conv_output_size(input_size)
         self.fc1 = nn.Linear(conv_output_size, 128)
@@ -1412,16 +1415,16 @@ class MitosisNet(nn.Module):
 
     def _calculate_conv_output_size(self, input_size):
         x = torch.randn(1, 1, input_size)
-        x = self.pool(nn.functional.relu(self.conv1(x)))
-        x = self.pool(nn.functional.relu(self.conv2(x)))
-        x = self.pool(nn.functional.relu(self.conv3(x)))
+        x = self.pool(nn.functional.relu(self.bn1(self.conv1(x))))
+        x = self.pool(nn.functional.relu(self.bn2(self.conv2(x))))
+        x = self.pool(nn.functional.relu(self.bn3(self.conv3(x))))
         return x.view(1, -1).size(1)
 
     def forward(self, x):
         x = x.view(-1, 1, x.size(1))
-        x = self.pool(nn.functional.relu(self.conv1(x)))
-        x = self.pool(nn.functional.relu(self.conv2(x)))
-        x = self.pool(nn.functional.relu(self.conv3(x)))
+        x = self.pool(nn.functional.relu(self.bn1(self.conv1(x))))
+        x = self.pool(nn.functional.relu(self.bn2(self.conv2(x))))
+        x = self.pool(nn.functional.relu(self.bn3(self.conv3(x))))
         x = x.view(x.size(0), -1)
         x = nn.functional.relu(self.fc1(x))
         class_output1 = self.fc2_class1(x)
