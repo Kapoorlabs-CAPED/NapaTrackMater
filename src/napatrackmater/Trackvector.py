@@ -1367,7 +1367,7 @@ def compute_covariance_matrix(track_arrays, shape_features=5, mask_features=None
     return covariance_matrix, eigenvectors
 
 class MitosisNetLSTM(nn.Module):
-    def __init__(self, input_size, num_classes_class1, num_classes_class2, hidden_size=64, num_layers=3):
+    def __init__(self, input_size, num_classes_class1, num_classes_class2, hidden_size=32, num_layers=1):
         super().__init__()
         self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
         self.fc1 = nn.Linear(hidden_size, 128)
