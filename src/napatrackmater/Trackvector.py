@@ -1123,8 +1123,7 @@ def unsupervised_clustering(
     full_dataframe,
     csv_file_name,
     analysis_vectors,
-    threshold_distance=5.0,
-    num_clusters=None,
+    num_clusters=3,
     metric="euclidean",
     method="ward",
     criterion="distance",
@@ -1195,7 +1194,7 @@ def unsupervised_clustering(
 
     track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
     clusterable_track_arrays = [
-        shape_dynamic_covariance_2d,
+        shape_dynamic_covariance_2d, 
         shape_covariance_2d,
         dynamic_covariance_2d,
     ]
@@ -1217,12 +1216,7 @@ def unsupervised_clustering(
         shape_dynamic_linkage_matrix = linkage(
             shape_dynamic_cosine_distance, method=method
         )
-        if num_clusters is None:
-            shape_dynamic_cluster_labels = fcluster(
-                shape_dynamic_linkage_matrix, t=threshold_distance, criterion=criterion
-            )
-        else:
-            shape_dynamic_cluster_labels = fcluster(
+        shape_dynamic_cluster_labels = fcluster(
                 shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
             )
 
@@ -1239,14 +1233,14 @@ def unsupervised_clustering(
         silhouette_file_name = os.path.join(
             csv_file_name_original
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-            + f"_silhouette_{metric}_{threshold_distance}.npy"
+            + f"_silhouette_{metric}_{num_clusters}.npy"
         )
         np.save(silhouette_file_name, silhouette)
 
         wcss_file_name = os.path.join(
             csv_file_name_original
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-            + f"_wcss_{metric}_{threshold_distance}.npy"
+            + f"_wcss_{metric}_{num_clusters}.npy"
         )
         np.save(wcss_file_name, wcss_value)
         track_id_to_cluster = {
