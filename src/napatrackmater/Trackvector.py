@@ -1345,7 +1345,7 @@ def compute_covariance_matrix(track_arrays,shape_array = 5, feature_array = None
 
 
     covariance_matrix = np.cov(track_arrays, rowvar=False)
-    covariance_matrix = np.nan_to_num(covariance_matrix, num = 0)
+    covariance_matrix = np.nan_to_num(covariance_matrix)
     eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
     eigenvalue_order = np.argsort(eigenvalues)[::-1]
     eigenvalues = eigenvalues[eigenvalue_order]
