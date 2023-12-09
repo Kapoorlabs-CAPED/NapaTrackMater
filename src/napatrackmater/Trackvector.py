@@ -1585,13 +1585,13 @@ def train_mitosis_neural_net(
                 num_classes_class1=num_classes1,
                 num_classes_class2=num_classes2,
             )
-    summary(model, input_size=(1,input_size))
+    summary(model, input_size=(X_train.shape[0],1,input_size))
     model.to(device)
 
     criterion_class1 = nn.CrossEntropyLoss()
     criterion_class2 = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    milestones = [int(epochs * 0.5), int(epochs * 0.75)]
+    milestones = [int(epochs * 0.25),int(epochs * 0.5), int(epochs * 0.75)]
     scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.1)
 
     train_dataset = TensorDataset(
