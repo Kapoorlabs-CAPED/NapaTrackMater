@@ -25,8 +25,8 @@ from tqdm import tqdm
 from torch.optim.lr_scheduler import MultiStepLR
 import matplotlib.pyplot as plt
 from typing import List, Union
-import torch.nn.functional as F
 from torchsummary import summary
+
 
 class TrackVector(TrackMate):
     def __init__(
@@ -1195,7 +1195,7 @@ def unsupervised_clustering(
 
     track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
     clusterable_track_arrays = [
-        shape_dynamic_covariance_2d, 
+        shape_dynamic_covariance_2d,
         shape_covariance_2d,
         dynamic_covariance_2d,
     ]
@@ -1218,8 +1218,8 @@ def unsupervised_clustering(
             shape_dynamic_cosine_distance, method=method
         )
         shape_dynamic_cluster_labels = fcluster(
-                shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
-            )
+            shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
+        )
 
         cluster_centroids = calculate_cluster_centroids(
             clusterable_track_array, shape_dynamic_cluster_labels
@@ -1364,8 +1364,8 @@ def compute_covariance_matrix(track_arrays, shape_features=5, mask_features=None
 
 
 class DenseLayer(nn.Module):
-    '''
-    '''
+    """ """
+
     def __init__(self, in_channels, growth_rate, bottleneck_size, kernel_size):
         super().__init__()
         self.use_bottleneck = bottleneck_size > 0
@@ -1374,19 +1374,18 @@ class DenseLayer(nn.Module):
             self.bn2 = nn.BatchNorm1d(in_channels)
             self.act2 = nn.ReLU(inplace=True)
             self.conv2 = nn.Conv1d(
-                in_channels, 
-                self.num_bottleneck_output_filters,
-                kernel_size=1,
-                stride=1)
+                in_channels, self.num_bottleneck_output_filters, kernel_size=1, stride=1
+            )
         self.bn1 = nn.BatchNorm1d(self.num_bottleneck_output_filters)
         self.act1 = nn.ReLU(inplace=True)
         self.conv1 = nn.Conv1d(
             self.num_bottleneck_output_filters,
             growth_rate,
             kernel_size=kernel_size,
-            stride=1, 
-            dilation=1, 
-            padding=kernel_size // 2)
+            stride=1,
+            dilation=1,
+            padding=kernel_size // 2,
+        )
 
     def forward(self, x):
         if self.use_bottleneck:
@@ -1400,17 +1399,23 @@ class DenseLayer(nn.Module):
 
 
 class DenseBlock(nn.ModuleDict):
-    '''
-    '''
-    def __init__(self, num_layers, in_channels, growth_rate, kernel_size, bottleneck_size):
+    """ """
+
+    def __init__(
+        self, num_layers, in_channels, growth_rate, kernel_size, bottleneck_size
+    ):
         super().__init__()
         self.num_layers = num_layers
         for i in range(self.num_layers):
-            self.add_module(f'denselayer{i}', 
-                DenseLayer(in_channels + i * growth_rate, 
-                           growth_rate, 
-                           bottleneck_size, 
-                           kernel_size))
+            self.add_module(
+                f"denselayer{i}",
+                DenseLayer(
+                    in_channels + i * growth_rate,
+                    growth_rate,
+                    bottleneck_size,
+                    kernel_size,
+                ),
+            )
 
     def forward(self, x):
         layer_outputs = [x]
@@ -1422,33 +1427,33 @@ class DenseBlock(nn.ModuleDict):
 
 
 class TransitionBlock(nn.Module):
-    '''
-    '''
+    """ """
+
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.bn = nn.BatchNorm1d(in_channels)
         self.act = nn.ReLU(inplace=True)
-        self.conv = nn.Conv1d(in_channels, out_channels, kernel_size=1, stride=1, dilation=1)
+        self.conv = nn.Conv1d(
+            in_channels, out_channels, kernel_size=1, stride=1, dilation=1
+        )
         self.pool = nn.AvgPool1d(kernel_size=2, stride=2)
-    
+
     def forward(self, x):
         x = self.bn(x)
         x = self.act(x)
         x = self.conv(x)
         x = self.pool(x)
         return x
-        
 
-    
+
 class DenseNet1d(nn.Module):
-
     def __init__(
-        self, 
+        self,
         growth_rate: int = 32,
         block_config: tuple = (6, 12, 24, 16),
         num_init_features: int = 64,
         bottleneck_size: int = 4,
-        kernel_size: int = 3, 
+        kernel_size: int = 3,
         in_channels: int = 1,
         num_classes: int = 1,
         reinit: bool = True,
@@ -1456,9 +1461,7 @@ class DenseNet1d(nn.Module):
         super().__init__()
 
         self.features = nn.Sequential(
-            nn.Conv1d(
-                in_channels, num_init_features, 
-                kernel_size=3),
+            nn.Conv1d(in_channels, num_init_features, kernel_size=3),
             nn.BatchNorm1d(num_init_features),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
@@ -1473,21 +1476,20 @@ class DenseNet1d(nn.Module):
                 kernel_size=kernel_size,
                 bottleneck_size=bottleneck_size,
             )
-            self.features.add_module(f'denseblock{i}', block)
+            self.features.add_module(f"denseblock{i}", block)
             num_features = num_features + num_layers * growth_rate
             if i != len(block_config) - 1:
                 trans = TransitionBlock(
-                    in_channels=num_features,
-                    out_channels=num_features // 2)
-                self.features.add_module(f'transition{i}', trans)
+                    in_channels=num_features, out_channels=num_features // 2
+                )
+                self.features.add_module(f"transition{i}", trans)
                 num_features = num_features // 2
-        
+
         self.final_bn = nn.BatchNorm1d(num_features)
         self.final_act = nn.ReLU(inplace=True)
         self.final_pool = nn.AdaptiveAvgPool1d(1)
         self.classifier = nn.Linear(num_features, num_classes)
-        
-        # init
+
         if reinit:
             for m in self.modules():
                 if isinstance(m, nn.Conv1d):
@@ -1513,25 +1515,27 @@ class DenseNet1d(nn.Module):
 
     def reset_classifier(self):
         self.classifier = nn.Identity()
-    
+
     def get_classifier(self):
         return self.classifier
+
 
 class MitosisNet(nn.Module):
     def __init__(self, num_classes_class1, num_classes_class2):
         super().__init__()
-        self.densenet = DenseNet1d(in_channels=1, num_classes=num_classes_class1 + num_classes_class2)
+        self.densenet = DenseNet1d(
+            in_channels=1, num_classes=num_classes_class1 + num_classes_class2
+        )
         self.num_classes_class1 = num_classes_class1
         self.num_classes_class2 = num_classes_class2
 
     def forward(self, x):
         logits = self.densenet(x)
 
-        class_output1 = logits[:, :self.num_classes_class1]
-        class_output2 = logits[:, self.num_classes_class1:]
+        class_output1 = logits[:, : self.num_classes_class1]
+        class_output2 = logits[:, self.num_classes_class1 :]
 
         return class_output1, class_output2
-    
 
 
 def train_mitosis_neural_net(
@@ -1579,18 +1583,18 @@ def train_mitosis_neural_net(
     }
     with open(save_path + "_model_info.json", "w") as json_file:
         json.dump(model_info, json_file)
-      
+
     model = MitosisNet(
-                num_classes_class1=num_classes1,
-                num_classes_class2=num_classes2,
-            )
-    
+        num_classes_class1=num_classes1,
+        num_classes_class2=num_classes2,
+    )
+
     model.to(device)
-    summary(model, (1,input_size))
+    summary(model, (1, input_size))
     criterion_class1 = nn.CrossEntropyLoss()
     criterion_class2 = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    milestones = [int(epochs * 0.25),int(epochs * 0.5), int(epochs * 0.75)]
+    milestones = [int(epochs * 0.25), int(epochs * 0.5), int(epochs * 0.75)]
     scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.1)
 
     train_dataset = TensorDataset(
