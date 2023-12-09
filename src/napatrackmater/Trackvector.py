@@ -1449,7 +1449,7 @@ class DenseNet1d(nn.Module):
         num_init_features: int = 64,
         bottleneck_size: int = 4,
         kernel_size: int = 3, 
-        in_channels: int = 3,
+        in_channels: int = 1,
         num_classes: int = 1,
         reinit: bool = True,
     ):
@@ -1585,7 +1585,7 @@ def train_mitosis_neural_net(
                 num_classes_class1=num_classes1,
                 num_classes_class2=num_classes2,
             )
-    summary(model, input_size=(input_size))
+    summary(model, input_size=[input_size])
     model.to(device)
 
     criterion_class1 = nn.CrossEntropyLoss()
