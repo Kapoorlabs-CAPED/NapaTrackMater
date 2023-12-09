@@ -1807,7 +1807,6 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     num_classes_class2 = model_info["num_classes2"]
 
     model = MitosisNet(
-        input_size=input_size,
         num_classes_class1=num_classes_class1,
         num_classes_class2=num_classes_class2,
     )
