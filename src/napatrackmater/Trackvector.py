@@ -1127,7 +1127,7 @@ def unsupervised_clustering(
     num_clusters=3,
     metric="euclidean",
     method="ward",
-    criterion="distance",
+    criterion="maxclust",
 ):
     csv_file_name_original = csv_file_name
     analysis_track_ids = []
