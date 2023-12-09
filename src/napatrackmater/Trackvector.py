@@ -1525,7 +1525,6 @@ class MitosisNet(nn.Module):
         self.num_classes_class2 = num_classes_class2
 
     def forward(self, x):
-        x = x.unsqueeze(1) 
         logits = self.densenet(x)
 
         class_output1 = logits[:, :self.num_classes_class1]
@@ -1585,7 +1584,7 @@ def train_mitosis_neural_net(
                 num_classes_class1=num_classes1,
                 num_classes_class2=num_classes2,
             )
-    summary(model, input_size=[input_size])
+    summary(model, (1,input_size))
     model.to(device)
 
     criterion_class1 = nn.CrossEntropyLoss()
@@ -1621,8 +1620,9 @@ def train_mitosis_neural_net(
         with tqdm(total=len(train_loader), desc=f"Epoch {epoch + 1}/{epochs}") as pbar:
             for i, data in enumerate(train_loader):
                 inputs, labels_class1, labels_class2 = data
+                inputs_with_channel = inputs.unsqueeze(1)
                 optimizer.zero_grad()
-                class_output1, class_output2 = model(inputs)
+                class_output1, class_output2 = model(inputs_with_channel)
 
                 loss_class1 = criterion_class1(class_output1, labels_class1)
                 loss_class1.backward(retain_graph=True)
@@ -1632,7 +1632,7 @@ def train_mitosis_neural_net(
 
                 optimizer.step()
 
-                outputs_class1, outputs_class2 = model(inputs)
+                outputs_class1, outputs_class2 = model(inputs_with_channel)
 
                 _, predicted_class1 = torch.max(outputs_class1.data, 1)
                 _, predicted_class2 = torch.max(outputs_class2.data, 1)
