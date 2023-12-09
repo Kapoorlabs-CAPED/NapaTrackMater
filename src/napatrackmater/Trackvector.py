@@ -1584,9 +1584,9 @@ def train_mitosis_neural_net(
                 num_classes_class1=num_classes1,
                 num_classes_class2=num_classes2,
             )
-    summary(model, (1,input_size))
+    
     model.to(device)
-
+    summary(model, (1,input_size))
     criterion_class1 = nn.CrossEntropyLoss()
     criterion_class2 = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
