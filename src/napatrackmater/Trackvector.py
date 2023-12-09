@@ -50,7 +50,7 @@ class TrackVector(TrackMate):
         scale_z=1.0,
         scale_xy=1.0,
         seg_image: np.ndarray = None,
-        accelerator: str = "cuda",
+        accelerator: str = "cpu",
         devices: Union[List[int], str, int] = 1,
     ):
 
