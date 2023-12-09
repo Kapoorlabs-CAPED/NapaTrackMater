@@ -1342,7 +1342,7 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
     return (shape_dynamic_covariance_2d, shape_covariance_2d, dynamic_covariance_2d)
 
 
-def compute_covariance_matrix(track_arrays, shape_features=5, mask_features=None):
+def compute_covariance_matrix(track_arrays, shape_features=2, mask_features=None):
 
     if mask_features is not None:
         negative_column_indices = np.where(
