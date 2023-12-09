@@ -26,6 +26,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 import matplotlib.pyplot as plt
 from typing import List, Union
 import torch.nn.functional as F
+from torchsummary import summary
 
 class TrackVector(TrackMate):
     def __init__(
@@ -1584,6 +1585,7 @@ def train_mitosis_neural_net(
                 num_classes_class1=num_classes1,
                 num_classes_class2=num_classes2,
             )
+    summary(model, (1,input_size))
     model.to(device)
 
     criterion_class1 = nn.CrossEntropyLoss()
