@@ -978,7 +978,7 @@ def supervised_clustering(
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array, mask_features=11)
+            ) = compute_covariance_matrix(shape_dynamic_track_array)
 
             upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
 
@@ -1069,7 +1069,7 @@ def predict_supervised_clustering(
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array, mask_features=11)
+            ) = compute_covariance_matrix(shape_dynamic_track_array)
 
             upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
 
@@ -1161,9 +1161,9 @@ def unsupervised_clustering(
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array, mask_features=11)
+            ) = compute_covariance_matrix(shape_dynamic_track_array)
             shape_covariance, shape_eigenvectors = compute_covariance_matrix(
-                shape_track_array, mask_features=5
+                shape_track_array
             )
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
                 dynamic_track_array
@@ -1317,9 +1317,9 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array, mask_features=11)
+            ) = compute_covariance_matrix(shape_dynamic_track_array)
             shape_covariance, shape_eigenvectors = compute_covariance_matrix(
-                shape_track_array, mask_features=5
+                shape_track_array
             )
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
                 dynamic_track_array
@@ -1342,19 +1342,10 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
     return (shape_dynamic_covariance_2d, shape_covariance_2d, dynamic_covariance_2d)
 
 
-def compute_covariance_matrix(track_arrays, shape_features=2, mask_features=None):
+def compute_covariance_matrix(track_arrays):
 
-    if mask_features is not None:
-        negative_column_indices = np.where(
-            (track_arrays[:, :shape_features] == -1).any(axis=0)
-        )[0]
-        if len(negative_column_indices) > 0:
-            track_arrays[:, negative_column_indices] = np.nan
-
-            track_arrays[:, mask_features:] = np.nan
 
     covariance_matrix = np.cov(track_arrays, rowvar=False)
-    covariance_matrix = np.nan_to_num(covariance_matrix, nan=0.0)
     eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
     eigenvalue_order = np.argsort(eigenvalues)[::-1]
     eigenvalues = eigenvalues[eigenvalue_order]
@@ -1802,7 +1793,6 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     with open(saved_model_json) as json_file:
         model_info = json.load(json_file)
 
-    input_size = model_info["input_size"]
     num_classes_class1 = model_info["num_classes1"]
     num_classes_class2 = model_info["num_classes2"]
 
