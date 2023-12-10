@@ -1451,7 +1451,6 @@ class DenseNet1d(nn.Module):
         in_channels: int = 1,
         num_classes_1: int = 1,
         num_classes_2: int = 1,
-        dropout_prob: float = 0.5
     ):
         super().__init__()
 
@@ -1483,7 +1482,6 @@ class DenseNet1d(nn.Module):
         self.final_bn = nn.BatchNorm1d(num_features)
         self.final_act = nn.ReLU(inplace=True)
         self.final_pool = nn.AdaptiveAvgPool1d(1)
-        self.dropout = nn.Dropout(dropout_prob)
         self.classifier_1 = nn.Linear(num_features, num_classes_1)
         self.classifier_2 = nn.Linear(num_features, num_classes_2)
 
