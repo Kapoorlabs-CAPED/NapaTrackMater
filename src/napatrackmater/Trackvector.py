@@ -1539,13 +1539,13 @@ class SimpleDenseNet1d(nn.Module):
 
     def _get_output_shape(self, module, input, output):
         if self._to_linear is None:
-            self._to_linear = output.size(1) * output.size(2)
+            self._to_linear = output.view(output.size(0), -1).shape[1]
 
     def forward(self, x):
         out = self.features(x)
         out = out.view(out.size(0), -1)
-        out_1 = self.classifier_1(out)
-        out_2 = self.classifier_2(out)
+        out_1 = self.classifier_1(out)  
+        out_2 = self.classifier_2(out)  
         return out_1, out_2
     
 
