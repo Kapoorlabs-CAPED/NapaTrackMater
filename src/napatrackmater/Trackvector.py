@@ -1531,17 +1531,27 @@ class SimpleDenseNet1d(nn.Module):
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
         )
 
-        self.classifier_1 = nn.Linear(64 * 8, num_classes_1)
-        self.classifier_2 = nn.Linear(64 * 8, num_classes_2)
+        # Calculate the output size after convolutions and pooling
+        self._to_linear = None
+        self.forward_conv(torch.zeros(1, in_channels, 5625))  # Assuming input size (1, 5625) - update if needed
 
-    def forward(self, x):
+        self.classifier_1 = nn.Linear(self._to_linear, num_classes_1)
+        self.classifier_2 = nn.Linear(self._to_linear, num_classes_2)
+
+    def forward_conv(self, x):
         out = self.features(x)
         out = out.view(out.size(0), -1)
+        if self._to_linear is None:
+            self._to_linear = out.shape[1]
+        return out
+
+    def forward(self, x):
+        out = self.forward_conv(x)
         out_1 = self.classifier_1(out)
         out_2 = self.classifier_2(out)
         return out_1, out_2
     
-    
+
 class MitosisNet(nn.Module):
     def __init__(self, num_classes_class1, num_classes_class2):
         super().__init__()
