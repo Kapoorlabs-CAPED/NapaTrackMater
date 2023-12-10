@@ -1451,7 +1451,7 @@ class DenseNet1d(nn.Module):
         in_channels: int = 1,
         num_classes_1: int = 1,
         num_classes_2: int = 1,
-        reinit: bool = True,
+        reinit: bool = False,
         dropout_prob: float = 0.5
     ):
         super().__init__()
