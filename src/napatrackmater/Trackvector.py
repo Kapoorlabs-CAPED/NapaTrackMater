@@ -1443,9 +1443,9 @@ class TransitionBlock(nn.Module):
 class DenseNet1d(nn.Module):
     def __init__(
         self,
-        growth_rate: int = 4,
+        growth_rate: int = 16,
         block_config: tuple = (6, 12, 24, 16),
-        num_init_features: int = 16,
+        num_init_features: int = 32,
         bottleneck_size: int = 4,
         kernel_size: int = 3,
         in_channels: int = 1,
@@ -1455,7 +1455,7 @@ class DenseNet1d(nn.Module):
         super().__init__()
 
         self.features = nn.Sequential(
-            nn.Conv1d(in_channels, num_init_features, kernel_size=3),
+            nn.Conv1d(in_channels, num_init_features, kernel_size=7),
             nn.BatchNorm1d(num_init_features),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
