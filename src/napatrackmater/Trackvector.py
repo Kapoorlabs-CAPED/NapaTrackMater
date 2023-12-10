@@ -99,10 +99,28 @@ class TrackVector(TrackMate):
         self.seg_image = seg_image
         self.latent_features = latent_features
         self.xml_parser = et.XMLParser(huge_tree=True)
-
+       
         self.unique_morphology_dynamic_properties = {}
         self.unique_mitosis_label = {}
         self.non_unique_mitosis_label = {}
+
+        if not isinstance(self.master_xml_path, str):
+            if self.master_xml_path.is_file():
+                print("Reading Master XML")
+
+                self.xml_content = et.fromstring(
+                    open(self.master_xml_path).read().encode(), self.xml_parser
+                )
+
+                self.filtered_track_ids = [
+                    int(track.get(self.trackid_key))
+                    for track in self.xml_content.find("Model")
+                    .find("FilteredTracks")
+                    .findall("TrackID")
+                ]
+                self.max_track_id = max(self.filtered_track_ids)
+
+                self._get_track_vector_xml_data()
         
 
     @property
@@ -216,40 +234,7 @@ class TrackVector(TrackMate):
             self.x_start = self.xmin
         if self.y_start < self.ymin:
             self.y_start = self.ymin
-        print("Iterating over spots in frame")
-        self.count = 0
-        futures = []
-
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=os.cpu_count()
-        ) as executor:
-
-            for frame in self.Spotobjects.findall("SpotsInFrame"):
-                futures.append(executor.submit(self._master_spot_computer, frame))
-
-            [r.result() for r in concurrent.futures.as_completed(futures)]
-
-        print(f"Iterating over tracks {len(self.filtered_track_ids)}")
-
-        futures = []
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=os.cpu_count()
-        ) as executor:
-
-            for track in self.tracks.findall("Track"):
-
-                track_id = int(track.get(self.trackid_key))
-                if track_id in self.filtered_track_ids:
-                    futures.append(
-                        executor.submit(self._master_track_computer, track, track_id, self.t_minus, self.t_plus)
-                    )
-
-            [r.result() for r in concurrent.futures.as_completed(futures)]
-
-        print("getting attributes")
-        self._get_attributes()
-        if self.autoencoder_model is not None:
-            self._compute_latent_space()
+        
 
     def _compute_track_vectors(self):
 
@@ -334,24 +319,41 @@ class TrackVector(TrackMate):
         )
 
     def _interactive_function(self):
-        if not isinstance(self.master_xml_path, str):
-            if self.master_xml_path.is_file():
-                print("Reading Master XML")
+        
+        print("Iterating over spots in frame")
+        self.count = 0
+        futures = []
 
-                self.xml_content = et.fromstring(
-                    open(self.master_xml_path).read().encode(), self.xml_parser
-                )
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=os.cpu_count()
+        ) as executor:
 
-                self.filtered_track_ids = [
-                    int(track.get(self.trackid_key))
-                    for track in self.xml_content.find("Model")
-                    .find("FilteredTracks")
-                    .findall("TrackID")
-                ]
-                self.max_track_id = max(self.filtered_track_ids)
+            for frame in self.Spotobjects.findall("SpotsInFrame"):
+                futures.append(executor.submit(self._master_spot_computer, frame))
 
-                self._get_track_vector_xml_data()
+            [r.result() for r in concurrent.futures.as_completed(futures)]
 
+        print(f"Iterating over tracks {len(self.filtered_track_ids)}")
+
+        futures = []
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=os.cpu_count()
+        ) as executor:
+
+            for track in self.tracks.findall("Track"):
+
+                track_id = int(track.get(self.trackid_key))
+                if track_id in self.filtered_track_ids:
+                    futures.append(
+                        executor.submit(self._master_track_computer, track, track_id, self.t_minus, self.t_plus)
+                    )
+
+            [r.result() for r in concurrent.futures.as_completed(futures)]
+
+        print("getting attributes")
+        self._get_attributes()
+        if self.autoencoder_model is not None:
+            self._compute_latent_space()
         self.unique_tracks = {}
         self.unique_track_properties = {}
         self.unique_fft_properties = {}
