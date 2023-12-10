@@ -1444,14 +1444,13 @@ class DenseNet1d(nn.Module):
     def __init__(
         self,
         growth_rate: int = 4,
-        block_config: tuple = (6, 12),
+        block_config: tuple = (3, 6),
         num_init_features: int = 32,
         bottleneck_size: int = 4,
         kernel_size: int = 3,
         in_channels: int = 1,
         num_classes_1: int = 1,
         num_classes_2: int = 1,
-        reinit: bool = False,
         dropout_prob: float = 0.5
     ):
         super().__init__()
@@ -1488,15 +1487,6 @@ class DenseNet1d(nn.Module):
         self.classifier_1 = nn.Linear(num_features, num_classes_1)
         self.classifier_2 = nn.Linear(num_features, num_classes_2)
 
-        if reinit:
-            for m in self.modules():
-                if isinstance(m, nn.Conv1d):
-                    nn.init.kaiming_normal_(m.weight)
-                elif isinstance(m, nn.BatchNorm1d):
-                    nn.init.constant_(m.weight, 1)
-                    nn.init.constant_(m.bias, 0)
-                elif isinstance(m, nn.Linear):
-                    nn.init.constant_(m.bias, 0)
 
     def forward_features(self, x):
         out = self.features(x)
@@ -1632,7 +1622,7 @@ def train_mitosis_neural_net(
     model.parameters(),
     lr=learning_rate,
     momentum=0.9,       
-    weight_decay=1e-4,  
+    
     eps=1.0          
 )
     if use_scheduler:
