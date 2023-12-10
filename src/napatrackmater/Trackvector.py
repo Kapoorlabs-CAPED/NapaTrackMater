@@ -98,28 +98,12 @@ class TrackVector(TrackMate):
         self.batch_size = batch_size
         self.seg_image = seg_image
         self.latent_features = latent_features
-        xml_parser = et.XMLParser(huge_tree=True)
+        self.xml_parser = et.XMLParser(huge_tree=True)
 
         self.unique_morphology_dynamic_properties = {}
         self.unique_mitosis_label = {}
         self.non_unique_mitosis_label = {}
-        if not isinstance(self.master_xml_path, str):
-            if self.master_xml_path.is_file():
-                print("Reading Master XML")
-
-                self.xml_content = et.fromstring(
-                    open(self.master_xml_path).read().encode(), xml_parser
-                )
-
-                self.filtered_track_ids = [
-                    int(track.get(self.trackid_key))
-                    for track in self.xml_content.find("Model")
-                    .find("FilteredTracks")
-                    .findall("TrackID")
-                ]
-                self.max_track_id = max(self.filtered_track_ids)
-
-                self._get_track_vector_xml_data()
+        
 
     @property
     def viewer(self):
@@ -350,6 +334,23 @@ class TrackVector(TrackMate):
         )
 
     def _interactive_function(self):
+        if not isinstance(self.master_xml_path, str):
+            if self.master_xml_path.is_file():
+                print("Reading Master XML")
+
+                self.xml_content = et.fromstring(
+                    open(self.master_xml_path).read().encode(), self.xml_parser
+                )
+
+                self.filtered_track_ids = [
+                    int(track.get(self.trackid_key))
+                    for track in self.xml_content.find("Model")
+                    .find("FilteredTracks")
+                    .findall("TrackID")
+                ]
+                self.max_track_id = max(self.filtered_track_ids)
+
+                self._get_track_vector_xml_data()
 
         self.unique_tracks = {}
         self.unique_track_properties = {}
@@ -1440,9 +1441,9 @@ class TransitionBlock(nn.Module):
 class DenseNet1d(nn.Module):
     def __init__(
         self,
-        growth_rate: int = 32,
+        growth_rate: int = 4,
         block_config: tuple = (6, 12, 24, 16),
-        num_init_features: int = 64,
+        num_init_features: int = 16,
         bottleneck_size: int = 4,
         kernel_size: int = 3,
         in_channels: int = 1,
