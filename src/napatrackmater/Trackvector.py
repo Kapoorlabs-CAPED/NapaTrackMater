@@ -1525,7 +1525,6 @@ class SimpleDenseNet1d(nn.Module):
             nn.Conv1d(in_channels, 32, kernel_size=7),
             nn.BatchNorm1d(32),
             nn.ReLU(inplace=True),
-            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
 
             nn.Conv1d(32, 64, kernel_size=3),
             nn.BatchNorm1d(64),
@@ -1535,19 +1534,11 @@ class SimpleDenseNet1d(nn.Module):
             nn.Conv1d(64, 128, kernel_size=3),
             nn.BatchNorm1d(128),
             nn.ReLU(inplace=True),
-            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
 
             nn.Conv1d(128, 256, kernel_size=3),
             nn.BatchNorm1d(256),
-
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
-
-            nn.Conv1d(256, 512, kernel_size=3),
-            nn.BatchNorm1d(512),
-            nn.ReLU(inplace=True),
-            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
-
 
 
         )
@@ -1572,7 +1563,7 @@ class SimpleDenseNet1d(nn.Module):
         out_2 = self.classifier_2(out)
         return out_1, out_2
     
-
+ 
 class MitosisNet(nn.Module):
     def __init__(self, num_classes_class1, num_classes_class2):
         super().__init__()
