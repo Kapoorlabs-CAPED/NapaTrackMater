@@ -1444,7 +1444,7 @@ class DenseNet1d(nn.Module):
     def __init__(
         self,
         growth_rate: int = 16,
-        block_config: tuple = (6, 12, 24, 16),
+        block_config: tuple = (3, 6, 12, 8),
         num_init_features: int = 32,
         bottleneck_size: int = 4,
         kernel_size: int = 3,
@@ -1558,7 +1558,7 @@ class SimpleDenseNet1d(nn.Module):
 class MitosisNet(nn.Module):
     def __init__(self, num_classes_class1, num_classes_class2):
         super().__init__()
-        self.densenet = SimpleDenseNet1d(
+        self.densenet = DenseNet1d(
             in_channels=1, num_classes_1=num_classes_class1, num_classes_2=num_classes_class2
         )
         self.num_classes_class1 = num_classes_class1
