@@ -1531,21 +1531,22 @@ class SimpleDenseNet1d(nn.Module):
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
         )
 
-        self._to_linear = None
-        self.features.register_forward_hook(self._get_output_shape)
+        self.classifier_1 = nn.Linear(0, num_classes_1)
+        self.classifier_2 = nn.Linear(0, num_classes_2)
 
-        self.classifier_1 = nn.Linear(512, num_classes_1)
-        self.classifier_2 = nn.Linear(512, num_classes_2)
-
-    def _get_output_shape(self, module, input, output):
-        if self._to_linear is None:
-            self._to_linear = output.view(output.size(0), -1).shape[1]
-
-    def forward(self, x):
+    def forward_conv(self, x):
         out = self.features(x)
         out = out.view(out.size(0), -1)
-        out_1 = self.classifier_1(out)  
-        out_2 = self.classifier_2(out)  
+        return out
+
+    def forward(self, x):
+        out = self.forward_conv(x)
+        to_linear = out.shape[1]
+        if not self.classifier_1.in_features:
+            self.classifier_1 = nn.Linear(to_linear, self.classifier_1.out_features)
+            self.classifier_2 = nn.Linear(to_linear, self.classifier_2.out_features)
+        out_1 = self.classifier_1(out)
+        out_2 = self.classifier_2(out)
         return out_1, out_2
     
 
