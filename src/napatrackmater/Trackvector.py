@@ -1444,7 +1444,7 @@ class DenseNet1d(nn.Module):
     def __init__(
         self,
         growth_rate: int = 16,
-        block_config: tuple = (3, 6, 12),
+        block_config: tuple = (3, 3, 3),
         num_init_features: int = 32,
         bottleneck_size: int = 4,
         kernel_size: int = 3,
@@ -1460,7 +1460,7 @@ class DenseNet1d(nn.Module):
             nn.Conv1d(in_channels, num_init_features, kernel_size=3),
             nn.BatchNorm1d(num_init_features),
             nn.ReLU(inplace=True),
-            
+            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
         )
 
         num_features = num_init_features
