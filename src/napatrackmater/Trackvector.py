@@ -1445,7 +1445,7 @@ class DenseNet1d(nn.Module):
         self,
         growth_rate: int = 4,
         block_config: tuple = (3, 6),
-        num_init_features: int = 8,
+        num_init_features: int = 32,
         bottleneck_size: int = 4,
         kernel_size: int = 3,
         in_channels: int = 1,
