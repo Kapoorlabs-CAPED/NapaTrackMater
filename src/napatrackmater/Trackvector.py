@@ -1519,23 +1519,23 @@ class DenseNet1d(nn.Module):
 class SimpleDenseNet1d(nn.Module):
     def __init__(self, in_channels=1, num_classes_1=1, num_classes_2=1):
         super().__init__()
-
+        start_channel = 64 
         self.features = nn.Sequential(
             
-            nn.Conv1d(in_channels, 32, kernel_size=3),
-            nn.BatchNorm1d(32),
+            nn.Conv1d(in_channels, start_channel, kernel_size=3),
+            nn.BatchNorm1d(start_channel),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
             nn.Dropout(0.25),
 
-            nn.Conv1d(32, 64, kernel_size=3),
-            nn.BatchNorm1d(64),
+            nn.Conv1d(start_channel, start_channel * 2, kernel_size=3),
+            nn.BatchNorm1d(start_channel * 2),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
             nn.Dropout(0.25),
             
-            nn.Conv1d(64, 128, kernel_size=3),
-            nn.BatchNorm1d(128),
+            nn.Conv1d(start_channel * 2, start_channel * 4, kernel_size=3),
+            nn.BatchNorm1d(start_channel * 4),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
             nn.Dropout(0.25),
