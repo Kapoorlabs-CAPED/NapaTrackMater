@@ -1525,6 +1525,7 @@ class SimpleDenseNet1d(nn.Module):
             nn.Conv1d(in_channels, 32, kernel_size=7),
             nn.BatchNorm1d(32),
             nn.ReLU(inplace=True),
+            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
 
             nn.Conv1d(32, 64, kernel_size=3),
             nn.BatchNorm1d(64),
@@ -1534,11 +1535,8 @@ class SimpleDenseNet1d(nn.Module):
             nn.Conv1d(64, 128, kernel_size=3),
             nn.BatchNorm1d(128),
             nn.ReLU(inplace=True),
-
-            nn.Conv1d(128, 256, kernel_size=3),
-            nn.BatchNorm1d(256),
-            nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
+
 
 
         )
