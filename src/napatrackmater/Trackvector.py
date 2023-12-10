@@ -1585,6 +1585,7 @@ def train_mitosis_neural_net(
     batch_size=64,
     learning_rate=0.001,
     epochs=10,
+    use_scheduler = False
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -1632,8 +1633,9 @@ def train_mitosis_neural_net(
     criterion_class1 = nn.CrossEntropyLoss()
     criterion_class2 = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    milestones = [int(epochs * 0.25), int(epochs * 0.5), int(epochs * 0.75)]
-    scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.1)
+    if use_scheduler:
+        milestones = [int(epochs * 0.25), int(epochs * 0.5), int(epochs * 0.75)]
+        scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.1)
 
     train_dataset = TensorDataset(
         X_train_tensor, y_train_class1_tensor, y_train_class2_tensor
