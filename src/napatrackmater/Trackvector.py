@@ -1496,7 +1496,6 @@ class DenseNet1d(nn.Module):
     def forward(self, x):
         features = self.forward_features(x)
         features = features.squeeze(-1)
-        features = self.dropout(features)
         out_1 = self.classifier_1(features)
         out_2 = self.classifier_2(features)
         return out_1, out_2
