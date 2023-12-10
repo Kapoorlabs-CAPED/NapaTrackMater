@@ -1531,22 +1531,19 @@ class SimpleDenseNet1d(nn.Module):
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
         )
 
-        # Calculate the output size after convolutions and pooling
         self._to_linear = None
-        self.forward_conv(torch.zeros(1, in_channels, 5625))  # Assuming input size (1, 5625) - update if needed
+        self.features.register_forward_hook(self._get_output_shape)
 
-        self.classifier_1 = nn.Linear(self._to_linear, num_classes_1)
-        self.classifier_2 = nn.Linear(self._to_linear, num_classes_2)
+        self.classifier_1 = nn.Linear(512, num_classes_1)
+        self.classifier_2 = nn.Linear(512, num_classes_2)
 
-    def forward_conv(self, x):
-        out = self.features(x)
-        out = out.view(out.size(0), -1)
+    def _get_output_shape(self, module, input, output):
         if self._to_linear is None:
-            self._to_linear = out.shape[1]
-        return out
+            self._to_linear = output.size(1) * output.size(2)
 
     def forward(self, x):
-        out = self.forward_conv(x)
+        out = self.features(x)
+        out = out.view(out.size(0), -1)
         out_1 = self.classifier_1(out)
         out_2 = self.classifier_2(out)
         return out_1, out_2
