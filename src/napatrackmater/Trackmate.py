@@ -844,7 +844,6 @@ class TrackMate:
                 self._timed_centroid[str(t)] = tree, spot_centroids
 
     def _master_track_computer(self, track, track_id, t_start = None, t_end = None):
-        print(t_start,t_end)  
         current_cell_ids = []
 
         (
