@@ -1516,11 +1516,36 @@ class DenseNet1d(nn.Module):
     def get_classifier(self):
         return self.classifier
 
+class SimpleDenseNet1d(nn.Module):
+    def __init__(self, in_channels=1, num_classes_1=1, num_classes_2=1):
+        super().__init__()
 
+        self.features = nn.Sequential(
+            nn.Conv1d(in_channels, 32, kernel_size=7),
+            nn.BatchNorm1d(32),
+            nn.ReLU(inplace=True),
+            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
+            nn.Conv1d(32, 64, kernel_size=3),
+            nn.BatchNorm1d(64),
+            nn.ReLU(inplace=True),
+            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
+        )
+
+        self.classifier_1 = nn.Linear(64 * 8, num_classes_1)
+        self.classifier_2 = nn.Linear(64 * 8, num_classes_2)
+
+    def forward(self, x):
+        out = self.features(x)
+        out = out.view(out.size(0), -1)
+        out_1 = self.classifier_1(out)
+        out_2 = self.classifier_2(out)
+        return out_1, out_2
+    
+    
 class MitosisNet(nn.Module):
     def __init__(self, num_classes_class1, num_classes_class2):
         super().__init__()
-        self.densenet = DenseNet1d(
+        self.densenet = SimpleDenseNet1d(
             in_channels=1, num_classes_1=num_classes_class1, num_classes_2=num_classes_class2
         )
         self.num_classes_class1 = num_classes_class1
