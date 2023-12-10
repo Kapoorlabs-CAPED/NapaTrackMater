@@ -28,6 +28,7 @@ from typing import List, Union
 from torchsummary import summary
 from torch.nn.utils import clip_grad_norm_
 
+
 class TrackVector(TrackMate):
     def __init__(
         self,
@@ -99,7 +100,7 @@ class TrackVector(TrackMate):
         self.seg_image = seg_image
         self.latent_features = latent_features
         self.xml_parser = et.XMLParser(huge_tree=True)
-       
+
         self.unique_morphology_dynamic_properties = {}
         self.unique_mitosis_label = {}
         self.non_unique_mitosis_label = {}
@@ -121,7 +122,6 @@ class TrackVector(TrackMate):
                 self.max_track_id = max(self.filtered_track_ids)
 
                 self._get_track_vector_xml_data()
-        
 
     @property
     def viewer(self):
@@ -234,7 +234,6 @@ class TrackVector(TrackMate):
             self.x_start = self.xmin
         if self.y_start < self.ymin:
             self.y_start = self.ymin
-        
 
     def _compute_track_vectors(self):
 
@@ -319,7 +318,7 @@ class TrackVector(TrackMate):
         )
 
     def _interactive_function(self):
-        
+
         print("Iterating over spots in frame")
         self.count = 0
         futures = []
@@ -345,7 +344,13 @@ class TrackVector(TrackMate):
                 track_id = int(track.get(self.trackid_key))
                 if track_id in self.filtered_track_ids:
                     futures.append(
-                        executor.submit(self._master_track_computer, track, track_id, self.t_minus, self.t_plus)
+                        executor.submit(
+                            self._master_track_computer,
+                            track,
+                            track_id,
+                            self.t_minus,
+                            self.t_plus,
+                        )
                     )
 
             [r.result() for r in concurrent.futures.as_completed(futures)]
@@ -1208,7 +1213,6 @@ def unsupervised_clustering(
             track_arrays_array.index(track_arrays)
         ]
         shape_dynamic_cosine_distance = pdist(clusterable_track_array, metric=metric)
-       
 
         shape_dynamic_linkage_matrix = linkage(
             shape_dynamic_cosine_distance, method=method
@@ -1338,14 +1342,13 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
     return (shape_dynamic_covariance_2d, shape_covariance_2d, dynamic_covariance_2d)
 
 
-def compute_covariance_matrix(track_arrays,shape_array = 5, feature_array = None ):
-    
-    for i in range(track_arrays.shape[0]):
-            if track_arrays[i, :2].any() == -1:
-                if feature_array is not None:
-                    track_arrays[i,feature_array:] = np.nan
-                track_arrays[i,:shape_array] = np.nan
+def compute_covariance_matrix(track_arrays, shape_array=5, feature_array=None):
 
+    for i in range(track_arrays.shape[0]):
+        if track_arrays[i, :2].any() == -1:
+            if feature_array is not None:
+                track_arrays[i, feature_array:] = np.nan
+            track_arrays[i, :shape_array] = np.nan
 
     covariance_matrix = np.cov(track_arrays, rowvar=False)
     covariance_matrix = np.nan_to_num(covariance_matrix)
@@ -1485,7 +1488,6 @@ class DenseNet1d(nn.Module):
         self.classifier_1 = nn.Linear(num_features, num_classes_1)
         self.classifier_2 = nn.Linear(num_features, num_classes_2)
 
-
     def forward_features(self, x):
         out = self.features(x)
         out = self.final_bn(out)
@@ -1506,22 +1508,20 @@ class DenseNet1d(nn.Module):
     def get_classifier(self):
         return self.classifier
 
+
 class SimpleDenseNet1d(nn.Module):
     def __init__(self, in_channels=1, num_classes_1=1, num_classes_2=1):
         super().__init__()
         start_channel = 128
         self.features = nn.Sequential(
-            
             nn.Conv1d(in_channels, start_channel, kernel_size=3),
-            nn.BatchNorm1d(start_channel),
+            nn.GroupNorm(1, start_channel),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
-
             nn.Conv1d(start_channel, start_channel * 2, kernel_size=3),
-            nn.BatchNorm1d(start_channel * 2),
+            nn.GroupNorm(1, start_channel * 2),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
-
         )
 
         self.classifier_1 = nn.Linear(0, num_classes_1)
@@ -1533,29 +1533,35 @@ class SimpleDenseNet1d(nn.Module):
         return out
 
     def forward(self, x):
-        device = next(self.parameters()).device  
-        x = x.to(device)  
+        device = next(self.parameters()).device
+        x = x.to(device)
         out = self.forward_conv(x)
         to_linear = out.shape[1]
         if not self.classifier_1.in_features:
-            self.classifier_1 = nn.Linear(to_linear, self.classifier_1.out_features).to(device)
-            self.classifier_2 = nn.Linear(to_linear, self.classifier_2.out_features).to(device)
+            self.classifier_1 = nn.Linear(to_linear, self.classifier_1.out_features).to(
+                device
+            )
+            self.classifier_2 = nn.Linear(to_linear, self.classifier_2.out_features).to(
+                device
+            )
         out_1 = self.classifier_1(out)
         out_2 = self.classifier_2(out)
         return out_1, out_2
-    
- 
+
+
 class MitosisNet(nn.Module):
     def __init__(self, num_classes_class1, num_classes_class2):
         super().__init__()
         self.densenet = DenseNet1d(
-            in_channels=1, num_classes_1=num_classes_class1, num_classes_2=num_classes_class2
+            in_channels=1,
+            num_classes_1=num_classes_class1,
+            num_classes_2=num_classes_class2,
         )
         self.num_classes_class1 = num_classes_class1
         self.num_classes_class2 = num_classes_class2
 
     def forward(self, x):
-        class_output1, class_output2  = self.densenet(x)
+        class_output1, class_output2 = self.densenet(x)
         return class_output1, class_output2
 
 
@@ -1568,7 +1574,7 @@ def train_mitosis_neural_net(
     batch_size=64,
     learning_rate=0.001,
     epochs=10,
-    use_scheduler = False
+    use_scheduler=False,
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -1615,8 +1621,8 @@ def train_mitosis_neural_net(
     summary(model, (1, input_size))
     criterion_class1 = nn.CrossEntropyLoss()
     criterion_class2 = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate) 
-    
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
     if use_scheduler:
         milestones = [int(epochs * 0.25), int(epochs * 0.5), int(epochs * 0.75)]
         scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.1)
@@ -1657,7 +1663,7 @@ def train_mitosis_neural_net(
 
                 loss_class2 = criterion_class2(class_output2, labels_class2)
                 loss_class2.backward()
-                max_norm = 2.0  
+                max_norm = 2.0
                 clip_grad_norm_(model.parameters(), max_norm)
 
                 optimizer.step()
@@ -1686,8 +1692,8 @@ def train_mitosis_neural_net(
                         "Class2 Loss": running_loss_class2 / (i + 1),
                     }
                 )
-            if use_scheduler:     
-               scheduler.step()
+            if use_scheduler:
+                scheduler.step()
         train_loss_class1_values.append(running_loss_class1 / len(train_loader))
         train_loss_class2_values.append(running_loss_class2 / len(train_loader))
         train_acc_class1_values.append(
@@ -1844,7 +1850,7 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     if len(features_tensor.shape) == 1:
         new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(0)
     if len(features_tensor.shape) == 2:
-        new_data_with_channel = features_tensor.unsqueeze(1)    
+        new_data_with_channel = features_tensor.unsqueeze(1)
     with torch.no_grad():
         outputs_class1, outputs_class2 = model(new_data_with_channel)
         predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
