@@ -1702,7 +1702,8 @@ def train_mitosis_neural_net(
                         "Class2 Loss": running_loss_class2 / (i + 1),
                     }
                 )
-            scheduler.step()
+            if use_scheduler:     
+               scheduler.step()
         train_loss_class1_values.append(running_loss_class1 / len(train_loader))
         train_loss_class2_values.append(running_loss_class2 / len(train_loader))
         train_acc_class1_values.append(
