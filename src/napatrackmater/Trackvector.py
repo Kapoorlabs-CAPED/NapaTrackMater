@@ -1449,7 +1449,8 @@ class DenseNet1d(nn.Module):
         bottleneck_size: int = 4,
         kernel_size: int = 3,
         in_channels: int = 1,
-        num_classes: int = 1,
+        num_classes_1: int = 1,
+        num_classes_2: int = 1,
         reinit: bool = True,
     ):
         super().__init__()
@@ -1482,7 +1483,8 @@ class DenseNet1d(nn.Module):
         self.final_bn = nn.BatchNorm1d(num_features)
         self.final_act = nn.ReLU(inplace=True)
         self.final_pool = nn.AdaptiveAvgPool1d(1)
-        self.classifier = nn.Linear(num_features, num_classes)
+        self.classifier_1 = nn.Linear(num_features, num_classes_1)
+        self.classifier_2 = nn.Linear(num_features, num_classes_2)
 
         if reinit:
             for m in self.modules():
@@ -1504,8 +1506,9 @@ class DenseNet1d(nn.Module):
     def forward(self, x):
         features = self.forward_features(x)
         features = features.squeeze(-1)
-        out = self.classifier(features)
-        return out
+        out_1 = self.classifier_1(features)
+        out_2 = self.classifier_2(features)
+        return out_1, out_2
 
     def reset_classifier(self):
         self.classifier = nn.Identity()
@@ -1518,17 +1521,13 @@ class MitosisNet(nn.Module):
     def __init__(self, num_classes_class1, num_classes_class2):
         super().__init__()
         self.densenet = DenseNet1d(
-            in_channels=1, num_classes=num_classes_class1 + num_classes_class2
+            in_channels=1, num_classes_1=num_classes_class1, num_classes_2=num_classes_class2
         )
         self.num_classes_class1 = num_classes_class1
         self.num_classes_class2 = num_classes_class2
 
     def forward(self, x):
-        logits = self.densenet(x)
-
-        class_output1 = logits[:, : self.num_classes_class1]
-        class_output2 = logits[:, self.num_classes_class1 :]
-
+        class_output1, class_output2  = self.densenet(x)
         return class_output1, class_output2
 
 
