@@ -1457,7 +1457,7 @@ class DenseNet1d(nn.Module):
         super().__init__()
 
         self.features = nn.Sequential(
-            nn.Conv1d(in_channels, num_init_features, kernel_size=7),
+            nn.Conv1d(in_channels, num_init_features, kernel_size=3),
             nn.BatchNorm1d(num_init_features),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
