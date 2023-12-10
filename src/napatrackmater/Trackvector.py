@@ -1522,7 +1522,7 @@ class SimpleDenseNet1d(nn.Module):
 
         self.features = nn.Sequential(
             
-            nn.Conv1d(in_channels, 32, kernel_size=7),
+            nn.Conv1d(in_channels, 32, kernel_size=3),
             nn.BatchNorm1d(32),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
