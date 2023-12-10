@@ -1615,13 +1615,8 @@ def train_mitosis_neural_net(
     summary(model, (1, input_size))
     criterion_class1 = nn.CrossEntropyLoss()
     criterion_class2 = nn.CrossEntropyLoss()
-    optimizer = optim.RMSprop(
-    model.parameters(),
-    lr=learning_rate,
-    momentum=0.9,       
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate) 
     
-    eps=1.0          
-)
     if use_scheduler:
         milestones = [int(epochs * 0.25), int(epochs * 0.5), int(epochs * 0.75)]
         scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.1)
