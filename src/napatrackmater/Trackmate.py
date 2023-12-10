@@ -843,7 +843,7 @@ class TrackMate:
                 tree = spatial.cKDTree(spot_centroids)
                 self._timed_centroid[str(t)] = tree, spot_centroids
 
-    def _master_track_computer(self, track, track_id):
+    def _master_track_computer(self, track, track_id, t_start = None, t_end = None):
 
         current_cell_ids = []
 
@@ -972,16 +972,30 @@ class TrackMate:
             self.unique_spot_centroid[frame_spot_centroid] = k
             self.unique_track_centroid[frame_spot_centroid] = track_id
             
-            if str(t) in self._timed_centroid:
-                tree, spot_centroids = self._timed_centroid[str(t)]
-                spot_centroids.append(spot_centroid)
-                tree = spatial.cKDTree(spot_centroids)
-                self._timed_centroid[str(t)] = tree, spot_centroids
-            else:
-                spot_centroids = []
-                spot_centroids.append(spot_centroid)
-                tree = spatial.cKDTree(spot_centroids)
-                self._timed_centroid[str(t)] = tree, spot_centroids
+            if t_start is not None and t_end is not None:
+                if t >= t_start and t <= t_end:
+                    if str(t) in self._timed_centroid:
+                        tree, spot_centroids = self._timed_centroid[str(t)]
+                        spot_centroids.append(spot_centroid)
+                        tree = spatial.cKDTree(spot_centroids)
+                        self._timed_centroid[str(t)] = tree, spot_centroids
+                    else:
+                        spot_centroids = []
+                        spot_centroids.append(spot_centroid)
+                        tree = spatial.cKDTree(spot_centroids)
+                        self._timed_centroid[str(t)] = tree, spot_centroids
+            else:       
+
+                    if str(t) in self._timed_centroid:
+                        tree, spot_centroids = self._timed_centroid[str(t)]
+                        spot_centroids.append(spot_centroid)
+                        tree = spatial.cKDTree(spot_centroids)
+                        self._timed_centroid[str(t)] = tree, spot_centroids
+                    else:
+                        spot_centroids = []
+                        spot_centroids.append(spot_centroid)
+                        tree = spatial.cKDTree(spot_centroids)
+                        self._timed_centroid[str(t)] = tree, spot_centroids
     def _second_channel_update(self, cell_id, track_id):
 
         if self.channel_seg_image is not None:

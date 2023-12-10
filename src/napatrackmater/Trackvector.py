@@ -257,7 +257,7 @@ class TrackVector(TrackMate):
                 track_id = int(track.get(self.trackid_key))
                 if track_id in self.filtered_track_ids:
                     futures.append(
-                        executor.submit(self._master_track_computer, track, track_id)
+                        executor.submit(self._master_track_computer, track, track_id, self.tstart, self.tend)
                     )
 
             [r.result() for r in concurrent.futures.as_completed(futures)]
@@ -1807,10 +1807,9 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     model.eval()
 
     features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
-    if len(features_tensor.shape) == 1:
-        features_tensor = features_tensor.unsqueeze(0)
+    new_data_with_channel = features_tensor.unsqueeze(1)
     with torch.no_grad():
-        outputs_class1, outputs_class2 = model(features_tensor)
+        outputs_class1, outputs_class2 = model(new_data_with_channel)
         predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
         predicted_probs_class2 = torch.softmax(outputs_class2, dim=1)
 
