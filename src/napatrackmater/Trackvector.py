@@ -1807,7 +1807,8 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     model.eval()
 
     features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
-    new_data_with_channel = features_tensor.unsqueeze(1)
+    new_data_with_channel = features_tensor.unsqueeze(0)
+    print(new_data_with_channel.shape)
     with torch.no_grad():
         outputs_class1, outputs_class2 = model(new_data_with_channel)
         predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
