@@ -257,7 +257,7 @@ class TrackVector(TrackMate):
                 track_id = int(track.get(self.trackid_key))
                 if track_id in self.filtered_track_ids:
                     futures.append(
-                        executor.submit(self._master_track_computer, track, track_id, self.tstart, self.tend)
+                        executor.submit(self._master_track_computer, track, track_id, self._t_minus, self._t_plus)
                     )
 
             [r.result() for r in concurrent.futures.as_completed(futures)]
