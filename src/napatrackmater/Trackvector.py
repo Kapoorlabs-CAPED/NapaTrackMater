@@ -1533,14 +1533,6 @@ class SimpleDenseNet1d(nn.Module):
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
             nn.Dropout(0.25),
-            
-            nn.Conv1d(start_channel * 2, start_channel * 4, kernel_size=3),
-            nn.BatchNorm1d(start_channel * 4),
-            nn.ReLU(inplace=True),
-            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
-            nn.Dropout(0.25),
-
-
 
         )
 
