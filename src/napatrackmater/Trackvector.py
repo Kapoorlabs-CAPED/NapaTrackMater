@@ -1365,10 +1365,12 @@ class DenseLayer(nn.Module):
         self.use_bottleneck = bottleneck_size > 0
         self.num_bottleneck_output_filters = growth_rate * bottleneck_size
         if self.use_bottleneck:
+            self.bn2 = nn.GroupNorm(1, in_channels)
             self.act2 = nn.ReLU(inplace=True)
             self.conv2 = nn.Conv1d(
                 in_channels, self.num_bottleneck_output_filters, kernel_size=1, stride=1
             )
+        self.bn1 = nn.GroupNorm(1, self.num_bottleneck_output_filters)
         self.act1 = nn.ReLU(inplace=True)
         self.conv1 = nn.Conv1d(
             self.num_bottleneck_output_filters,
@@ -1381,8 +1383,10 @@ class DenseLayer(nn.Module):
 
     def forward(self, x):
         if self.use_bottleneck:
+            x = self.bn2(x)
             x = self.act2(x)
             x = self.conv2(x)
+        x = self.bn1(x)
         x = self.act1(x)
         x = self.conv1(x)
         return x
@@ -1421,6 +1425,7 @@ class TransitionBlock(nn.Module):
 
     def __init__(self, in_channels, out_channels):
         super().__init__()
+        self.bn = nn.GroupNorm(1, in_channels)
         self.act = nn.ReLU(inplace=True)
         self.conv = nn.Conv1d(
             in_channels, out_channels, kernel_size=1, stride=1, dilation=1
@@ -1428,6 +1433,7 @@ class TransitionBlock(nn.Module):
         self.pool = nn.AvgPool1d(kernel_size=2, stride=2)
 
     def forward(self, x):
+        x = self.bn(x)
         x = self.act(x)
         x = self.conv(x)
         x = self.pool(x)
@@ -1437,9 +1443,9 @@ class TransitionBlock(nn.Module):
 class DenseNet1d(nn.Module):
     def __init__(
         self,
-        growth_rate: int = 4,
+        growth_rate: int = 32,
         block_config: tuple = (6, 12, 24, 16),
-        num_init_features: int = 32,
+        num_init_features: int = 64,
         bottleneck_size: int = 4,
         kernel_size: int = 3,
         in_channels: int = 1,
@@ -1449,7 +1455,8 @@ class DenseNet1d(nn.Module):
         super().__init__()
 
         self.features = nn.Sequential(
-            nn.Conv1d(in_channels, num_init_features, kernel_size=7),
+            nn.Conv1d(in_channels, num_init_features, kernel_size=3),
+            nn.GroupNorm(1, num_init_features),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
         )
@@ -1472,6 +1479,7 @@ class DenseNet1d(nn.Module):
                 self.features.add_module(f"transition{i}", trans)
                 num_features = num_features // 2
 
+        self.final_bn = nn.GroupNorm(1, num_features)
         self.final_act = nn.ReLU(inplace=True)
         self.final_pool = nn.AdaptiveAvgPool1d(1)
         self.classifier_1 = nn.Linear(num_features, num_classes_1)
@@ -1480,6 +1488,7 @@ class DenseNet1d(nn.Module):
 
     def forward_features(self, x):
         out = self.features(x)
+        out = self.final_bn(out)
         out = self.final_act(out)
         out = self.final_pool(out)
         return out
