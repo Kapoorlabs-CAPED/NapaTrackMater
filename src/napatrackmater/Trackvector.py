@@ -1540,11 +1540,13 @@ class SimpleDenseNet1d(nn.Module):
         return out
 
     def forward(self, x):
+        device = next(self.parameters()).device  
+        x = x.to(device)  
         out = self.forward_conv(x)
         to_linear = out.shape[1]
         if not self.classifier_1.in_features:
-            self.classifier_1 = nn.Linear(to_linear, self.classifier_1.out_features)
-            self.classifier_2 = nn.Linear(to_linear, self.classifier_2.out_features)
+            self.classifier_1 = nn.Linear(to_linear, self.classifier_1.out_features).to(device)
+            self.classifier_2 = nn.Linear(to_linear, self.classifier_2.out_features).to(device)
         out_1 = self.classifier_1(out)
         out_2 = self.classifier_2(out)
         return out_1, out_2
