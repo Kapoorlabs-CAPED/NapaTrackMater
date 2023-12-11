@@ -1871,10 +1871,11 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
         new_data_with_channel = features_tensor.unsqueeze(1)
     with torch.no_grad():
         outputs_class1, outputs_class2 = model(new_data_with_channel)
+        print(outputs_class1.shape)
         predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
         predicted_probs_class2 = torch.softmax(outputs_class2, dim=1)
-
+        print(predicted_probs_class1.shape)
         predicted_class1 = torch.argmax(predicted_probs_class1, dim=1).cpu().numpy()
         predicted_class2 = torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
-
+        print(predicted_class1.shape)
     return predicted_class1, predicted_class2
