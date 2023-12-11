@@ -1612,8 +1612,8 @@ def train_mitosis_neural_net(
     num_classes2 = int(torch.max(y_train_class2_tensor)) + 1
     model_info = {
         "growth_rate": growth_rate,
-        "block_config": block_config,
-        "num_init_features": list(num_init_features),
+        "block_config": list(block_config),
+        "num_init_features":num_init_features,
         "input_size": input_size,
         "num_classes1": num_classes1,
         "num_classes2": num_classes2,
