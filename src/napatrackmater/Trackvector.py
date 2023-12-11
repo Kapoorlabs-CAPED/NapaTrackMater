@@ -1446,7 +1446,7 @@ class TransitionBlock(nn.Module):
 class DenseNet1d(nn.Module):
     def __init__(
         self,
-        growth_rate: int = 16,
+        growth_rate: int = 4,
         block_config: tuple = (3, 6),
         num_init_features: int = 32,
         bottleneck_size: int = 4,
