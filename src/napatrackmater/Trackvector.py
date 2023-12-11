@@ -1550,7 +1550,14 @@ class SimpleDenseNet1d(nn.Module):
 
 
 class MitosisNet(nn.Module):
-    def __init__(self,growth_rate, block_config, num_init_features, num_classes_class1, num_classes_class2):
+    def __init__(
+        self,
+        growth_rate,
+        block_config,
+        num_init_features,
+        num_classes_class1,
+        num_classes_class2,
+    ):
         super().__init__()
         self.densenet = DenseNet1d(
             growth_rate=growth_rate,
@@ -1613,7 +1620,7 @@ def train_mitosis_neural_net(
     model_info = {
         "growth_rate": growth_rate,
         "block_config": list(block_config),
-        "num_init_features":num_init_features,
+        "num_init_features": num_init_features,
         "input_size": input_size,
         "num_classes1": num_classes1,
         "num_classes2": num_classes2,
@@ -1811,13 +1818,13 @@ def plot_metrics_from_npz(npz_file):
     plt.subplot(1, 2, 1)
     plt.plot(range(epochs), train_loss_class1, label="Train Loss Class 1")
     plt.plot(range(epochs), val_loss_class1, label="Validation Loss Class 1")
-    plt.legend(loc='lower right')
+    plt.legend(loc="lower right")
     plt.title("Loss for Class 1")
 
     plt.subplot(1, 2, 2)
     plt.plot(range(epochs), train_loss_class2, label="Train Loss Class 2")
     plt.plot(range(epochs), val_loss_class2, label="Validation Loss Class 2")
-    plt.legend(loc='lower right')
+    plt.legend(loc="lower right")
     plt.title("Loss for Class 2")
 
     plt.tight_layout()
@@ -1827,19 +1834,20 @@ def plot_metrics_from_npz(npz_file):
     plt.subplot(1, 2, 1)
     plt.plot(range(epochs), train_acc_class1, label="Train Acc Class 1")
     plt.plot(range(epochs), val_acc_class1, label="Validation Acc Class 1")
-    plt.legend(loc='lower right')
+    plt.legend(loc="lower right")
     plt.title("Accuracy for Class 1")
 
     plt.subplot(1, 2, 2)
     plt.plot(range(epochs), train_acc_class2, label="Train Acc Class 2")
     plt.plot(range(epochs), val_acc_class2, label="Validation Acc Class 2")
-    plt.legend(loc='lower right')
+    plt.legend(loc="lower right")
     plt.title("Accuracy for Class 2")
 
     plt.tight_layout()
     plt.show()
 
 
+# Model prediction
 def predict_with_model(saved_model_path, saved_model_json, features_array):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     with open(saved_model_json) as json_file:
