@@ -1550,9 +1550,12 @@ class SimpleDenseNet1d(nn.Module):
 
 
 class MitosisNet(nn.Module):
-    def __init__(self, num_classes_class1, num_classes_class2):
+    def __init__(self,growth_rate, block_config, num_init_features, num_classes_class1, num_classes_class2):
         super().__init__()
         self.densenet = DenseNet1d(
+            growth_rate=growth_rate,
+            block_config=block_config,
+            num_init_features=num_init_features,
             in_channels=1,
             num_classes_1=num_classes_class1,
             num_classes_2=num_classes_class2,
@@ -1573,6 +1576,9 @@ def train_mitosis_neural_net(
     save_path,
     batch_size=64,
     learning_rate=0.001,
+    growth_rate: int = 4,
+    block_config: tuple = (3, 3),
+    num_init_features: int = 32,
     epochs=10,
     use_scheduler=False,
 ):
@@ -1613,6 +1619,9 @@ def train_mitosis_neural_net(
         json.dump(model_info, json_file)
 
     model = MitosisNet(
+        growth_rate=growth_rate,
+        block_config=block_config,
+        num_init_features=num_init_features,
         num_classes_class1=num_classes1,
         num_classes_class2=num_classes2,
     )
