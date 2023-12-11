@@ -1611,6 +1611,9 @@ def train_mitosis_neural_net(
     num_classes1 = int(torch.max(y_train_class1_tensor)) + 1
     num_classes2 = int(torch.max(y_train_class2_tensor)) + 1
     model_info = {
+        "growth_rate": growth_rate,
+        "block_config": block_config,
+        "num_init_features": list(num_init_features),
         "input_size": input_size,
         "num_classes1": num_classes1,
         "num_classes2": num_classes2,
@@ -1808,13 +1811,13 @@ def plot_metrics_from_npz(npz_file):
     plt.subplot(1, 2, 1)
     plt.plot(range(epochs), train_loss_class1, label="Train Loss Class 1")
     plt.plot(range(epochs), val_loss_class1, label="Validation Loss Class 1")
-    plt.legend()
+    plt.legend(loc='lower right')
     plt.title("Loss for Class 1")
 
     plt.subplot(1, 2, 2)
     plt.plot(range(epochs), train_loss_class2, label="Train Loss Class 2")
     plt.plot(range(epochs), val_loss_class2, label="Validation Loss Class 2")
-    plt.legend()
+    plt.legend(loc='lower right')
     plt.title("Loss for Class 2")
 
     plt.tight_layout()
@@ -1824,13 +1827,13 @@ def plot_metrics_from_npz(npz_file):
     plt.subplot(1, 2, 1)
     plt.plot(range(epochs), train_acc_class1, label="Train Acc Class 1")
     plt.plot(range(epochs), val_acc_class1, label="Validation Acc Class 1")
-    plt.legend()
+    plt.legend(loc='lower right')
     plt.title("Accuracy for Class 1")
 
     plt.subplot(1, 2, 2)
     plt.plot(range(epochs), train_acc_class2, label="Train Acc Class 2")
     plt.plot(range(epochs), val_acc_class2, label="Validation Acc Class 2")
-    plt.legend()
+    plt.legend(loc='lower right')
     plt.title("Accuracy for Class 2")
 
     plt.tight_layout()
@@ -1844,8 +1847,14 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
 
     num_classes_class1 = model_info["num_classes1"]
     num_classes_class2 = model_info["num_classes2"]
+    growth_rate = model_info["growth_rate"]
+    block_config = model_info["block_config"]
+    num_init_features = model_info["num_init_features"]
 
     model = MitosisNet(
+        growth_rate=growth_rate,
+        block_config=tuple(block_config),
+        num_init_features=num_init_features,
         num_classes_class1=num_classes_class1,
         num_classes_class2=num_classes_class2,
     )
