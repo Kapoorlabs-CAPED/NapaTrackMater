@@ -987,7 +987,7 @@ def supervised_clustering(
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array)
+            ) = compute_covariance_matrix(shape_dynamic_track_array, feature_array=11)
 
             upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
 
@@ -1078,7 +1078,7 @@ def predict_supervised_clustering(
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array)
+            ) = compute_covariance_matrix(shape_dynamic_track_array, feature_array=11)
 
             upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
 
@@ -1170,12 +1170,12 @@ def unsupervised_clustering(
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array)
+            ) = compute_covariance_matrix(shape_dynamic_track_array, feature_array=11)
             shape_covariance, shape_eigenvectors = compute_covariance_matrix(
                 shape_track_array
             )
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
-                dynamic_track_array
+                dynamic_track_array, feature_array=6
             )
 
             shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
@@ -1318,12 +1318,12 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array)
+            ) = compute_covariance_matrix(shape_dynamic_track_array, feature_array=11)
             shape_covariance, shape_eigenvectors = compute_covariance_matrix(
                 shape_track_array
             )
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
-                dynamic_track_array
+                dynamic_track_array, feature_array=6
             )
 
             shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
@@ -1343,11 +1343,16 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
     return (shape_dynamic_covariance_2d, shape_covariance_2d, dynamic_covariance_2d)
 
 
-def compute_covariance_matrix(track_arrays):
+def compute_covariance_matrix(track_arrays, shape_array=5, feature_array=None):
 
-    
+    for i in range(track_arrays.shape[0]):
+        if track_arrays[i, :2].any() == -1:
+            if feature_array is not None:
+                track_arrays[i, feature_array:] = np.nan
+            track_arrays[i, :shape_array] = np.nan
 
     covariance_matrix = np.cov(track_arrays, rowvar=False)
+    covariance_matrix = np.nan_to_num(covariance_matrix)
     eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
     eigenvalue_order = np.argsort(eigenvalues)[::-1]
     eigenvalues = eigenvalues[eigenvalue_order]
@@ -1483,6 +1488,12 @@ class DenseNet1d(nn.Module):
         self.final_pool = nn.AdaptiveAvgPool1d(1)
         self.classifier_1 = nn.Linear(num_features, num_classes_1)
         self.classifier_2 = nn.Linear(num_features, num_classes_2)
+
+        for module in self.modules():
+            if isinstance(module, nn.Conv1d) or isinstance(module, nn.Linear):
+                nn.init.xavier_uniform_(module.weight)
+                if module.bias is not None:
+                    nn.init.constant_(module.bias, 0)
 
     def forward_features(self, x):
         out = self.features(x)
