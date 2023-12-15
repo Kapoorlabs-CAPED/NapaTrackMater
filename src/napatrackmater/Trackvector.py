@@ -1639,14 +1639,10 @@ def train_mitosis_neural_net(
 
     model.to(device)
     summary(model, (1, input_size))
-    class_weights_class1 = compute_class_weight('balanced', classes=np.unique(y_train_class1), y=y_train_class1)
-    class_weights_class2 = compute_class_weight('balanced', classes=np.unique(y_train_class2), y=y_train_class2)
 
-    weight_tensor_class1 = torch.tensor(class_weights_class1, dtype=torch.float32).to(device)
-    weight_tensor_class2 = torch.tensor(class_weights_class2, dtype=torch.float32).to(device)
 
-    criterion_class1 = nn.CrossEntropyLoss(weight=weight_tensor_class1)
-    criterion_class2 = nn.CrossEntropyLoss(weight=weight_tensor_class2)
+    criterion_class1 = nn.CrossEntropyLoss()
+    criterion_class2 = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     if use_scheduler:
