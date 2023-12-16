@@ -1795,7 +1795,7 @@ def train_mitosis_neural_net(
     )
 
     model.to(device)
-    summary(model, (1, input_size))
+    summary(model, (input_size,1))
 
 
     criterion_class1 = nn.CrossEntropyLoss()
