@@ -463,9 +463,13 @@ class TrackVector(TrackMate):
                 self.unique_track_properties[track_id] = current_tracklets_properties
 
     def plot_mitosis_times(self, full_dataframe, save_path=""):
-        time_counter = Counter(self.cell_id_times)
-        times = list(time_counter.keys())
-        counts = list(time_counter.values())
+
+        dividing_events = full_dataframe[full_dataframe['Dividing'] == 1]
+
+        dividing_counts = dividing_events['t'].value_counts().sort_index()
+
+        times = dividing_counts.index
+        counts = dividing_counts.values
         data = {"Time": times, "Count": counts}
         df = pd.DataFrame(data)
         np.save(save_path + "_counts.npy", df.to_numpy())
