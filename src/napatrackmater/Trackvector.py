@@ -14,7 +14,6 @@ from sklearn.neighbors import KNeighborsClassifier
 from joblib import dump
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
-from collections import Counter
 from sklearn.metrics import silhouette_score
 import torch
 import torch.nn as nn
@@ -27,7 +26,6 @@ import matplotlib.pyplot as plt
 from typing import List, Union
 from torchsummary import summary
 from torch.nn.utils import clip_grad_norm_
-from sklearn.utils.class_weight import compute_class_weight
 
 
 class TrackVector(TrackMate):
@@ -464,9 +462,9 @@ class TrackVector(TrackMate):
 
     def plot_mitosis_times(self, full_dataframe, save_path=""):
 
-        dividing_events = full_dataframe[full_dataframe['Dividing'] == 1]
+        dividing_events = full_dataframe[full_dataframe["Dividing"] == 1]
 
-        dividing_counts = dividing_events['t'].value_counts().sort_index()
+        dividing_counts = dividing_events["t"].value_counts().sort_index()
 
         times = dividing_counts.index
         counts = dividing_counts.values
@@ -692,11 +690,13 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
 
     return analysis_vectors
 
+
 def z_score_normalize(data):
     mean = np.mean(data, axis=0)
     std = np.std(data, axis=0)
     normalized_data = (data - mean) / std
     return normalized_data, mean, std
+
 
 def create_mitosis_training_data(
     shape_dynamic_track_arrays,
@@ -1348,7 +1348,12 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
     )
     shape_covariance_2d = shape_covariance_3d.reshape(len(analysis_track_ids), -1)
     dynamic_covariance_2d = dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
-    return (shape_dynamic_covariance_2d, shape_covariance_2d, dynamic_covariance_2d)
+    return (
+        shape_dynamic_covariance_2d,
+        shape_covariance_2d,
+        dynamic_covariance_2d,
+        analysis_track_ids,
+    )
 
 
 def compute_covariance_matrix(track_arrays, shape_array=5, feature_array=None):
@@ -1533,7 +1538,6 @@ class SimpleDenseNet1d(nn.Module):
             nn.GroupNorm(1, start_channel),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
-           
         )
 
         self.classifier_1 = nn.Linear(0, num_classes_1)
@@ -1650,7 +1654,6 @@ def train_mitosis_neural_net(
 
     model.to(device)
     summary(model, (1, input_size))
-
 
     criterion_class1 = nn.CrossEntropyLoss()
     criterion_class2 = nn.CrossEntropyLoss()
@@ -1885,19 +1888,17 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     )
     model.to(device)
     model.eval()
-    
-    
-    
+
     if len(features_array.shape) == 2:
         for i, batch in enumerate(features_array):
             batch = z_score_normalize(batch)[0]
             features_array[i] = batch
     else:
         features_array = z_score_normalize(features_array)[0]
-    features_array = features_array.astype(np.float32)    
+    features_array = features_array.astype(np.float32)
     features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
     if len(features_tensor.shape) == 1:
-        
+
         new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(0)
     if len(features_tensor.shape) == 2:
         new_data_with_channel = features_tensor.unsqueeze(1)
