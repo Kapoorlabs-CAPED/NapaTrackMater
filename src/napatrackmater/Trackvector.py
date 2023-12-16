@@ -1482,11 +1482,13 @@ class TransitionBlock(nn.Module):
         self.conv = nn.Conv1d(
             in_channels, out_channels, kernel_size=1, stride=1, dilation=1
         )
+        self.pool = nn.AvgPool1d(kernel_size=2, stride=2)
 
     def forward(self, x):
         x = self.bn(x)
         x = self.act(x)
         x = self.conv(x)
+        x = self.pool(x)
         return x
 
 
