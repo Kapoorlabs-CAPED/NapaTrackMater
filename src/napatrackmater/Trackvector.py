@@ -1831,7 +1831,7 @@ def train_mitosis_neural_net(
         with tqdm(total=len(train_loader), desc=f"Epoch {epoch + 1}/{epochs}") as pbar:
             for i, data in enumerate(train_loader):
                 inputs, labels_class1, labels_class2 = data
-                inputs_with_channel = inputs.unsqueeze(1)
+                inputs_with_channel = inputs.unsqueeze(-1)
                 optimizer.zero_grad()
                 class_output1, class_output2 = model(inputs_with_channel)
 
@@ -2042,9 +2042,9 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
     if len(features_tensor.shape) == 1:
         
-        new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(0)
+        new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(-1)
     if len(features_tensor.shape) == 2:
-        new_data_with_channel = features_tensor.unsqueeze(1)
+        new_data_with_channel = features_tensor.unsqueeze(-1)
     with torch.no_grad():
         outputs_class1, outputs_class2 = model(new_data_with_channel)
         predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
