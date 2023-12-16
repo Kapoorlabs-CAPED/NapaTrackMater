@@ -1537,11 +1537,7 @@ class DenseNet1d(nn.Module):
         self.classifier_1 = nn.Linear(num_features, num_classes_1)
         self.classifier_2 = nn.Linear(num_features, num_classes_2)
 
-        for module in self.modules():
-            if isinstance(module, nn.Conv1d) or isinstance(module, nn.Linear):
-                nn.init.xavier_uniform_(module.weight)
-                if module.bias is not None:
-                    nn.init.constant_(module.bias, 0)
+
 
     def forward_features(self, x):
         out = self.features(x)
