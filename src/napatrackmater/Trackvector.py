@@ -1888,7 +1888,9 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     
     
     if len(features_array.shape) == 2:
-        features_array = np.array([z_score_normalize(vec) for vec in features_array])
+        for i, batch in enumerate(features_array):
+            batch = z_score_normalize(batch)
+            features_array[i] = batch
     else:
         features_array = z_score_normalize(features_array)
     features_array = features_array.astype(np.float32)    
