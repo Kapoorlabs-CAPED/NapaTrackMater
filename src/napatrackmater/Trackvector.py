@@ -2013,8 +2013,10 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     growth_rate = model_info["growth_rate"]
     block_config = model_info["block_config"]
     num_init_features = model_info["num_init_features"]
+    input_size = model_info["input_size"]
 
     model = MitosisNet(
+        in_channels=input_size,
         growth_rate=growth_rate,
         block_config=tuple(block_config),
         num_init_features=num_init_features,
