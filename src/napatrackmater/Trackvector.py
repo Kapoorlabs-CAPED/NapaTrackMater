@@ -1526,7 +1526,7 @@ class SimpleDenseNet1d(nn.Module):
         start_channel = 32
         self.features = nn.Sequential(
             nn.Conv1d(in_channels, start_channel, kernel_size=3),
-            nn.GroupNorm(1, start_channel),
+            nn.BatchNorm1d(start_channel),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
            
