@@ -1567,13 +1567,11 @@ class SimpleDenseNet1d(nn.Module):
 
         self.classifier_1 = nn.Sequential(
             nn.Linear(features, num_init_features), 
-            nn.ReLU(inplace=True),
             nn.Linear(num_init_features, num_classes_1)
         )
 
         self.classifier_2 = nn.Sequential(
             nn.Linear(features, num_init_features),  
-            nn.ReLU(inplace=True),
             nn.Linear(num_init_features, num_classes_2)
         )
 
