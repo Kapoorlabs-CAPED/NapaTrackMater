@@ -1563,7 +1563,7 @@ class SimpleDenseNet1d(nn.Module):
         super().__init__()
         self.features = nn.Sequential(
             nn.Conv1d(in_channels, num_init_features, kernel_size=3, padding=1),
-            nn.LayerNorm(1,num_init_features),
+            nn.GroupNorm(1,num_init_features),
             nn.ReLU(inplace=True)
         )
 
