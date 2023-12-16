@@ -1891,6 +1891,7 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
         features_array = np.array([z_score_normalize(vec) for vec in features_array])
     else:
         features_array = z_score_normalize(features_array)
+    features_array = features_array.astype(np.float32)    
     features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
     if len(features_tensor.shape) == 1:
         
