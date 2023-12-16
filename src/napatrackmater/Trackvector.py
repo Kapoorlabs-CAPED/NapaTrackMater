@@ -695,43 +695,79 @@ def create_mitosis_training_data(
     shape_dynamic_track_arrays,
     shape_track_arrays,
     dynamic_track_arrays,
-    full_records,
+    global_shape_dynamic_dataframe,
+    analysis_track_ids,
     save_path,
+    min_length=None,
 ):
     training_data_shape_dynamic = []
     training_data_shape = []
     training_data_dynamic = []
-    for idx in range(shape_dynamic_track_arrays.shape[0]):
-        label_dividing = full_records["Dividing"][idx]
-        label_number_dividing = full_records["Number_Dividing"][idx]
+    analysis_track_ids = np.asarray(analysis_track_ids)
+    for idx in range(analysis_track_ids.shape[0]):
+        current_track_id = analysis_track_ids[idx]
+        filtered_data = global_shape_dynamic_dataframe[
+            global_shape_dynamic_dataframe["Track ID"] == current_track_id
+        ]
+
+        label_dividing = filtered_data["Dividing"].values[0]
+        label_number_dividing = filtered_data["Number_Dividing"].values[0]
+
+        gt_label = int(label_dividing)
+        gt_label_number = int(label_number_dividing)
 
         features_shape_dynamic = shape_dynamic_track_arrays[idx, :].tolist()
         features_shape = shape_track_arrays[idx, :].tolist()
         features_dynamic = dynamic_track_arrays[idx, :].tolist()
+        if min_length is not None:
+            if len(features_shape_dynamic) >= min_length:
+                training_data_shape_dynamic.append(
+                    {
+                        "features": features_shape_dynamic,
+                        "label_dividing": gt_label,
+                        "label_number_dividing": gt_label_number,
+                    }
+                )
 
-        training_data_shape_dynamic.append(
-            {
-                "features": features_shape_dynamic,
-                "label_dividing": label_dividing,
-                "label_number_dividing": label_number_dividing,
-            }
-        )
+                training_data_shape.append(
+                    {
+                        "features": features_shape,
+                        "label_dividing": gt_label,
+                        "label_number_dividing": gt_label_number,
+                    }
+                )
 
-        training_data_shape.append(
-            {
-                "features": features_shape,
-                "label_dividing": label_dividing,
-                "label_number_dividing": label_number_dividing,
-            }
-        )
+                training_data_dynamic.append(
+                    {
+                        "features": features_dynamic,
+                        "label_dividing": gt_label,
+                        "label_number_dividing": gt_label_number,
+                    }
+                )
+        else:
+            training_data_shape_dynamic.append(
+                {
+                    "features": features_shape_dynamic,
+                    "label_dividing": gt_label,
+                    "label_number_dividing": gt_label_number,
+                }
+            )
 
-        training_data_dynamic.append(
-            {
-                "features": features_dynamic,
-                "label_dividing": label_dividing,
-                "label_number_dividing": label_number_dividing,
-            }
-        )
+            training_data_shape.append(
+                {
+                    "features": features_shape,
+                    "label_dividing": gt_label,
+                    "label_number_dividing": gt_label_number,
+                }
+            )
+
+            training_data_dynamic.append(
+                {
+                    "features": features_dynamic,
+                    "label_dividing": gt_label,
+                    "label_number_dividing": gt_label_number,
+                }
+            )
 
     np.savez(
         os.path.join(save_path, "shape_dynamic.npz"),
