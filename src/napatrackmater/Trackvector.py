@@ -1575,13 +1575,13 @@ class SimpleDenseNet1d(nn.Module):
         )
 
         self.classifier_1 = nn.Sequential(
-            nn.Linear(num_init_features * features//2, num_init_features * 2), 
+            nn.Linear(num_init_features * (features // 2), num_init_features * 2), 
             nn.ReLU(inplace=True),
             nn.Linear(num_init_features * 2, num_classes_1)
         )
 
         self.classifier_2 = nn.Sequential(
-            nn.Linear(num_init_features * features//2, num_init_features * 2),  
+            nn.Linear(num_init_features *(features // 2), num_init_features * 2),  
             nn.ReLU(inplace=True),
             nn.Linear(num_init_features * 2, num_classes_2)
         )
