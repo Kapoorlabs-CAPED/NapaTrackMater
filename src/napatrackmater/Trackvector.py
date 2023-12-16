@@ -711,9 +711,9 @@ def create_mitosis_training_data(
     shape_dynamic_track_arrays = z_score_normalization(shape_dynamic_track_arrays)
     shape_track_arrays = z_score_normalization(shape_track_arrays)
     dynamic_track_arrays = z_score_normalization(dynamic_track_arrays)
-    count_label_dividing_0 = global_shape_dynamic_dataframe[global_shape_dynamic_dataframe["Dividing"] == 0].shape[0]
-    count_label_dividing_1 = global_shape_dynamic_dataframe[global_shape_dynamic_dataframe["Dividing"] == 1].shape[0]
-    min_samples_label_dividing = min(count_label_dividing_0, count_label_dividing_1)
+    count_label_dividing_0 = 0 
+    count_label_dividing_1 = 0 
+    
     loop_zero_count = 0
     for idx in range(analysis_track_ids.shape[0]):
         current_track_id = analysis_track_ids[idx]
@@ -723,12 +723,33 @@ def create_mitosis_training_data(
 
         label_dividing = filtered_data["Dividing"].values[0]
         label_number_dividing = filtered_data["Number_Dividing"].values[0]
-
+        
         gt_label = int(label_dividing)
         gt_label_number = int(label_number_dividing)
+
+        
         
         if gt_label == 0:
-            loop_zero_count += 1
+            count_label_dividing_0+= gt_label
+        else:
+            count_label_dividing_1+= gt_label
+
+    min_samples_label_dividing = min(count_label_dividing_0, count_label_dividing_1)
+
+    for idx in range(analysis_track_ids.shape[0]):    
+        current_track_id = analysis_track_ids[idx]
+        filtered_data = global_shape_dynamic_dataframe[
+            global_shape_dynamic_dataframe["Track ID"] == current_track_id
+        ]
+
+        label_dividing = filtered_data["Dividing"].values[0]
+        label_number_dividing = filtered_data["Number_Dividing"].values[0]
+        
+        gt_label = int(label_dividing)
+        gt_label_number = int(label_number_dividing)
+
+        if gt_label == 0:
+            loop_zero_count+= 1
 
         if gt_label == 0 and loop_zero_count > min_samples_label_dividing:
             continue  
