@@ -690,6 +690,11 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
 
     return analysis_vectors
 
+def z_score_normalization(data):
+    mean = np.mean(data)
+    std = np.std(data)
+    normalized_data = (data - mean) / std
+    return normalized_data
 
 def create_mitosis_training_data(
     shape_dynamic_track_arrays,
@@ -716,9 +721,9 @@ def create_mitosis_training_data(
         gt_label = int(label_dividing)
         gt_label_number = int(label_number_dividing)
 
-        features_shape_dynamic = shape_dynamic_track_arrays[idx, :].tolist()
-        features_shape = shape_track_arrays[idx, :].tolist()
-        features_dynamic = dynamic_track_arrays[idx, :].tolist()
+        features_shape_dynamic = z_score_normalization(shape_dynamic_track_arrays[idx, :]).tolist()
+        features_shape = z_score_normalization(shape_track_arrays[idx, :]).tolist()
+        features_dynamic = z_score_normalization(dynamic_track_arrays[idx, :]).tolist()
         if min_length is not None:
             if len(features_shape_dynamic) >= min_length:
                 training_data_shape_dynamic.append(
@@ -1923,7 +1928,15 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     model.to(device)
     model.eval()
 
+
+    if len(features_array.shape) == 1:
+        features_array = z_score_normalization(features_array)
+    if len(features_array.shape) == 2:
+        for i,batch in enumerate(features_array):
+            batch = z_score_normalization(batch)
+            features_array[i] = batch   
     features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
+
     if len(features_tensor.shape) == 1:
 
         new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(0)
