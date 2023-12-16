@@ -464,7 +464,7 @@ class TrackVector(TrackMate):
 
         dividing_events = full_dataframe[full_dataframe["Dividing"] == 1]
 
-        dividing_counts = dividing_events["t"].value_counts().sort_index()
+        dividing_counts = dividing_events.groupby("t").size()
 
         times = dividing_counts.index
         counts = dividing_counts.values
