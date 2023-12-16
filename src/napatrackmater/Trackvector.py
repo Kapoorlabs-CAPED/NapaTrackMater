@@ -704,7 +704,6 @@ def create_mitosis_training_data(
     training_data_shape_dynamic = []
     training_data_shape = []
     training_data_dynamic = []
-    shape_dynamic_track_arrays = z_score_normalize(shape_dynamic_track_arrays)[0]
     for idx in range(shape_dynamic_track_arrays.shape[0]):
         label_dividing = full_records["Dividing"][idx]
         label_number_dividing = full_records["Number_Dividing"][idx]
@@ -715,7 +714,7 @@ def create_mitosis_training_data(
 
         training_data_shape_dynamic.append(
             {
-                "features": features_shape_dynamic,
+                "features": z_score_normalize(features_shape_dynamic)[0],
                 "label_dividing": label_dividing,
                 "label_number_dividing": label_number_dividing,
             }
@@ -723,7 +722,7 @@ def create_mitosis_training_data(
 
         training_data_shape.append(
             {
-                "features": features_shape,
+                "features": z_score_normalize(features_shape)[0],
                 "label_dividing": label_dividing,
                 "label_number_dividing": label_number_dividing,
             }
@@ -731,7 +730,7 @@ def create_mitosis_training_data(
 
         training_data_dynamic.append(
             {
-                "features": features_dynamic,
+                "features": z_score_normalize(features_dynamic)[0],
                 "label_dividing": label_dividing,
                 "label_number_dividing": label_number_dividing,
             }
@@ -1887,7 +1886,11 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     model.eval()
     
     
-    features_array = z_score_normalize(features_array)
+    
+    if len(features_array.shape) == 2:
+        features_array = np.array([z_score_normalize(vec) for vec in features_array])
+    else:
+        features_array = z_score_normalize(features_array)
     features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
     if len(features_tensor.shape) == 1:
         
