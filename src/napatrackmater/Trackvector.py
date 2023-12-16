@@ -1363,154 +1363,6 @@ def compute_covariance_matrix(track_arrays, shape_array=5, feature_array=None):
     eigenvectors = eigenvectors[:, eigenvalue_order]
 
     return covariance_matrix, eigenvectors
-import torch.nn as nn
-
-class DenseLayer2D(nn.Module):
-    def __init__(self, in_channels, growth_rate, bottleneck_size, kernel_size):
-        super().__init__()
-        self.use_bottleneck = bottleneck_size > 0
-        self.num_bottleneck_output_filters = growth_rate * bottleneck_size
-        if self.use_bottleneck:
-            self.bn2 = nn.GroupNorm(1, in_channels)
-            self.act2 = nn.ReLU(inplace=True)
-            self.conv2 = nn.Conv2d(
-                in_channels, self.num_bottleneck_output_filters, kernel_size=1, stride=1
-            )
-        self.bn1 = nn.GroupNorm(1, self.num_bottleneck_output_filters)
-        self.act1 = nn.ReLU(inplace=True)
-        self.conv1 = nn.Conv2d(
-            self.num_bottleneck_output_filters,
-            growth_rate,
-            kernel_size=kernel_size,
-            stride=1,
-            padding=kernel_size // 2,
-        )
-
-    def forward(self, x):
-        if self.use_bottleneck:
-            x = self.bn2(x)
-            x = self.act2(x)
-            x = self.conv2(x)
-        x = self.bn1(x)
-        x = self.act1(x)
-        x = self.conv1(x)
-        return x
-
-
-class DenseBlock2D(nn.Module):
-    def __init__(
-        self, num_layers, in_channels, growth_rate, kernel_size, bottleneck_size
-    ):
-        super().__init__()
-        self.num_layers = num_layers
-        for i in range(self.num_layers):
-            self.add_module(
-                f"denselayer{i}",
-                DenseLayer2D(
-                    in_channels + i * growth_rate,
-                    growth_rate,
-                    bottleneck_size,
-                    kernel_size,
-                ),
-            )
-
-    def forward(self, x):
-        layer_outputs = [x]
-        for _, layer in self.named_children():
-            x = layer(x)
-            layer_outputs.append(x)
-            x = torch.cat(layer_outputs, dim=1)
-        return x
-
-
-class TransitionBlock2D(nn.Module):
-    def __init__(self, in_channels, out_channels):
-        super().__init__()
-        self.bn = nn.GroupNorm(1, in_channels)
-        self.act = nn.ReLU(inplace=True)
-        self.conv = nn.Conv2d(
-            in_channels, out_channels, kernel_size=1, stride=1
-        )
-        self.pool = nn.AvgPool2d(kernel_size=2, stride=2)
-
-    def forward(self, x):
-        x = self.bn(x)
-        x = self.act(x)
-        x = self.conv(x)
-        x = self.pool(x)
-        return x
-
-
-class DenseNet2D(nn.Module):
-    def __init__(
-        self,
-        growth_rate=4,
-        block_config=(3, 3),
-        num_init_features=32,
-        bottleneck_size=2,
-        kernel_size=3,
-        in_channels=3,
-        num_classes_1=1,
-        num_classes_2=1,
-    ):
-        super().__init__()
-
-        self.features = nn.Sequential(
-            nn.Conv2d(in_channels, num_init_features, kernel_size=3),
-            nn.GroupNorm(1, num_init_features),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-        )
-
-        num_features = num_init_features
-        for i, num_layers in enumerate(block_config):
-            block = DenseBlock2D(
-                num_layers=num_layers,
-                in_channels=num_features,
-                growth_rate=growth_rate,
-                kernel_size=kernel_size,
-                bottleneck_size=bottleneck_size,
-            )
-            self.features.add_module(f"denseblock{i}", block)
-            num_features = num_features + num_layers * growth_rate
-            if i != len(block_config) - 1:
-                trans = TransitionBlock2D(
-                    in_channels=num_features, out_channels=num_features // 2
-                )
-                self.features.add_module(f"transition{i}", trans)
-                num_features = num_features // 2
-
-        self.final_bn = nn.GroupNorm(1, num_features)
-        self.final_act = nn.ReLU(inplace=True)
-        self.final_pool = nn.AdaptiveAvgPool2d((1, 1))
-        self.classifier_1 = nn.Linear(num_features, num_classes_1)
-        self.classifier_2 = nn.Linear(num_features, num_classes_2)
-
-        for module in self.modules():
-            if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear):
-                nn.init.xavier_uniform_(module.weight)
-                if module.bias is not None:
-                    nn.init.constant_(module.bias, 0)
-
-    def forward_features(self, x):
-        out = self.features(x)
-        out = self.final_bn(out)
-        out = self.final_act(out)
-        out = self.final_pool(out)
-        return out
-
-    def forward(self, x):
-        features = self.forward_features(x)
-        features = features.squeeze(-1).squeeze(-1)
-        out_1 = self.classifier_1(features)
-        out_2 = self.classifier_2(features)
-        return out_1, out_2
-
-    def reset_classifier(self):
-        self.classifier = nn.Identity()
-
-    def get_classifier(self):
-        return self.classifier
 
 
 class DenseLayer(nn.Module):
@@ -1586,11 +1438,13 @@ class TransitionBlock(nn.Module):
         self.conv = nn.Conv1d(
             in_channels, out_channels, kernel_size=1, stride=1, dilation=1
         )
+        self.pool = nn.AvgPool1d(kernel_size=2, stride=2)
 
     def forward(self, x):
         x = self.bn(x)
         x = self.act(x)
         x = self.conv(x)
+        x = self.pool(x)
         return x
 
 
@@ -1600,8 +1454,8 @@ class DenseNet1d(nn.Module):
         growth_rate: int = 4,
         block_config: tuple = (3, 3),
         num_init_features: int = 32,
-        bottleneck_size: int = 2,
-        kernel_size: int = 1,
+        bottleneck_size: int = 4,
+        kernel_size: int = 3,
         in_channels: int = 1,
         num_classes_1: int = 1,
         num_classes_2: int = 1,
@@ -1609,9 +1463,10 @@ class DenseNet1d(nn.Module):
         super().__init__()
 
         self.features = nn.Sequential(
-            nn.Conv1d(in_channels, num_init_features, kernel_size=1),
+            nn.Conv1d(in_channels, num_init_features, kernel_size=7),
             nn.GroupNorm(1, num_init_features),
             nn.ReLU(inplace=True),
+            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
         )
 
         num_features = num_init_features
@@ -1634,6 +1489,7 @@ class DenseNet1d(nn.Module):
 
         self.final_bn = nn.GroupNorm(1, num_features)
         self.final_act = nn.ReLU(inplace=True)
+        self.final_pool = nn.AdaptiveAvgPool1d(1)
         self.classifier_1 = nn.Linear(num_features, num_classes_1)
         self.classifier_2 = nn.Linear(num_features, num_classes_2)
 
@@ -1647,6 +1503,7 @@ class DenseNet1d(nn.Module):
         out = self.features(x)
         out = self.final_bn(out)
         out = self.final_act(out)
+        out = self.final_pool(out)
         return out
 
     def forward(self, x):
@@ -1668,7 +1525,7 @@ class SimpleDenseNet1d(nn.Module):
         super().__init__()
         start_channel = 32
         self.features = nn.Sequential(
-            nn.Conv1d(in_channels, start_channel, kernel_size=3),
+            nn.Conv1d(in_channels, start_channel, kernel_size=7),
             nn.GroupNorm(1, start_channel),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
@@ -1703,7 +1560,6 @@ class SimpleDenseNet1d(nn.Module):
 class MitosisNet(nn.Module):
     def __init__(
         self,
-        in_channels,
         growth_rate,
         block_config,
         num_init_features,
@@ -1715,7 +1571,7 @@ class MitosisNet(nn.Module):
             growth_rate=growth_rate,
             block_config=block_config,
             num_init_features=num_init_features,
-            in_channels=in_channels,
+            in_channels=1,
             num_classes_1=num_classes_class1,
             num_classes_2=num_classes_class2,
         )
@@ -1781,7 +1637,6 @@ def train_mitosis_neural_net(
         json.dump(model_info, json_file)
 
     model = MitosisNet(
-        in_channels=input_size,
         growth_rate=growth_rate,
         block_config=block_config,
         num_init_features=num_init_features,
@@ -1790,7 +1645,7 @@ def train_mitosis_neural_net(
     )
 
     model.to(device)
-    summary(model, (input_size,1))
+    summary(model, (1, input_size))
 
 
     criterion_class1 = nn.CrossEntropyLoss()
@@ -1828,7 +1683,7 @@ def train_mitosis_neural_net(
         with tqdm(total=len(train_loader), desc=f"Epoch {epoch + 1}/{epochs}") as pbar:
             for i, data in enumerate(train_loader):
                 inputs, labels_class1, labels_class2 = data
-                inputs_with_channel = inputs.unsqueeze(-1)
+                inputs_with_channel = inputs.unsqueeze(1)
                 optimizer.zero_grad()
                 class_output1, class_output2 = model(inputs_with_channel)
 
@@ -1891,7 +1746,7 @@ def train_mitosis_neural_net(
             with torch.no_grad():
                 for i, data in enumerate(val_loader):
                     inputs, labels_class1, labels_class2 = data
-                    inputs_with_channel = inputs.unsqueeze(-1)
+                    inputs_with_channel = inputs.unsqueeze(1)
                     outputs_class1, outputs_class2 = model(inputs_with_channel)
 
                     _, predicted_class1 = torch.max(outputs_class1.data, 1)
@@ -2013,10 +1868,8 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     growth_rate = model_info["growth_rate"]
     block_config = model_info["block_config"]
     num_init_features = model_info["num_init_features"]
-    input_size = model_info["input_size"]
 
     model = MitosisNet(
-        in_channels=input_size,
         growth_rate=growth_rate,
         block_config=tuple(block_config),
         num_init_features=num_init_features,
@@ -2041,9 +1894,9 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
     if len(features_tensor.shape) == 1:
         
-        new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(-1)
+        new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(0)
     if len(features_tensor.shape) == 2:
-        new_data_with_channel = features_tensor.unsqueeze(-1)
+        new_data_with_channel = features_tensor.unsqueeze(1)
     with torch.no_grad():
         outputs_class1, outputs_class2 = model(new_data_with_channel)
         predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
