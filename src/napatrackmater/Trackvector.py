@@ -691,13 +691,6 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
     return analysis_vectors
 
 
-def z_score_normalize(data):
-    mean = np.mean(data, axis=0)
-    std = np.std(data, axis=0)
-    normalized_data = (data - mean) / std
-    return normalized_data, mean, std
-
-
 def create_mitosis_training_data(
     shape_dynamic_track_arrays,
     shape_track_arrays,
@@ -718,7 +711,7 @@ def create_mitosis_training_data(
 
         training_data_shape_dynamic.append(
             {
-                "features": z_score_normalize(features_shape_dynamic)[0],
+                "features": features_shape_dynamic,
                 "label_dividing": label_dividing,
                 "label_number_dividing": label_number_dividing,
             }
@@ -726,7 +719,7 @@ def create_mitosis_training_data(
 
         training_data_shape.append(
             {
-                "features": z_score_normalize(features_shape)[0],
+                "features": features_shape,
                 "label_dividing": label_dividing,
                 "label_number_dividing": label_number_dividing,
             }
@@ -734,7 +727,7 @@ def create_mitosis_training_data(
 
         training_data_dynamic.append(
             {
-                "features": z_score_normalize(features_dynamic)[0],
+                "features": features_dynamic,
                 "label_dividing": label_dividing,
                 "label_number_dividing": label_number_dividing,
             }
@@ -1889,13 +1882,6 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     model.to(device)
     model.eval()
 
-    if len(features_array.shape) == 2:
-        for i, batch in enumerate(features_array):
-            batch = z_score_normalize(batch)[0]
-            features_array[i] = batch
-    else:
-        features_array = z_score_normalize(features_array)[0]
-    features_array = features_array.astype(np.float32)
     features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
     if len(features_tensor.shape) == 1:
 
