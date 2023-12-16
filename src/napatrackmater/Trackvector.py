@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 from typing import List, Union
 from torchsummary import summary
 from torch.nn.utils import clip_grad_norm_
-
+from sklearn.preprocessing import normalize
 
 class TrackVector(TrackMate):
     def __init__(
@@ -691,9 +691,7 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
     return analysis_vectors
 
 def z_score_normalization(data):
-    mean = np.mean(data)
-    std = np.std(data)
-    normalized_data = (data - mean) / std
+    normalized_data = normalize(data, norm='l2')
     return normalized_data
 
 def create_mitosis_training_data(
