@@ -1454,7 +1454,7 @@ class DenseNet1d(nn.Module):
         growth_rate: int = 4,
         block_config: tuple = (3, 3),
         num_init_features: int = 32,
-        bottleneck_size: int = 4,
+        bottleneck_size: int = 2,
         kernel_size: int = 3,
         in_channels: int = 1,
         num_classes_1: int = 1,
@@ -1526,7 +1526,7 @@ class SimpleDenseNet1d(nn.Module):
         start_channel = 32
         self.features = nn.Sequential(
             nn.Conv1d(in_channels, start_channel, kernel_size=3),
-            nn.BatchNorm1d(start_channel),
+            nn.GroupNorm(1, start_channel),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
            
@@ -1567,20 +1567,14 @@ class MitosisNet(nn.Module):
         num_classes_class2,
     ):
         super().__init__()
-        self.densenet = SimpleDenseNet1d(
+        self.densenet = DenseNet1d(
+            growth_rate=growth_rate,
+            block_config=block_config,
+            num_init_features=num_init_features,
             in_channels=1,
             num_classes_1=num_classes_class1,
             num_classes_2=num_classes_class2,
         )
-        
-        #DenseNet1d(
-        #    growth_rate=growth_rate,
-        #    block_config=block_config,
-        #    num_init_features=num_init_features,
-        #    in_channels=1,
-        #    num_classes_1=num_classes_class1,
-        #    num_classes_2=num_classes_class2,
-        #)
         self.num_classes_class1 = num_classes_class1
         self.num_classes_class2 = num_classes_class2
 
