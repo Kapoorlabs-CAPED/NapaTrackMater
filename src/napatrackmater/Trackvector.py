@@ -1563,18 +1563,21 @@ class SimpleDenseNet1d(nn.Module):
         super().__init__()
         self.features = nn.Sequential(
             nn.Conv1d(in_channels, num_init_features, kernel_size=3, padding=1),
+            nn.BatchNorm1d(num_init_features),
             nn.ReLU(inplace=True)
         )
 
         self.classifier_1 = nn.Sequential(
-            nn.Linear(num_init_features * (features), num_init_features * 2), 
+            nn.Linear(num_init_features * features, num_init_features * 2), 
             nn.ReLU(inplace=True),
+            nn.Dropout(0.5),
             nn.Linear(num_init_features * 2, num_classes_1)
         )
 
         self.classifier_2 = nn.Sequential(
-            nn.Linear(num_init_features * (features), num_init_features * 2),  
+            nn.Linear(num_init_features * features, num_init_features * 2),  
             nn.ReLU(inplace=True),
+            nn.Dropout(0.5),
             nn.Linear(num_init_features * 2, num_classes_2)
         )
 
