@@ -714,7 +714,6 @@ def create_mitosis_training_data(
     count_label_dividing_0 = 0 
     count_label_dividing_1 = 0 
     
-    loop_zero_count = 0
     for idx in range(analysis_track_ids.shape[0]):
         current_track_id = analysis_track_ids[idx]
         filtered_data = global_shape_dynamic_dataframe[
@@ -726,16 +725,15 @@ def create_mitosis_training_data(
         
         gt_label = int(label_dividing)
         gt_label_number = int(label_number_dividing)
-
-        
         
         if gt_label == 0:
-            count_label_dividing_0+= gt_label
+            count_label_dividing_0+= 1
         else:
-            count_label_dividing_1+= gt_label
+            count_label_dividing_1+= 1
 
     min_samples_label_dividing = min(count_label_dividing_0, count_label_dividing_1)
-
+    samples_collected_0 = 0
+    samples_collected_1 = 0
     for idx in range(analysis_track_ids.shape[0]):    
         current_track_id = analysis_track_ids[idx]
         filtered_data = global_shape_dynamic_dataframe[
@@ -748,17 +746,20 @@ def create_mitosis_training_data(
         gt_label = int(label_dividing)
         gt_label_number = int(label_number_dividing)
 
-        if gt_label == 0:
-            loop_zero_count+= 1
-
-        if gt_label == 0 and loop_zero_count > min_samples_label_dividing:
-            continue  
-
+        
         features_shape_dynamic = shape_dynamic_track_arrays[idx, :].tolist()
         features_shape = shape_track_arrays[idx, :].tolist()
         features_dynamic = dynamic_track_arrays[idx, :].tolist()
+        if gt_label == 0 and samples_collected_0 >= min_samples_label_dividing:
+            continue
+        elif gt_label == 1 and samples_collected_1 >= min_samples_label_dividing:
+            continue
         if min_length is not None:
             if len(features_shape_dynamic) >= min_length:
+                if gt_label == 0:
+                    samples_collected_0 += 1
+                elif gt_label == 1:
+                    samples_collected_1 += 1
                 training_data_shape_dynamic.append(
                     {
                         "features": features_shape_dynamic,
@@ -783,6 +784,11 @@ def create_mitosis_training_data(
                     }
                 )
         else:
+
+            if gt_label == 0:
+                 samples_collected_0 += 1
+            elif gt_label == 1:
+                samples_collected_1 += 1
             training_data_shape_dynamic.append(
                 {
                     "features": features_shape_dynamic,
