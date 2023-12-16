@@ -1697,7 +1697,7 @@ def train_mitosis_neural_net(
 
     criterion_class1 = nn.CrossEntropyLoss()
     criterion_class2 = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-5)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     if use_scheduler:
         milestones = [int(epochs * 0.5), int(epochs * 0.75)]
@@ -1739,8 +1739,6 @@ def train_mitosis_neural_net(
 
                 loss_class2 = criterion_class2(class_output2, labels_class2)
                 loss_class2.backward()
-                max_norm = 2.0
-                clip_grad_norm_(model.parameters(), max_norm)
 
                 optimizer.step()
 
