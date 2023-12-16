@@ -1559,44 +1559,38 @@ class DenseNet1d(nn.Module):
 
 
 class SimpleDenseNet1d(nn.Module):
-    def __init__(self, num_init_features = 32,  in_channels=1, num_classes_1=1, num_classes_2=1):
+    def __init__(self, features, num_init_features = 32,  in_channels=1, num_classes_1=1, num_classes_2=1):
         super().__init__()
-        start_channel = num_init_features
         self.features = nn.Sequential(
-            nn.Conv1d(in_channels, start_channel, kernel_size=3),
-            nn.GroupNorm(1, start_channel),
+            nn.Conv1d(in_channels, num_init_features, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
-            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
+            nn.MaxPool1d(kernel_size=2)
         )
 
-        self.classifier_1 = nn.Linear(0, num_classes_1)
-        self.classifier_2 = nn.Linear(0, num_classes_2)
+        self.classifier_1 = nn.Sequential(
+            nn.Linear(num_init_features * (features // 2), num_init_features * 2), 
+            nn.ReLU(inplace=True),
+            nn.Linear(128, num_classes_1)
+        )
 
-    def forward_conv(self, x):
-        out = self.features(x)
-        out = out.view(out.size(0), -1)
-        return out
+        self.classifier_2 = nn.Sequential(
+            nn.Linear(num_init_features * (features // 2), num_init_features * 2),  
+            nn.ReLU(inplace=True),
+            nn.Linear(128, num_classes_2)
+        )
 
     def forward(self, x):
-        device = next(self.parameters()).device
-        x = x.to(device)
-        out = self.forward_conv(x)
-        to_linear = out.shape[1]
-        if not self.classifier_1.in_features:
-            self.classifier_1 = nn.Linear(to_linear, self.classifier_1.out_features).to(
-                device
-            )
-            self.classifier_2 = nn.Linear(to_linear, self.classifier_2.out_features).to(
-                device
-            )
-        out_1 = self.classifier_1(out)
-        out_2 = self.classifier_2(out)
+        x = self.features(x)
+        x = x.view(x.size(0), -1)  
+        out_1 = self.classifier_1(x)
+        out_2 = self.classifier_2(x)
         return out_1, out_2
 
 
 class MitosisNet(nn.Module):
     def __init__(
         self,
+        features,
         growth_rate,
         block_config,
         num_init_features,
@@ -1605,6 +1599,7 @@ class MitosisNet(nn.Module):
     ):
         super().__init__()
         self.densenet = SimpleDenseNet1d(
+            features=features,
             num_init_features=num_init_features,
             in_channels=1,
             num_classes_1=num_classes_class1,
@@ -1681,6 +1676,7 @@ def train_mitosis_neural_net(
         json.dump(model_info, json_file)
 
     model = MitosisNet(
+        features = input_size,
         growth_rate=growth_rate,
         block_config=block_config,
         num_init_features=num_init_features,
@@ -1911,8 +1907,10 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     growth_rate = model_info["growth_rate"]
     block_config = model_info["block_config"]
     num_init_features = model_info["num_init_features"]
+    input_size = model_info["input_size"]
 
     model = MitosisNet(
+        features=input_size,
         growth_rate=growth_rate,
         block_config=tuple(block_config),
         num_init_features=num_init_features,
