@@ -1586,13 +1586,11 @@ class TransitionBlock(nn.Module):
         self.conv = nn.Conv1d(
             in_channels, out_channels, kernel_size=1, stride=1, dilation=1
         )
-        self.pool = nn.AvgPool1d(kernel_size=2, stride=2)
 
     def forward(self, x):
         x = self.bn(x)
         x = self.act(x)
         x = self.conv(x)
-        x = self.pool(x)
         return x
 
 
@@ -1636,7 +1634,6 @@ class DenseNet1d(nn.Module):
 
         self.final_bn = nn.GroupNorm(1, num_features)
         self.final_act = nn.ReLU(inplace=True)
-        self.final_pool = nn.AdaptiveAvgPool1d(1)
         self.classifier_1 = nn.Linear(num_features, num_classes_1)
         self.classifier_2 = nn.Linear(num_features, num_classes_2)
 
@@ -1647,11 +1644,9 @@ class DenseNet1d(nn.Module):
                     nn.init.constant_(module.bias, 0)
 
     def forward_features(self, x):
-        print(x.shape)
         out = self.features(x)
         out = self.final_bn(out)
         out = self.final_act(out)
-        out = self.final_pool(out)
         return out
 
     def forward(self, x):
