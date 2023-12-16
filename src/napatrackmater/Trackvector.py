@@ -1530,6 +1530,7 @@ class DenseNet1d(nn.Module):
 
         self.final_bn = nn.GroupNorm(1, num_features)
         self.final_act = nn.ReLU(inplace=True)
+        self.final_pool = nn.AdaptiveAvgPool1d(1)
         self.classifier_1 = nn.Linear(num_features, num_classes_1)
         self.classifier_2 = nn.Linear(num_features, num_classes_2)
 
@@ -1543,6 +1544,7 @@ class DenseNet1d(nn.Module):
         out = self.features(x)
         out = self.final_bn(out)
         out = self.final_act(out)
+        out = self.final_pool(out)
         return out
 
     def forward(self, x):
