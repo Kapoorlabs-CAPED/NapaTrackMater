@@ -1648,6 +1648,7 @@ class DenseNet1d(nn.Module):
                     nn.init.constant_(module.bias, 0)
 
     def forward_features(self, x):
+        print(x.shape)
         out = self.features(x)
         out = self.final_bn(out)
         out = self.final_act(out)
