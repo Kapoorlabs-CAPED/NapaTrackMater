@@ -688,6 +688,11 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
 
     return analysis_vectors
 
+def z_score_normalize(data):
+    mean = np.mean(data, axis=0)
+    std = np.std(data, axis=0)
+    normalized_data = (data - mean) / std
+    return normalized_data, mean, std
 
 def create_mitosis_training_data(
     shape_dynamic_track_arrays,
@@ -699,7 +704,7 @@ def create_mitosis_training_data(
     training_data_shape_dynamic = []
     training_data_shape = []
     training_data_dynamic = []
-
+    shape_dynamic_track_arrays = z_score_normalize(shape_dynamic_track_arrays)[0]
     for idx in range(shape_dynamic_track_arrays.shape[0]):
         label_dividing = full_records["Dividing"][idx]
         label_number_dividing = full_records["Number_Dividing"][idx]
@@ -1880,9 +1885,12 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     )
     model.to(device)
     model.eval()
-
+    
+    
+    features_array = z_score_normalize(features_array)
     features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
     if len(features_tensor.shape) == 1:
+        
         new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(0)
     if len(features_tensor.shape) == 2:
         new_data_with_channel = features_tensor.unsqueeze(1)
