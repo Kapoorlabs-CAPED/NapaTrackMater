@@ -701,7 +701,8 @@ def create_mitosis_training_data(
     global_shape_dynamic_dataframe,
     analysis_track_ids,
     save_path,
-    min_length=None,
+    min_length=None
+    
 ):
     training_data_shape_dynamic = []
     training_data_shape = []
@@ -710,6 +711,8 @@ def create_mitosis_training_data(
     shape_dynamic_track_arrays = z_score_normalization(shape_dynamic_track_arrays)
     shape_track_arrays = z_score_normalization(shape_track_arrays)
     dynamic_track_arrays = z_score_normalization(dynamic_track_arrays)
+    count_label_dividing_0 = 0
+    count_label_dividing_1 = 0
     for idx in range(analysis_track_ids.shape[0]):
         current_track_id = analysis_track_ids[idx]
         filtered_data = global_shape_dynamic_dataframe[
@@ -721,7 +724,30 @@ def create_mitosis_training_data(
 
         gt_label = int(label_dividing)
         gt_label_number = int(label_number_dividing)
-          
+        
+        if gt_label == 0:
+            count_label_dividing_0 += 1
+        elif gt_label == 1:
+            count_label_dividing_1 += 1
+
+
+    min_samples_label_dividing = min(count_label_dividing_0, count_label_dividing_1)
+        
+    for idx in range(analysis_track_ids.shape[0]):
+        current_track_id = analysis_track_ids[idx]
+        filtered_data = global_shape_dynamic_dataframe[
+            global_shape_dynamic_dataframe["Track ID"] == current_track_id
+        ]
+
+        label_dividing = filtered_data["Dividing"].values[0]
+        label_number_dividing = filtered_data["Number_Dividing"].values[0]
+
+        gt_label = int(label_dividing)
+        gt_label_number = int(label_number_dividing)
+
+        if gt_label == 0 and count_label_dividing_0 > min_samples_label_dividing:
+            continue  
+
         features_shape_dynamic = shape_dynamic_track_arrays[idx, :].tolist()
         features_shape = shape_track_arrays[idx, :].tolist()
         features_dynamic = dynamic_track_arrays[idx, :].tolist()
@@ -1567,11 +1593,13 @@ class SimpleDenseNet1d(nn.Module):
 
         self.classifier_1 = nn.Sequential(
             nn.Linear(features, num_init_features), 
+            nn.ReLU(inplace=True),
             nn.Linear(num_init_features, num_classes_1)
         )
 
         self.classifier_2 = nn.Sequential(
             nn.Linear(features, num_init_features),  
+            nn.ReLU(inplace=True),
             nn.Linear(num_init_features, num_classes_2)
         )
 
