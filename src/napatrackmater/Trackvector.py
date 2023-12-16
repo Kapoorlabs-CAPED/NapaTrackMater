@@ -1892,7 +1892,7 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
             batch = z_score_normalize(batch)
             features_array[i] = batch
     else:
-        features_array = z_score_normalize(features_array)
+        features_array = z_score_normalize(features_array)[0]
     features_array = features_array.astype(np.float32)    
     features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
     if len(features_tensor.shape) == 1:
