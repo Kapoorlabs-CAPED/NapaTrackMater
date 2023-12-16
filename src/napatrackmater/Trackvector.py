@@ -462,9 +462,9 @@ class TrackVector(TrackMate):
 
     def plot_mitosis_times(self, full_dataframe, save_path=""):
 
-        dividing_events = full_dataframe[full_dataframe["Dividing"] == 1]
+        subset = full_dataframe[full_dataframe["Dividing"] == 1].loc[full_dataframe.duplicated(subset=["t", "x", "y", "z"], keep=False)]
 
-        dividing_counts = dividing_events.groupby("t").size()
+        dividing_counts = subset.groupby("t").size() / 2
 
         times = dividing_counts.index
         counts = dividing_counts.values
