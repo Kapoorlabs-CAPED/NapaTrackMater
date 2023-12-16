@@ -1482,13 +1482,11 @@ class TransitionBlock(nn.Module):
         self.conv = nn.Conv1d(
             in_channels, out_channels, kernel_size=1, stride=1, dilation=1
         )
-        self.pool = nn.AvgPool1d(kernel_size=2, stride=2)
 
     def forward(self, x):
         x = self.bn(x)
         x = self.act(x)
         x = self.conv(x)
-        x = self.pool(x)
         return x
 
 
@@ -1498,7 +1496,7 @@ class DenseNet1d(nn.Module):
         growth_rate: int = 4,
         block_config: tuple = (3, 3),
         num_init_features: int = 32,
-        bottleneck_size: int = 2,
+        bottleneck_size: int = 0,
         kernel_size: int = 3,
         in_channels: int = 1,
         num_classes_1: int = 1,
