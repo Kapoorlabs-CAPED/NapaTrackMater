@@ -1523,7 +1523,7 @@ class DenseNet1d(nn.Module):
 class SimpleDenseNet1d(nn.Module):
     def __init__(self, in_channels=1, num_classes_1=1, num_classes_2=1):
         super().__init__()
-        start_channel = 128
+        start_channel = 64
         self.features = nn.Sequential(
             nn.Conv1d(in_channels, start_channel, kernel_size=3),
             nn.GroupNorm(1, start_channel),
