@@ -1786,7 +1786,7 @@ def train_mitosis_neural_net(
         json.dump(model_info, json_file)
 
     model = MitosisNet(
-        in_channels=input_size[-1],
+        in_channels=input_size,
         growth_rate=growth_rate,
         block_config=block_config,
         num_init_features=num_init_features,
