@@ -1891,7 +1891,7 @@ def train_mitosis_neural_net(
             with torch.no_grad():
                 for i, data in enumerate(val_loader):
                     inputs, labels_class1, labels_class2 = data
-                    inputs_with_channel = inputs.unsqueeze(1)
+                    inputs_with_channel = inputs.unsqueeze(-1)
                     outputs_class1, outputs_class2 = model(inputs_with_channel)
 
                     _, predicted_class1 = torch.max(outputs_class1.data, 1)
