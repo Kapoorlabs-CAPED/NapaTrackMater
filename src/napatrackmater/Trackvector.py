@@ -707,6 +707,9 @@ def create_mitosis_training_data(
     training_data_shape = []
     training_data_dynamic = []
     analysis_track_ids = np.asarray(analysis_track_ids)
+    shape_dynamic_track_arrays = z_score_normalization(shape_dynamic_track_arrays)
+    shape_track_arrays = z_score_normalization(shape_track_arrays)
+    dynamic_track_arrays = z_score_normalization(dynamic_track_arrays)
     for idx in range(analysis_track_ids.shape[0]):
         current_track_id = analysis_track_ids[idx]
         filtered_data = global_shape_dynamic_dataframe[
@@ -718,10 +721,10 @@ def create_mitosis_training_data(
 
         gt_label = int(label_dividing)
         gt_label_number = int(label_number_dividing)
-
-        features_shape_dynamic = z_score_normalization(shape_dynamic_track_arrays[idx, :]).tolist()
-        features_shape = z_score_normalization(shape_track_arrays[idx, :]).tolist()
-        features_dynamic = z_score_normalization(dynamic_track_arrays[idx, :]).tolist()
+          
+        features_shape_dynamic = shape_dynamic_track_arrays[idx, :].tolist()
+        features_shape = shape_track_arrays[idx, :].tolist()
+        features_dynamic = dynamic_track_arrays[idx, :].tolist()
         if min_length is not None:
             if len(features_shape_dynamic) >= min_length:
                 training_data_shape_dynamic.append(
@@ -1925,11 +1928,10 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
 
 
     if len(features_array.shape) == 1:
-        features_array = z_score_normalization(features_array)
+        features_array = z_score_normalization(features_array.reshape(-1, 1))
+        features_array = features_array.flatten()
     if len(features_array.shape) == 2:
-        for i,batch in enumerate(features_array):
-            batch = z_score_normalization(batch)
-            features_array[i] = batch   
+        features_array = z_score_normalization(features_array)
     features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
 
     if len(features_tensor.shape) == 1:
