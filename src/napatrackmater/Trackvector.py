@@ -27,6 +27,7 @@ from typing import List, Union
 from torchsummary import summary
 from torch.nn.utils import clip_grad_norm_
 from sklearn.preprocessing import normalize
+import torch.nn.init as init
 
 class TrackVector(TrackMate):
     def __init__(
@@ -694,6 +695,16 @@ def z_score_normalization(data):
     normalized_data = data #normalize(data, norm='l2')
     return normalized_data
 
+
+def append_data_to_npz(file_path, key, data):
+    existing_data = np.load(file_path)
+    
+    existing_array = existing_data[key]
+    
+    new_array = np.concatenate([existing_array, data])
+    
+    
+
 def create_mitosis_training_data(
     shape_dynamic_track_arrays,
     shape_track_arrays,
@@ -701,7 +712,8 @@ def create_mitosis_training_data(
     global_shape_dynamic_dataframe,
     analysis_track_ids,
     save_path,
-    min_length=None
+    min_length=None,
+    append_data=False
     
 ):
     training_data_shape_dynamic = []
@@ -812,7 +824,10 @@ def create_mitosis_training_data(
                     "label_number_dividing": gt_label_number,
                 }
             )
-
+    if append_data:
+        append_data_to_npz(os.path.join(save_path, "shape_dynamic.npz"), "shape_dynamic", np.array(training_data_shape_dynamic))
+        append_data_to_npz(os.path.join(save_path, "shape.npz"), "shape", np.array(training_data_shape))
+        append_data_to_npz(os.path.join(save_path, "dynamic.npz"), "dynamic", np.array(training_data_dynamic))
     np.savez(
         os.path.join(save_path, "shape_dynamic.npz"),
         shape_dynamic=np.array(training_data_shape_dynamic),
@@ -821,6 +836,8 @@ def create_mitosis_training_data(
     np.savez(
         os.path.join(save_path, "dynamic.npz"), dynamic=np.array(training_data_dynamic)
     )
+
+    
 
     return training_data_shape_dynamic, training_data_shape, training_data_dynamic
 
@@ -1542,7 +1559,10 @@ class DenseNet1d(nn.Module):
         num_classes_1: int = 1,
         num_classes_2: int = 1,
     ):
+        
+
         super().__init__()
+        self._initialize_weights()
 
         self.features = nn.Sequential(
             nn.Conv1d(in_channels, num_init_features, kernel_size=3),
@@ -1575,7 +1595,18 @@ class DenseNet1d(nn.Module):
         self.classifier_1 = nn.Linear(num_features, num_classes_1)
         self.classifier_2 = nn.Linear(num_features, num_classes_2)
 
-
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv1d):
+                init.kaiming_normal_(m.weight)
+                if m.bias is not None:
+                    init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm1d) or isinstance(m, nn.GroupNorm):
+                init.constant_(m.weight, 1)
+                init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                init.kaiming_normal_(m.weight)
+                init.constant_(m.bias, 0)
 
     def forward_features(self, x):
         out = self.features(x)
