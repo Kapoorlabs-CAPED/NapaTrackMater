@@ -2082,4 +2082,4 @@ def predict_with_model(saved_model_path, saved_model_json, features_array, thres
             predicted_class1[predicted_class2 == 0] = 0
             predicted_classes1.append(predicted_class1)
             predicted_classes2.append(predicted_class2)
-    return predicted_class1, predicted_class2
+    return predicted_classes1, predicted_classes2
