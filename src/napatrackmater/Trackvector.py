@@ -28,6 +28,7 @@ from torchsummary import summary
 from torch.nn.utils import clip_grad_norm_
 from sklearn.preprocessing import normalize
 import torch.nn.init as init
+from sklearn.utils.class_weight import compute_class_weight
 
 class TrackVector(TrackMate):
     def __init__(
@@ -1794,7 +1795,14 @@ def train_mitosis_neural_net(
 
     model.to(device)
     summary(model, (1, input_size))
+    class_weights_class1 = compute_class_weight('balanced', classes=np.unique(labels_array_class1), y=labels_array_class1)
+    class_weights_class2 = compute_class_weight('balanced', classes=np.unique(labels_array_class2), y=labels_array_class2)
 
+    class_weights_tensor_class1 = torch.tensor(class_weights_class1, dtype=torch.float32).to(device)
+    class_weights_tensor_class2 = torch.tensor(class_weights_class2, dtype=torch.float32).to(device)
+
+    criterion_class1 = nn.CrossEntropyLoss(weight=class_weights_tensor_class1)
+    criterion_class2 = nn.CrossEntropyLoss(weight=class_weights_tensor_class2)
     criterion_class1 = nn.CrossEntropyLoss()
     criterion_class2 = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
