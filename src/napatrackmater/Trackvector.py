@@ -851,9 +851,9 @@ def create_mitosis_training_data(
                 }
             )
     if append_data:
-       training_data_shape_dynamic = append_data_to_npz(os.path.join(save_path, "shape_dynamic.npz"), "shape_dynamic", np.array(training_data_shape_dynamic))
-       training_data_shape =  append_data_to_npz(os.path.join(save_path, "shape.npz"), "shape", np.array(training_data_shape))
-       training_data_dynamic = append_data_to_npz(os.path.join(save_path, "dynamic.npz"), "dynamic", np.array(training_data_dynamic))
+       training_data_shape_dynamic = append_data_to_npz(os.path.join(save_path, "shape_dynamic.npz"), "shape_dynamic", training_data_shape_dynamic)
+       training_data_shape =  append_data_to_npz(os.path.join(save_path, "shape.npz"), "shape", training_data_shape)
+       training_data_dynamic = append_data_to_npz(os.path.join(save_path, "dynamic.npz"), "dynamic", training_data_dynamic)
     np.savez(
             os.path.join(save_path, "shape_dynamic.npz"),
             shape_dynamic=np.array(training_data_shape_dynamic),
