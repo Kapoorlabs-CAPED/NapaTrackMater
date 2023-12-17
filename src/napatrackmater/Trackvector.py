@@ -737,6 +737,7 @@ def create_embeddings_with_gt(
     dynamic_track_arrays,
     global_shape_dynamic_dataframe,
     analysis_track_ids,
+    min_length = 50,
 ):
     prediction_data_shape_dynamic = []
     prediction_data_shape = []
@@ -761,30 +762,30 @@ def create_embeddings_with_gt(
         features_shape_dynamic = shape_dynamic_track_arrays[idx, :].tolist()
         features_shape = shape_track_arrays[idx, :].tolist()
         features_dynamic = dynamic_track_arrays[idx, :].tolist()
+        if len(features_shape_dynamic) >= min_length:
+            prediction_data_shape_dynamic.append(
+                {
+                    "features": features_shape_dynamic,
+                    "label_dividing": gt_label,
+                    "label_number_dividing": gt_label_number,
+                }
+            )
 
-        prediction_data_shape_dynamic.append(
-            {
-                "features": features_shape_dynamic,
-                "label_dividing": gt_label,
-                "label_number_dividing": gt_label_number,
-            }
-        )
+            prediction_data_shape.append(
+                {
+                    "features": features_shape,
+                    "label_dividing": gt_label,
+                    "label_number_dividing": gt_label_number,
+                }
+            )
 
-        prediction_data_shape.append(
-            {
-                "features": features_shape,
-                "label_dividing": gt_label,
-                "label_number_dividing": gt_label_number,
-            }
-        )
-
-        prediction_data_dynamic.append(
-            {
-                "features": features_dynamic,
-                "label_dividing": gt_label,
-                "label_number_dividing": gt_label_number,
-            }
-        )
+            prediction_data_dynamic.append(
+                {
+                    "features": features_dynamic,
+                    "label_dividing": gt_label,
+                    "label_number_dividing": gt_label_number,
+                }
+            )
 
     return np.array(prediction_data_shape_dynamic), np.array(prediction_data_shape), np.array(prediction_data_dynamic)
 
