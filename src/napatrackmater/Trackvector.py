@@ -1701,7 +1701,6 @@ class MitosisNet(nn.Module):
         self.densenet = SimpleDenseNet1d(
             features=features,
             num_init_features=num_init_features,
-            in_channels=1,
             num_classes_1=num_classes_class1,
             num_classes_2=num_classes_class2,
         )
