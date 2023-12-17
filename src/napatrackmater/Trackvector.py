@@ -730,40 +730,87 @@ def append_data_to_npz(file_path, key, data):
             )
     return training_data_key
     
-def create_features_for_prediction(
+
+def create_embeddings_with_gt(
     shape_dynamic_track_arrays,
     shape_track_arrays,
     dynamic_track_arrays,
     global_shape_dynamic_dataframe,
     analysis_track_ids,
 ):
-    training_data_shape_dynamic = []
-    training_data_shape = []
-    training_data_dynamic = []
+    prediction_data_shape_dynamic = []
+    prediction_data_shape = []
+    prediction_data_dynamic = []
     analysis_track_ids = np.asarray(analysis_track_ids)
     shape_dynamic_track_arrays = z_score_normalization(shape_dynamic_track_arrays)
     shape_track_arrays = z_score_normalization(shape_track_arrays)
     dynamic_track_arrays = z_score_normalization(dynamic_track_arrays)
     
-   
-    for idx in range(analysis_track_ids.shape[0]):    
+    for idx in range(analysis_track_ids.shape[0]):
+        current_track_id = analysis_track_ids[idx]
+        filtered_data = global_shape_dynamic_dataframe[
+            global_shape_dynamic_dataframe["Track ID"] == current_track_id
+        ]
+
+        label_dividing = filtered_data["Dividing"].values[0]
+        label_number_dividing = filtered_data["Number_Dividing"].values[0]
+        
+        gt_label = int(label_dividing)
+        gt_label_number = int(label_number_dividing)
         
         features_shape_dynamic = shape_dynamic_track_arrays[idx, :].tolist()
         features_shape = shape_track_arrays[idx, :].tolist()
         features_dynamic = dynamic_track_arrays[idx, :].tolist()
-        training_data_shape_dynamic.append(
-            features_shape_dynamic
+
+        prediction_data_shape_dynamic.append(
+            {
+                "features": features_shape_dynamic,
+                "label_dividing": gt_label,
+                "label_number_dividing": gt_label_number,
+            }
         )
 
-        training_data_shape.append(
-             features_shape
+        prediction_data_shape.append(
+            {
+                "features": features_shape,
+                "label_dividing": gt_label,
+                "label_number_dividing": gt_label_number,
+            }
         )
 
-        training_data_dynamic.append(
-           features_dynamic
-
+        prediction_data_dynamic.append(
+            {
+                "features": features_dynamic,
+                "label_dividing": gt_label,
+                "label_number_dividing": gt_label_number,
+            }
         )
-    return np.array(training_data_shape_dynamic), np.array(training_data_shape), np.array(training_data_dynamic)
+
+        return prediction_data_shape_dynamic, prediction_data_shape, prediction_data_dynamic
+
+def load_prediction_data(prediction_data_feature):
+    loaded_data = prediction_data_feature
+    features_list = []
+    label_dividing_list = []
+    label_number_dividing_list = []
+
+    for entry in loaded_data:
+        features = entry["features"]
+        label_dividing = entry["label_dividing"]
+        label_number_dividing = entry["label_number_dividing"]
+
+        features_list.append(features)
+        label_dividing_list.append(label_dividing)
+        label_number_dividing_list.append(label_number_dividing)
+
+    features_array = np.array(features_list)
+    label_dividing_array = np.array(label_dividing_list)
+    label_number_dividing_array = np.array(label_number_dividing_list)
+
+    return features_array, label_dividing_array, label_number_dividing_array
+
+
+
 
 def create_mitosis_training_data(
     shape_dynamic_track_arrays,
