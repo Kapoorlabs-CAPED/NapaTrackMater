@@ -788,7 +788,7 @@ def create_mitosis_training_data(
         features_shape_dynamic = shape_dynamic_track_arrays[idx, :].tolist()
         features_shape = shape_track_arrays[idx, :].tolist()
         features_dynamic = dynamic_track_arrays[idx, :].tolist()
-        if gt_label == 0 and samples_collected_0 >= min_samples_label_dividing:
+        if gt_label == 0 and samples_collected_0 >= 2 * min_samples_label_dividing:
             continue
         elif gt_label == 1 and samples_collected_1 >= min_samples_label_dividing:
             continue
