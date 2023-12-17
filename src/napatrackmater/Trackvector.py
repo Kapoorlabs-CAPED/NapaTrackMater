@@ -1455,9 +1455,9 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
             shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
             shape_covariance_matrix.append(shape_covariance)
             dynamic_covariance_matrix.append(dynamic_covaraince)
-            shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_eigenvectors.T)
-            shape_eigenvectors_matrix.extend(shape_eigenvectors.T)
-            dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors.T)
+            shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_eigenvectors)
+            shape_eigenvectors_matrix.extend(shape_eigenvectors)
+            dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
             analysis_track_ids.append(track_id)
 
     shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
@@ -2063,8 +2063,8 @@ def predict_with_model(saved_model_path, saved_model_json, features_array, thres
     model.eval()
     predicted_classes1 = []
     predicted_classes2 = []
-    for idx in range(len(features_array)):
-        feature_type = features_array[idx,:].astype(np.float32).tolist()
+    for idx in range(features_array.shape[0]):
+        feature_type = features_array[idx,:].tolist()
         feature_type = z_score_normalization(feature_type)
         features_tensor = torch.tensor(feature_type, dtype=torch.float32).to(device)
         new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(0)
