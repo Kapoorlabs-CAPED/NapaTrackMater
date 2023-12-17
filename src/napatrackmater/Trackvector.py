@@ -793,6 +793,8 @@ def create_training_tracklets(global_shape_dynamic_dataframe: pd.DataFrame, t_mi
                     dynamic_dataframe_list,
                     full_dataframe_list,
                 )
+
+    print(f"returning shape and dynamic vectors as list {len(training_tracklets)}")        
     return training_tracklets
 
 
@@ -1028,7 +1030,7 @@ def create_mitosis_training_data(
     dynamic_track_arrays = z_score_normalization(dynamic_track_arrays)
     count_label_dividing_0 = 0 
     count_label_dividing_1 = 0 
-    
+    print(len(analysis_track_ids.shape[0]))
     for idx in range(analysis_track_ids.shape[0]):
         current_track_id = analysis_track_ids[idx]
         filtered_data = global_shape_dynamic_dataframe[
