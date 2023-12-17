@@ -2009,7 +2009,7 @@ def plot_metrics_from_npz(npz_file):
 
 
 # Model prediction
-def predict_with_model(saved_model_path, saved_model_json, features_array):
+def predict_with_model(saved_model_path, saved_model_json, features_array, threshold = 0.99):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     with open(saved_model_json) as json_file:
         model_info = json.load(json_file)
@@ -2042,7 +2042,7 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
     if len(features_array.shape) == 2:
         features_array = z_score_normalization(features_array)
     features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
-
+ 
     if len(features_tensor.shape) == 1:
 
         new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(0)
@@ -2053,7 +2053,7 @@ def predict_with_model(saved_model_path, saved_model_json, features_array):
         predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
         predicted_probs_class2 = torch.softmax(outputs_class2, dim=1)
         print(predicted_probs_class1, predicted_probs_class2)
-        predicted_class1 = torch.argmax(predicted_probs_class1, dim=1).cpu().numpy()
+        predicted_class1 = (predicted_probs_class1[:, 1] > threshold).astype(int)
         predicted_class2 = torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
         predicted_class1[predicted_class2 == 0] = 0
     return predicted_class1, predicted_class2
