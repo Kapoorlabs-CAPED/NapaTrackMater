@@ -1796,10 +1796,10 @@ def train_mitosis_neural_net(
     print(
         f"Training data shape: {X_train.shape}, Validation data shape: {X_val.shape}, Training labels shape: {y_train_class1.shape}, Validation labels shape: {y_val_class1.shape}"
     )
-    X_train_tensor = torch.tensor(X_train, dtype=torch.float32).to(device)
+    X_train_tensor = torch.tensor(X_train).to(device)
     y_train_class1_tensor = torch.tensor(y_train_class1, dtype=torch.uint8).to(device)
     y_train_class2_tensor = torch.tensor(y_train_class2, dtype=torch.uint8).to(device)
-    X_val_tensor = torch.tensor(X_val, dtype=torch.float32).to(device)
+    X_val_tensor = torch.tensor(X_val).to(device)
     y_val_class1_tensor = torch.tensor(y_val_class1, dtype=torch.uint8).to(device)
     y_val_class2_tensor = torch.tensor(y_val_class2, dtype=torch.uint8).to(device)
 
