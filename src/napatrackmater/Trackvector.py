@@ -793,7 +793,7 @@ def create_training_tracklets(global_shape_dynamic_dataframe: pd.DataFrame, t_mi
                     dynamic_dataframe_list,
                     full_dataframe_list,
                 )
-    print(training_tracklets.keys())
+   
     return training_tracklets
 
 
@@ -1706,6 +1706,7 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe, min_length = None
             shape_eigenvectors_matrix.extend(shape_eigenvectors)
             dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
             analysis_track_ids.append(track_id)
+            print(f'Processed track {track_id}')
 
     shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
     shape_covariance_3d = np.dstack(shape_covariance_matrix)
