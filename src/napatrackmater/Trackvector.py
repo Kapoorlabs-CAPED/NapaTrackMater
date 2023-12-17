@@ -1625,6 +1625,7 @@ class SimpleDenseNet1d(nn.Module):
 
     def forward(self, x):
         x = x.view(x.size(0), -1)  
+        x = self.features_layer(x)
         out_1 = self.classifier_1(x)
         out_2 = self.classifier_2(x)
         return out_1, out_2
