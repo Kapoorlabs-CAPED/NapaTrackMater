@@ -2067,8 +2067,8 @@ def predict_with_model(saved_model_path, saved_model_json, features_array, thres
         feature_type = features_array[idx,:].astype(np.float32).tolist()
         feature_type = z_score_normalization(feature_type)
         features_tensor = torch.tensor(feature_type, dtype=torch.float32).to(device)
-        new_data_with_channel = features_tensor.unsqueeze(0)
-        print(new_data_with_channel.shape, features_tensor.shape)
+        new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(0)
+       
         with torch.no_grad():
             outputs_class1, outputs_class2 = model(new_data_with_channel)
             predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
