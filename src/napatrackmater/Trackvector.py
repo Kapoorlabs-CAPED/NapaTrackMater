@@ -1562,13 +1562,13 @@ class TransitionBlock(nn.Module):
         self.conv = nn.Conv1d(
             in_channels, out_channels, kernel_size=1, stride=1, dilation=1
         )
-        #self.pool = nn.AvgPool1d(kernel_size=2, stride=2)
+        self.pool = nn.AvgPool1d(kernel_size=2, stride=2)
 
     def forward(self, x):
         x = self.bn(x)
         x = self.act(x)
         x = self.conv(x)
-        #x = self.pool(x)
+        x = self.pool(x)
         return x
 
 
@@ -1593,7 +1593,7 @@ class DenseNet1d(nn.Module):
             nn.Conv1d(in_channels, num_init_features, kernel_size=3),
             nn.GroupNorm(1, num_init_features),
             nn.ReLU(inplace=True),
-            #nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
+            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
         )
 
         num_features = num_init_features
@@ -2003,7 +2003,7 @@ def plot_metrics_from_npz(npz_file):
 
 
 # Model prediction
-def predict_with_model(saved_model_path, saved_model_json, features_array, threshold = 0.99):
+def predict_with_model(saved_model_path, saved_model_json, features_array, threshold = 0.8):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     with open(saved_model_json) as json_file:
         model_info = json.load(json_file)
@@ -2046,7 +2046,6 @@ def predict_with_model(saved_model_path, saved_model_json, features_array, thres
         outputs_class1, outputs_class2 = model(new_data_with_channel)
         predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
         predicted_probs_class2 = torch.softmax(outputs_class2, dim=1)
-        print(predicted_probs_class1, predicted_probs_class2)
         predicted_probs_class1_numpy = predicted_probs_class1[:, 1].cpu().detach().numpy()
         predicted_class1 = (predicted_probs_class1_numpy > threshold).astype(int)
         predicted_class2 = torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
