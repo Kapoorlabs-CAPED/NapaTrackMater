@@ -730,7 +730,40 @@ def append_data_to_npz(file_path, key, data):
             )
     return training_data_key
     
+def create_features_for_prediction(
+    shape_dynamic_track_arrays,
+    shape_track_arrays,
+    dynamic_track_arrays,
+    global_shape_dynamic_dataframe,
+    analysis_track_ids,
+):
+    training_data_shape_dynamic = []
+    training_data_shape = []
+    training_data_dynamic = []
+    analysis_track_ids = np.asarray(analysis_track_ids)
+    shape_dynamic_track_arrays = z_score_normalization(shape_dynamic_track_arrays)
+    shape_track_arrays = z_score_normalization(shape_track_arrays)
+    dynamic_track_arrays = z_score_normalization(dynamic_track_arrays)
     
+   
+    for idx in range(analysis_track_ids.shape[0]):    
+        
+        features_shape_dynamic = shape_dynamic_track_arrays[idx, :].tolist()
+        features_shape = shape_track_arrays[idx, :].tolist()
+        features_dynamic = dynamic_track_arrays[idx, :].tolist()
+        training_data_shape_dynamic.append(
+            features_shape_dynamic
+        )
+
+        training_data_shape.append(
+             features_shape
+        )
+
+        training_data_dynamic.append(
+           features_dynamic
+
+        )
+    return np.array(training_data_shape_dynamic), np.array(training_data_shape), np.array(training_data_dynamic)
 
 def create_mitosis_training_data(
     shape_dynamic_track_arrays,
