@@ -1452,7 +1452,7 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
                 dynamic_track_array, feature_array=6
             )
-
+            print(shape_eigenvectors.T.reshape(-1).shape)
             shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
             shape_covariance_matrix.append(shape_covariance)
             dynamic_covariance_matrix.append(dynamic_covaraince)
@@ -1478,6 +1478,10 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
     shape_dynamic_eigenvectors_1d = np.array(shape_dynamic_eigenvectors_2d)
     shape_eigenvectors_1d = np.array(shape_eigenvectors_2d)
     dynamic_eigenvectors_1d = np.array(dynamic_eigenvectors_2d)
+
+    print(shape_dynamic_eigenvectors_1d.shape)
+
+
 
     #return (
     #    shape_dynamic_covariance_2d,
