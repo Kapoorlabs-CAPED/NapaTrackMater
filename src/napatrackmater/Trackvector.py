@@ -1414,6 +1414,10 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
     shape_dynamic_covariance_matrix = []
     shape_covariance_matrix = []
     dynamic_covariance_matrix = []
+    shape_dynamic_eigenvectors_matrix = []
+    shape_eigenvectors_matrix = []
+    dynamic_eigenvectors_matrix = []
+
     for track_id, (
         shape_dynamic_dataframe_list,
         shape_dataframe_list,
@@ -1452,6 +1456,9 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
             shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
             shape_covariance_matrix.append(shape_covariance)
             dynamic_covariance_matrix.append(dynamic_covaraince)
+            shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_eigenvectors.T.reshape(-1))
+            shape_eigenvectors_matrix.extend(shape_eigenvectors.T.reshape(-1))
+            dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors.T.reshape(-1))
             analysis_track_ids.append(track_id)
 
     shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
@@ -1463,12 +1470,25 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
     )
     shape_covariance_2d = shape_covariance_3d.reshape(len(analysis_track_ids), -1)
     dynamic_covariance_2d = dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
+
+    shape_dynamic_eigenvectors_1d = np.array(shape_dynamic_eigenvectors_matrix)
+    shape_eigenvectors_1d = np.array(shape_eigenvectors_matrix)
+    dynamic_eigenvectors_1d = np.array(dynamic_eigenvectors_matrix)
+
+    #return (
+    #    shape_dynamic_covariance_2d,
+    #    shape_covariance_2d,
+    #    dynamic_covariance_2d,
+    #    analysis_track_ids,
+    #)
+
     return (
-        shape_dynamic_covariance_2d,
-        shape_covariance_2d,
-        dynamic_covariance_2d,
+        shape_dynamic_eigenvectors_1d,
+        shape_eigenvectors_1d,
+        dynamic_eigenvectors_1d,
         analysis_track_ids,
     )
+
 
 
 def compute_covariance_matrix(track_arrays, shape_array=5, feature_array=None):
