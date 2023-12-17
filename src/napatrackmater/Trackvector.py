@@ -1602,15 +1602,23 @@ class SimpleDenseNet1d(nn.Module):
     def __init__(self, features, num_init_features = 32,  num_classes_1=1, num_classes_2=1):
         super().__init__()
         
+        self.features_layer = nn.Sequential(
+            nn.Conv1d(1, num_init_features, kernel_size=3, padding=1),
+            nn.BatchNorm1d(num_init_features),  
+            nn.ReLU(inplace=True),
+            nn.MaxPool1d(kernel_size=2)
+        )
+
+        self.input_size = num_init_features * (features //2)
 
         self.classifier_1 = nn.Sequential(
-            nn.Linear(features, num_init_features), 
+            nn.Linear(self.input_size, num_init_features), 
             nn.ReLU(inplace=True),
             nn.Linear(num_init_features, num_classes_1)
         )
 
         self.classifier_2 = nn.Sequential(
-            nn.Linear(features, num_init_features),  
+            nn.Linear(self.input_size, num_init_features),  
             nn.ReLU(inplace=True),
             nn.Linear(num_init_features, num_classes_2)
         )
