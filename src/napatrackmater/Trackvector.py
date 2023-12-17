@@ -1664,7 +1664,7 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe, min_length = None
     shape_dynamic_eigenvectors_matrix = []
     shape_eigenvectors_matrix = []
     dynamic_eigenvectors_matrix = []
-
+    print(f'keys: {analysis_vectors.keys()}')
     for track_id, (
         shape_dynamic_dataframe_list,
         shape_dataframe_list,
