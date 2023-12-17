@@ -2066,7 +2066,7 @@ def predict_with_model(saved_model_path, saved_model_json, features_array, thres
     for idx in range(len(features_array)):
         feature_type = features_array[idx,:].tolist()
         feature_type = z_score_normalization(feature_type)
-        features_tensor = torch.tensor(feature_type, dtype=torch.complex32).to(device)
+        features_tensor = torch.tensor(feature_type.T, dtype=torch.float32).to(device)
         new_data_with_channel = features_tensor.unsqueeze(1)
         with torch.no_grad():
             outputs_class1, outputs_class2 = model(new_data_with_channel)
