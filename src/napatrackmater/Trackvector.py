@@ -1465,15 +1465,22 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
     shape_covariance_3d = np.dstack(shape_covariance_matrix)
     dynamic_covariance_3d = np.dstack(dynamic_covariance_matrix)
 
-    shape_dynamic_eigenvectors_2d = np.concatenate(shape_dynamic_eigenvectors_matrix)
-    shape_eigenvectors_2d = np.concatenate(shape_eigenvectors_matrix)
-    dynamic_eigenvectors_2d = np.concatenate(dynamic_eigenvectors_matrix)
+    shape_dynamic_eigenvectors_3d = np.dstack(shape_dynamic_eigenvectors_matrix)
+    shape_eigenvectors_3d = np.dstack(shape_eigenvectors_matrix)
+    dynamic_eigenvectors_3d = np.dstack(dynamic_eigenvectors_matrix)
 
     shape_dynamic_covariance_2d = shape_dynamic_covariance_3d.reshape(
         len(analysis_track_ids), -1
     )
     shape_covariance_2d = shape_covariance_3d.reshape(len(analysis_track_ids), -1)
     dynamic_covariance_2d = dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
+
+    shape_dynamic_eigenvectors_2d = shape_dynamic_eigenvectors_3d.reshape(
+        len(analysis_track_ids), -1
+    )
+    shape_eigenvectors_2d = shape_eigenvectors_3d.reshape(len(analysis_track_ids), -1)
+    dynamic_eigenvectors_2d = dynamic_eigenvectors_3d.reshape(len(analysis_track_ids), -1)
+    
 
     shape_dynamic_eigenvectors_1d = np.array(shape_dynamic_eigenvectors_2d)
     shape_eigenvectors_1d = np.array(shape_eigenvectors_2d)
