@@ -697,12 +697,37 @@ def z_score_normalization(data):
 
 
 def append_data_to_npz(file_path, key, data):
-    existing_data = np.load(file_path, allow_pickle=True)
+    existing_data = np.load(file_path, allow_pickle=True)[key]
     
-    existing_array = existing_data[key]
-    
-    new_array = np.concatenate([existing_array, data])
-    np.savez(file_path, **{key: new_array})
+    training_data_key = []
+    features_list = []
+    label_dividing_list = []
+    label_number_dividing_list = []
+
+    for entry in existing_data:
+        features = entry["features"]
+        label_dividing = entry["label_dividing"]
+        label_number_dividing = entry["label_number_dividing"]
+
+        features_list.append(features)
+        label_dividing_list.append(label_dividing)
+        label_number_dividing_list.append(label_number_dividing)
+    for entry in data:
+        features = entry["features"]
+        label_dividing = entry["label_dividing"]
+        label_number_dividing = entry["label_number_dividing"]
+
+        features_list.append(features)
+        label_dividing_list.append(label_dividing)
+        label_number_dividing_list.append(label_number_dividing)
+    training_data_key.append(
+                {
+                    "features": features_list,
+                    "label_dividing": label_dividing_list,
+                    "label_number_dividing": label_number_dividing_list,
+                }
+            )
+    return training_data_key
     
     
 
@@ -826,20 +851,17 @@ def create_mitosis_training_data(
                 }
             )
     if append_data:
-        append_data_to_npz(os.path.join(save_path, "shape_dynamic.npz"), "shape_dynamic", np.array(training_data_shape_dynamic))
-        append_data_to_npz(os.path.join(save_path, "shape.npz"), "shape", np.array(training_data_shape))
-        append_data_to_npz(os.path.join(save_path, "dynamic.npz"), "dynamic", np.array(training_data_dynamic))
-    else:
-        np.savez(
+       training_data_shape_dynamic = append_data_to_npz(os.path.join(save_path, "shape_dynamic.npz"), "shape_dynamic", np.array(training_data_shape_dynamic))
+       training_data_shape =  append_data_to_npz(os.path.join(save_path, "shape.npz"), "shape", np.array(training_data_shape))
+       training_data_dynamic = append_data_to_npz(os.path.join(save_path, "dynamic.npz"), "dynamic", np.array(training_data_dynamic))
+    np.savez(
             os.path.join(save_path, "shape_dynamic.npz"),
             shape_dynamic=np.array(training_data_shape_dynamic),
-        )
-        np.savez(os.path.join(save_path, "shape.npz"), shape=np.array(training_data_shape))
-        np.savez(
-            os.path.join(save_path, "dynamic.npz"), dynamic=np.array(training_data_dynamic)
-        )
-
-    
+    )
+    np.savez(os.path.join(save_path, "shape.npz"), shape=np.array(training_data_shape))
+    np.savez(
+        os.path.join(save_path, "dynamic.npz"), dynamic=np.array(training_data_dynamic)
+    )
 
     return training_data_shape_dynamic, training_data_shape, training_data_dynamic
 
