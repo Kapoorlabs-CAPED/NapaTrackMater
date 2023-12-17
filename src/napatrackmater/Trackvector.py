@@ -1452,7 +1452,6 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
                 dynamic_track_array, feature_array=6
             )
-            print(shape_eigenvectors.T.shape)
             shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
             shape_covariance_matrix.append(shape_covariance)
             dynamic_covariance_matrix.append(dynamic_covaraince)
@@ -1480,13 +1479,12 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
     )
     shape_eigenvectors_2d = shape_eigenvectors_3d.reshape(len(analysis_track_ids), -1)
     dynamic_eigenvectors_2d = dynamic_eigenvectors_3d.reshape(len(analysis_track_ids), -1)
-    
+
 
     shape_dynamic_eigenvectors_1d = np.array(shape_dynamic_eigenvectors_2d)
     shape_eigenvectors_1d = np.array(shape_eigenvectors_2d)
     dynamic_eigenvectors_1d = np.array(dynamic_eigenvectors_2d)
 
-    print(shape_dynamic_eigenvectors_1d.shape)
 
 
 
@@ -2063,29 +2061,25 @@ def predict_with_model(saved_model_path, saved_model_json, features_array, thres
     )
     model.to(device)
     model.eval()
-
-
-    if len(features_array.shape) == 1:
-        features_array = z_score_normalization(features_array.reshape(-1, 1))
-        features_array = features_array.flatten()
-    if len(features_array.shape) == 2:
-        features_array = z_score_normalization(features_array)
-    features_tensor = torch.tensor(features_array, dtype=torch.float32).to(device)
- 
-    if len(features_tensor.shape) == 1:
-
-        new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(0)
-    if len(features_tensor.shape) == 2:
+    predicted_classes1 = []
+    predicted_classes2 = []
+    for idx in range(len(features_array)):
+        feature_type = features_array[idx,:].tolist()
+        feature_type = z_score_normalization(feature_type.reshape(-1, 1))
+        feature_type = feature_type.flatten()
+        features_tensor = torch.tensor(feature_type, dtype=torch.float32).to(device)
         new_data_with_channel = features_tensor.unsqueeze(1)
-    with torch.no_grad():
-        outputs_class1, outputs_class2 = model(new_data_with_channel)
-        predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
-        predicted_probs_class2 = torch.softmax(outputs_class2, dim=1)
-        if threshold is not None:
-            predicted_probs_class1_numpy = predicted_probs_class1[:, 1].cpu().detach().numpy()
-            predicted_class1 = (predicted_probs_class1_numpy > threshold).astype(int)
-        else:
-            predicted_class1 = torch.argmax(predicted_probs_class1, dim=1).cpu().numpy()    
-        predicted_class2 = torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
-        predicted_class1[predicted_class2 == 0] = 0
+        with torch.no_grad():
+            outputs_class1, outputs_class2 = model(new_data_with_channel)
+            predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
+            predicted_probs_class2 = torch.softmax(outputs_class2, dim=1)
+            if threshold is not None:
+                predicted_probs_class1_numpy = predicted_probs_class1[:, 1].cpu().detach().numpy()
+                predicted_class1 = (predicted_probs_class1_numpy > threshold).astype(int)
+            else:
+                predicted_class1 = torch.argmax(predicted_probs_class1, dim=1).cpu().numpy()    
+            predicted_class2 = torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
+            predicted_class1[predicted_class2 == 0] = 0
+            predicted_classes1.append(predicted_class1)
+            predicted_classes2.append(predicted_class2)
     return predicted_class1, predicted_class2
