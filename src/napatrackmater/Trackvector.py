@@ -702,6 +702,7 @@ def append_data_to_npz(file_path, key, data):
     existing_array = existing_data[key]
     
     new_array = np.concatenate([existing_array, data])
+    np.savez(file_path, **{key: new_array})
     
     
 
@@ -828,14 +829,15 @@ def create_mitosis_training_data(
         append_data_to_npz(os.path.join(save_path, "shape_dynamic.npz"), "shape_dynamic", np.array(training_data_shape_dynamic))
         append_data_to_npz(os.path.join(save_path, "shape.npz"), "shape", np.array(training_data_shape))
         append_data_to_npz(os.path.join(save_path, "dynamic.npz"), "dynamic", np.array(training_data_dynamic))
-    np.savez(
-        os.path.join(save_path, "shape_dynamic.npz"),
-        shape_dynamic=np.array(training_data_shape_dynamic),
-    )
-    np.savez(os.path.join(save_path, "shape.npz"), shape=np.array(training_data_shape))
-    np.savez(
-        os.path.join(save_path, "dynamic.npz"), dynamic=np.array(training_data_dynamic)
-    )
+    else:
+        np.savez(
+            os.path.join(save_path, "shape_dynamic.npz"),
+            shape_dynamic=np.array(training_data_shape_dynamic),
+        )
+        np.savez(os.path.join(save_path, "shape.npz"), shape=np.array(training_data_shape))
+        np.savez(
+            os.path.join(save_path, "dynamic.npz"), dynamic=np.array(training_data_dynamic)
+        )
 
     
 
