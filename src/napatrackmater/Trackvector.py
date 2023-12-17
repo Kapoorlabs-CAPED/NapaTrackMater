@@ -615,7 +615,6 @@ def create_training_tracklets(global_shape_dynamic_dataframe: pd.DataFrame, t_mi
                 & (global_shape_dynamic_dataframe["t"] <= upper_bound)
             ].sort_values(by="t")
             if track_data.shape[0] > 0:
-                print(f'dividing track {track_id}')
                 shape_dynamic_dataframe = track_data[
                         [
                             "Radius",
@@ -712,7 +711,6 @@ def create_training_tracklets(global_shape_dynamic_dataframe: pd.DataFrame, t_mi
             track_data = track_data[(track_data["t"] >= lower_bound) & (track_data["t"] <= upper_bound)]
 
             if track_data.shape[0] > 0:
-                print(f'Non dividing track {track_id}')
                 shape_dynamic_dataframe = track_data[
                         [
                             "Radius",
@@ -795,7 +793,7 @@ def create_training_tracklets(global_shape_dynamic_dataframe: pd.DataFrame, t_mi
                     dynamic_dataframe_list,
                     full_dataframe_list,
                 )
-
+    print(training_tracklets.keys())
     return training_tracklets
 
 
