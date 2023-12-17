@@ -1809,6 +1809,8 @@ def train_mitosis_neural_net(
     y_val_class1_tensor = torch.tensor(y_val_class1, dtype=torch.uint8).to(device)
     y_val_class2_tensor = torch.tensor(y_val_class2, dtype=torch.uint8).to(device)
 
+    X_train_tensor = X_train_tensor.float()
+    X_val_tensor = X_val_tensor.float()
     num_classes1 = int(torch.max(y_train_class1_tensor)) + 1
     num_classes2 = int(torch.max(y_train_class2_tensor)) + 1
     model_info = {
