@@ -691,7 +691,7 @@ def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
     return analysis_vectors
 
 def z_score_normalization(data):
-    normalized_data = normalize(data, norm='l2')
+    normalized_data = data #normalize(data, norm='l2')
     return normalized_data
 
 def create_mitosis_training_data(
