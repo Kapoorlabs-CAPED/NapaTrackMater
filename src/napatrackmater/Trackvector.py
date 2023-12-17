@@ -1505,7 +1505,6 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
 
 
 def compute_covariance_matrix(track_arrays, shape_array=5, feature_array=None):
-
     for i in range(track_arrays.shape[0]):
         if track_arrays[i, :2].any() == -1:
             if feature_array is not None:
@@ -1519,7 +1518,14 @@ def compute_covariance_matrix(track_arrays, shape_array=5, feature_array=None):
     eigenvalues = eigenvalues[eigenvalue_order]
     eigenvectors = eigenvectors[:, eigenvalue_order]
 
-    return covariance_matrix, eigenvectors
+    # Split eigenvectors into their real and imaginary parts
+    real_part = np.real(eigenvectors)
+    imag_part = np.imag(eigenvectors)
+
+    # Concatenate real and imaginary parts along the last axis (axis=1)
+    concatenated_eigenvectors = np.concatenate((real_part, imag_part), axis=1)
+
+    return covariance_matrix, concatenated_eigenvectors
 
 
 class DenseLayer(nn.Module):
