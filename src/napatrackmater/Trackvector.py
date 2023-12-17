@@ -786,7 +786,7 @@ def create_embeddings_with_gt(
             }
         )
 
-        return prediction_data_shape_dynamic, prediction_data_shape, prediction_data_dynamic
+    return prediction_data_shape_dynamic, prediction_data_shape, prediction_data_dynamic
 
 def load_prediction_data(prediction_data_feature):
     loaded_data = prediction_data_feature
