@@ -697,7 +697,7 @@ def z_score_normalization(data):
 
 
 def append_data_to_npz(file_path, key, data):
-    existing_data = np.load(file_path)
+    existing_data = np.load(file_path, allow_pickle=True)
     
     existing_array = existing_data[key]
     
