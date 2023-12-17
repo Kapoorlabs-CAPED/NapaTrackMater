@@ -707,7 +707,7 @@ def create_training_tracklets(global_shape_dynamic_dataframe: pd.DataFrame, t_mi
             track_end_time = track_data["t"].max()
             upper_bound = min(track_end_time, track_start_time + 2 * t_plus)
             lower_bound = max(track_start_time, upper_bound )
-            
+            print(f'lower bound {lower_bound} upper bound {upper_bound}')
             track_data = track_data[(track_data["t"] >= lower_bound) & (track_data["t"] <= upper_bound)]
 
             if track_data.shape[0] > 0:
