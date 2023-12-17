@@ -1698,13 +1698,14 @@ class MitosisNet(nn.Module):
         num_classes_class2,
     ):
         super().__init__()
-        self.densenet = SimpleDenseNet1d(
-            features=features,
+        self.densenet = DenseNet1d(
+            growth_rate=growth_rate,
+            block_config=block_config,
             num_init_features=num_init_features,
+            in_channels=1,
             num_classes_1=num_classes_class1,
             num_classes_2=num_classes_class2,
         )
-        
         #SimpleDenseNet1d(
         #    features=features,
         #    num_init_features=num_init_features,
