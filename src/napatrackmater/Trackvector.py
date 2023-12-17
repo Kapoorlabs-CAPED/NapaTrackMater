@@ -820,7 +820,6 @@ def create_mitosis_training_data(
     global_shape_dynamic_dataframe,
     analysis_track_ids,
     save_path,
-    min_length=None,
     append_data=False
     
 ):
@@ -874,64 +873,35 @@ def create_mitosis_training_data(
             continue
         elif gt_label == 1 and samples_collected_1 >= min_samples_label_dividing:
             continue
-        if min_length is not None:
-            if len(features_shape_dynamic) >= min_length:
-                if gt_label == 0:
-                    samples_collected_0 += 1
-                elif gt_label == 1:
-                    samples_collected_1 += 1
-                training_data_shape_dynamic.append(
-                    {
-                        "features": features_shape_dynamic,
-                        "label_dividing": gt_label,
-                        "label_number_dividing": gt_label_number,
-                    }
-                )
+        
 
-                training_data_shape.append(
-                    {
-                        "features": features_shape,
-                        "label_dividing": gt_label,
-                        "label_number_dividing": gt_label_number,
-                    }
-                )
+        if gt_label == 0:
+                samples_collected_0 += 1
+        elif gt_label == 1:
+            samples_collected_1 += 1
+        training_data_shape_dynamic.append(
+            {
+                "features": features_shape_dynamic,
+                "label_dividing": gt_label,
+                "label_number_dividing": gt_label_number,
+            }
+        )
 
-                training_data_dynamic.append(
-                    {
-                        "features": features_dynamic,
-                        "label_dividing": gt_label,
-                        "label_number_dividing": gt_label_number,
-                    }
-                )
-        else:
+        training_data_shape.append(
+            {
+                "features": features_shape,
+                "label_dividing": gt_label,
+                "label_number_dividing": gt_label_number,
+            }
+        )
 
-            if gt_label == 0:
-                 samples_collected_0 += 1
-            elif gt_label == 1:
-                samples_collected_1 += 1
-            training_data_shape_dynamic.append(
-                {
-                    "features": features_shape_dynamic,
-                    "label_dividing": gt_label,
-                    "label_number_dividing": gt_label_number,
-                }
-            )
-
-            training_data_shape.append(
-                {
-                    "features": features_shape,
-                    "label_dividing": gt_label,
-                    "label_number_dividing": gt_label_number,
-                }
-            )
-
-            training_data_dynamic.append(
-                {
-                    "features": features_dynamic,
-                    "label_dividing": gt_label,
-                    "label_number_dividing": gt_label_number,
-                }
-            )
+        training_data_dynamic.append(
+            {
+                "features": features_dynamic,
+                "label_dividing": gt_label,
+                "label_number_dividing": gt_label_number,
+            }
+        )
     if append_data:
        training_data_shape_dynamic = append_data_to_npz(os.path.join(save_path, "shape_dynamic.npz"), "shape_dynamic", training_data_shape_dynamic)
        training_data_shape =  append_data_to_npz(os.path.join(save_path, "shape.npz"), "shape", training_data_shape)
@@ -1489,7 +1459,7 @@ def unsupervised_clustering(
         np.save(cluster_labels_npy_file_name, shape_dynamic_cluster_labels)
 
 
-def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
+def convert_tracks_to_arrays(analysis_vectors, full_dataframe, min_length = None):
 
     analysis_track_ids = []
     shape_dynamic_covariance_matrix = []
@@ -1522,7 +1492,7 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe):
             == shape_track_array.shape[0]
             == dynamic_track_array.shape[0]
         ), "Shape dynamic, shape and dynamic track arrays must have the same length."
-        if shape_dynamic_track_array.shape[0] > 1:
+        if shape_dynamic_track_array.shape[0] > 1 and shape_dynamic_track_array.shape[0] >= min_length if min_length is not None else True:
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
