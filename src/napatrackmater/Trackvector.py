@@ -2053,7 +2053,8 @@ def predict_with_model(saved_model_path, saved_model_json, features_array, thres
         predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
         predicted_probs_class2 = torch.softmax(outputs_class2, dim=1)
         print(predicted_probs_class1, predicted_probs_class2)
-        predicted_class1 = (predicted_probs_class1[:, 1] > threshold).astype(int)
+        predicted_probs_class1_numpy = predicted_probs_class1[:, 1].cpu().detach().numpy()
+        predicted_class1 = (predicted_probs_class1_numpy > threshold).astype(int)
         predicted_class2 = torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
         predicted_class1[predicted_class2 == 0] = 0
     return predicted_class1, predicted_class2
