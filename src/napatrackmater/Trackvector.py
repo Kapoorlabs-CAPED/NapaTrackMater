@@ -2088,6 +2088,6 @@ def predict_with_model(saved_model_path, saved_model_json, features_array, thres
                 predicted_class1 = torch.argmax(predicted_probs_class1, dim=1).cpu().numpy()    
             predicted_class2 = torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
             predicted_class1[predicted_class2 == 0] = 0
-            predicted_classes1.append(predicted_class1.astype(int))
-            predicted_classes2.append(predicted_class2.astype(int))
+            predicted_classes1.append(predicted_class1[0])
+            predicted_classes2.append(predicted_class2[0])
     return predicted_classes1, predicted_classes2
