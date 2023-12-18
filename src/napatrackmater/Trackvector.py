@@ -2356,7 +2356,18 @@ def predict_with_model(
                 predicted_class1 = (
                     torch.argmax(predicted_probs_class1, dim=1).cpu().numpy()
                 )
-            predicted_class2 = torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
+            if threshold is not None: 
+                predicted_probs_class2_numpy = (
+                    predicted_probs_class2[:, 1].cpu().detach().numpy()
+                )
+                predicted_class2 = (predicted_probs_class2_numpy > threshold).astype(
+                    int
+                )
+            else:
+                predicted_class2 = (
+                    torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
+                )
+            
             predicted_class1[predicted_class2 == 0] = 0
             predicted_classes1.append(predicted_class1[0])
             predicted_classes2.append(predicted_class2[0])
