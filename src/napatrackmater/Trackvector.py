@@ -703,7 +703,14 @@ def create_training_tracklets(global_shape_dynamic_dataframe: pd.DataFrame, t_mi
             track_data = subset[
                     (subset["Track ID"] == track_id)
                 ].sort_values(by="t")
-            
+            t = track_data[track_data.shape[0] // 2]["t"]
+            lower_bound = max(0, t - t_minus)
+            upper_bound = t + t_plus
+            track_data = global_shape_dynamic_dataframe[
+                (global_shape_dynamic_dataframe["Track ID"] == track_id)
+                & (global_shape_dynamic_dataframe["t"] >= lower_bound)
+                & (global_shape_dynamic_dataframe["t"] <= upper_bound)
+            ].sort_values(by="t")
 
             if track_data.shape[0] > 0:
                 shape_dynamic_dataframe = track_data[
@@ -1036,12 +1043,6 @@ def create_mitosis_training_data(
         gt_label = int(label_dividing)
         gt_label_number = int(label_number_dividing)
         
-        if gt_label == 0:
-            count_label_dividing_0+= 1
-        else:
-            count_label_dividing_1+= 1
-
-    min_samples_label_dividing = min(count_label_dividing_0, count_label_dividing_1)
     samples_collected_0 = 0
     samples_collected_1 = 0
     for idx in range(analysis_track_ids.shape[0]):    
@@ -1060,16 +1061,9 @@ def create_mitosis_training_data(
         features_shape_dynamic = shape_dynamic_track_arrays[idx, :].tolist()
         features_shape = shape_track_arrays[idx, :].tolist()
         features_dynamic = dynamic_track_arrays[idx, :].tolist()
-        #if gt_label == 0 and samples_collected_0 >= 3 * min_samples_label_dividing:
-        #    continue
-        #elif gt_label == 1 and samples_collected_1 >= min_samples_label_dividing:
-        #    continue
         
 
-        if gt_label == 0:
-                samples_collected_0 += 1
-        elif gt_label == 1:
-            samples_collected_1 += 1
+    
         training_data_shape_dynamic.append(
             {
                 "features": features_shape_dynamic,
