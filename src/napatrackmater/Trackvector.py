@@ -703,13 +703,13 @@ def create_training_tracklets(global_shape_dynamic_dataframe: pd.DataFrame, t_mi
             track_data = subset[
                     (subset["Track ID"] == track_id)
                 ].sort_values(by="t")
-            t = track_data.iloc[track_data.shape[0] // 2]["t"]
-            lower_bound = max(0, t - t_minus)
-            upper_bound = t + t_plus
+            #t = track_data.iloc[track_data.shape[0] // 2]["t"]
+            #lower_bound = max(0, t - t_minus)
+            #upper_bound = t + t_plus
             track_data = global_shape_dynamic_dataframe[
                 (global_shape_dynamic_dataframe["Track ID"] == track_id)
-                & (global_shape_dynamic_dataframe["t"] >= lower_bound)
-                & (global_shape_dynamic_dataframe["t"] <= upper_bound)
+                #& (global_shape_dynamic_dataframe["t"] >= lower_bound)
+                #& (global_shape_dynamic_dataframe["t"] <= upper_bound)
             ].sort_values(by="t")
 
             if track_data.shape[0] > 0:
