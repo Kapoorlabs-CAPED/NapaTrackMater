@@ -703,13 +703,8 @@ def create_training_tracklets(global_shape_dynamic_dataframe: pd.DataFrame, t_mi
             track_data = subset[
                     (subset["Track ID"] == track_id)
                 ].sort_values(by="t")
-            #t = track_data.iloc[track_data.shape[0] // 2]["t"]
-            #lower_bound = max(0, t - t_minus)
-            #upper_bound = t + t_plus
             track_data = global_shape_dynamic_dataframe[
                 (global_shape_dynamic_dataframe["Track ID"] == track_id)
-                #& (global_shape_dynamic_dataframe["t"] >= lower_bound)
-                #& (global_shape_dynamic_dataframe["t"] <= upper_bound)
             ].sort_values(by="t")
 
             if track_data.shape[0] > 0:
@@ -1055,42 +1050,44 @@ def create_mitosis_training_data(
         features_shape_dynamic = shape_dynamic_track_arrays[idx, :].tolist()
         features_shape = shape_track_arrays[idx, :].tolist()
         features_dynamic = dynamic_track_arrays[idx, :].tolist()
-    
-        training_data_shape_dynamic.append(
-            {
-                "features": features_shape_dynamic,
-                "label_dividing": gt_label,
-                "label_number_dividing": gt_label_number,
-            }
-        )
+        if np.any(features_shape_dynamic) and np.any(features_shape) and np.any(features_dynamic):
 
-        training_data_shape.append(
-            {
-                "features": features_shape,
-                "label_dividing": gt_label,
-                "label_number_dividing": gt_label_number,
-            }
-        )
+                training_data_shape_dynamic.append(
+                    {
+                        "features": features_shape_dynamic,
+                        "label_dividing": gt_label,
+                        "label_number_dividing": gt_label_number,
+                    }
+                )
 
-        training_data_dynamic.append(
-            {
-                "features": features_dynamic,
-                "label_dividing": gt_label,
-                "label_number_dividing": gt_label_number,
-            }
+                training_data_shape.append(
+                    {
+                        "features": features_shape,
+                        "label_dividing": gt_label,
+                        "label_number_dividing": gt_label_number,
+                    }
+                )
+
+                training_data_dynamic.append(
+                    {
+                        "features": features_dynamic,
+                        "label_dividing": gt_label,
+                        "label_number_dividing": gt_label_number,
+                    }
+                )
+    if len(training_data_shape_dynamic) > 0 and len(training_data_shape) > 0 and len(training_data_dynamic) > 0:            
+        if append_data:
+                training_data_shape_dynamic = append_data_to_npz(os.path.join(save_path, "shape_dynamic.npz"), "shape_dynamic", training_data_shape_dynamic)
+                training_data_shape =  append_data_to_npz(os.path.join(save_path, "shape.npz"), "shape", training_data_shape)
+                training_data_dynamic = append_data_to_npz(os.path.join(save_path, "dynamic.npz"), "dynamic", training_data_dynamic)
+        np.savez(
+                os.path.join(save_path, "shape_dynamic.npz"),
+                shape_dynamic=np.array(training_data_shape_dynamic),
         )
-    if append_data:
-       training_data_shape_dynamic = append_data_to_npz(os.path.join(save_path, "shape_dynamic.npz"), "shape_dynamic", training_data_shape_dynamic)
-       training_data_shape =  append_data_to_npz(os.path.join(save_path, "shape.npz"), "shape", training_data_shape)
-       training_data_dynamic = append_data_to_npz(os.path.join(save_path, "dynamic.npz"), "dynamic", training_data_dynamic)
-    np.savez(
-            os.path.join(save_path, "shape_dynamic.npz"),
-            shape_dynamic=np.array(training_data_shape_dynamic),
-    )
-    np.savez(os.path.join(save_path, "shape.npz"), shape=np.array(training_data_shape))
-    np.savez(
-        os.path.join(save_path, "dynamic.npz"), dynamic=np.array(training_data_dynamic)
-    )
+        np.savez(os.path.join(save_path, "shape.npz"), shape=np.array(training_data_shape))
+        np.savez(
+            os.path.join(save_path, "dynamic.npz"), dynamic=np.array(training_data_dynamic)
+        )
 
     return training_data_shape_dynamic, training_data_shape, training_data_dynamic
 
