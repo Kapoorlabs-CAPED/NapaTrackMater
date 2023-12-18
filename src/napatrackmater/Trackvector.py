@@ -2103,7 +2103,7 @@ def train_mitosis_neural_net(
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     if use_scheduler:
-        milestones = [int(epochs * 0.5), int(epochs * 0.75)]
+        milestones = [int(epochs * 0.25),int(epochs * 0.5), int(epochs * 0.75)]
         scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.1)
 
     train_dataset = TensorDataset(
