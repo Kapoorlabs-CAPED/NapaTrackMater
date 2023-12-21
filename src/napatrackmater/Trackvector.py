@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 from typing import List, Union
 from torchsummary import summary
 import torch.nn.init as init
-
+import random
 
 class TrackVector(TrackMate):
     def __init__(
@@ -599,31 +599,9 @@ class TrackVector(TrackMate):
 
         return global_shape_dynamic_dataframe
 
-
-def create_training_tracklets(
-    global_shape_dynamic_dataframe: pd.DataFrame, t_minus=20, t_plus=20
-):
-    training_tracklets = {}
-    subset = global_shape_dynamic_dataframe[
-        global_shape_dynamic_dataframe["Dividing"] == 1
-    ].loc[
-        global_shape_dynamic_dataframe.duplicated(
-            subset=["t", "x", "y", "z"], keep=False
-        )
-    ]
-    dividing_track_ids = subset["Track ID"].unique()
-    for track_id in dividing_track_ids:
-        track_dividing_times = subset[subset["Track ID"] == track_id]["t"].unique()
-
-        for dividing_time in track_dividing_times:
-            lower_bound = max(0, dividing_time - t_minus)
-            upper_bound = dividing_time + t_plus
-            track_data = global_shape_dynamic_dataframe[
-                (global_shape_dynamic_dataframe["Track ID"] == track_id)
-                & (global_shape_dynamic_dataframe["t"] >= lower_bound)
-                & (global_shape_dynamic_dataframe["t"] <= upper_bound)
-            ].sort_values(by="t")
-            if track_data.shape[0] > 0:
+def _iterate_over_tracklets(track_data, training_tracklets, track_id):
+                
+                
                 shape_dynamic_dataframe = track_data[
                     [
                         "Radius",
@@ -712,102 +690,67 @@ def create_training_tracklets(
                     dynamic_dataframe_list,
                     full_dataframe_list,
                 )
+                
+                return training_tracklets
+    
+def create_training_tracklets(
+    global_shape_dynamic_dataframe: pd.DataFrame, t_minus=20, t_plus=20
+):
+    training_tracklets = {}
+    subset = global_shape_dynamic_dataframe[
+        global_shape_dynamic_dataframe["Dividing"] == 1
+    ].loc[
+        global_shape_dynamic_dataframe.duplicated(
+            subset=["t", "x", "y", "z"], keep=False
+        )
+    ]
+    dividing_track_ids = subset["Track ID"].unique()
+    for track_id in dividing_track_ids:
+        track_dividing_times = subset[subset["Track ID"] == track_id]["t"].unique()
+
+        for dividing_time in track_dividing_times:
+            if t_minus is not None and t_plus is not None:
+                lower_bound = max(0, dividing_time - t_minus)
+                upper_bound = dividing_time + t_plus
+                track_data = global_shape_dynamic_dataframe[
+                    (global_shape_dynamic_dataframe["Track ID"] == track_id)
+                    & (global_shape_dynamic_dataframe["t"] >= lower_bound)
+                    & (global_shape_dynamic_dataframe["t"] <= upper_bound)
+                ].sort_values(by="t")
+            else:
+                track_data = global_shape_dynamic_dataframe[
+                    (global_shape_dynamic_dataframe["Track ID"] == track_id)
+                    
+                ].sort_values(by="t")    
+            if track_data.shape[0] > 0:
+                training_tracklets = _iterate_over_tracklets(track_data, training_tracklets, track_id)
+               
     subset = global_shape_dynamic_dataframe[
         global_shape_dynamic_dataframe["Dividing"] == 0
     ]
     non_dividing_track_ids = subset["Track ID"].unique()
     for track_id in non_dividing_track_ids:
         track_data = subset[(subset["Track ID"] == track_id)].sort_values(by="t")
-        track_data = global_shape_dynamic_dataframe[
-            (global_shape_dynamic_dataframe["Track ID"] == track_id)
-        ].sort_values(by="t")
+        if t_minus is not None and t_plus is not None:
+            track_data = global_shape_dynamic_dataframe[
+                (global_shape_dynamic_dataframe["Track ID"] == track_id)
+            ].sort_values(by="t")
+            training_tracklets = _iterate_over_tracklets(track_data, training_tracklets, track_id)
 
-        if track_data.shape[0] > 0:
-            shape_dynamic_dataframe = track_data[
-                [
-                    "Radius",
-                    "Volume",
-                    "Eccentricity Comp First",
-                    "Eccentricity Comp Second",
-                    "Surface Area",
-                    "Speed",
-                    "Motion_Angle",
-                    "Acceleration",
-                    "Distance_Cell_mask",
-                    "Radial_Angle",
-                    "Cell_Axis_Mask",
-                ]
-            ].copy()
+        else:    
+            random_float = random.random() 
+            for _ in range(3):
+                t = track_data[track_data.shape[0] * random_float]["t"]
+                lower_bound = max(0, t - t_minus)
+                upper_bound = t + t_plus
+                track_data = global_shape_dynamic_dataframe[
+                    (global_shape_dynamic_dataframe["Track ID"] == track_id)
+                    & (global_shape_dynamic_dataframe["t"] >= lower_bound)
+                    & (global_shape_dynamic_dataframe["t"] <= upper_bound)
+                ].sort_values(by="t")
+                training_tracklets = _iterate_over_tracklets(track_data, training_tracklets, track_id)
 
-            shape_dataframe = track_data[
-                [
-                    "Radius",
-                    "Volume",
-                    "Eccentricity Comp First",
-                    "Eccentricity Comp Second",
-                    "Surface Area",
-                ]
-            ].copy()
-
-            dynamic_dataframe = track_data[
-                [
-                    "Speed",
-                    "Motion_Angle",
-                    "Acceleration",
-                    "Distance_Cell_mask",
-                    "Radial_Angle",
-                    "Cell_Axis_Mask",
-                ]
-            ].copy()
-
-            full_dataframe = track_data[
-                [
-                    "Track ID",
-                    "t",
-                    "z",
-                    "y",
-                    "x",
-                    "Dividing",
-                    "Number_Dividing",
-                    "Radius",
-                    "Volume",
-                    "Eccentricity Comp First",
-                    "Eccentricity Comp Second",
-                    "Surface Area",
-                    "Speed",
-                    "Motion_Angle",
-                    "Acceleration",
-                    "Distance_Cell_mask",
-                    "Radial_Angle",
-                    "Cell_Axis_Mask",
-                ]
-            ].copy()
-
-            latent_columns = [
-                col
-                for col in track_data.columns
-                if col.startswith("latent_feature_number_")
-            ]
-            if latent_columns:
-                latent_features = track_data[latent_columns].copy()
-                full_dataframe = pd.concat([full_dataframe, latent_features], axis=1)
-                shape_dataframe = pd.concat([shape_dataframe, latent_features], axis=1)
-                shape_dynamic_dataframe = pd.concat(
-                    [shape_dynamic_dataframe, latent_features], axis=1
-                )
-            shape_dynamic_dataframe_list = shape_dynamic_dataframe.to_dict(
-                orient="records"
-            )
-            shape_dataframe_list = shape_dataframe.to_dict(orient="records")
-            dynamic_dataframe_list = dynamic_dataframe.to_dict(orient="records")
-            full_dataframe_list = full_dataframe.to_dict(orient="records")
-            training_tracklets[track_id] = (
-                shape_dynamic_dataframe_list,
-                shape_dataframe_list,
-                dynamic_dataframe_list,
-                full_dataframe_list,
-            )
-
+            
     return training_tracklets
 
 
