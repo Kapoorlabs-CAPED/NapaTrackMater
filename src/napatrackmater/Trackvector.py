@@ -729,8 +729,8 @@ def create_training_tracklets(
         if t_minus is not None and t_plus is not None:
 
             for _ in range(3):
-                random_float = random.random()
-                t = track_data[track_data.shape[0] - 1]["t"] * random_float
+                random_index = random.randint(0, len(track_data) - 1)
+                t = track_data.iloc[random_index]["t"]
                 lower_bound = max(0, t - t_minus)
                 upper_bound = t + t_plus
                 track_data = global_shape_dynamic_dataframe[
