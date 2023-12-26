@@ -701,24 +701,29 @@ def create_training_tracklets(
     dividing_track_ids = subset["Track ID"].unique()
     for track_id in dividing_track_ids:
         track_dividing_times = subset[subset["Track ID"] == track_id]["t"].unique()
+        if t_minus is not None and t_plus is not None:
+            for dividing_time in track_dividing_times:
+                
+                    lower_bound = max(0, dividing_time - t_minus)
+                    upper_bound = dividing_time + t_plus
+                    track_data = global_shape_dynamic_dataframe[
+                        (global_shape_dynamic_dataframe["Track ID"] == track_id)
+                        & (global_shape_dynamic_dataframe["t"] >= lower_bound)
+                        & (global_shape_dynamic_dataframe["t"] <= upper_bound)
+                    ].sort_values(by="t")
 
-        for dividing_time in track_dividing_times:
-            if t_minus is not None and t_plus is not None:
-                lower_bound = max(0, dividing_time - t_minus)
-                upper_bound = dividing_time + t_plus
-                track_data = global_shape_dynamic_dataframe[
-                    (global_shape_dynamic_dataframe["Track ID"] == track_id)
-                    & (global_shape_dynamic_dataframe["t"] >= lower_bound)
-                    & (global_shape_dynamic_dataframe["t"] <= upper_bound)
-                ].sort_values(by="t")
-            else:
+                    if track_data.shape[0] > 0:
+                        training_tracklets = _iterate_over_tracklets(
+                            track_data, training_tracklets, track_id
+                        )
+        else:
                 track_data = global_shape_dynamic_dataframe[
                     (global_shape_dynamic_dataframe["Track ID"] == track_id)
                 ].sort_values(by="t")
-            if track_data.shape[0] > 0:
-                training_tracklets = _iterate_over_tracklets(
-                    track_data, training_tracklets, track_id
-                )
+                if track_data.shape[0] > 0:
+                    training_tracklets = _iterate_over_tracklets(
+                        track_data, training_tracklets, track_id
+                    )
 
     subset = global_shape_dynamic_dataframe[
         global_shape_dynamic_dataframe["Dividing"] == 0
@@ -748,9 +753,10 @@ def create_training_tracklets(
             track_data = global_shape_dynamic_dataframe[
                 (global_shape_dynamic_dataframe["Track ID"] == track_id)
             ].sort_values(by="t")
-            training_tracklets = _iterate_over_tracklets(
-                track_data, training_tracklets, track_id
-            )
+            if track_data.shape[0] > 0:
+              training_tracklets = _iterate_over_tracklets(
+                    track_data, training_tracklets, track_id
+                )
 
     return training_tracklets
 
