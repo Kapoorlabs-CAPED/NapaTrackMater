@@ -745,7 +745,7 @@ def create_training_tracklets(
                 ].sort_values(by="t")
                 if track_data.shape[0] > 0:
                     training_tracklets = _iterate_over_tracklets(
-                        track_data, training_tracklets, track_id + str(tracklet_index)
+                        track_data, training_tracklets, track_id + float(tracklet_index)
                     )
 
         else:
