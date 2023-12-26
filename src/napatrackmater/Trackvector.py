@@ -733,7 +733,6 @@ def create_training_tracklets(
         track_data = subset[(subset["Track ID"] == track_id)].sort_values(by="t")
         if t_minus is not None and t_plus is not None:
 
-            for tracklet_index in range(3):
                 random_index = random.randint(0, len(track_data) - 1)
                 t = track_data.iloc[random_index]["t"]
                 lower_bound = max(0, t - t_minus)
@@ -745,7 +744,7 @@ def create_training_tracklets(
                 ].sort_values(by="t")
                 if track_data.shape[0] > 0:
                     training_tracklets = _iterate_over_tracklets(
-                        track_data, training_tracklets, track_id + float(tracklet_index)
+                        track_data, training_tracklets, track_id 
                     )
 
         else:
