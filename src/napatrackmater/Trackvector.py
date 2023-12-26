@@ -1323,16 +1323,16 @@ def supervised_clustering(
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
             ) = compute_covariance_matrix(shape_dynamic_track_array, feature_array=11)
+            if shape_dynamic_covariance.shape[0] > 1:
+                upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
 
-            upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
-
-            flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
-            data_list.append(
-                {
-                    "Flattened_Covariance": flattened_covariance,
-                    "gt_label": gt_track_array[0][0],
-                }
-            )
+                flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
+                data_list.append(
+                    {
+                        "Flattened_Covariance": flattened_covariance,
+                        "gt_label": gt_track_array[0][0],
+                    }
+                )
     result_dataframe = pd.DataFrame(data_list)
     if os.path.exists(csv_file_name_original):
         os.remove(csv_file_name_original)
@@ -1411,15 +1411,15 @@ def predict_supervised_clustering(
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
             ) = compute_covariance_matrix(shape_dynamic_track_array, feature_array=11)
+            if shape_dynamic_covariance.shape[0] > 1:
+                upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
 
-            upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
-
-            flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
-            data_list.append(
-                {
-                    "Flattened_Covariance": flattened_covariance,
-                }
-            )
+                flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
+                data_list.append(
+                    {
+                        "Flattened_Covariance": flattened_covariance,
+                    }
+                )
     result_dataframe = pd.DataFrame(data_list)
     X = np.vstack(result_dataframe["Flattened_Covariance"].values)
 
@@ -1509,11 +1509,12 @@ def unsupervised_clustering(
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
                 dynamic_track_array, feature_array=6
             )
-
-            shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
-            shape_covariance_matrix.append(shape_covariance)
-            dynamic_covariance_matrix.append(dynamic_covaraince)
-            analysis_track_ids.append(track_id)
+            if shape_dynamic_covariance.shape[0] > 1:
+              
+                shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
+                shape_covariance_matrix.append(shape_covariance)
+                dynamic_covariance_matrix.append(dynamic_covaraince)
+                analysis_track_ids.append(track_id)
     shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
     shape_covariance_3d = np.dstack(shape_covariance_matrix)
     dynamic_covariance_3d = np.dstack(dynamic_covariance_matrix)
@@ -1665,13 +1666,14 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe, min_length=None):
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
                 dynamic_track_array, feature_array=6
             )
-            shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
-            shape_covariance_matrix.append(shape_covariance)
-            dynamic_covariance_matrix.append(dynamic_covaraince)
-            shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_eigenvectors)
-            shape_eigenvectors_matrix.extend(shape_eigenvectors)
-            dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
-            analysis_track_ids.append(track_id)
+            if shape_dynamic_covariance.shape[0] > 1:
+                shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
+                shape_covariance_matrix.append(shape_covariance)
+                dynamic_covariance_matrix.append(dynamic_covaraince)
+                shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_eigenvectors)
+                shape_eigenvectors_matrix.extend(shape_eigenvectors)
+                dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
+                analysis_track_ids.append(track_id)
 
     # shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
     # shape_covariance_3d = np.dstack(shape_covariance_matrix)
@@ -1723,19 +1725,22 @@ def compute_covariance_matrix(track_arrays, shape_array=5, feature_array=None):
 
     covariance_matrix = np.cov(track_arrays, rowvar=False)
     covariance_matrix = np.nan_to_num(covariance_matrix)
-    eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
-    eigenvalue_order = np.argsort(eigenvalues)[::-1]
-    eigenvalues = eigenvalues[eigenvalue_order]
-    eigenvectors = eigenvectors[:, eigenvalue_order]
+    if covariance_matrix.shape[0] > 1:
+        eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
+        eigenvalue_order = np.argsort(eigenvalues)[::-1]
+        eigenvalues = eigenvalues[eigenvalue_order]
+        eigenvectors = eigenvectors[:, eigenvalue_order]
 
-    # Split eigenvectors into their real and imaginary parts
-    real_part = np.real(eigenvectors)
-    imag_part = np.imag(eigenvectors)
+        # Split eigenvectors into their real and imaginary parts
+        real_part = np.real(eigenvectors)
+        imag_part = np.imag(eigenvectors)
 
-    # Concatenate real and imaginary parts along the last axis (axis=1)
-    concatenated_eigenvectors = np.concatenate((real_part, imag_part), axis=1)
+        # Concatenate real and imaginary parts along the last axis (axis=1)
+        concatenated_eigenvectors = np.concatenate((real_part, imag_part), axis=1)
 
-    return covariance_matrix, concatenated_eigenvectors
+        return covariance_matrix, concatenated_eigenvectors
+    else:
+        return covariance_matrix, np.zeros((1, 1))
 
 
 class DenseLayer(nn.Module):
