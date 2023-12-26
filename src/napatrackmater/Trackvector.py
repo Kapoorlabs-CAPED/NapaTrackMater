@@ -1673,45 +1673,45 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe, min_length=None):
             dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
             analysis_track_ids.append(track_id)
 
-    shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
-    shape_covariance_3d = np.dstack(shape_covariance_matrix)
-    dynamic_covariance_3d = np.dstack(dynamic_covariance_matrix)
+    # shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
+    # shape_covariance_3d = np.dstack(shape_covariance_matrix)
+    # dynamic_covariance_3d = np.dstack(dynamic_covariance_matrix)
 
-    #shape_dynamic_eigenvectors_3d = np.dstack(shape_dynamic_eigenvectors_matrix)
-    #shape_eigenvectors_3d = np.dstack(shape_eigenvectors_matrix)
-    #dynamic_eigenvectors_3d = np.dstack(dynamic_eigenvectors_matrix)
+    shape_dynamic_eigenvectors_3d = np.dstack(shape_dynamic_eigenvectors_matrix)
+    shape_eigenvectors_3d = np.dstack(shape_eigenvectors_matrix)
+    dynamic_eigenvectors_3d = np.dstack(dynamic_eigenvectors_matrix)
 
-    shape_dynamic_covariance_2d = shape_dynamic_covariance_3d.reshape(
+    # shape_dynamic_covariance_2d = shape_dynamic_covariance_3d.reshape(
+    #    len(analysis_track_ids), -1
+    # )
+    # shape_covariance_2d = shape_covariance_3d.reshape(len(analysis_track_ids), -1)
+    # dynamic_covariance_2d = dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
+
+    shape_dynamic_eigenvectors_2d = shape_dynamic_eigenvectors_3d.reshape(
         len(analysis_track_ids), -1
     )
-    shape_covariance_2d = shape_covariance_3d.reshape(len(analysis_track_ids), -1)
-    dynamic_covariance_2d = dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
-
-    #shape_dynamic_eigenvectors_2d = shape_dynamic_eigenvectors_3d.reshape(
-    #    len(analysis_track_ids), -1
-    #)
-    #shape_eigenvectors_2d = shape_eigenvectors_3d.reshape(len(analysis_track_ids), -1)
-    #dynamic_eigenvectors_2d = dynamic_eigenvectors_3d.reshape(
-    #    len(analysis_track_ids), -1
-    #)
-
-    #shape_dynamic_eigenvectors_1d = np.array(shape_dynamic_eigenvectors_2d)
-    #shape_eigenvectors_1d = np.array(shape_eigenvectors_2d)
-    #dynamic_eigenvectors_1d = np.array(dynamic_eigenvectors_2d)
-
-    return (
-        shape_dynamic_covariance_2d,
-        shape_covariance_2d,
-        dynamic_covariance_2d,
-        analysis_track_ids,
+    shape_eigenvectors_2d = shape_eigenvectors_3d.reshape(len(analysis_track_ids), -1)
+    dynamic_eigenvectors_2d = dynamic_eigenvectors_3d.reshape(
+        len(analysis_track_ids), -1
     )
 
-    #return (
-    #    shape_dynamic_eigenvectors_1d,
-    #    shape_eigenvectors_1d,
-    #    dynamic_eigenvectors_1d,
+    shape_dynamic_eigenvectors_1d = np.array(shape_dynamic_eigenvectors_2d)
+    shape_eigenvectors_1d = np.array(shape_eigenvectors_2d)
+    dynamic_eigenvectors_1d = np.array(dynamic_eigenvectors_2d)
+
+    # return (
+    #    shape_dynamic_covariance_2d,
+    #    shape_covariance_2d,
+    #    dynamic_covariance_2d,
     #    analysis_track_ids,
-    #)
+    # )
+
+    return (
+        shape_dynamic_eigenvectors_1d,
+        shape_eigenvectors_1d,
+        dynamic_eigenvectors_1d,
+        analysis_track_ids,
+    )
 
 
 def compute_covariance_matrix(track_arrays, shape_array=5, feature_array=None):
