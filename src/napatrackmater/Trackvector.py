@@ -2317,7 +2317,7 @@ def predict_with_model(
                     torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
                 )
 
-            predicted_class1[predicted_class2 == 0] = 0
+            
             predicted_classes1.append(predicted_class1[0])
             predicted_classes2.append(predicted_class2[0])
     return predicted_classes1, predicted_classes2
