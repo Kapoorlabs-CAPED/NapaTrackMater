@@ -688,7 +688,7 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id):
 
 
 def create_training_tracklets(
-    global_shape_dynamic_dataframe: pd.DataFrame, t_minus=20, t_plus=20
+    global_shape_dynamic_dataframe: pd.DataFrame, t_minus=None, t_plus=None
 ):
     training_tracklets = {}
     subset = global_shape_dynamic_dataframe[
@@ -730,7 +730,7 @@ def create_training_tracklets(
 
             for _ in range(3):
                 random_float = random.random()
-                t = track_data[track_data.shape[0]]["t"] * random_float
+                t = track_data[track_data.shape[0] - 1]["t"] * random_float
                 lower_bound = max(0, t - t_minus)
                 upper_bound = t + t_plus
                 track_data = global_shape_dynamic_dataframe[
@@ -2220,13 +2220,13 @@ def plot_metrics_from_npz(npz_file):
     plt.subplot(1, 2, 1)
     plt.plot(range(epochs), train_loss_class1, label="Train Loss Class 1")
     plt.plot(range(epochs), val_loss_class1, label="Validation Loss Class 1")
-    plt.legend(loc="lower right")
+    plt.legend(loc="upper right")
     plt.title("Loss for Class 1")
 
     plt.subplot(1, 2, 2)
     plt.plot(range(epochs), train_loss_class2, label="Train Loss Class 2")
     plt.plot(range(epochs), val_loss_class2, label="Validation Loss Class 2")
-    plt.legend(loc="lower right")
+    plt.legend(loc="upper right")
     plt.title("Loss for Class 2")
 
     plt.tight_layout()
@@ -2236,13 +2236,13 @@ def plot_metrics_from_npz(npz_file):
     plt.subplot(1, 2, 1)
     plt.plot(range(epochs), train_acc_class1, label="Train Acc Class 1")
     plt.plot(range(epochs), val_acc_class1, label="Validation Acc Class 1")
-    plt.legend(loc="lower right")
+    plt.legend(loc="upper right")
     plt.title("Accuracy for Class 1")
 
     plt.subplot(1, 2, 2)
     plt.plot(range(epochs), train_acc_class2, label="Train Acc Class 2")
     plt.plot(range(epochs), val_acc_class2, label="Validation Acc Class 2")
-    plt.legend(loc="lower right")
+    plt.legend(loc="upper right")
     plt.title("Accuracy for Class 2")
 
     plt.tight_layout()
