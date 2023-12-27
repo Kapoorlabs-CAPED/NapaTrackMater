@@ -802,13 +802,9 @@ def create_training_tracklets(
 
 
 def z_score_normalization(data):
-    min_val = -1
-    max_val = 1
-
-    min_data = np.min(data, axis=1, keepdims=True)
-    max_data = np.max(data, axis=1, keepdims=True)
-
-    normalized_data = min_val + ((data - min_data) * (max_val - min_val)) / (max_data - min_data + 1.0e-20)
+    mean = np.mean(data, axis=1, keepdims=True)
+    std_dev = np.std(data, axis=1, keepdims=True)
+    normalized_data = (data - mean) / std_dev
     return normalized_data
 
 
