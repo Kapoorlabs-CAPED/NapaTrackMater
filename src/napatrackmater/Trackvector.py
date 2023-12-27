@@ -808,7 +808,7 @@ def z_score_normalization(data):
     min_data = np.min(data, axis=1, keepdims=True)
     max_data = np.max(data, axis=1, keepdims=True)
 
-    normalized_data = min_val + ((data - min_data) * (max_val - min_val)) / (max_data - min_data)
+    normalized_data = min_val + ((data - min_data) * (max_val - min_val)) / (max_data - min_data + 1.0e-20)
     return normalized_data
 
 
@@ -1678,11 +1678,9 @@ def compute_covariance_matrix(track_arrays, shape_array=5, feature_array=None):
     eigenvalues = eigenvalues[eigenvalue_order]
     eigenvectors = eigenvectors[:, eigenvalue_order]
 
-    # Split eigenvectors into their real and imaginary parts
     real_part = np.real(eigenvectors)
     imag_part = np.imag(eigenvectors)
 
-    # Concatenate real and imaginary parts along the last axis (axis=1)
     concatenated_eigenvectors = np.concatenate((real_part, imag_part), axis=1)
 
     return covariance_matrix, concatenated_eigenvectors
