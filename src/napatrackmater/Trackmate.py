@@ -344,7 +344,7 @@ class TrackMate:
             self.AttributeBoxname,
             self.detectorchannel,
         )
-        print("obtianed spot attributes")
+        print("obtained spot attributes")
         self.TrackAttributeids, self.AllTrackValues = get_track_dataset(
             self.track_dataset,
             self.track_analysis_spot_keys,
