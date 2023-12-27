@@ -983,13 +983,7 @@ def create_mitosis_training_data(
         features_shape_dynamic = shape_dynamic_track_arrays[idx, :].tolist()
         features_shape = shape_track_arrays[idx, :].tolist()
         features_dynamic = dynamic_track_arrays[idx, :].tolist()
-        if (
-            np.any(features_shape_dynamic)
-            and np.any(features_shape)
-            and np.any(features_dynamic)
-        ):
-
-            training_data_shape_dynamic.append(
+        training_data_shape_dynamic.append(
                 {
                     "features": features_shape_dynamic,
                     "label_dividing": gt_label,
@@ -997,21 +991,21 @@ def create_mitosis_training_data(
                 }
             )
 
-            training_data_shape.append(
-                {
-                    "features": features_shape,
-                    "label_dividing": gt_label,
-                    "label_number_dividing": gt_label_number,
-                }
-            )
+        training_data_shape.append(
+            {
+                "features": features_shape,
+                "label_dividing": gt_label,
+                "label_number_dividing": gt_label_number,
+            }
+        )
 
-            training_data_dynamic.append(
-                {
-                    "features": features_dynamic,
-                    "label_dividing": gt_label,
-                    "label_number_dividing": gt_label_number,
-                }
-            )
+        training_data_dynamic.append(
+            {
+                "features": features_dynamic,
+                "label_dividing": gt_label,
+                "label_number_dividing": gt_label_number,
+            }
+        )
     if (
         len(training_data_shape_dynamic) > 0
         and len(training_data_shape) > 0
@@ -1287,17 +1281,16 @@ def supervised_clustering(
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array, feature_array=11)
-            if len(shape_dynamic_covariance.shape) > 1:
-                upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
+            ) = compute_covariance_matrix(shape_dynamic_track_array)
+            upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
 
-                flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
-                data_list.append(
-                    {
-                        "Flattened_Covariance": flattened_covariance,
-                        "gt_label": gt_track_array[0][0],
-                    }
-                )
+            flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
+            data_list.append(
+                {
+                    "Flattened_Covariance": flattened_covariance,
+                    "gt_label": gt_track_array[0][0],
+                }
+            )
     result_dataframe = pd.DataFrame(data_list)
     if os.path.exists(csv_file_name_original):
         os.remove(csv_file_name_original)
@@ -1375,16 +1368,15 @@ def predict_supervised_clustering(
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array, feature_array=11)
-            if len(shape_dynamic_covariance.shape) > 1:
-                upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
+            ) = compute_covariance_matrix(shape_dynamic_track_array)
+            upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
 
-                flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
-                data_list.append(
-                    {
-                        "Flattened_Covariance": flattened_covariance,
-                    }
-                )
+            flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
+            data_list.append(
+                {
+                    "Flattened_Covariance": flattened_covariance,
+                }
+            )
     result_dataframe = pd.DataFrame(data_list)
     X = np.vstack(result_dataframe["Flattened_Covariance"].values)
 
@@ -1468,19 +1460,18 @@ def unsupervised_clustering(
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array, feature_array=11)
+            ) = compute_covariance_matrix(shape_dynamic_track_array)
             shape_covariance, shape_eigenvectors = compute_covariance_matrix(
                 shape_track_array
             )
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
-                dynamic_track_array, feature_array=6
+                dynamic_track_array
             )
-            if len(shape_dynamic_covariance.shape) > 1:
 
-                shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
-                shape_covariance_matrix.append(shape_covariance)
-                dynamic_covariance_matrix.append(dynamic_covaraince)
-                analysis_track_ids.append(track_id)
+            shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
+            shape_covariance_matrix.append(shape_covariance)
+            dynamic_covariance_matrix.append(dynamic_covaraince)
+            analysis_track_ids.append(track_id)
     shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
     shape_covariance_3d = np.dstack(shape_covariance_matrix)
     dynamic_covariance_3d = np.dstack(dynamic_covariance_matrix)
@@ -1589,7 +1580,7 @@ def convert_tracks_to_arrays(analysis_vectors,
                              metric="euclidean",
                              num_clusters=4,
     method="ward",
-    criterion="maxclust",):
+    criterion="maxclust"):
 
     analysis_track_ids = []
     shape_dynamic_covariance_matrix = []
@@ -1630,21 +1621,21 @@ def convert_tracks_to_arrays(analysis_vectors,
             (
                 shape_dynamic_covariance,
                 shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array, feature_array=11)
+            ) = compute_covariance_matrix(shape_dynamic_track_array)
             shape_covariance, shape_eigenvectors = compute_covariance_matrix(
                 shape_track_array
             )
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
-                dynamic_track_array, feature_array=6
+                dynamic_track_array
             )
-            if len(shape_dynamic_covariance.shape) > 1:
-                shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
-                shape_covariance_matrix.append(shape_covariance)
-                dynamic_covariance_matrix.append(dynamic_covaraince)
-                shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_eigenvectors)
-                shape_eigenvectors_matrix.extend(shape_eigenvectors)
-                dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
-                analysis_track_ids.append(track_id)
+            
+            shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
+            shape_covariance_matrix.append(shape_covariance)
+            dynamic_covariance_matrix.append(dynamic_covaraince)
+            shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_eigenvectors)
+            shape_eigenvectors_matrix.extend(shape_eigenvectors)
+            dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
+            analysis_track_ids.append(track_id)
 
   
     shape_dynamic_eigenvectors_3d = np.dstack(shape_dynamic_eigenvectors_matrix)
@@ -1704,7 +1695,7 @@ def convert_tracks_to_arrays(analysis_vectors,
     )
 
 
-def compute_covariance_matrix(track_arrays, shape_array=5, feature_array=None):
+def compute_covariance_matrix(track_arrays):
 
     covariance_matrix = np.cov(track_arrays, rowvar=False)
     eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
