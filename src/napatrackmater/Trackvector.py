@@ -732,10 +732,6 @@ def create_training_tracklets(
     training_tracklets = {}
     subset_dividing = global_shape_dynamic_dataframe[
         global_shape_dynamic_dataframe["Dividing"] == 1
-    ].loc[
-        global_shape_dynamic_dataframe.duplicated(
-            subset=["t", "x", "y", "z"], keep=False
-        )
     ]
 
     subset_non_dividing = global_shape_dynamic_dataframe[
@@ -753,8 +749,13 @@ def create_training_tracklets(
         dividing_track_ids = random.sample(
             list(dividing_track_ids), non_dividing_count
         )
-    
+    print(f'Dividing track counts {dividing_track_ids}, Non Dividing track counts {non_dividing_track_ids}')
     for track_id in dividing_track_ids:
+        subset_dividing = subset_dividing.loc[
+        global_shape_dynamic_dataframe.duplicated(
+            subset=["t", "x", "y", "z"], keep=False
+        )
+    ]
         track_dividing_times = subset_dividing[subset_dividing["Track ID"] == track_id]["t"].unique()
         if t_minus is not None and t_plus is not None:
             for dividing_time in track_dividing_times:
