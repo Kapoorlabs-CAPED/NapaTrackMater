@@ -743,7 +743,7 @@ def create_training_tracklets(
     non_dividing_count = len(non_dividing_track_ids)
     if non_dividing_count > dividing_count:
         non_dividing_track_ids = random.sample(
-            list(non_dividing_track_ids), min(non_dividing_count,dividing_count * 1.5 )
+            list(non_dividing_track_ids), int(min(non_dividing_count,dividing_count * 1.5 ))
         )
     else:
         dividing_track_ids = random.sample(
