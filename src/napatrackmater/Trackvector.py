@@ -640,28 +640,28 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction
         ]
     ].copy()
     if not prediction:
-            full_dataframe = track_data[
-                [
-                    "Track ID",
-                    "t",
-                    "z",
-                    "y",
-                    "x",
-                    "Dividing",
-                    "Number_Dividing",
-                    "Radius",
-                    "Volume",
-                    "Eccentricity Comp First",
-                    "Eccentricity Comp Second",
-                    "Surface Area",
-                    "Speed",
-                    "Motion_Angle",
-                    "Acceleration",
-                    "Distance_Cell_mask",
-                    "Radial_Angle",
-                    "Cell_Axis_Mask",
-                ]
-            ].copy()
+        full_dataframe = track_data[
+            [
+                "Track ID",
+                "t",
+                "z",
+                "y",
+                "x",
+                "Dividing",
+                "Number_Dividing",
+                "Radius",
+                "Volume",
+                "Eccentricity Comp First",
+                "Eccentricity Comp Second",
+                "Surface Area",
+                "Speed",
+                "Motion_Angle",
+                "Acceleration",
+                "Distance_Cell_mask",
+                "Radial_Angle",
+                "Cell_Axis_Mask",
+            ]
+        ].copy()
     else:
         full_dataframe = track_data[
             [
@@ -682,7 +682,7 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction
                 "Radial_Angle",
                 "Cell_Axis_Mask",
             ]
-        ].copy()        
+        ].copy()
 
     latent_columns = [
         col for col in track_data.columns if col.startswith("latent_feature_number_")
@@ -708,26 +708,27 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction
     return training_tracklets
 
 
-
-def create_prediction_tracklets(
-    global_shape_dynamic_dataframe: pd.DataFrame
-):
+def create_prediction_tracklets(global_shape_dynamic_dataframe: pd.DataFrame):
     training_tracklets = {}
-   
+
     track_ids = global_shape_dynamic_dataframe["Track ID"].unique()
     for track_id in track_ids:
-            track_data = global_shape_dynamic_dataframe[
-                (global_shape_dynamic_dataframe["Track ID"] == track_id)
-            ].sort_values(by="t")
-            if track_data.shape[0] > 0:
-              training_tracklets = _iterate_over_tracklets(
-                    track_data, training_tracklets, track_id, prediction=True   
-                )
+        track_data = global_shape_dynamic_dataframe[
+            (global_shape_dynamic_dataframe["Track ID"] == track_id)
+        ].sort_values(by="t")
+        if track_data.shape[0] > 0:
+            training_tracklets = _iterate_over_tracklets(
+                track_data, training_tracklets, track_id, prediction=True
+            )
 
     return training_tracklets
 
+
 def create_training_tracklets(
-    global_shape_dynamic_dataframe: pd.DataFrame, t_minus=None, t_plus=None
+    global_shape_dynamic_dataframe: pd.DataFrame,
+    t_minus=None,
+    t_plus=None,
+    class_ratio=1.5,
 ):
     training_tracklets = {}
     subset_dividing = global_shape_dynamic_dataframe[
@@ -735,7 +736,7 @@ def create_training_tracklets(
     ]
 
     subset_non_dividing = global_shape_dynamic_dataframe[
-    global_shape_dynamic_dataframe["Dividing"] == 0
+        global_shape_dynamic_dataframe["Dividing"] == 0
     ]
     non_dividing_track_ids = subset_non_dividing["Track ID"].unique()
     dividing_track_ids = subset_dividing["Track ID"].unique()
@@ -743,65 +744,66 @@ def create_training_tracklets(
     non_dividing_count = len(non_dividing_track_ids)
     if non_dividing_count > dividing_count:
         non_dividing_track_ids = random.sample(
-            list(non_dividing_track_ids), int(min(non_dividing_count,dividing_count * 1.5 ))
+            list(non_dividing_track_ids),
+            int(min(non_dividing_count, dividing_count * class_ratio)),
         )
     else:
-        dividing_track_ids = random.sample(
-            list(dividing_track_ids), non_dividing_count
-        )
-    print(f'Training data Dividing track counts {len(dividing_track_ids)}, Non Dividing track counts {len(non_dividing_track_ids)}')
+        dividing_track_ids = random.sample(list(dividing_track_ids), non_dividing_count)
+    print(
+        f"Training data Dividing track counts {len(dividing_track_ids)}, Non Dividing track counts {len(non_dividing_track_ids)}"
+    )
     for track_id in dividing_track_ids:
         subset_dividing = subset_dividing.loc[
-        global_shape_dynamic_dataframe.duplicated(
-            subset=["t", "x", "y", "z"], keep=False
-        )
-    ]
-        track_dividing_times = subset_dividing[subset_dividing["Track ID"] == track_id]["t"].unique()
+            global_shape_dynamic_dataframe.duplicated(
+                subset=["t", "x", "y", "z"], keep=False
+            )
+        ]
+        track_dividing_times = subset_dividing[subset_dividing["Track ID"] == track_id][
+            "t"
+        ].unique()
         if t_minus is not None and t_plus is not None:
             for dividing_time in track_dividing_times:
-                
-                    lower_bound = max(0, dividing_time - t_minus)
-                    upper_bound = dividing_time + t_plus
-                    track_data = global_shape_dynamic_dataframe[
-                        (global_shape_dynamic_dataframe["Track ID"] == track_id)
-                        & (global_shape_dynamic_dataframe["t"] >= lower_bound)
-                        & (global_shape_dynamic_dataframe["t"] <= upper_bound)
-                    ].sort_values(by="t")
 
-                    if track_data.shape[0] > 0:
-                        training_tracklets = _iterate_over_tracklets(
-                            track_data, training_tracklets, track_id
-                        )
-        else:
-                track_data = global_shape_dynamic_dataframe[
-                    (global_shape_dynamic_dataframe["Track ID"] == track_id)
-                ].sort_values(by="t")
-                if track_data.shape[0] > 0:
-                    training_tracklets = _iterate_over_tracklets(
-                        track_data, training_tracklets, track_id
-                    )
-
-
-    
-
-
-    for track_id in non_dividing_track_ids:
-        track_data = subset_non_dividing[(subset_non_dividing["Track ID"] == track_id)].sort_values(by="t")
-        if t_minus is not None and t_plus is not None:
-
-                random_index = random.randint(0, len(track_data) - 1)
-                t = track_data.iloc[random_index]["t"]
-                lower_bound = max(0, t - t_minus)
-                upper_bound = t + t_plus
+                lower_bound = max(0, dividing_time - t_minus)
+                upper_bound = dividing_time + t_plus
                 track_data = global_shape_dynamic_dataframe[
                     (global_shape_dynamic_dataframe["Track ID"] == track_id)
                     & (global_shape_dynamic_dataframe["t"] >= lower_bound)
                     & (global_shape_dynamic_dataframe["t"] <= upper_bound)
                 ].sort_values(by="t")
+
                 if track_data.shape[0] > 0:
                     training_tracklets = _iterate_over_tracklets(
-                        track_data, training_tracklets, track_id 
+                        track_data, training_tracklets, track_id
                     )
+        else:
+            track_data = global_shape_dynamic_dataframe[
+                (global_shape_dynamic_dataframe["Track ID"] == track_id)
+            ].sort_values(by="t")
+            if track_data.shape[0] > 0:
+                training_tracklets = _iterate_over_tracklets(
+                    track_data, training_tracklets, track_id
+                )
+
+    for track_id in non_dividing_track_ids:
+        track_data = subset_non_dividing[
+            (subset_non_dividing["Track ID"] == track_id)
+        ].sort_values(by="t")
+        if t_minus is not None and t_plus is not None:
+
+            random_index = random.randint(0, len(track_data) - 1)
+            t = track_data.iloc[random_index]["t"]
+            lower_bound = max(0, t - t_minus)
+            upper_bound = t + t_plus
+            track_data = global_shape_dynamic_dataframe[
+                (global_shape_dynamic_dataframe["Track ID"] == track_id)
+                & (global_shape_dynamic_dataframe["t"] >= lower_bound)
+                & (global_shape_dynamic_dataframe["t"] <= upper_bound)
+            ].sort_values(by="t")
+            if track_data.shape[0] > 0:
+                training_tracklets = _iterate_over_tracklets(
+                    track_data, training_tracklets, track_id
+                )
 
         else:
 
@@ -809,13 +811,11 @@ def create_training_tracklets(
                 (global_shape_dynamic_dataframe["Track ID"] == track_id)
             ].sort_values(by="t")
             if track_data.shape[0] > 0:
-              training_tracklets = _iterate_over_tracklets(
+                training_tracklets = _iterate_over_tracklets(
                     track_data, training_tracklets, track_id
                 )
 
     return training_tracklets
-
-
 
 
 def z_score_normalization(data):
@@ -1475,7 +1475,7 @@ def unsupervised_clustering(
                 dynamic_track_array, feature_array=6
             )
             if len(shape_dynamic_covariance.shape) > 1:
-              
+
                 shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
                 shape_covariance_matrix.append(shape_covariance)
                 dynamic_covariance_matrix.append(dynamic_covaraince)
@@ -1696,7 +1696,6 @@ def compute_covariance_matrix(track_arrays, shape_array=5, feature_array=None):
     concatenated_eigenvectors = np.concatenate((real_part, imag_part), axis=1)
 
     return covariance_matrix, concatenated_eigenvectors
-
 
 
 class DenseLayer(nn.Module):
@@ -2278,7 +2277,6 @@ def predict_with_model(
                     torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
                 )
 
-            
             predicted_classes1.append(predicted_class1[0])
             predicted_classes2.append(predicted_class2[0])
     return predicted_classes1, predicted_classes2
