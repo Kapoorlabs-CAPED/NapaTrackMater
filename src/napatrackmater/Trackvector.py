@@ -802,9 +802,7 @@ def create_training_tracklets(
 
 
 def z_score_normalization(data):
-    mean = np.mean(data, axis=1, keepdims=True)
-    std_dev = np.std(data, axis=1, keepdims=True)
-    normalized_data = (data - mean) / std_dev
+    normalized_data = data
     return normalized_data
 
 
@@ -1673,9 +1671,10 @@ def compute_covariance_matrix(track_arrays, shape_array=5, feature_array=None):
     eigenvalue_order = np.argsort(eigenvalues)[::-1]
     eigenvalues = eigenvalues[eigenvalue_order]
     eigenvectors = eigenvectors[:, eigenvalue_order]
+    normalized_eigenvectors = np.array([v / np.linalg.norm(v) for v in eigenvectors])
 
-    real_part = np.real(eigenvectors)
-    imag_part = np.imag(eigenvectors)
+    real_part = np.real(normalized_eigenvectors)
+    imag_part = np.imag(normalized_eigenvectors)
 
     concatenated_eigenvectors = np.concatenate((real_part, imag_part), axis=1)
 
