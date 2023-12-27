@@ -19,7 +19,8 @@ from .Trackvector import (
     plot_metrics_from_npz,
     load_prediction_data,
     create_embeddings_with_gt,
-    create_training_tracklets
+    create_training_tracklets,
+    create_prediction_tracklets
 )
 from .DeepEmbeddedClustering import DeepEmbeddedClustering
 from .CloudAutoEncoder import CloudAutoEncoder
@@ -86,7 +87,8 @@ __all__ = (
     "plot_metrics_from_npz",
     "load_prediction_data",
     "create_embeddings_with_gt",
-    "create_training_tracklets"
+    "create_training_tracklets",
+    "create_prediction_tracklets"
 )
 
 clear_models_and_aliases(DeepEmbeddedClustering, CloudAutoEncoder)

@@ -601,7 +601,7 @@ class TrackVector(TrackMate):
         return global_shape_dynamic_dataframe
 
 
-def _iterate_over_tracklets(track_data, training_tracklets, track_id):
+def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction=False):
 
     shape_dynamic_dataframe = track_data[
         [
@@ -639,29 +639,50 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id):
             "Cell_Axis_Mask",
         ]
     ].copy()
-
-    full_dataframe = track_data[
-        [
-            "Track ID",
-            "t",
-            "z",
-            "y",
-            "x",
-            "Dividing",
-            "Number_Dividing",
-            "Radius",
-            "Volume",
-            "Eccentricity Comp First",
-            "Eccentricity Comp Second",
-            "Surface Area",
-            "Speed",
-            "Motion_Angle",
-            "Acceleration",
-            "Distance_Cell_mask",
-            "Radial_Angle",
-            "Cell_Axis_Mask",
-        ]
-    ].copy()
+    if not prediction:
+            full_dataframe = track_data[
+                [
+                    "Track ID",
+                    "t",
+                    "z",
+                    "y",
+                    "x",
+                    "Dividing",
+                    "Number_Dividing",
+                    "Radius",
+                    "Volume",
+                    "Eccentricity Comp First",
+                    "Eccentricity Comp Second",
+                    "Surface Area",
+                    "Speed",
+                    "Motion_Angle",
+                    "Acceleration",
+                    "Distance_Cell_mask",
+                    "Radial_Angle",
+                    "Cell_Axis_Mask",
+                ]
+            ].copy()
+    else:
+        full_dataframe = track_data[
+            [
+                "Track ID",
+                "t",
+                "z",
+                "y",
+                "x",
+                "Radius",
+                "Volume",
+                "Eccentricity Comp First",
+                "Eccentricity Comp Second",
+                "Surface Area",
+                "Speed",
+                "Motion_Angle",
+                "Acceleration",
+                "Distance_Cell_mask",
+                "Radial_Angle",
+                "Cell_Axis_Mask",
+            ]
+        ].copy()        
 
     latent_columns = [
         col for col in track_data.columns if col.startswith("latent_feature_number_")
@@ -686,6 +707,24 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id):
 
     return training_tracklets
 
+
+
+def create_prediction_tracklets(
+    global_shape_dynamic_dataframe: pd.DataFrame
+):
+    training_tracklets = {}
+   
+    track_ids = global_shape_dynamic_dataframe["Track ID"].unique()
+    for track_id in track_ids:
+            track_data = global_shape_dynamic_dataframe[
+                (global_shape_dynamic_dataframe["Track ID"] == track_id)
+            ].sort_values(by="t")
+            if track_data.shape[0] > 0:
+              training_tracklets = _iterate_over_tracklets(
+                    track_data, training_tracklets, track_id, prediction=True   
+                )
+
+    return training_tracklets
 
 def create_training_tracklets(
     global_shape_dynamic_dataframe: pd.DataFrame, t_minus=None, t_plus=None
