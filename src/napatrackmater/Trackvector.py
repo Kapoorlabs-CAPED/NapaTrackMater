@@ -1426,6 +1426,7 @@ def calculate_cluster_centroids(data, labels):
     return np.array(centroids)
 
 
+
 def unsupervised_clustering(
     full_dataframe,
     csv_file_name,
@@ -1583,7 +1584,12 @@ def unsupervised_clustering(
         np.save(cluster_labels_npy_file_name, shape_dynamic_cluster_labels)
 
 
-def convert_tracks_to_arrays(analysis_vectors, full_dataframe, min_length=None):
+def convert_tracks_to_arrays(analysis_vectors, 
+                             min_length=None,
+                             metric="euclidean",
+                             num_clusters=4,
+    method="ward",
+    criterion="maxclust",):
 
     analysis_track_ids = []
     shape_dynamic_covariance_matrix = []
@@ -1640,19 +1646,11 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe, min_length=None):
                 dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
                 analysis_track_ids.append(track_id)
 
-    # shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
-    # shape_covariance_3d = np.dstack(shape_covariance_matrix)
-    # dynamic_covariance_3d = np.dstack(dynamic_covariance_matrix)
-
+  
     shape_dynamic_eigenvectors_3d = np.dstack(shape_dynamic_eigenvectors_matrix)
     shape_eigenvectors_3d = np.dstack(shape_eigenvectors_matrix)
     dynamic_eigenvectors_3d = np.dstack(dynamic_eigenvectors_matrix)
 
-    # shape_dynamic_covariance_2d = shape_dynamic_covariance_3d.reshape(
-    #    len(analysis_track_ids), -1
-    # )
-    # shape_covariance_2d = shape_covariance_3d.reshape(len(analysis_track_ids), -1)
-    # dynamic_covariance_2d = dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
 
     shape_dynamic_eigenvectors_2d = shape_dynamic_eigenvectors_3d.reshape(
         len(analysis_track_ids), -1
@@ -1666,17 +1664,42 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe, min_length=None):
     shape_eigenvectors_1d = np.array(shape_eigenvectors_2d)
     dynamic_eigenvectors_1d = np.array(dynamic_eigenvectors_2d)
 
-    # return (
-    #    shape_dynamic_covariance_2d,
-    #    shape_covariance_2d,
-    #    dynamic_covariance_2d,
-    #    analysis_track_ids,
-    # )
+    shape_dynamic_cosine_distance = pdist(shape_dynamic_eigenvectors_1d, metric=metric)
+
+    shape_dynamic_linkage_matrix = linkage(
+            shape_dynamic_cosine_distance, method=method
+        )
+    shape_dynamic_cluster_labels = fcluster(
+            shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
+        ) 
+    
+    dynamic_cosine_distance = pdist(dynamic_eigenvectors_1d, metric=metric)
+
+    dynamic_linkage_matrix = linkage(
+            dynamic_cosine_distance, method=method
+        )
+    dynamic_cluster_labels = fcluster(
+            dynamic_linkage_matrix, num_clusters, criterion=criterion
+    )
+
+    shape_cosine_distance = pdist(shape_eigenvectors_1d, metric=metric)
+
+    shape_linkage_matrix = linkage(
+            shape_cosine_distance, method=method
+        )
+    shape_cluster_labels = fcluster(
+            shape_linkage_matrix, num_clusters, criterion=criterion
+    ) 
+
+
 
     return (
         shape_dynamic_eigenvectors_1d,
         shape_eigenvectors_1d,
         dynamic_eigenvectors_1d,
+        shape_dynamic_cluster_labels,
+        shape_cluster_labels,
+        dynamic_cluster_labels,
         analysis_track_ids,
     )
 
