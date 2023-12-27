@@ -728,7 +728,7 @@ def create_training_tracklets(
     global_shape_dynamic_dataframe: pd.DataFrame,
     t_minus=None,
     t_plus=None,
-    class_ratio=1.5,
+    class_ratio=1,
 ):
     training_tracklets = {}
     subset_dividing = global_shape_dynamic_dataframe[
