@@ -749,7 +749,7 @@ def create_training_tracklets(
         dividing_track_ids = random.sample(
             list(dividing_track_ids), non_dividing_count
         )
-    print(f'Training data Dividing track counts {len(dividing_track_ids)}, Non Dividing track counts {(non_dividing_track_ids)}')
+    print(f'Training data Dividing track counts {len(dividing_track_ids)}, Non Dividing track counts {len(non_dividing_track_ids)}')
     for track_id in dividing_track_ids:
         subset_dividing = subset_dividing.loc[
         global_shape_dynamic_dataframe.duplicated(
