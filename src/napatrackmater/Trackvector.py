@@ -730,16 +730,32 @@ def create_training_tracklets(
     global_shape_dynamic_dataframe: pd.DataFrame, t_minus=None, t_plus=None
 ):
     training_tracklets = {}
-    subset = global_shape_dynamic_dataframe[
+    subset_dividing = global_shape_dynamic_dataframe[
         global_shape_dynamic_dataframe["Dividing"] == 1
     ].loc[
         global_shape_dynamic_dataframe.duplicated(
             subset=["t", "x", "y", "z"], keep=False
         )
     ]
-    dividing_track_ids = subset["Track ID"].unique()
+
+    subset_non_dividing = global_shape_dynamic_dataframe[
+    global_shape_dynamic_dataframe["Dividing"] == 0
+    ]
+    non_dividing_track_ids = subset_non_dividing["Track ID"].unique()
+    dividing_track_ids = subset_dividing["Track ID"].unique()
+    dividing_count = len(dividing_track_ids)
+    non_dividing_count = len(non_dividing_track_ids)
+    if non_dividing_count > dividing_count:
+        non_dividing_track_ids = random.sample(
+            list(non_dividing_track_ids), dividing_count
+        )
+    else:
+        dividing_track_ids = random.sample(
+            list(dividing_track_ids), non_dividing_count
+        )
+    
     for track_id in dividing_track_ids:
-        track_dividing_times = subset[subset["Track ID"] == track_id]["t"].unique()
+        track_dividing_times = subset_dividing[subset_dividing["Track ID"] == track_id]["t"].unique()
         if t_minus is not None and t_plus is not None:
             for dividing_time in track_dividing_times:
                 
@@ -764,12 +780,12 @@ def create_training_tracklets(
                         track_data, training_tracklets, track_id
                     )
 
-    subset = global_shape_dynamic_dataframe[
-        global_shape_dynamic_dataframe["Dividing"] == 0
-    ]
-    non_dividing_track_ids = subset["Track ID"].unique()
+
+    
+
+
     for track_id in non_dividing_track_ids:
-        track_data = subset[(subset["Track ID"] == track_id)].sort_values(by="t")
+        track_data = subset_non_dividing[(subset_non_dividing["Track ID"] == track_id)].sort_values(by="t")
         if t_minus is not None and t_plus is not None:
 
                 random_index = random.randint(0, len(track_data) - 1)
