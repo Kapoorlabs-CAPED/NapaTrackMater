@@ -799,97 +799,6 @@ def create_training_tracklets(
     return training_tracklets
 
 
-def create_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
-    analysis_vectors = {}
-    for track_id in global_shape_dynamic_dataframe["Track ID"].unique():
-        track_data = global_shape_dynamic_dataframe[
-            global_shape_dynamic_dataframe["Track ID"] == track_id
-        ].sort_values(by="t")
-
-        shape_dynamic_dataframe = track_data[
-            [
-                "Radius",
-                "Volume",
-                "Eccentricity Comp First",
-                "Eccentricity Comp Second",
-                "Surface Area",
-                "Speed",
-                "Motion_Angle",
-                "Acceleration",
-                "Distance_Cell_mask",
-                "Radial_Angle",
-                "Cell_Axis_Mask",
-            ]
-        ].copy()
-
-        shape_dataframe = track_data[
-            [
-                "Radius",
-                "Volume",
-                "Eccentricity Comp First",
-                "Eccentricity Comp Second",
-                "Surface Area",
-            ]
-        ].copy()
-
-        dynamic_dataframe = track_data[
-            [
-                "Speed",
-                "Motion_Angle",
-                "Acceleration",
-                "Distance_Cell_mask",
-                "Radial_Angle",
-                "Cell_Axis_Mask",
-            ]
-        ].copy()
-
-        full_dataframe = track_data[
-            [
-                "Track ID",
-                "t",
-                "z",
-                "y",
-                "x",
-                "Dividing",
-                "Number_Dividing",
-                "Radius",
-                "Volume",
-                "Eccentricity Comp First",
-                "Eccentricity Comp Second",
-                "Surface Area",
-                "Speed",
-                "Motion_Angle",
-                "Acceleration",
-                "Distance_Cell_mask",
-                "Radial_Angle",
-                "Cell_Axis_Mask",
-            ]
-        ].copy()
-
-        latent_columns = [
-            col
-            for col in track_data.columns
-            if col.startswith("latent_feature_number_")
-        ]
-        if latent_columns:
-            latent_features = track_data[latent_columns].copy()
-            full_dataframe = pd.concat([full_dataframe, latent_features], axis=1)
-            shape_dataframe = pd.concat([shape_dataframe, latent_features], axis=1)
-            shape_dynamic_dataframe = pd.concat(
-                [shape_dynamic_dataframe, latent_features], axis=1
-            )
-        shape_dynamic_dataframe_list = shape_dynamic_dataframe.to_dict(orient="records")
-        shape_dataframe_list = shape_dataframe.to_dict(orient="records")
-        dynamic_dataframe_list = dynamic_dataframe.to_dict(orient="records")
-        full_dataframe_list = full_dataframe.to_dict(orient="records")
-        analysis_vectors[track_id] = (
-            shape_dynamic_dataframe_list,
-            shape_dataframe_list,
-            dynamic_dataframe_list,
-            full_dataframe_list,
-        )
-
-    return analysis_vectors
 
 
 def z_score_normalization(data):
@@ -1756,15 +1665,8 @@ def convert_tracks_to_arrays(analysis_vectors, full_dataframe, min_length=None):
 
 
 def compute_covariance_matrix(track_arrays, shape_array=5, feature_array=None):
-    for i in range(track_arrays.shape[0]):
-        if track_arrays[i, :2].any() == -1:
-            if feature_array is not None:
-                track_arrays[i, feature_array:] = np.nan
-            track_arrays[i, :shape_array] = np.nan
 
     covariance_matrix = np.cov(track_arrays, rowvar=False)
-    covariance_matrix = np.nan_to_num(covariance_matrix)
-    
     eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
     eigenvalue_order = np.argsort(eigenvalues)[::-1]
     eigenvalues = eigenvalues[eigenvalue_order]

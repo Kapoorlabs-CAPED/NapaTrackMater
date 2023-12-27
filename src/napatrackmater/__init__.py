@@ -3,7 +3,6 @@ from .clustering import Clustering
 from .Trackmate import TrackMate, get_feature_dict
 from .Trackvector import (
     TrackVector,
-    create_analysis_vectors_dict,
     convert_tracks_to_arrays,
     unsupervised_clustering,
     supervised_clustering,
@@ -73,7 +72,6 @@ __all__ = (
     "supervised_clustering",
     "TrackVector",
     "predict_supervised_clustering",
-    "create_analysis_vectors_dict",
     "convert_tracks_to_arrays",
     "unsupervised_clustering",
     "DeepEmbeddedClustering",
