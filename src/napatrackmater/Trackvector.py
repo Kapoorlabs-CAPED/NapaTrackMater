@@ -728,7 +728,7 @@ def create_training_tracklets(
     global_shape_dynamic_dataframe: pd.DataFrame,
     t_minus=None,
     t_plus=None,
-    class_ratio=1,
+    class_ratio=1.0,
 ):
     training_tracklets = {}
     subset_dividing = global_shape_dynamic_dataframe[
@@ -984,12 +984,12 @@ def create_mitosis_training_data(
         features_shape = shape_track_arrays[idx, :].tolist()
         features_dynamic = dynamic_track_arrays[idx, :].tolist()
         training_data_shape_dynamic.append(
-                {
-                    "features": features_shape_dynamic,
-                    "label_dividing": gt_label,
-                    "label_number_dividing": gt_label_number,
-                }
-            )
+            {
+                "features": features_shape_dynamic,
+                "label_dividing": gt_label,
+                "label_number_dividing": gt_label_number,
+            }
+        )
 
         training_data_shape.append(
             {
@@ -1418,7 +1418,6 @@ def calculate_cluster_centroids(data, labels):
     return np.array(centroids)
 
 
-
 def unsupervised_clustering(
     full_dataframe,
     csv_file_name,
@@ -1575,12 +1574,14 @@ def unsupervised_clustering(
         np.save(cluster_labels_npy_file_name, shape_dynamic_cluster_labels)
 
 
-def convert_tracks_to_arrays(analysis_vectors, 
-                             min_length=None,
-                             metric="euclidean",
-                             num_clusters=4,
+def convert_tracks_to_arrays(
+    analysis_vectors,
+    min_length=None,
+    metric="euclidean",
+    num_clusters=4,
     method="ward",
-    criterion="maxclust"):
+    criterion="maxclust",
+):
 
     analysis_track_ids = []
     shape_dynamic_covariance_matrix = []
@@ -1628,7 +1629,7 @@ def convert_tracks_to_arrays(analysis_vectors,
             dynamic_covaraince, dynamic_eigenvectors = compute_covariance_matrix(
                 dynamic_track_array
             )
-            
+
             shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
             shape_covariance_matrix.append(shape_covariance)
             dynamic_covariance_matrix.append(dynamic_covaraince)
@@ -1637,11 +1638,9 @@ def convert_tracks_to_arrays(analysis_vectors,
             dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
             analysis_track_ids.append(track_id)
 
-  
     shape_dynamic_eigenvectors_3d = np.dstack(shape_dynamic_eigenvectors_matrix)
     shape_eigenvectors_3d = np.dstack(shape_eigenvectors_matrix)
     dynamic_eigenvectors_3d = np.dstack(dynamic_eigenvectors_matrix)
-
 
     shape_dynamic_eigenvectors_2d = shape_dynamic_eigenvectors_3d.reshape(
         len(analysis_track_ids), -1
@@ -1657,40 +1656,50 @@ def convert_tracks_to_arrays(analysis_vectors,
 
     shape_dynamic_cosine_distance = pdist(shape_dynamic_eigenvectors_1d, metric=metric)
 
-    shape_dynamic_linkage_matrix = linkage(
-            shape_dynamic_cosine_distance, method=method
-        )
+    shape_dynamic_linkage_matrix = linkage(shape_dynamic_cosine_distance, method=method)
     shape_dynamic_cluster_labels = fcluster(
-            shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
-        ) 
-    
+        shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
+    )
+
     dynamic_cosine_distance = pdist(dynamic_eigenvectors_1d, metric=metric)
 
-    dynamic_linkage_matrix = linkage(
-            dynamic_cosine_distance, method=method
-        )
+    dynamic_linkage_matrix = linkage(dynamic_cosine_distance, method=method)
     dynamic_cluster_labels = fcluster(
-            dynamic_linkage_matrix, num_clusters, criterion=criterion
+        dynamic_linkage_matrix, num_clusters, criterion=criterion
     )
 
     shape_cosine_distance = pdist(shape_eigenvectors_1d, metric=metric)
 
-    shape_linkage_matrix = linkage(
-            shape_cosine_distance, method=method
-        )
+    shape_linkage_matrix = linkage(shape_cosine_distance, method=method)
     shape_cluster_labels = fcluster(
-            shape_linkage_matrix, num_clusters, criterion=criterion
-    ) 
+        shape_linkage_matrix, num_clusters, criterion=criterion
+    )
 
-
+    for track_id in analysis_track_ids:
+        shape_dynamic_cluster_labels_dict = {
+            track_id: cluster_label
+            for track_id, cluster_label in zip(
+                analysis_track_ids, shape_dynamic_cluster_labels
+            )
+        }
+        shape_cluster_labels_dict = {
+            track_id: cluster_label
+            for track_id, cluster_label in zip(analysis_track_ids, shape_cluster_labels)
+        }
+        dynamic_cluster_labels_dict = {
+            track_id: cluster_label
+            for track_id, cluster_label in zip(
+                analysis_track_ids, dynamic_cluster_labels
+            )
+        }
 
     return (
         shape_dynamic_eigenvectors_1d,
         shape_eigenvectors_1d,
         dynamic_eigenvectors_1d,
-        shape_dynamic_cluster_labels,
-        shape_cluster_labels,
-        dynamic_cluster_labels,
+        shape_dynamic_cluster_labels_dict,
+        shape_cluster_labels_dict,
+        dynamic_cluster_labels_dict,
         analysis_track_ids,
     )
 
