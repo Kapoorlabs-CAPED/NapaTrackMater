@@ -2119,19 +2119,16 @@ def predict_with_model(
         model_info = json.load(json_file)
 
     num_classes_class1 = model_info["num_classes1"]
-    num_classes_class2 = model_info["num_classes2"]
     growth_rate = model_info["growth_rate"]
     block_config = model_info["block_config"]
     num_init_features = model_info["num_init_features"]
     input_size = model_info["input_size"]
 
     model = MitosisNet(
-        features=input_size,
         growth_rate=growth_rate,
         block_config=tuple(block_config),
         num_init_features=num_init_features,
         num_classes_class1=num_classes_class1,
-        num_classes_class2=num_classes_class2,
     )
     model.load_state_dict(
         torch.load(saved_model_path, map_location=torch.device(device))
