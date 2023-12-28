@@ -1904,8 +1904,8 @@ class MitosisNet(nn.Module):
         self.num_classes_class1 = num_classes_class1
 
     def forward(self, x):
-        class_output1, class_output2 = self.densenet(x)
-        return class_output1, class_output2
+        class_output1 = self.densenet(x)
+        return class_output1
 
 
 def train_mitosis_neural_net(
