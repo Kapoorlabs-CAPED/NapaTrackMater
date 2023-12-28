@@ -2239,7 +2239,7 @@ def plot_metrics_from_npz(npz_file):
 
 # Model prediction
 def predict_with_model(
-    saved_model_path, saved_model_json, features_array, threshold=None
+    saved_model_path, saved_model_json, features_array, threshold=0.8
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     with open(saved_model_json) as json_file:
@@ -2277,23 +2277,22 @@ def predict_with_model(
             outputs_class1, outputs_class2 = model(new_data_with_channel)
             predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
             predicted_probs_class2 = torch.softmax(outputs_class2, dim=1)
-            print(predicted_probs_class1)
             if threshold is not None:
                 predicted_probs_class1_numpy = (
-                    predicted_probs_class1[:, 1].cpu().detach().numpy()
+                    predicted_probs_class1.cpu().detach().numpy()
                 )
-                predicted_class1 = (predicted_probs_class1_numpy > threshold).astype(
+                predicted_class1 = (predicted_probs_class1_numpy[0][1] > threshold).astype(
                     int
                 )
             else:
                 predicted_class1 = (
                     torch.argmax(predicted_probs_class1, dim=1).cpu().numpy()
-                )
+                )[0]
             
             predicted_class2 = (
                     torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
-                )
+                )[0]
 
-            predicted_classes1.append(predicted_class1[0])
-            predicted_classes2.append(predicted_class2[0])
+            predicted_classes1.append(predicted_class1)
+            predicted_classes2.append(predicted_class2)
     return predicted_classes1, predicted_classes2
