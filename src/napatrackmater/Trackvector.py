@@ -1814,7 +1814,6 @@ class DenseNet1d(nn.Module):
         kernel_size: int = 3,
         in_channels: int = 1,
         num_classes_1: int = 1,
-        num_classes_2: int = 1,
     ):
 
         super().__init__()
@@ -1849,7 +1848,6 @@ class DenseNet1d(nn.Module):
         self.final_act = nn.ReLU(inplace=True)
         self.final_pool = nn.AdaptiveAvgPool1d(1)
         self.classifier_1 = nn.Linear(num_features, num_classes_1)
-        self.classifier_2 = nn.Linear(num_features, num_classes_2)
 
     def _initialize_weights(self):
         for m in self.modules():
@@ -1875,8 +1873,7 @@ class DenseNet1d(nn.Module):
         features = self.forward_features(x)
         features = features.squeeze(-1)
         out_1 = self.classifier_1(features)
-        out_2 = self.classifier_2(features)
-        return out_1, out_2
+        return out_1
 
     def reset_classifier(self):
         self.classifier = nn.Identity()
@@ -1885,50 +1882,15 @@ class DenseNet1d(nn.Module):
         return self.classifier
 
 
-class SimpleDenseNet1d(nn.Module):
-    def __init__(
-        self, features, num_init_features=32, num_classes_1=1, num_classes_2=1
-    ):
-        super().__init__()
-
-        # self.features_layer = nn.Sequential(
-        #    nn.Conv1d(1, num_init_features, kernel_size=3, padding=1),
-        #    nn.BatchNorm1d(num_init_features),
-        #    nn.ReLU(inplace=True),
-        #    nn.MaxPool1d(kernel_size=2)
-        # )
-
-        self.input_size = features  # num_init_features #* (features //2)
-
-        self.classifier_1 = nn.Sequential(
-            nn.Linear(self.input_size, num_init_features),
-            nn.ReLU(inplace=True),
-            nn.Linear(num_init_features, num_classes_1),
-        )
-
-        self.classifier_2 = nn.Sequential(
-            nn.Linear(self.input_size, num_init_features),
-            nn.ReLU(inplace=True),
-            nn.Linear(num_init_features, num_classes_2),
-        )
-
-    def forward(self, x):
-        # x = self.features_layer(x)
-        x = x.view(x.size(0), -1)
-        out_1 = self.classifier_1(x)
-        out_2 = self.classifier_2(x)
-        return out_1, out_2
 
 
 class MitosisNet(nn.Module):
     def __init__(
         self,
-        features,
         growth_rate,
         block_config,
         num_init_features,
         num_classes_class1,
-        num_classes_class2,
     ):
         super().__init__()
         self.densenet = DenseNet1d(
@@ -1937,26 +1899,9 @@ class MitosisNet(nn.Module):
             num_init_features=num_init_features,
             in_channels=1,
             num_classes_1=num_classes_class1,
-            num_classes_2=num_classes_class2,
         )
-        # SimpleDenseNet1d(
-        #    features=features,
-        #    num_init_features=num_init_features,
-        #    in_channels=1,
-        #    num_classes_1=num_classes_class1,
-        #    num_classes_2=num_classes_class2,
-        # )
-
-        # DenseNet1d(
-        #    growth_rate=growth_rate,
-        #    block_config=block_config,
-        #    num_init_features=num_init_features,
-        #    in_channels=1,
-        #    num_classes_1=num_classes_class1,
-        #    num_classes_2=num_classes_class2,
-        # )
+      
         self.num_classes_class1 = num_classes_class1
-        self.num_classes_class2 = num_classes_class2
 
     def forward(self, x):
         class_output1, class_output2 = self.densenet(x)
@@ -1984,8 +1929,8 @@ def train_mitosis_neural_net(
         X_val,
         y_train_class1,
         y_val_class1,
-        y_train_class2,
-        y_val_class2,
+        _,
+        _,
     ) = train_test_split(
         features_array,
         labels_array_class1.astype(np.uint8),
@@ -1998,40 +1943,33 @@ def train_mitosis_neural_net(
     )
     X_train_tensor = torch.tensor(X_train).to(device)
     y_train_class1_tensor = torch.tensor(y_train_class1, dtype=torch.uint8).to(device)
-    y_train_class2_tensor = torch.tensor(y_train_class2, dtype=torch.uint8).to(device)
     X_val_tensor = torch.tensor(X_val).to(device)
     y_val_class1_tensor = torch.tensor(y_val_class1, dtype=torch.uint8).to(device)
-    y_val_class2_tensor = torch.tensor(y_val_class2, dtype=torch.uint8).to(device)
 
     X_train_tensor = X_train_tensor.float()
     X_val_tensor = X_val_tensor.float()
     num_classes1 = int(torch.max(y_train_class1_tensor)) + 1
-    num_classes2 = int(torch.max(y_train_class2_tensor)) + 1
     model_info = {
         "growth_rate": growth_rate,
         "block_config": list(block_config),
         "num_init_features": num_init_features,
         "input_size": input_size,
         "num_classes1": num_classes1,
-        "num_classes2": num_classes2,
     }
     with open(save_path + "_model_info.json", "w") as json_file:
         json.dump(model_info, json_file)
 
     model = MitosisNet(
-        features=input_size,
         growth_rate=growth_rate,
         block_config=block_config,
         num_init_features=num_init_features,
         num_classes_class1=num_classes1,
-        num_classes_class2=num_classes2,
     )
 
     model.to(device)
     summary(model, (1, input_size))
 
     criterion_class1 = nn.CrossEntropyLoss()
-    criterion_class2 = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     if use_scheduler:
@@ -2039,108 +1977,79 @@ def train_mitosis_neural_net(
         scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.1)
 
     train_dataset = TensorDataset(
-        X_train_tensor, y_train_class1_tensor, y_train_class2_tensor
+        X_train_tensor, y_train_class1_tensor
     )
-    val_dataset = TensorDataset(X_val_tensor, y_val_class1_tensor, y_val_class2_tensor)
+    val_dataset = TensorDataset(X_val_tensor, y_val_class1_tensor)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size)
     train_loss_class1_values = []
-    train_loss_class2_values = []
     val_loss_class1_values = []
-    val_loss_class2_values = []
     train_acc_class1_values = []
-    train_acc_class2_values = []
     val_acc_class1_values = []
-    val_acc_class2_values = []
     for epoch in range(epochs):
         model.train()
         running_loss_class1 = 0.0
-        running_loss_class2 = 0.0
         correct_train_class1 = 0
         total_train_class1 = 0
-        correct_train_class2 = 0
-        total_train_class2 = 0
 
         with tqdm(total=len(train_loader), desc=f"Epoch {epoch + 1}/{epochs}") as pbar:
             for i, data in enumerate(train_loader):
-                inputs, labels_class1, labels_class2 = data
+                inputs, labels_class1 = data
                 inputs_with_channel = inputs.unsqueeze(1)
                 optimizer.zero_grad()
-                class_output1, class_output2 = model(inputs_with_channel)
+                class_output1 = model(inputs_with_channel)
 
                 loss_class1 = criterion_class1(class_output1, labels_class1)
-                loss_class1.backward(retain_graph=True)
+                loss_class1.backward()
 
-                loss_class2 = criterion_class2(class_output2, labels_class2)
-                loss_class2.backward()
 
                 optimizer.step()
 
-                outputs_class1, outputs_class2 = model(inputs_with_channel)
+                outputs_class1 = model(inputs_with_channel)
 
                 _, predicted_class1 = torch.max(outputs_class1.data, 1)
-                _, predicted_class2 = torch.max(outputs_class2.data, 1)
 
                 running_loss_class1 += loss_class1.item()
-                running_loss_class2 += loss_class2.item()
                 correct_train_class1 += (predicted_class1 == labels_class1).sum().item()
                 total_train_class1 += labels_class1.size(0)
-                correct_train_class2 += (predicted_class2 == labels_class2).sum().item()
-                total_train_class2 += labels_class2.size(0)
                 pbar.update(1)
                 pbar.set_postfix(
                     {
                         "Acc Class1": correct_train_class1 / total_train_class1
                         if total_train_class1 > 0
                         else 0,
-                        "Acc Class2": correct_train_class2 / total_train_class2
-                        if total_train_class2 > 0
-                        else 0,
                         "Class1 Loss": running_loss_class1 / (i + 1),
-                        "Class2 Loss": running_loss_class2 / (i + 1),
                     }
                 )
             if use_scheduler:
                 scheduler.step()
         train_loss_class1_values.append(running_loss_class1 / len(train_loader))
-        train_loss_class2_values.append(running_loss_class2 / len(train_loader))
         train_acc_class1_values.append(
             correct_train_class1 / total_train_class1 if total_train_class1 > 0 else 0
-        )
-        train_acc_class2_values.append(
-            correct_train_class2 / total_train_class2 if total_train_class2 > 0 else 0
         )
 
         model.eval()
         running_val_loss_class1 = 0.0
-        running_val_loss_class2 = 0.0
         correct_val_class1 = 0
         total_val_class1 = 0
-        correct_val_class2 = 0
-        total_val_class2 = 0
 
         with tqdm(
             total=len(val_loader), desc=f"Validation Epoch {epoch + 1}/{epochs}"
         ) as pbar_val:
             with torch.no_grad():
                 for i, data in enumerate(val_loader):
-                    inputs, labels_class1, labels_class2 = data
+                    inputs, labels_class1 = data
                     inputs_with_channel = inputs.unsqueeze(1)
-                    outputs_class1, outputs_class2 = model(inputs_with_channel)
+                    outputs_class1 = model(inputs_with_channel)
 
                     _, predicted_class1 = torch.max(outputs_class1.data, 1)
-                    _, predicted_class2 = torch.max(outputs_class2.data, 1)
 
                     total_val_class1 += labels_class1.size(0)
                     correct_val_class1 += (
                         (predicted_class1 == labels_class1).sum().item()
                     )
 
-                    total_val_class2 += labels_class2.size(0)
-                    correct_val_class2 += (
-                        (predicted_class2 == labels_class2).sum().item()
-                    )
 
                     pbar_val.update(1)
                     accuracy_class1 = (
@@ -2148,44 +2057,27 @@ def train_mitosis_neural_net(
                         if total_val_class1 > 0
                         else 0
                     )
-                    accuracy_class2 = (
-                        correct_val_class2 / total_val_class2
-                        if total_val_class2 > 0
-                        else 0
-                    )
                     loss_class1 = criterion_class1(outputs_class1, labels_class1)
-                    loss_class2 = criterion_class2(outputs_class2, labels_class2)
 
                     running_val_loss_class1 += loss_class1.item()
-                    running_val_loss_class2 += loss_class2.item()
                     pbar_val.set_postfix(
                         {
                             "Acc Class1": accuracy_class1,
-                            "Acc Class2": accuracy_class2,
                             "Class1 Loss": running_val_loss_class1 / (i + 1),
-                            "Class2 Loss": running_val_loss_class2 / (i + 1),
                         }
                     )
 
         val_loss_class1_values.append(running_val_loss_class1 / len(val_loader))
-        val_loss_class2_values.append(running_val_loss_class2 / len(val_loader))
         val_acc_class1_values.append(
             correct_val_class1 / total_val_class1 if total_val_class1 > 0 else 0
-        )
-        val_acc_class2_values.append(
-            correct_val_class2 / total_val_class2 if total_val_class2 > 0 else 0
         )
 
     np.savez(
         save_path + "_metrics.npz",
         train_loss_class1=train_loss_class1_values,
-        train_loss_class2=train_loss_class2_values,
         val_loss_class1=val_loss_class1_values,
-        val_loss_class2=val_loss_class2_values,
         train_acc_class1=train_acc_class1_values,
-        train_acc_class2=train_acc_class2_values,
         val_acc_class1=val_acc_class1_values,
-        val_acc_class2=val_acc_class2_values,
     )
     torch.save(model.state_dict(), save_path + "_mitosis_track_model.pth")
 
