@@ -2277,6 +2277,7 @@ def predict_with_model(
             outputs_class1, outputs_class2 = model(new_data_with_channel)
             predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
             predicted_probs_class2 = torch.softmax(outputs_class2, dim=1)
+            print(predicted_probs_class2)
             if threshold is not None:
                 predicted_probs_class1_numpy = (
                     predicted_probs_class1[:, 1].cpu().detach().numpy()
