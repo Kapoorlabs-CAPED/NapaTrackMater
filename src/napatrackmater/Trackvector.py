@@ -2136,7 +2136,6 @@ def predict_with_model(
     model.to(device)
     model.eval()
     predicted_classes1 = []
-    predicted_classes2 = []
     for idx in range(features_array.shape[0]):
         feature_type = features_array[idx, :].tolist()
         feature_type = z_score_normalization(feature_type)
@@ -2144,7 +2143,7 @@ def predict_with_model(
         new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(0)
 
         with torch.no_grad():
-            outputs_class1, = model(new_data_with_channel)
+            outputs_class1 = model(new_data_with_channel)
             predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
             if threshold is not None:
                 predicted_probs_class1_numpy = (
