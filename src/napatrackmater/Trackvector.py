@@ -2110,7 +2110,6 @@ def plot_metrics_from_npz(npz_file):
     plt.show()
 
 
-# Model prediction
 def predict_with_model(
     saved_model_path, saved_model_json, features_array, threshold=None
 ):
@@ -2122,7 +2121,6 @@ def predict_with_model(
     growth_rate = model_info["growth_rate"]
     block_config = model_info["block_config"]
     num_init_features = model_info["num_init_features"]
-    input_size = model_info["input_size"]
 
     model = MitosisNet(
         growth_rate=growth_rate,
@@ -2145,6 +2143,7 @@ def predict_with_model(
         with torch.no_grad():
             outputs_class1 = model(new_data_with_channel)
             predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
+            print(predicted_probs_class1)
             if threshold is not None:
                 predicted_probs_class1_numpy = (
                     predicted_probs_class1.cpu().detach().numpy()
