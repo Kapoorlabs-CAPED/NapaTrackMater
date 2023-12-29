@@ -710,8 +710,10 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction
 
 def create_prediction_tracklets(global_shape_dynamic_dataframe: pd.DataFrame):
     training_tracklets = {}
-
-    track_ids = global_shape_dynamic_dataframe["Track ID"].unique()
+    subset_dividing = global_shape_dynamic_dataframe[
+        global_shape_dynamic_dataframe["Dividing"] == 1
+    ]
+    track_ids = subset_dividing["Track ID"].unique()
     for track_id in track_ids:
         track_data = global_shape_dynamic_dataframe[
             (global_shape_dynamic_dataframe["Track ID"] == track_id)
