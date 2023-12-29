@@ -708,7 +708,7 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction
     return training_tracklets
 
 
-def create_prediction_tracklets(global_shape_dynamic_dataframe: pd.DataFrame):
+def create_dividing_prediction_tracklets(global_shape_dynamic_dataframe: pd.DataFrame):
     training_tracklets = {}
     subset_dividing = global_shape_dynamic_dataframe[
         global_shape_dynamic_dataframe["Dividing"] == 1
@@ -726,7 +726,7 @@ def create_prediction_tracklets(global_shape_dynamic_dataframe: pd.DataFrame):
     return training_tracklets
 
 
-def create_training_tracklets(
+def create_analysis_tracklets(
     global_shape_dynamic_dataframe: pd.DataFrame,
     t_minus=None,
     t_plus=None,

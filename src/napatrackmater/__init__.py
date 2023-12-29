@@ -18,8 +18,8 @@ from .Trackvector import (
     plot_metrics_from_npz,
     load_prediction_data,
     create_embeddings_with_gt,
-    create_training_tracklets,
-    create_prediction_tracklets
+    create_analysis_tracklets,
+    create_dividing_prediction_tracklets
 )
 from .CloudAutoEncoder import CloudAutoEncoder
 import json
@@ -83,8 +83,8 @@ __all__ = (
     "plot_metrics_from_npz",
     "load_prediction_data",
     "create_embeddings_with_gt",
-    "create_training_tracklets",
-    "create_prediction_tracklets"
+    "create_analysis_tracklets",
+    "create_dividing_prediction_tracklets"
 )
 
 clear_models_and_aliases(CloudAutoEncoder)
