@@ -2112,7 +2112,7 @@ def plot_metrics_from_npz(npz_file):
 
 # Model prediction
 def predict_with_model(
-    saved_model_path, saved_model_json, features_array, threshold=0.8
+    saved_model_path, saved_model_json, features_array, threshold=None
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     with open(saved_model_json) as json_file:
@@ -2144,9 +2144,8 @@ def predict_with_model(
         new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(0)
 
         with torch.no_grad():
-            outputs_class1, outputs_class2 = model(new_data_with_channel)
+            outputs_class1, = model(new_data_with_channel)
             predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
-            predicted_probs_class2 = torch.softmax(outputs_class2, dim=1)
             if threshold is not None:
                 predicted_probs_class1_numpy = (
                     predicted_probs_class1.cpu().detach().numpy()
@@ -2159,10 +2158,8 @@ def predict_with_model(
                     torch.argmax(predicted_probs_class1, dim=1).cpu().numpy()
                 )[0]
             
-            predicted_class2 = (
-                    torch.argmax(predicted_probs_class2, dim=1).cpu().numpy()
-                )[0]
+           
 
             predicted_classes1.append(predicted_class1)
-            predicted_classes2.append(predicted_class2)
-    return predicted_classes1, predicted_classes2
+           
+    return predicted_classes1
