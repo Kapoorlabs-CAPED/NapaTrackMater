@@ -730,7 +730,7 @@ def create_analysis_tracklets(
     global_shape_dynamic_dataframe: pd.DataFrame,
     t_minus=None,
     t_plus=None,
-    class_ratio=1.0,
+    class_ratio=1,
 ):
     training_tracklets = {}
     subset_dividing = global_shape_dynamic_dataframe[
@@ -1884,8 +1884,6 @@ class DenseNet1d(nn.Module):
         return self.classifier
 
 
-
-
 class MitosisNet(nn.Module):
     def __init__(
         self,
@@ -1902,7 +1900,7 @@ class MitosisNet(nn.Module):
             in_channels=1,
             num_classes_1=num_classes_class1,
         )
-      
+
         self.num_classes_class1 = num_classes_class1
 
     def forward(self, x):
@@ -1926,14 +1924,7 @@ def train_mitosis_neural_net(
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    (
-        X_train,
-        X_val,
-        y_train_class1,
-        y_val_class1,
-        _,
-        _,
-    ) = train_test_split(
+    (X_train, X_val, y_train_class1, y_val_class1, _, _,) = train_test_split(
         features_array,
         labels_array_class1.astype(np.uint8),
         labels_array_class2.astype(np.uint8),
@@ -1978,9 +1969,7 @@ def train_mitosis_neural_net(
         milestones = [int(epochs * 0.25), int(epochs * 0.5), int(epochs * 0.75)]
         scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.1)
 
-    train_dataset = TensorDataset(
-        X_train_tensor, y_train_class1_tensor
-    )
+    train_dataset = TensorDataset(X_train_tensor, y_train_class1_tensor)
     val_dataset = TensorDataset(X_val_tensor, y_val_class1_tensor)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -2004,7 +1993,6 @@ def train_mitosis_neural_net(
 
                 loss_class1 = criterion_class1(class_output1, labels_class1)
                 loss_class1.backward()
-
 
                 optimizer.step()
 
@@ -2051,7 +2039,6 @@ def train_mitosis_neural_net(
                     correct_val_class1 += (
                         (predicted_class1 == labels_class1).sum().item()
                     )
-
 
                     pbar_val.update(1)
                     accuracy_class1 = (
@@ -2107,7 +2094,6 @@ def plot_metrics_from_npz(npz_file):
     plt.legend(loc="upper right")
     plt.title("Accuracy for Class 1")
 
-
     plt.tight_layout()
     plt.show()
 
@@ -2149,16 +2135,14 @@ def predict_with_model(
                 predicted_probs_class1_numpy = (
                     predicted_probs_class1.cpu().detach().numpy()
                 )
-                predicted_class1 = (predicted_probs_class1_numpy[0][1] > threshold).astype(
-                    int
-                )
+                predicted_class1 = (
+                    predicted_probs_class1_numpy[0][1] > threshold
+                ).astype(int)
             else:
                 predicted_class1 = (
                     torch.argmax(predicted_probs_class1, dim=1).cpu().numpy()
                 )[0]
-            
-           
 
             predicted_classes1.append(predicted_class1)
-           
+
     return predicted_classes1
