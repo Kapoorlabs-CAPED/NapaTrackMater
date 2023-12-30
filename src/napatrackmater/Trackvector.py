@@ -752,7 +752,7 @@ def create_analysis_tracklets(
     else:
         dividing_track_ids = random.sample(list(dividing_track_ids), non_dividing_count)
     print(
-        f"Training data Dividing track counts {len(dividing_track_ids)}, Non Dividing track counts {len(non_dividing_track_ids)}"
+        f"Analysis data Dividing track counts {len(dividing_track_ids)}, Non Dividing track counts {len(non_dividing_track_ids)}"
     )
     for track_id in dividing_track_ids:
         subset_dividing = subset_dividing.loc[
@@ -1702,6 +1702,9 @@ def convert_tracks_to_arrays(
         shape_dynamic_cluster_labels_dict,
         shape_cluster_labels_dict,
         dynamic_cluster_labels_dict,
+        shape_dynamic_linkage_matrix,
+        shape_linkage_matrix,
+        dynamic_linkage_matrix,
         analysis_track_ids,
     )
 
