@@ -744,13 +744,17 @@ def create_analysis_tracklets(
     dividing_track_ids = subset_dividing["Track ID"].unique()
     dividing_count = len(dividing_track_ids)
     non_dividing_count = len(non_dividing_track_ids)
-    if non_dividing_count > dividing_count:
+    if non_dividing_count > dividing_count and class_ratio > 0:
         non_dividing_track_ids = random.sample(
             list(non_dividing_track_ids),
             int(min(non_dividing_count, dividing_count * class_ratio)),
         )
     else:
-        dividing_track_ids = random.sample(list(dividing_track_ids), non_dividing_count)
+        dividing_track_ids = random.sample(list(dividing_track_ids), dividing_count)
+        non_dividing_track_ids = random.sample(
+            list(non_dividing_track_ids), non_dividing_count
+        )
+
     print(
         f"Analysis data Dividing track counts {len(dividing_track_ids)}, Non Dividing track counts {len(non_dividing_track_ids)}"
     )
