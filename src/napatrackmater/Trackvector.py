@@ -1928,6 +1928,8 @@ def train_mitosis_neural_net(
     num_init_features: int = 32,
     epochs=10,
     use_scheduler=False,
+    weight_decay=1e-5,
+    eps=0.1,
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -1970,7 +1972,7 @@ def train_mitosis_neural_net(
     summary(model, (1, input_size))
 
     criterion_class1 = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay, eps=eps)
 
     if use_scheduler:
         milestones = [int(epochs * 0.25), int(epochs * 0.5), int(epochs * 0.75)]
