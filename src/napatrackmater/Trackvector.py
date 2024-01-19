@@ -824,6 +824,9 @@ def create_analysis_tracklets(
     return training_tracklets
 
 
+
+
+
 def z_score_normalization(data):
     normalized_data = data
     return normalized_data
@@ -1428,7 +1431,7 @@ def unsupervised_clustering(
     full_dataframe,
     csv_file_name,
     analysis_vectors,
-    num_clusters=3,
+    cluster_threshold=3,
     metric="euclidean",
     method="ward",
     criterion="maxclust",
@@ -1514,7 +1517,7 @@ def unsupervised_clustering(
             shape_dynamic_cosine_distance, method=method
         )
         shape_dynamic_cluster_labels = fcluster(
-            shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
+            shape_dynamic_linkage_matrix, cluster_threshold, criterion=criterion
         )
 
         cluster_centroids = calculate_cluster_centroids(
@@ -1530,14 +1533,14 @@ def unsupervised_clustering(
         silhouette_file_name = os.path.join(
             csv_file_name_original
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-            + f"_silhouette_{metric}_{num_clusters}.npy"
+            + f"_silhouette_{metric}_{cluster_threshold}.npy"
         )
         np.save(silhouette_file_name, silhouette)
 
         wcss_file_name = os.path.join(
             csv_file_name_original
             + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-            + f"_wcss_{metric}_{num_clusters}.npy"
+            + f"_wcss_{metric}_{cluster_threshold}.npy"
         )
         np.save(wcss_file_name, wcss_value)
         track_id_to_cluster = {
@@ -1584,7 +1587,7 @@ def convert_tracks_to_arrays(
     analysis_vectors,
     min_length=None,
     metric="euclidean",
-    num_clusters=4,
+    cluster_threshold=4,
     method="ward",
     criterion="maxclust",
 ):
@@ -1660,25 +1663,26 @@ def convert_tracks_to_arrays(
     shape_eigenvectors_1d = np.array(shape_eigenvectors_2d)
     dynamic_eigenvectors_1d = np.array(dynamic_eigenvectors_2d)
 
+
     shape_dynamic_cosine_distance = pdist(shape_dynamic_eigenvectors_1d, metric=metric)
 
     shape_dynamic_linkage_matrix = linkage(shape_dynamic_cosine_distance, method=method)
     shape_dynamic_cluster_labels = fcluster(
-        shape_dynamic_linkage_matrix, num_clusters, criterion=criterion
+        shape_dynamic_linkage_matrix, cluster_threshold, criterion=criterion
     )
 
     dynamic_cosine_distance = pdist(dynamic_eigenvectors_1d, metric=metric)
 
     dynamic_linkage_matrix = linkage(dynamic_cosine_distance, method=method)
     dynamic_cluster_labels = fcluster(
-        dynamic_linkage_matrix, num_clusters, criterion=criterion
+        dynamic_linkage_matrix, cluster_threshold, criterion=criterion
     )
 
     shape_cosine_distance = pdist(shape_eigenvectors_1d, metric=metric)
 
     shape_linkage_matrix = linkage(shape_cosine_distance, method=method)
     shape_cluster_labels = fcluster(
-        shape_linkage_matrix, num_clusters, criterion=criterion
+        shape_linkage_matrix, cluster_threshold, criterion=criterion
     )
 
     for track_id in analysis_track_ids:
@@ -1928,8 +1932,6 @@ def train_mitosis_neural_net(
     num_init_features: int = 32,
     epochs=10,
     use_scheduler=False,
-    weight_decay=1e-5,
-    eps=0.1,
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -1972,7 +1974,7 @@ def train_mitosis_neural_net(
     summary(model, (1, input_size))
 
     criterion_class1 = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay, eps=eps)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     if use_scheduler:
         milestones = [int(epochs * 0.25), int(epochs * 0.5), int(epochs * 0.75)]
