@@ -1564,7 +1564,9 @@ def convert_tracks_to_arrays(
     analysis_vectors,
     min_length=None,
     metric="euclidean",
-    cluster_threshold=4,
+    cluster_threshold_shape_dynamic=4,
+    cluster_threshold_dynamic=4,
+    cluster_threshold_shape=4,
     method="ward",
     criterion="maxclust",
     starting_label_shape_dynamic = 0,
@@ -1648,7 +1650,7 @@ def convert_tracks_to_arrays(
 
         shape_dynamic_linkage_matrix = linkage(shape_dynamic_cosine_distance, method=method)
         shape_dynamic_cluster_labels = fcluster(
-            shape_dynamic_linkage_matrix, cluster_threshold, criterion=criterion
+            shape_dynamic_linkage_matrix, cluster_threshold_shape_dynamic, criterion=criterion
         ) + starting_label_shape_dynamic
         shape_dynamic_cluster_centroids = calculate_cluster_centroids(
                         shape_dynamic_eigenvectors_1d, shape_dynamic_cluster_labels
@@ -1664,7 +1666,7 @@ def convert_tracks_to_arrays(
 
         dynamic_linkage_matrix = linkage(dynamic_cosine_distance, method=method)
         dynamic_cluster_labels = fcluster(
-            dynamic_linkage_matrix, cluster_threshold, criterion=criterion
+            dynamic_linkage_matrix, cluster_threshold_dynamic, criterion=criterion
         ) + starting_label_dynamic
         dynamic_cluster_centroids = calculate_cluster_centroids(
                         dynamic_eigenvectors_1d, dynamic_cluster_labels
@@ -1680,7 +1682,7 @@ def convert_tracks_to_arrays(
 
         shape_linkage_matrix = linkage(shape_cosine_distance, method=method)
         shape_cluster_labels = fcluster(
-            shape_linkage_matrix, cluster_threshold, criterion=criterion
+            shape_linkage_matrix, cluster_threshold_shape, criterion=criterion
         ) + starting_label_shape
         shape_cluster_centroids = calculate_cluster_centroids(
                         shape_eigenvectors_1d, shape_cluster_labels
