@@ -590,7 +590,15 @@ class TrackVector(TrackMate):
                     [global_shape_dynamic_dataframe, shape_dynamic_dataframe],
                     ignore_index=True,
                 )
-
+        global_shape_dynamic_dataframe["TrackMate Track ID"] = global_shape_dynamic_dataframe["Track ID"].map(self.tracklet_id_to_trackmate_id)
+        trackmate_ids = global_shape_dynamic_dataframe['TrackMate Track ID']
+        track_duration_dict = {}
+        for trackmate_id in trackmate_ids :
+            track_properties = self.unique_track_properties[trackmate_id]
+            total_track_duration = track_properties[:,18][0]
+            track_duration_dict[trackmate_id] = int(total_track_duration)
+        global_shape_dynamic_dataframe["Track Duration"] = global_shape_dynamic_dataframe["TrackMate Track ID"].map(track_duration_dict)
+    
         global_shape_dynamic_dataframe = global_shape_dynamic_dataframe.sort_values(
             by=["Track ID"]
         )
@@ -733,12 +741,18 @@ def create_analysis_tracklets(
     class_ratio=-1,
 ):
     training_tracklets = {}
-    subset_dividing = global_shape_dynamic_dataframe[
-        global_shape_dynamic_dataframe["Dividing"] == 1
+    if t_minus is not None and t_plus is not None:
+       time_mask = (global_shape_dynamic_dataframe['t'] >= t_minus) & (global_shape_dynamic_dataframe['t'] <= t_plus )
+       local_shape_dynamic_dataframe = global_shape_dynamic_dataframe[time_mask] 
+    else:
+        local_shape_dynamic_dataframe = global_shape_dynamic_dataframe
+    
+    subset_dividing = local_shape_dynamic_dataframe[
+        local_shape_dynamic_dataframe["Dividing"] == 1
     ]
 
-    subset_non_dividing = global_shape_dynamic_dataframe[
-        global_shape_dynamic_dataframe["Dividing"] == 0
+    subset_non_dividing = local_shape_dynamic_dataframe[
+        local_shape_dynamic_dataframe["Dividing"] == 0
     ]
     non_dividing_track_ids = subset_non_dividing["Track ID"].unique()
     dividing_track_ids = subset_dividing["Track ID"].unique()
@@ -755,73 +769,31 @@ def create_analysis_tracklets(
             list(non_dividing_track_ids), non_dividing_count
         )
 
-    print(
-        f"Analysis data Dividing track counts {len(dividing_track_ids)}, Non Dividing track counts {len(non_dividing_track_ids)}"
-    )
+    
     for track_id in dividing_track_ids:
         subset_dividing = subset_dividing.loc[
-            global_shape_dynamic_dataframe.duplicated(
+            local_shape_dynamic_dataframe.duplicated(
                 subset=["t", "x", "y", "z"], keep=False
             )
         ]
-        track_dividing_times = subset_dividing[subset_dividing["Track ID"] == track_id][
-            "t"
-        ].unique()
-        if t_minus is not None and t_plus is not None:
-            for dividing_time in track_dividing_times:
-
-                lower_bound = max(0, dividing_time - t_minus)
-                upper_bound = dividing_time + t_plus
-                track_data = global_shape_dynamic_dataframe[
-                    (global_shape_dynamic_dataframe["Track ID"] == track_id)
-                    & (global_shape_dynamic_dataframe["t"] >= lower_bound)
-                    & (global_shape_dynamic_dataframe["t"] <= upper_bound)
-                ].sort_values(by="t")
-
-                if track_data.shape[0] > 0:
-                    training_tracklets = _iterate_over_tracklets(
-                        track_data, training_tracklets, track_id
-                    )
-        else:
-            track_data = global_shape_dynamic_dataframe[
-                (global_shape_dynamic_dataframe["Track ID"] == track_id)
+        track_data = local_shape_dynamic_dataframe[
+                (local_shape_dynamic_dataframe["Track ID"] == track_id)
             ].sort_values(by="t")
-            if track_data.shape[0] > 0:
+        if track_data.shape[0] > 0:
                 training_tracklets = _iterate_over_tracklets(
                     track_data, training_tracklets, track_id
                 )
 
     for track_id in non_dividing_track_ids:
-        track_data = subset_non_dividing[
-            (subset_non_dividing["Track ID"] == track_id)
-        ].sort_values(by="t")
-        if t_minus is not None and t_plus is not None:
-
-            random_index = random.randint(0, len(track_data) - 1)
-            t = track_data.iloc[random_index]["t"]
-            lower_bound = max(0, t - t_minus)
-            upper_bound = t + t_plus
-            track_data = global_shape_dynamic_dataframe[
-                (global_shape_dynamic_dataframe["Track ID"] == track_id)
-                & (global_shape_dynamic_dataframe["t"] >= lower_bound)
-                & (global_shape_dynamic_dataframe["t"] <= upper_bound)
+        track_data = local_shape_dynamic_dataframe[
+                (local_shape_dynamic_dataframe["Track ID"] == track_id)
             ].sort_values(by="t")
-            if track_data.shape[0] > 0:
+        if track_data.shape[0] > 0:
                 training_tracklets = _iterate_over_tracklets(
                     track_data, training_tracklets, track_id
                 )
 
-        else:
-
-            track_data = global_shape_dynamic_dataframe[
-                (global_shape_dynamic_dataframe["Track ID"] == track_id)
-            ].sort_values(by="t")
-            if track_data.shape[0] > 0:
-                training_tracklets = _iterate_over_tracklets(
-                    track_data, training_tracklets, track_id
-                )
-
-    return training_tracklets
+    return training_tracklets, local_shape_dynamic_dataframe
 
 
 
@@ -1595,6 +1567,9 @@ def convert_tracks_to_arrays(
     cluster_threshold=4,
     method="ward",
     criterion="maxclust",
+    starting_label_shape_dynamic = 0,
+    starting_label_dynamic = 0,
+    starting_label_shape = 0,
 ):
 
     analysis_track_ids = []
@@ -1651,75 +1626,113 @@ def convert_tracks_to_arrays(
             shape_eigenvectors_matrix.extend(shape_eigenvectors)
             dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
             analysis_track_ids.append(track_id)
+    try:
+        shape_dynamic_eigenvectors_3d = np.dstack(shape_dynamic_eigenvectors_matrix)
+        shape_eigenvectors_3d = np.dstack(shape_eigenvectors_matrix)
+        dynamic_eigenvectors_3d = np.dstack(dynamic_eigenvectors_matrix)
 
-    shape_dynamic_eigenvectors_3d = np.dstack(shape_dynamic_eigenvectors_matrix)
-    shape_eigenvectors_3d = np.dstack(shape_eigenvectors_matrix)
-    dynamic_eigenvectors_3d = np.dstack(dynamic_eigenvectors_matrix)
+        shape_dynamic_eigenvectors_2d = shape_dynamic_eigenvectors_3d.reshape(
+            len(analysis_track_ids), -1
+        )
+        shape_eigenvectors_2d = shape_eigenvectors_3d.reshape(len(analysis_track_ids), -1)
+        dynamic_eigenvectors_2d = dynamic_eigenvectors_3d.reshape(
+            len(analysis_track_ids), -1
+        )
 
-    shape_dynamic_eigenvectors_2d = shape_dynamic_eigenvectors_3d.reshape(
-        len(analysis_track_ids), -1
-    )
-    shape_eigenvectors_2d = shape_eigenvectors_3d.reshape(len(analysis_track_ids), -1)
-    dynamic_eigenvectors_2d = dynamic_eigenvectors_3d.reshape(
-        len(analysis_track_ids), -1
-    )
+        shape_dynamic_eigenvectors_1d = np.array(shape_dynamic_eigenvectors_2d)
+        shape_eigenvectors_1d = np.array(shape_eigenvectors_2d)
+        dynamic_eigenvectors_1d = np.array(dynamic_eigenvectors_2d)
 
-    shape_dynamic_eigenvectors_1d = np.array(shape_dynamic_eigenvectors_2d)
-    shape_eigenvectors_1d = np.array(shape_eigenvectors_2d)
-    dynamic_eigenvectors_1d = np.array(dynamic_eigenvectors_2d)
+    
+        shape_dynamic_cosine_distance = pdist(shape_dynamic_eigenvectors_1d, metric=metric)
 
+        shape_dynamic_linkage_matrix = linkage(shape_dynamic_cosine_distance, method=method)
+        shape_dynamic_cluster_labels = fcluster(
+            shape_dynamic_linkage_matrix, cluster_threshold, criterion=criterion
+        ) + starting_label_shape_dynamic
+        shape_dynamic_cluster_centroids = calculate_cluster_centroids(
+                        shape_dynamic_eigenvectors_1d, shape_dynamic_cluster_labels
+                    )
+        shape_dynamic_silhouette = silhouette_score(
+            shape_dynamic_eigenvectors_1d, shape_dynamic_cluster_labels, metric=metric
+        )
+        shape_dynamic_wcss_value = calculate_wcss(
+            shape_dynamic_eigenvectors_1d, shape_dynamic_cluster_labels, shape_dynamic_cluster_centroids
+        )
+  
+        dynamic_cosine_distance = pdist(dynamic_eigenvectors_1d, metric=metric)
 
-    shape_dynamic_cosine_distance = pdist(shape_dynamic_eigenvectors_1d, metric=metric)
+        dynamic_linkage_matrix = linkage(dynamic_cosine_distance, method=method)
+        dynamic_cluster_labels = fcluster(
+            dynamic_linkage_matrix, cluster_threshold, criterion=criterion
+        ) + starting_label_dynamic
+        dynamic_cluster_centroids = calculate_cluster_centroids(
+                        dynamic_eigenvectors_1d, dynamic_cluster_labels
+                    )
+        dynamic_silhouette = silhouette_score(
+            dynamic_eigenvectors_1d, dynamic_cluster_labels, metric=metric
+        )
+        dynamic_wcss_value = calculate_wcss(
+            dynamic_eigenvectors_1d, dynamic_cluster_labels, dynamic_cluster_centroids
+        )
+  
+        shape_cosine_distance = pdist(shape_eigenvectors_1d, metric=metric)
 
-    shape_dynamic_linkage_matrix = linkage(shape_dynamic_cosine_distance, method=method)
-    shape_dynamic_cluster_labels = fcluster(
-        shape_dynamic_linkage_matrix, cluster_threshold, criterion=criterion
-    )
+        shape_linkage_matrix = linkage(shape_cosine_distance, method=method)
+        shape_cluster_labels = fcluster(
+            shape_linkage_matrix, cluster_threshold, criterion=criterion
+        ) + starting_label_shape
+        shape_cluster_centroids = calculate_cluster_centroids(
+                        shape_eigenvectors_1d, shape_cluster_labels
+                    )
+        shape_silhouette = silhouette_score(
+            shape_eigenvectors_1d, shape_cluster_labels, metric=metric
+        )
+        shape_wcss_value = calculate_wcss(
+            shape_eigenvectors_1d, shape_cluster_labels, shape_cluster_centroids
+        )
 
-    dynamic_cosine_distance = pdist(dynamic_eigenvectors_1d, metric=metric)
+        for track_id in analysis_track_ids:
+            shape_dynamic_cluster_labels_dict = {
+                track_id: cluster_label
+                for track_id, cluster_label in zip(
+                    analysis_track_ids, shape_dynamic_cluster_labels
+                )
+            }
+            shape_cluster_labels_dict = {
+                track_id: cluster_label
+                for track_id, cluster_label in zip(analysis_track_ids, shape_cluster_labels)
+            }
+            dynamic_cluster_labels_dict = {
+                track_id: cluster_label
+                for track_id, cluster_label in zip(
+                    analysis_track_ids, dynamic_cluster_labels
+                )
+            }
 
-    dynamic_linkage_matrix = linkage(dynamic_cosine_distance, method=method)
-    dynamic_cluster_labels = fcluster(
-        dynamic_linkage_matrix, cluster_threshold, criterion=criterion
-    )
+        return (
+            shape_dynamic_eigenvectors_1d,
+            shape_eigenvectors_1d,
+            dynamic_eigenvectors_1d,
+            shape_dynamic_cluster_labels_dict,
+            shape_cluster_labels_dict,
+            dynamic_cluster_labels_dict,
+            shape_dynamic_linkage_matrix,
+            shape_linkage_matrix,
+            dynamic_linkage_matrix,
+            shape_dynamic_silhouette,
+            shape_dynamic_wcss_value,
+            shape_silhouette,
+            shape_wcss_value,
+            dynamic_silhouette,
+            dynamic_wcss_value,
+            analysis_track_ids,
+        )
+    except Exception as e_shape:
+            print(f'Clustering failed with {e_shape}')
+            
 
-    shape_cosine_distance = pdist(shape_eigenvectors_1d, metric=metric)
-
-    shape_linkage_matrix = linkage(shape_cosine_distance, method=method)
-    shape_cluster_labels = fcluster(
-        shape_linkage_matrix, cluster_threshold, criterion=criterion
-    )
-
-    for track_id in analysis_track_ids:
-        shape_dynamic_cluster_labels_dict = {
-            track_id: cluster_label
-            for track_id, cluster_label in zip(
-                analysis_track_ids, shape_dynamic_cluster_labels
-            )
-        }
-        shape_cluster_labels_dict = {
-            track_id: cluster_label
-            for track_id, cluster_label in zip(analysis_track_ids, shape_cluster_labels)
-        }
-        dynamic_cluster_labels_dict = {
-            track_id: cluster_label
-            for track_id, cluster_label in zip(
-                analysis_track_ids, dynamic_cluster_labels
-            )
-        }
-
-    return (
-        shape_dynamic_eigenvectors_1d,
-        shape_eigenvectors_1d,
-        dynamic_eigenvectors_1d,
-        shape_dynamic_cluster_labels_dict,
-        shape_cluster_labels_dict,
-        dynamic_cluster_labels_dict,
-        shape_dynamic_linkage_matrix,
-        shape_linkage_matrix,
-        dynamic_linkage_matrix,
-        analysis_track_ids,
-    )
+    
 
 
 def compute_covariance_matrix(track_arrays):

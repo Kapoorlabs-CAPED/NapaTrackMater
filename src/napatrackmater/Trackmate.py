@@ -212,6 +212,7 @@ class TrackMate:
         self.edge_z_location_key = self.track_analysis_edges_keys["edge_z_location"]
 
         self.unique_tracks = {}
+        self.tracklet_id_to_trackmate_id = {}
         self.unique_track_mitosis_label = {}
         self.unique_track_properties = {}
         self.unique_fft_properties = {}
@@ -1224,7 +1225,7 @@ class TrackMate:
                 quality = float(Spotobject.get(self.quality_key))
                 total_intensity = float(Spotobject.get(self.total_intensity_key))
                 mean_intensity = float(Spotobject.get(self.mean_intensity_key))
-
+                self.tracklet_id_to_trackmate_id[float(str(Spotobject.get(self.uniqueid_key)))] = int(float(str(Spotobject.get(self.trackid_key)))) 
                 self.unique_spot_properties[cell_id] = {
                     self.cellid_key: int(float(Spotobject.get(self.spotid_key))),
                     self.frameid_key: int(float(Spotobject.get(self.frameid_key))),
