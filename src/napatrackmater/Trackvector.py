@@ -1456,9 +1456,9 @@ def unsupervised_clustering(
                         ) = covariance_computation_shape_dynamic
                         (shape_covariance, shape_eigenvectors ) =  covaraince_computation_shape 
                         ( dynamic_covaraince, dynamic_eigenvectors ) = covaraince_computation_dynamic
-                        shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
-                        shape_covariance_matrix.append(shape_covariance)
-                        dynamic_covariance_matrix.append(dynamic_covaraince)
+                        shape_dynamic_covariance_matrix.append(shape_dynamic_eigenvectors)
+                        shape_covariance_matrix.append(shape_eigenvectors)
+                        dynamic_covariance_matrix.append(dynamic_eigenvectors)
                         analysis_track_ids.append(track_id)
             if len(shape_dynamic_covariance_matrix) > 0 and len(shape_covariance_matrix) > 0 and len(dynamic_covariance_matrix) > 0:            
                     shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
@@ -1581,9 +1581,6 @@ def convert_tracks_to_arrays(
 ):
 
     analysis_track_ids = []
-    shape_dynamic_covariance_matrix = []
-    shape_covariance_matrix = []
-    dynamic_covariance_matrix = []
     shape_dynamic_eigenvectors_matrix = []
     shape_eigenvectors_matrix = []
     dynamic_eigenvectors_matrix = []
@@ -1633,9 +1630,6 @@ def convert_tracks_to_arrays(
                 )  = covariance_shape_dynamic
                 shape_covariance, shape_eigenvectors = covariance_shape 
                 dynamic_covaraince, dynamic_eigenvectors = covariance_dynamic
-                shape_dynamic_covariance_matrix.append(shape_dynamic_covariance)
-                shape_covariance_matrix.append(shape_covariance)
-                dynamic_covariance_matrix.append(dynamic_covaraince)
                 shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_eigenvectors)
                 shape_eigenvectors_matrix.extend(shape_eigenvectors)
                 dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
