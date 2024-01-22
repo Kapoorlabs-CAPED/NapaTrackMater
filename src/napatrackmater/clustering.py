@@ -547,7 +547,7 @@ def _label_cluster(label_image, num_points, min_size, ndim, compute_with_autoenc
 
 
 def get_label_centroid_cloud(
-    binary_image, num_points, ndim, label, centroid, min_size, compute_with_autoencoder
+    binary_image, num_points, ndim, label, centroid, min_size, compute_with_autoencoder, padding_size = 3
 ):
 
     valid = []
@@ -563,10 +563,19 @@ def get_label_centroid_cloud(
             valid.append(True)
 
     if False not in valid:
+
         try:
-            vertices, faces, normals, values = marching_cubes(binary_image)
-        except RuntimeError:
-            vertices = None
+            
+            binary_image_padded = np.pad(binary_image, padding_size, mode='constant', constant_values=0)
+            vertices, faces, normals, values = marching_cubes(binary_image_padded)
+        except Exception as e:
+            print(f'Zero padding not possible {e}')    
+            try:
+                vertices, faces, normals, values = marching_cubes(binary_image)
+            except RuntimeError:
+                vertices = None
+
+        
         if vertices is not None:
             mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
             simple_clouds = np.asarray(mesh_obj.sample(num_points).data)
