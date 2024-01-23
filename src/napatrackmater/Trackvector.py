@@ -1544,49 +1544,7 @@ def simple_unsupervised_clustering(
                 + f"_wcss_{metric}_{cluster_threshold}.npy"
             )
             np.save(wcss_file_name, wcss_value)
-            track_id_to_cluster = {
-                track_id: cluster_label
-                for track_id, cluster_label in zip(
-                    analysis_track_ids, shape_dynamic_cluster_labels
-                )
-            }
-            full_dataframe["Cluster"] = full_dataframe["Track ID"].map(
-                track_id_to_cluster
-            )
-            result_dataframe = full_dataframe[
-                ["Track ID", "t", "z", "y", "x", "Cluster"]
-            ]
-            csv_file_name = (
-                csv_file_name_original
-                + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-                + ".csv"
-            )
-
-            if os.path.exists(csv_file_name):
-                os.remove(csv_file_name)
-            result_dataframe.to_csv(csv_file_name, index=False)
-
-            mean_matrix_file_name = (
-                csv_file_name_original
-                + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-                + f"_{metric}_covariance.npy"
-            )
-            np.save(mean_matrix_file_name, track_arrays)
-
-            linkage_npy_file_name = (
-                csv_file_name_original
-                + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-                + f"_{metric}_linkage.npy"
-            )
-            np.save(linkage_npy_file_name, shape_dynamic_linkage_matrix)
-
-            cluster_labels_npy_file_name = (
-                csv_file_name_original
-                + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-                + f"_{metric}_cluster_labels.npy"
-            )
-            np.save(cluster_labels_npy_file_name, shape_dynamic_cluster_labels)
-
+            
 
 def unsupervised_clustering(
     full_dataframe,
@@ -1729,28 +1687,7 @@ def unsupervised_clustering(
                 + f"_wcss_{metric}_{cluster_threshold}.npy"
             )
             np.save(wcss_file_name, wcss_value)
-            track_id_to_cluster = {
-                track_id: cluster_label
-                for track_id, cluster_label in zip(
-                    analysis_track_ids, shape_dynamic_cluster_labels
-                )
-            }
-            full_dataframe["Cluster"] = full_dataframe["Track ID"].map(
-                track_id_to_cluster
-            )
-            result_dataframe = full_dataframe[
-                ["Track ID", "t", "z", "y", "x", "Cluster"]
-            ]
-            csv_file_name = (
-                csv_file_name_original
-                + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-                + ".csv"
-            )
-
-            if os.path.exists(csv_file_name):
-                os.remove(csv_file_name)
-            result_dataframe.to_csv(csv_file_name, index=False)
-
+          
             mean_matrix_file_name = (
                 csv_file_name_original
                 + track_arrays_array_names[track_arrays_array.index(track_arrays)]
@@ -1758,33 +1695,11 @@ def unsupervised_clustering(
             )
             np.save(mean_matrix_file_name, track_arrays)
 
-            linkage_npy_file_name = (
-                csv_file_name_original
-                + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-                + f"_{metric}_linkage.npy"
-            )
-            np.save(linkage_npy_file_name, shape_dynamic_linkage_matrix)
-
-            cluster_labels_npy_file_name = (
-                csv_file_name_original
-                + track_arrays_array_names[track_arrays_array.index(track_arrays)]
-                + f"_{metric}_cluster_labels.npy"
-            )
-            np.save(cluster_labels_npy_file_name, shape_dynamic_cluster_labels)
-
-
+          
 def convert_tracks_to_arrays(
     analysis_vectors,
     min_length=None,
-    metric="euclidean",
-    cluster_threshold_shape_dynamic=4,
-    cluster_threshold_dynamic=4,
-    cluster_threshold_shape=4,
-    method="ward",
-    criterion="maxclust",
-    starting_label_shape_dynamic=0,
-    starting_label_dynamic=0,
-    starting_label_shape=0,
+    
 ):
 
     analysis_track_ids = []
