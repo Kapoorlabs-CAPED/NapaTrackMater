@@ -2136,13 +2136,13 @@ def convert_tracks_to_simple_arrays(
     
     
 
-def compute_raw_matrix(track_arrays, delta_t):
+def compute_raw_matrix(track_arrays, t_delta):
     
     track_duration = track_arrays.shape[0]
-    delta_t = int(delta_t)
-    if track_duration  < delta_t:
+    t_delta = int(t_delta)
+    if track_duration  < t_delta:
         #zero pad
-        pad_rows = delta_t - track_duration
+        pad_rows = t_delta - track_duration
         
         # Pad with the last row and then zeros
         last_row = track_arrays[-1, :]
