@@ -20,7 +20,8 @@ from .Trackvector import (
     load_prediction_data,
     create_embeddings_with_gt,
     create_analysis_tracklets,
-    create_dividing_prediction_tracklets
+    create_dividing_prediction_tracklets,
+    convert_tracks_to_simple_arrays,
 )
 from .CloudAutoEncoder import CloudAutoEncoder
 import json
@@ -73,6 +74,7 @@ __all__ = (
     "TrackVector",
     "predict_supervised_clustering",
     "convert_tracks_to_arrays",
+    "convert_tracks_to_simple_arrays",
     "unsupervised_clustering",
     "simple_unsupervised_clustering",
     "load_json",
