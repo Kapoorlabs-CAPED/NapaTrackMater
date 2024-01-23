@@ -1398,6 +1398,171 @@ def calculate_cluster_centroids(data, labels):
             centroids.append(centroid)
     return np.array(centroids)
 
+def simple_unsupervised_clustering(
+    full_dataframe,
+    csv_file_name,
+    analysis_vectors,
+    cluster_threshold=3,
+    metric="euclidean",
+    method="centroid",
+    criterion="distance",
+):
+    
+ 
+            csv_file_name_original = csv_file_name
+            analysis_track_ids = []
+            shape_dynamic_covariance_matrix = []
+            shape_covariance_matrix = []
+            dynamic_covariance_matrix = []
+            for track_id, (
+                shape_dynamic_dataframe_list,
+                shape_dataframe_list,
+                dynamic_dataframe_list,
+                full_dataframe_list,
+            ) in analysis_vectors.items():
+                shape_dynamic_track_array = np.array(
+                    [
+                        [item for item in record.values()]
+                        for record in shape_dynamic_dataframe_list
+                    ]
+                )
+                shape_track_array = np.array(
+                    [[item for item in record.values()] for record in shape_dataframe_list]
+                )
+                dynamic_track_array = np.array(
+                    [[item for item in record.values()] for record in dynamic_dataframe_list]
+                )
+                assert (
+                    shape_dynamic_track_array.shape[0]
+                    == shape_track_array.shape[0]
+                    == dynamic_track_array.shape[0]
+                ), "Shape dynamic, shape and dynamic track arrays must have the same length."
+                if shape_dynamic_track_array.shape[0] > 1:
+                    
+                     covariance_computation_shape_dynamic = compute_raw_matrix(shape_dynamic_track_array)
+                    
+                     covaraince_computation_shape = compute_raw_matrix(
+                        shape_track_array
+                       )
+                     
+                     covaraince_computation_dynamic = compute_raw_matrix(
+                        dynamic_track_array
+                     )
+                     if covariance_computation_shape_dynamic is not None and covaraince_computation_shape is not None and covaraince_computation_dynamic is not None:
+                        
+                        shape_dynamic_eigenvectors = covariance_computation_shape_dynamic
+                        shape_eigenvectors =  covaraince_computation_shape 
+                        dynamic_eigenvectors  = covaraince_computation_dynamic
+                        shape_dynamic_covariance_matrix.append(shape_dynamic_eigenvectors)
+                        shape_covariance_matrix.append(shape_eigenvectors)
+                        dynamic_covariance_matrix.append(dynamic_eigenvectors)
+                        analysis_track_ids.append(track_id)
+            if len(shape_dynamic_covariance_matrix) > 0 and len(shape_covariance_matrix) > 0 and len(dynamic_covariance_matrix) > 0:            
+                    shape_dynamic_covariance_3d = np.dstack(shape_dynamic_covariance_matrix)
+                    shape_covariance_3d = np.dstack(shape_covariance_matrix)
+                    dynamic_covariance_3d = np.dstack(dynamic_covariance_matrix)
+
+                    shape_dynamic_covariance_matrix = np.mean(shape_dynamic_covariance_matrix, axis=0)
+                    shape_covariance_matrix = np.mean(shape_covariance_matrix, axis=0)
+                    dynamic_covariance_matrix = np.mean(dynamic_covariance_matrix, axis=0)
+
+                    shape_dynamic_covariance_2d = shape_dynamic_covariance_3d.reshape(
+                        len(analysis_track_ids), -1
+                    )
+                    shape_covariance_2d = shape_covariance_3d.reshape(len(analysis_track_ids), -1)
+                    dynamic_covariance_2d = dynamic_covariance_3d.reshape(len(analysis_track_ids), -1)
+
+                    track_arrays_array = [
+                        shape_dynamic_covariance_matrix,
+                        shape_covariance_matrix,
+                        dynamic_covariance_matrix,
+                    ]
+
+                    track_arrays_array_names = ["shape_dynamic", "shape", "dynamic"]
+                    clusterable_track_arrays = [
+                        shape_dynamic_covariance_2d,
+                        shape_covariance_2d,
+                        dynamic_covariance_2d,
+                    ]
+
+                    for track_arrays in track_arrays_array:
+                        clusterable_track_array = clusterable_track_arrays[
+                            track_arrays_array.index(track_arrays)
+                        ]
+                        shape_dynamic_cosine_distance = pdist(clusterable_track_array, metric=metric)
+
+                        shape_dynamic_linkage_matrix = linkage(
+                            shape_dynamic_cosine_distance, method=method
+                        )
+                        shape_dynamic_cluster_labels = fcluster(
+                            shape_dynamic_linkage_matrix, cluster_threshold, criterion=criterion
+                        )
+
+                        cluster_centroids = calculate_cluster_centroids(
+                            clusterable_track_array, shape_dynamic_cluster_labels
+                        )
+                        silhouette = silhouette_score(
+                            clusterable_track_array, shape_dynamic_cluster_labels, metric=metric
+                        )
+                        wcss_value = calculate_wcss(
+                            clusterable_track_array, shape_dynamic_cluster_labels, cluster_centroids
+                        )
+
+                        silhouette_file_name = os.path.join(
+                            csv_file_name_original
+                            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+                            + f"_silhouette_{metric}_{cluster_threshold}.npy"
+                        )
+                        np.save(silhouette_file_name, silhouette)
+
+                        wcss_file_name = os.path.join(
+                            csv_file_name_original
+                            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+                            + f"_wcss_{metric}_{cluster_threshold}.npy"
+                        )
+                        np.save(wcss_file_name, wcss_value)
+                        track_id_to_cluster = {
+                            track_id: cluster_label
+                            for track_id, cluster_label in zip(
+                                analysis_track_ids, shape_dynamic_cluster_labels
+                            )
+                        }
+                        full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
+                        result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
+                        csv_file_name = (
+                            csv_file_name_original
+                            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+                            + ".csv"
+                        )
+
+                        if os.path.exists(csv_file_name):
+                            os.remove(csv_file_name)
+                        result_dataframe.to_csv(csv_file_name, index=False)
+
+                        mean_matrix_file_name = (
+                            csv_file_name_original
+                            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+                            + f"_{metric}_covariance.npy"
+                        )
+                        np.save(mean_matrix_file_name, track_arrays)
+
+                        linkage_npy_file_name = (
+                            csv_file_name_original
+                            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+                            + f"_{metric}_linkage.npy"
+                        )
+                        np.save(linkage_npy_file_name, shape_dynamic_linkage_matrix)
+
+                        cluster_labels_npy_file_name = (
+                            csv_file_name_original
+                            + track_arrays_array_names[track_arrays_array.index(track_arrays)]
+                            + f"_{metric}_cluster_labels.npy"
+                        )
+                        np.save(cluster_labels_npy_file_name, shape_dynamic_cluster_labels)
+
+         
+
+
 
 def unsupervised_clustering(
     full_dataframe,
@@ -1770,6 +1935,23 @@ def convert_tracks_to_arrays(
             
 
     
+
+def compute_raw_matrix(track_arrays, delta_t):
+    
+    track_duration = track_arrays.shape[0]
+    delta_t = int(delta_t)
+    if track_duration  < delta_t:
+        #zero pad
+        pad_rows = delta_t - track_duration
+        
+        # Pad with the last row and then zeros
+        last_row = track_arrays[-1, :]
+        zero_pad = np.zeros((pad_rows, track_arrays.shape[1]))
+        track_arrays = np.vstack((track_arrays, np.tile(last_row, (pad_rows, 1)), zero_pad))
+        
+    flattened_array = track_arrays.flatten()
+        
+    return flattened_array 
 
 
 def compute_covariance_matrix(track_arrays):
