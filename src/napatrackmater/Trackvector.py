@@ -1525,7 +1525,7 @@ def simple_unsupervised_clustering(
         
         silhouette_file_name = os.path.join(
             csv_file_name_original
-            + 'shape'
+            + 'dynamic'
             + f"_silhouette_{metric}_{cluster_threshold_dynamic}.npy"
         )
         np.save(silhouette_file_name, dynamic_silhouette)
