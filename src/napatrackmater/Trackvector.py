@@ -1770,9 +1770,9 @@ def convert_tracks_to_arrays(
         and len(shape_eigenvectors_matrix) > 0
     ):
 
-        shape_dynamic_eigenvectors_3d = shape_dynamic_eigenvectors_matrix
-        shape_eigenvectors_3d = shape_eigenvectors_matrix
-        dynamic_eigenvectors_3d = dynamic_eigenvectors_matrix
+        shape_dynamic_eigenvectors_3d = np.asarray(shape_dynamic_eigenvectors_matrix)
+        shape_eigenvectors_3d = np.asarray(shape_eigenvectors_matrix)
+        dynamic_eigenvectors_3d = np.asarray(dynamic_eigenvectors_matrix)
 
         shape_dynamic_eigenvectors_2d = shape_dynamic_eigenvectors_3d.reshape(
             len(analysis_track_ids), -1
@@ -2018,9 +2018,9 @@ def convert_tracks_to_simple_arrays(
 
 
 def core_clustering(shape_dynamic_eigenvectors_matrix,shape_eigenvectors_matrix,dynamic_eigenvectors_matrix, analysis_track_ids, metric, method, cluster_threshold_shape_dynamic, cluster_threshold_dynamic, cluster_threshold_shape, criterion):
-        shape_dynamic_eigenvectors_3d = shape_dynamic_eigenvectors_matrix
-        shape_eigenvectors_3d = shape_eigenvectors_matrix
-        dynamic_eigenvectors_3d = dynamic_eigenvectors_matrix
+        shape_dynamic_eigenvectors_3d = np.asarray(shape_dynamic_eigenvectors_matrix)
+        shape_eigenvectors_3d = np.asarray(shape_eigenvectors_matrix)
+        dynamic_eigenvectors_3d = np.asarray(dynamic_eigenvectors_matrix)
 
         shape_dynamic_eigenvectors_2d = shape_dynamic_eigenvectors_3d.reshape(
             len(analysis_track_ids), -1
