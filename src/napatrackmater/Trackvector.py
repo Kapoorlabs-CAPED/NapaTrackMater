@@ -1796,6 +1796,83 @@ def convert_tracks_to_arrays(
         )
 
 
+
+def local_track_covaraince(
+    analysis_vectors
+):
+    
+    analysis_track_ids = []
+    shape_dynamic_eigenvectors_matrix = []
+    shape_eigenvectors_matrix = []
+    dynamic_eigenvectors_matrix = []
+    for track_id, (
+        shape_dynamic_dataframe_list,
+        shape_dataframe_list,
+        dynamic_dataframe_list,
+        full_dataframe_list,
+    ) in analysis_vectors.items():
+        shape_dynamic_track_array = np.array(
+            [
+                [item for item in record.values()]
+                for record in shape_dynamic_dataframe_list
+            ]
+        )
+        shape_track_array = np.array(
+            [[item for item in record.values()] for record in shape_dataframe_list]
+        )
+        dynamic_track_array = np.array(
+            [[item for item in record.values()] for record in dynamic_dataframe_list]
+        )
+        assert (
+            shape_dynamic_track_array.shape[0]
+            == shape_track_array.shape[0]
+            == dynamic_track_array.shape[0]
+        ), "Shape dynamic, shape and dynamic track arrays must have the same length."
+        if (
+            shape_dynamic_track_array.shape[0] > 1
+            
+        ):
+            
+            covariance_shape_dynamic = compute_covariance_matrix(
+                shape_dynamic_track_array
+            )
+            
+            covariance_shape = compute_covariance_matrix(shape_track_array)
+            
+            covariance_dynamic = compute_covariance_matrix(dynamic_track_array)
+            
+            if (
+                covariance_shape_dynamic is not None
+                and covariance_shape is not None
+                and covariance_dynamic is not None
+            ):
+
+                shape_dynamic_eigenvectors = covariance_shape_dynamic
+                shape_eigenvectors = covariance_shape
+                dynamic_eigenvectors = covariance_dynamic
+                shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_eigenvectors)
+                shape_eigenvectors_matrix.extend(shape_eigenvectors)
+                dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
+                analysis_track_ids.append(track_id)
+    if (
+        len(shape_dynamic_eigenvectors_matrix) > 0
+        and len(dynamic_eigenvectors_matrix) > 0
+        and len(shape_eigenvectors_matrix) > 0
+    ):    
+        
+        mean_shape_dynamic_eigenvectors = np.mean(shape_dynamic_eigenvectors_matrix, axis=0)
+        mean_shape_eigenvectors = np.mean(shape_eigenvectors_matrix, axis=0)
+        mean_dynamic_eigenvectors = np.mean(dynamic_eigenvectors_matrix, axis=0)
+        
+        
+        return (
+            mean_shape_dynamic_eigenvectors,
+            mean_shape_eigenvectors,
+            mean_dynamic_eigenvectors,
+            analysis_track_ids,
+        )
+    
+
 def convert_tracks_to_simple_arrays(
     analysis_vectors,
     min_length=None,

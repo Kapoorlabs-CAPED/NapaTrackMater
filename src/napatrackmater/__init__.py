@@ -22,6 +22,7 @@ from .Trackvector import (
     create_analysis_tracklets,
     create_dividing_prediction_tracklets,
     convert_tracks_to_simple_arrays,
+    local_track_covaraince
 )
 from .CloudAutoEncoder import CloudAutoEncoder
 import json
@@ -88,6 +89,7 @@ __all__ = (
     "load_prediction_data",
     "create_embeddings_with_gt",
     "create_analysis_tracklets",
+    "local_track_covaraince",
     "create_dividing_prediction_tracklets"
 )
 
