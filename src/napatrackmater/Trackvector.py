@@ -1760,9 +1760,9 @@ def convert_tracks_to_arrays(
                 ) = covariance_shape_dynamic
                 shape_covariance, shape_eigenvectors = covariance_shape
                 dynamic_covaraince, dynamic_eigenvectors = covariance_dynamic
-                shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_eigenvectors)
-                shape_eigenvectors_matrix.extend(shape_eigenvectors)
-                dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
+                shape_dynamic_eigenvectors_matrix.append(shape_dynamic_eigenvectors)
+                shape_eigenvectors_matrix.append(shape_eigenvectors)
+                dynamic_eigenvectors_matrix.append(dynamic_eigenvectors)
                 analysis_track_ids.append(track_id)
     if (
         len(shape_dynamic_eigenvectors_matrix) > 0
@@ -1770,9 +1770,9 @@ def convert_tracks_to_arrays(
         and len(shape_eigenvectors_matrix) > 0
     ):
 
-        shape_dynamic_eigenvectors_3d = np.dstack(shape_dynamic_eigenvectors_matrix)
-        shape_eigenvectors_3d = np.dstack(shape_eigenvectors_matrix)
-        dynamic_eigenvectors_3d = np.dstack(dynamic_eigenvectors_matrix)
+        shape_dynamic_eigenvectors_3d = shape_dynamic_eigenvectors_matrix
+        shape_eigenvectors_3d = shape_eigenvectors_matrix
+        dynamic_eigenvectors_3d = dynamic_eigenvectors_matrix
 
         shape_dynamic_eigenvectors_2d = shape_dynamic_eigenvectors_3d.reshape(
             len(analysis_track_ids), -1
@@ -1833,13 +1833,13 @@ def local_track_covaraince(
             
         ):
             
-            covariance_shape_dynamic = compute_covariance_matrix(
+            covariance_shape_dynamic, eigenvectors_shape_dynamic = compute_covariance_matrix(
                 shape_dynamic_track_array
             )
             
-            covariance_shape = compute_covariance_matrix(shape_track_array)
+            covariance_shape, eigenvectors_shape = compute_covariance_matrix(shape_track_array)
             
-            covariance_dynamic = compute_covariance_matrix(dynamic_track_array)
+            covariance_dynamic, eigenvectors_dynamic = compute_covariance_matrix(dynamic_track_array)
             
             if (
                 covariance_shape_dynamic is not None
@@ -1847,12 +1847,10 @@ def local_track_covaraince(
                 and covariance_dynamic is not None
             ):
 
-                shape_dynamic_eigenvectors = covariance_shape_dynamic
-                shape_eigenvectors = covariance_shape
-                dynamic_eigenvectors = covariance_dynamic
-                shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_eigenvectors)
-                shape_eigenvectors_matrix.extend(shape_eigenvectors)
-                dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
+                
+                shape_dynamic_eigenvectors_matrix.append(covariance_shape_dynamic)
+                shape_eigenvectors_matrix.append(covariance_shape)
+                dynamic_eigenvectors_matrix.append(covariance_dynamic)
                 analysis_track_ids.append(track_id)
     if (
         len(shape_dynamic_eigenvectors_matrix) > 0
@@ -1937,9 +1935,9 @@ def convert_tracks_to_simple_arrays(
                 shape_dynamic_eigenvectors = covariance_shape_dynamic
                 shape_eigenvectors = covariance_shape
                 dynamic_eigenvectors = covariance_dynamic
-                shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_eigenvectors)
-                shape_eigenvectors_matrix.extend(shape_eigenvectors)
-                dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
+                shape_dynamic_eigenvectors_matrix.append(shape_dynamic_eigenvectors)
+                shape_eigenvectors_matrix.append(shape_eigenvectors)
+                dynamic_eigenvectors_matrix.append(dynamic_eigenvectors)
                 analysis_track_ids.append(track_id)
     if (
         len(shape_dynamic_eigenvectors_matrix) > 0
@@ -2020,9 +2018,9 @@ def convert_tracks_to_simple_arrays(
 
 
 def core_clustering(shape_dynamic_eigenvectors_matrix,shape_eigenvectors_matrix,dynamic_eigenvectors_matrix, analysis_track_ids, metric, method, cluster_threshold_shape_dynamic, cluster_threshold_dynamic, cluster_threshold_shape, criterion):
-        shape_dynamic_eigenvectors_3d = np.dstack(shape_dynamic_eigenvectors_matrix)
-        shape_eigenvectors_3d = np.dstack(shape_eigenvectors_matrix)
-        dynamic_eigenvectors_3d = np.dstack(dynamic_eigenvectors_matrix)
+        shape_dynamic_eigenvectors_3d = shape_dynamic_eigenvectors_matrix
+        shape_eigenvectors_3d = shape_eigenvectors_matrix
+        dynamic_eigenvectors_3d = dynamic_eigenvectors_matrix
 
         shape_dynamic_eigenvectors_2d = shape_dynamic_eigenvectors_3d.reshape(
             len(analysis_track_ids), -1
