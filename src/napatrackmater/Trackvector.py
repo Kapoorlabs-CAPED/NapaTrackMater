@@ -1935,9 +1935,9 @@ def convert_tracks_to_simple_arrays(
                 shape_dynamic_eigenvectors = covariance_shape_dynamic
                 shape_eigenvectors = covariance_shape
                 dynamic_eigenvectors = covariance_dynamic
-                shape_dynamic_eigenvectors_matrix.append(shape_dynamic_eigenvectors)
-                shape_eigenvectors_matrix.append(shape_eigenvectors)
-                dynamic_eigenvectors_matrix.append(dynamic_eigenvectors)
+                shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_eigenvectors)
+                shape_eigenvectors_matrix.extend(shape_eigenvectors)
+                dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
                 analysis_track_ids.append(track_id)
     if (
         len(shape_dynamic_eigenvectors_matrix) > 0
