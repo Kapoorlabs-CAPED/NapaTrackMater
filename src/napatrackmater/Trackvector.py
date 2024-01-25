@@ -1468,9 +1468,9 @@ def simple_unsupervised_clustering(
                 shape_dynamic_eigenvectors = covariance_computation_shape_dynamic
                 shape_eigenvectors = covaraince_computation_shape
                 dynamic_eigenvectors = covaraince_computation_dynamic
-                shape_dynamic_covariance_matrix.append(shape_dynamic_eigenvectors)
-                shape_covariance_matrix.append(shape_eigenvectors)
-                dynamic_covariance_matrix.append(dynamic_eigenvectors)
+                shape_dynamic_covariance_matrix.extend(shape_dynamic_eigenvectors)
+                shape_covariance_matrix.extend(shape_eigenvectors)
+                dynamic_covariance_matrix.extend(dynamic_eigenvectors)
                 analysis_track_ids.append(track_id)
     if (
         len(shape_dynamic_covariance_matrix) > 0
