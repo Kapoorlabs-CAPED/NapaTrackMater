@@ -2382,6 +2382,8 @@ def train_mitosis_neural_net(
     learning_rate=0.001,
     growth_rate: int = 4,
     block_config: tuple = (3, 3),
+    weight_decay: float = 1e-5,
+    eps: float = 1e-1,
     num_init_features: int = 32,
     epochs=10,
     use_scheduler=False,
@@ -2427,7 +2429,7 @@ def train_mitosis_neural_net(
     summary(model, (1, input_size))
 
     criterion_class1 = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay, eps=eps)
 
     if use_scheduler:
         milestones = [int(epochs * 0.25), int(epochs * 0.5), int(epochs * 0.75)]
