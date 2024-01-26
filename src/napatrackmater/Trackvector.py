@@ -559,6 +559,7 @@ class TrackVector(TrackMate):
                     "Dividing",
                     "Number_Dividing",
                     "Radius",
+                    "Volume",
                     "Eccentricity Comp First",
                     "Eccentricity Comp Second",
                     "Surface Area",
@@ -622,6 +623,7 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction
     shape_dynamic_dataframe = track_data[
         [
             "Radius",
+            "Volume",
             "Eccentricity Comp First",
             "Eccentricity Comp Second",
             "Surface Area",
@@ -637,6 +639,7 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction
     shape_dataframe = track_data[
         [
             "Radius",
+            "Volume",
             "Eccentricity Comp First",
             "Eccentricity Comp Second",
             "Surface Area",
@@ -664,6 +667,7 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction
                 "Dividing",
                 "Number_Dividing",
                 "Radius",
+                "Volume",
                 "Eccentricity Comp First",
                 "Eccentricity Comp Second",
                 "Surface Area",
@@ -684,6 +688,7 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction
                 "y",
                 "x",
                 "Radius",
+                "Volume",
                 "Eccentricity Comp First",
                 "Eccentricity Comp Second",
                 "Surface Area",
@@ -1098,6 +1103,7 @@ def create_gt_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame
         shape_dynamic_dataframe = track_data[
             [
                 "Radius",
+                "Volume",
                 "Eccentricity Comp First",
                 "Eccentricity Comp Second",
                 "Surface Area",
@@ -1125,6 +1131,7 @@ def create_gt_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame
                 "Dividing",
                 "Number_Dividing",
                 "Radius",
+                "Volume",
                 "Eccentricity Comp First",
                 "Eccentricity Comp Second",
                 "Surface Area",
