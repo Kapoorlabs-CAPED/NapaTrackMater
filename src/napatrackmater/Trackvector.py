@@ -269,6 +269,7 @@ class TrackVector(TrackMate):
                     current_y,
                     current_x,
                     radius,
+                    volume,
                     eccentricity_comp_first,
                     eccentricity_comp_second,
                     surface_area,
@@ -294,6 +295,7 @@ class TrackVector(TrackMate):
                         dividing_array,
                         number_dividing_array,
                         radius,
+                        volume,
                         eccentricity_comp_first,
                         eccentricity_comp_second,
                         surface_area,
@@ -499,7 +501,9 @@ class TrackVector(TrackMate):
             eccentricity_comp_first = spot_properties[self.eccentricity_comp_firstkey]
             eccentricity_comp_second = spot_properties[self.eccentricity_comp_secondkey]
             radius = spot_properties[self.radius_key]
+            volume = spot_properties[self.quality_key]
             speed = spot_properties[self.speed_key]
+
             motion_angle = spot_properties[self.motion_angle_key]
             acceleration = spot_properties[self.acceleration_key]
             distance_cell_mask = spot_properties[self.distance_cell_mask_key]
@@ -515,6 +519,7 @@ class TrackVector(TrackMate):
                 "Eccentricity Comp First": eccentricity_comp_first,
                 "Eccentricity Comp Second": eccentricity_comp_second,
                 "Radius": radius,
+                "Volume": volume,
                 "Speed": speed,
                 "Motion Angle": motion_angle,
                 "Acceleration": acceleration,
