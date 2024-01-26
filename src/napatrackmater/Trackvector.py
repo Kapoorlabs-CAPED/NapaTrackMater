@@ -269,7 +269,6 @@ class TrackVector(TrackMate):
                     current_y,
                     current_x,
                     radius,
-                    volume,
                     eccentricity_comp_first,
                     eccentricity_comp_second,
                     surface_area,
@@ -295,7 +294,6 @@ class TrackVector(TrackMate):
                         dividing_array,
                         number_dividing_array,
                         radius,
-                        volume,
                         eccentricity_comp_first,
                         eccentricity_comp_second,
                         surface_area,
@@ -500,7 +498,6 @@ class TrackVector(TrackMate):
             surface_area = spot_properties[self.surface_area_key]
             eccentricity_comp_first = spot_properties[self.eccentricity_comp_firstkey]
             eccentricity_comp_second = spot_properties[self.eccentricity_comp_secondkey]
-            volume = spot_properties[self.quality_key]
             radius = spot_properties[self.radius_key]
             speed = spot_properties[self.speed_key]
             motion_angle = spot_properties[self.motion_angle_key]
@@ -517,7 +514,6 @@ class TrackVector(TrackMate):
                 "Surface Area": surface_area,
                 "Eccentricity Comp First": eccentricity_comp_first,
                 "Eccentricity Comp Second": eccentricity_comp_second,
-                "Volume": volume,
                 "Radius": radius,
                 "Speed": speed,
                 "Motion Angle": motion_angle,
@@ -558,7 +554,6 @@ class TrackVector(TrackMate):
                     "Dividing",
                     "Number_Dividing",
                     "Radius",
-                    "Volume",
                     "Eccentricity Comp First",
                     "Eccentricity Comp Second",
                     "Surface Area",
@@ -622,7 +617,6 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction
     shape_dynamic_dataframe = track_data[
         [
             "Radius",
-            "Volume",
             "Eccentricity Comp First",
             "Eccentricity Comp Second",
             "Surface Area",
@@ -638,7 +632,6 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction
     shape_dataframe = track_data[
         [
             "Radius",
-            "Volume",
             "Eccentricity Comp First",
             "Eccentricity Comp Second",
             "Surface Area",
@@ -666,7 +659,6 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction
                 "Dividing",
                 "Number_Dividing",
                 "Radius",
-                "Volume",
                 "Eccentricity Comp First",
                 "Eccentricity Comp Second",
                 "Surface Area",
@@ -687,7 +679,6 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction
                 "y",
                 "x",
                 "Radius",
-                "Volume",
                 "Eccentricity Comp First",
                 "Eccentricity Comp Second",
                 "Surface Area",
@@ -1102,7 +1093,6 @@ def create_gt_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame
         shape_dynamic_dataframe = track_data[
             [
                 "Radius",
-                "Volume",
                 "Eccentricity Comp First",
                 "Eccentricity Comp Second",
                 "Surface Area",
@@ -1130,7 +1120,6 @@ def create_gt_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame
                 "Dividing",
                 "Number_Dividing",
                 "Radius",
-                "Volume",
                 "Eccentricity Comp First",
                 "Eccentricity Comp Second",
                 "Surface Area",
@@ -1477,7 +1466,7 @@ def simple_unsupervised_clustering(
         and len(shape_covariance_matrix) > 0
         and len(dynamic_covariance_matrix) > 0
     ):
-        
+
         (
             shape_dynamic_eigenvectors_1d,
             shape_eigenvectors_1d,
@@ -1502,56 +1491,54 @@ def simple_unsupervised_clustering(
             analysis_track_ids,
             metric,
             method,
-            cluster_threshold_shape_dynamic, 
+            cluster_threshold_shape_dynamic,
             cluster_threshold_dynamic,
-            cluster_threshold_shape, 
-            criterion
+            cluster_threshold_shape,
+            criterion,
         )
-      
 
         silhouette_file_name = os.path.join(
             csv_file_name_original
-            + 'shape_dynamic'
+            + "shape_dynamic"
             + f"_silhouette_{metric}_{cluster_threshold_shape_dynamic}.npy"
         )
         np.save(silhouette_file_name, shape_dynamic_silhouette)
 
         wcss_file_name = os.path.join(
             csv_file_name_original
-            + 'shape_dynamic'
+            + "shape_dynamic"
             + f"_wcss_{metric}_{cluster_threshold_shape_dynamic}.npy"
         )
         np.save(wcss_file_name, shape_dynamic_wcss_value)
-        
+
         silhouette_file_name = os.path.join(
             csv_file_name_original
-            + 'dynamic'
+            + "dynamic"
             + f"_silhouette_{metric}_{cluster_threshold_dynamic}.npy"
         )
         np.save(silhouette_file_name, dynamic_silhouette)
 
         wcss_file_name = os.path.join(
             csv_file_name_original
-            + 'dynamic'
+            + "dynamic"
             + f"_wcss_{metric}_{cluster_threshold_dynamic}.npy"
         )
         np.save(wcss_file_name, dynamic_wcss_value)
-        
-        
+
         silhouette_file_name = os.path.join(
             csv_file_name_original
-            + 'shape'
+            + "shape"
             + f"_silhouette_{metric}_{cluster_threshold_shape}.npy"
         )
         np.save(silhouette_file_name, shape_silhouette)
 
         wcss_file_name = os.path.join(
             csv_file_name_original
-            + 'shape'
+            + "shape"
             + f"_wcss_{metric}_{cluster_threshold_shape}.npy"
         )
         np.save(wcss_file_name, shape_wcss_value)
-        
+
 
 def unsupervised_clustering(
     full_dataframe,
@@ -1651,61 +1638,58 @@ def unsupervised_clustering(
             analysis_track_ids,
             metric,
             method,
-            cluster_threshold_shape_dynamic, 
+            cluster_threshold_shape_dynamic,
             cluster_threshold_dynamic,
-            cluster_threshold_shape, 
-            criterion
+            cluster_threshold_shape,
+            criterion,
         )
-      
 
         silhouette_file_name = os.path.join(
             csv_file_name_original
-            + 'shape_dynamic'
+            + "shape_dynamic"
             + f"_silhouette_{metric}_{cluster_threshold_shape_dynamic}.npy"
         )
         np.save(silhouette_file_name, shape_dynamic_silhouette)
 
         wcss_file_name = os.path.join(
             csv_file_name_original
-            + 'shape_dynamic'
+            + "shape_dynamic"
             + f"_wcss_{metric}_{cluster_threshold_shape_dynamic}.npy"
         )
         np.save(wcss_file_name, shape_dynamic_wcss_value)
-        
+
         silhouette_file_name = os.path.join(
             csv_file_name_original
-            + 'dynamic'
+            + "dynamic"
             + f"_silhouette_{metric}_{cluster_threshold_dynamic}.npy"
         )
         np.save(silhouette_file_name, dynamic_silhouette)
 
         wcss_file_name = os.path.join(
             csv_file_name_original
-            + 'dynamic'
+            + "dynamic"
             + f"_wcss_{metric}_{cluster_threshold_dynamic}.npy"
         )
         np.save(wcss_file_name, dynamic_wcss_value)
-        
-        
+
         silhouette_file_name = os.path.join(
             csv_file_name_original
-            + 'shape'
+            + "shape"
             + f"_silhouette_{metric}_{cluster_threshold_shape}.npy"
         )
         np.save(silhouette_file_name, shape_silhouette)
 
         wcss_file_name = os.path.join(
             csv_file_name_original
-            + 'shape'
+            + "shape"
             + f"_wcss_{metric}_{cluster_threshold_shape}.npy"
         )
         np.save(wcss_file_name, shape_wcss_value)
-        
-          
+
+
 def convert_tracks_to_arrays(
     analysis_vectors,
     min_length=None,
-    
 ):
 
     analysis_track_ids = []
@@ -1796,11 +1780,8 @@ def convert_tracks_to_arrays(
         )
 
 
+def local_track_covaraince(analysis_vectors):
 
-def local_track_covaraince(
-    analysis_vectors
-):
-    
     analysis_track_ids = []
     shape_dynamic_eigenvectors_matrix = []
     shape_eigenvectors_matrix = []
@@ -1828,26 +1809,27 @@ def local_track_covaraince(
             == shape_track_array.shape[0]
             == dynamic_track_array.shape[0]
         ), "Shape dynamic, shape and dynamic track arrays must have the same length."
-        if (
-            shape_dynamic_track_array.shape[0] > 1
-            
-        ):
-            
-            covariance_shape_dynamic, eigenvectors_shape_dynamic = compute_covariance_matrix(
-                shape_dynamic_track_array
+        if shape_dynamic_track_array.shape[0] > 1:
+
+            (
+                covariance_shape_dynamic,
+                eigenvectors_shape_dynamic,
+            ) = compute_covariance_matrix(shape_dynamic_track_array)
+
+            covariance_shape, eigenvectors_shape = compute_covariance_matrix(
+                shape_track_array
             )
-            
-            covariance_shape, eigenvectors_shape = compute_covariance_matrix(shape_track_array)
-            
-            covariance_dynamic, eigenvectors_dynamic = compute_covariance_matrix(dynamic_track_array)
-            
+
+            covariance_dynamic, eigenvectors_dynamic = compute_covariance_matrix(
+                dynamic_track_array
+            )
+
             if (
                 covariance_shape_dynamic is not None
                 and covariance_shape is not None
                 and covariance_dynamic is not None
             ):
 
-                
                 shape_dynamic_eigenvectors_matrix.append(covariance_shape_dynamic)
                 shape_eigenvectors_matrix.append(covariance_shape)
                 dynamic_eigenvectors_matrix.append(covariance_dynamic)
@@ -1856,20 +1838,21 @@ def local_track_covaraince(
         len(shape_dynamic_eigenvectors_matrix) > 0
         and len(dynamic_eigenvectors_matrix) > 0
         and len(shape_eigenvectors_matrix) > 0
-    ):    
-        
-        mean_shape_dynamic_eigenvectors = np.mean(shape_dynamic_eigenvectors_matrix, axis=0)
+    ):
+
+        mean_shape_dynamic_eigenvectors = np.mean(
+            shape_dynamic_eigenvectors_matrix, axis=0
+        )
         mean_shape_eigenvectors = np.mean(shape_eigenvectors_matrix, axis=0)
         mean_dynamic_eigenvectors = np.mean(dynamic_eigenvectors_matrix, axis=0)
-        
-        
+
         return (
             mean_shape_dynamic_eigenvectors,
             mean_shape_eigenvectors,
             mean_dynamic_eigenvectors,
             analysis_track_ids,
         )
-    
+
 
 def convert_tracks_to_simple_arrays(
     analysis_vectors,
@@ -1969,13 +1952,11 @@ def convert_tracks_to_simple_arrays(
             analysis_track_ids,
             metric,
             method,
-            cluster_threshold_shape_dynamic, 
+            cluster_threshold_shape_dynamic,
             cluster_threshold_dynamic,
-            cluster_threshold_shape, 
-            criterion
+            cluster_threshold_shape,
+            criterion,
         )
-      
-
 
         for track_id in analysis_track_ids:
             shape_dynamic_cluster_labels_dict = {
@@ -2017,135 +1998,133 @@ def convert_tracks_to_simple_arrays(
         )
 
 
-def core_clustering(shape_dynamic_eigenvectors_matrix,shape_eigenvectors_matrix,dynamic_eigenvectors_matrix, analysis_track_ids, metric, method, cluster_threshold_shape_dynamic, cluster_threshold_dynamic, cluster_threshold_shape, criterion):
-        shape_dynamic_eigenvectors_3d = np.dstack(shape_dynamic_eigenvectors_matrix)
-        shape_eigenvectors_3d = np.dstack(shape_eigenvectors_matrix)
-        dynamic_eigenvectors_3d = np.dstack(dynamic_eigenvectors_matrix)
+def core_clustering(
+    shape_dynamic_eigenvectors_matrix,
+    shape_eigenvectors_matrix,
+    dynamic_eigenvectors_matrix,
+    analysis_track_ids,
+    metric,
+    method,
+    cluster_threshold_shape_dynamic,
+    cluster_threshold_dynamic,
+    cluster_threshold_shape,
+    criterion,
+):
+    shape_dynamic_eigenvectors_3d = np.dstack(shape_dynamic_eigenvectors_matrix)
+    shape_eigenvectors_3d = np.dstack(shape_eigenvectors_matrix)
+    dynamic_eigenvectors_3d = np.dstack(dynamic_eigenvectors_matrix)
 
-        shape_dynamic_eigenvectors_2d = shape_dynamic_eigenvectors_3d.reshape(
-            len(analysis_track_ids), -1
-        )
-        shape_eigenvectors_2d = shape_eigenvectors_3d.reshape(
-            len(analysis_track_ids), -1
-        )
-        dynamic_eigenvectors_2d = dynamic_eigenvectors_3d.reshape(
-            len(analysis_track_ids), -1
-        )
+    shape_dynamic_eigenvectors_2d = shape_dynamic_eigenvectors_3d.reshape(
+        len(analysis_track_ids), -1
+    )
+    shape_eigenvectors_2d = shape_eigenvectors_3d.reshape(len(analysis_track_ids), -1)
+    dynamic_eigenvectors_2d = dynamic_eigenvectors_3d.reshape(
+        len(analysis_track_ids), -1
+    )
 
-        shape_dynamic_eigenvectors_1d = np.array(shape_dynamic_eigenvectors_2d)
-        shape_eigenvectors_1d = np.array(shape_eigenvectors_2d)
-        dynamic_eigenvectors_1d = np.array(dynamic_eigenvectors_2d)
+    shape_dynamic_eigenvectors_1d = np.array(shape_dynamic_eigenvectors_2d)
+    shape_eigenvectors_1d = np.array(shape_eigenvectors_2d)
+    dynamic_eigenvectors_1d = np.array(dynamic_eigenvectors_2d)
 
-        shape_dynamic_cosine_distance = pdist(
-            shape_dynamic_eigenvectors_1d, metric=metric
-        )
+    shape_dynamic_cosine_distance = pdist(shape_dynamic_eigenvectors_1d, metric=metric)
 
-        shape_dynamic_linkage_matrix = linkage(
-            shape_dynamic_cosine_distance, method=method
-        )
-        try:
-            shape_dynamic_cluster_labels = (
-                fcluster(
-                    shape_dynamic_linkage_matrix,
-                    cluster_threshold_shape_dynamic,
-                    criterion=criterion,
-                )
-            )
-            shape_dynamic_cluster_centroids = calculate_cluster_centroids(
-                shape_dynamic_eigenvectors_1d, shape_dynamic_cluster_labels
-            )
-            shape_dynamic_silhouette = silhouette_score(
-                shape_dynamic_eigenvectors_1d,
-                shape_dynamic_cluster_labels,
-                metric=metric,
-            )
-            shape_dynamic_wcss_value = calculate_wcss(
-                shape_dynamic_eigenvectors_1d,
-                shape_dynamic_cluster_labels,
-                shape_dynamic_cluster_centroids,
-            )
-        except Exception as e:
-            print(e)
-            shape_dynamic_cluster_labels = (
-                fcluster(shape_dynamic_linkage_matrix, 1, criterion="maxclust")
-            )
-            shape_dynamic_silhouette = np.nan
-            shape_dynamic_wcss_value = np.nan
-
-        dynamic_cosine_distance = pdist(dynamic_eigenvectors_1d, metric=metric)
-
-        dynamic_linkage_matrix = linkage(dynamic_cosine_distance, method=method)
-        try:
-            dynamic_cluster_labels = (
-                fcluster(
-                    dynamic_linkage_matrix,
-                    cluster_threshold_dynamic,
-                    criterion=criterion,
-                )
-            )
-            dynamic_cluster_centroids = calculate_cluster_centroids(
-                dynamic_eigenvectors_1d, dynamic_cluster_labels
-            )
-            dynamic_silhouette = silhouette_score(
-                dynamic_eigenvectors_1d, dynamic_cluster_labels, metric=metric
-            )
-            dynamic_wcss_value = calculate_wcss(
-                dynamic_eigenvectors_1d,
-                dynamic_cluster_labels,
-                dynamic_cluster_centroids,
-            )
-        except Exception as e:
-            print(f" Dynamic clustering error: {e} ")
-            dynamic_cluster_labels = (
-                fcluster(dynamic_linkage_matrix, 1, criterion="maxclust")
-            )
-            dynamic_silhouette = np.nan
-            dynamic_wcss_value = np.nan
-
-        shape_cosine_distance = pdist(shape_eigenvectors_1d, metric=metric)
-
-        shape_linkage_matrix = linkage(shape_cosine_distance, method=method)
-        try:
-            shape_cluster_labels = (
-                fcluster(
-                    shape_linkage_matrix, cluster_threshold_shape, criterion=criterion
-                )
-            )
-            shape_cluster_centroids = calculate_cluster_centroids(
-                shape_eigenvectors_1d, shape_cluster_labels
-            )
-            shape_silhouette = silhouette_score(
-                shape_eigenvectors_1d, shape_cluster_labels, metric=metric
-            )
-            shape_wcss_value = calculate_wcss(
-                shape_eigenvectors_1d, shape_cluster_labels, shape_cluster_centroids
-            )
-        except Exception as e:
-            print(f" Shape clustering error: {e}")
-            shape_cluster_labels = (
-                fcluster(shape_linkage_matrix, 1, criterion="maxclust")
-            )
-            shape_silhouette = np.nan
-            shape_wcss_value = np.nan
-
-        return (
-            shape_dynamic_eigenvectors_1d,
-            shape_eigenvectors_1d,
-            dynamic_eigenvectors_1d,
-            shape_dynamic_cluster_labels,
-            shape_cluster_labels,
-            dynamic_cluster_labels,
+    shape_dynamic_linkage_matrix = linkage(shape_dynamic_cosine_distance, method=method)
+    try:
+        shape_dynamic_cluster_labels = fcluster(
             shape_dynamic_linkage_matrix,
-            shape_linkage_matrix,
-            dynamic_linkage_matrix,
-            shape_dynamic_silhouette,
-            shape_dynamic_wcss_value,
-            shape_silhouette,
-            shape_wcss_value,
-            dynamic_silhouette,
-            dynamic_wcss_value,
-            analysis_track_ids,
+            cluster_threshold_shape_dynamic,
+            criterion=criterion,
         )
+        shape_dynamic_cluster_centroids = calculate_cluster_centroids(
+            shape_dynamic_eigenvectors_1d, shape_dynamic_cluster_labels
+        )
+        shape_dynamic_silhouette = silhouette_score(
+            shape_dynamic_eigenvectors_1d,
+            shape_dynamic_cluster_labels,
+            metric=metric,
+        )
+        shape_dynamic_wcss_value = calculate_wcss(
+            shape_dynamic_eigenvectors_1d,
+            shape_dynamic_cluster_labels,
+            shape_dynamic_cluster_centroids,
+        )
+    except Exception as e:
+        print(e)
+        shape_dynamic_cluster_labels = fcluster(
+            shape_dynamic_linkage_matrix, 1, criterion="maxclust"
+        )
+        shape_dynamic_silhouette = np.nan
+        shape_dynamic_wcss_value = np.nan
+
+    dynamic_cosine_distance = pdist(dynamic_eigenvectors_1d, metric=metric)
+
+    dynamic_linkage_matrix = linkage(dynamic_cosine_distance, method=method)
+    try:
+        dynamic_cluster_labels = fcluster(
+            dynamic_linkage_matrix,
+            cluster_threshold_dynamic,
+            criterion=criterion,
+        )
+        dynamic_cluster_centroids = calculate_cluster_centroids(
+            dynamic_eigenvectors_1d, dynamic_cluster_labels
+        )
+        dynamic_silhouette = silhouette_score(
+            dynamic_eigenvectors_1d, dynamic_cluster_labels, metric=metric
+        )
+        dynamic_wcss_value = calculate_wcss(
+            dynamic_eigenvectors_1d,
+            dynamic_cluster_labels,
+            dynamic_cluster_centroids,
+        )
+    except Exception as e:
+        print(f" Dynamic clustering error: {e} ")
+        dynamic_cluster_labels = fcluster(
+            dynamic_linkage_matrix, 1, criterion="maxclust"
+        )
+        dynamic_silhouette = np.nan
+        dynamic_wcss_value = np.nan
+
+    shape_cosine_distance = pdist(shape_eigenvectors_1d, metric=metric)
+
+    shape_linkage_matrix = linkage(shape_cosine_distance, method=method)
+    try:
+        shape_cluster_labels = fcluster(
+            shape_linkage_matrix, cluster_threshold_shape, criterion=criterion
+        )
+        shape_cluster_centroids = calculate_cluster_centroids(
+            shape_eigenvectors_1d, shape_cluster_labels
+        )
+        shape_silhouette = silhouette_score(
+            shape_eigenvectors_1d, shape_cluster_labels, metric=metric
+        )
+        shape_wcss_value = calculate_wcss(
+            shape_eigenvectors_1d, shape_cluster_labels, shape_cluster_centroids
+        )
+    except Exception as e:
+        print(f" Shape clustering error: {e}")
+        shape_cluster_labels = fcluster(shape_linkage_matrix, 1, criterion="maxclust")
+        shape_silhouette = np.nan
+        shape_wcss_value = np.nan
+
+    return (
+        shape_dynamic_eigenvectors_1d,
+        shape_eigenvectors_1d,
+        dynamic_eigenvectors_1d,
+        shape_dynamic_cluster_labels,
+        shape_cluster_labels,
+        dynamic_cluster_labels,
+        shape_dynamic_linkage_matrix,
+        shape_linkage_matrix,
+        dynamic_linkage_matrix,
+        shape_dynamic_silhouette,
+        shape_dynamic_wcss_value,
+        shape_silhouette,
+        shape_wcss_value,
+        dynamic_silhouette,
+        dynamic_wcss_value,
+        analysis_track_ids,
+    )
+
 
 def compute_raw_matrix(track_arrays, t_delta):
     track_duration = track_arrays.shape[0]
@@ -2429,7 +2408,9 @@ def train_mitosis_neural_net(
     summary(model, (1, input_size))
 
     criterion_class1 = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay, eps=eps)
+    optimizer = optim.Adam(
+        model.parameters(), lr=learning_rate, weight_decay=weight_decay, eps=eps
+    )
 
     if use_scheduler:
         milestones = [int(epochs * 0.25), int(epochs * 0.5), int(epochs * 0.75)]
