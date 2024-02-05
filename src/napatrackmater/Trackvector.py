@@ -618,7 +618,9 @@ class TrackVector(TrackMate):
         return global_shape_dynamic_dataframe
 
 
-def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction=False, ignore_columns = []):
+def _iterate_over_tracklets(
+    track_data, training_tracklets, track_id, prediction=False, ignore_columns=[]
+):
 
     shape_dynamic_dataframe = track_data[
         [
@@ -703,13 +705,15 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction
 
     if ignore_columns is not None:
         for column in ignore_columns:
-            if column in full_dataframe.columns:
-                full_dataframe = full_dataframe.drop(columns=[column])
-                shape_dynamic_dataframe = shape_dynamic_dataframe.drop(
-                    columns=[column]
-                )
-                shape_dataframe = shape_dataframe.drop(columns=[column])
-                dynamic_dataframe = dynamic_dataframe.drop(columns=[column])
+            for dataframe in [
+                full_dataframe,
+                shape_dynamic_dataframe,
+                shape_dataframe,
+                dynamic_dataframe,
+            ]:
+                if column in dataframe.columns:
+                    dataframe = dataframe.drop(columns=[column])
+
     latent_columns = [
         col for col in track_data.columns if col.startswith("latent_feature_number_")
     ]
@@ -734,7 +738,9 @@ def _iterate_over_tracklets(track_data, training_tracklets, track_id, prediction
     return training_tracklets
 
 
-def create_dividing_prediction_tracklets(global_shape_dynamic_dataframe: pd.DataFrame, ignore_columns = []):
+def create_dividing_prediction_tracklets(
+    global_shape_dynamic_dataframe: pd.DataFrame, ignore_columns=[]
+):
     training_tracklets = {}
     subset_dividing = global_shape_dynamic_dataframe[
         global_shape_dynamic_dataframe["Dividing"] == 1
@@ -746,7 +752,11 @@ def create_dividing_prediction_tracklets(global_shape_dynamic_dataframe: pd.Data
         ].sort_values(by="t")
         if track_data.shape[0] > 0:
             training_tracklets = _iterate_over_tracklets(
-                track_data, training_tracklets, track_id, prediction=True, ignore_columns=ignore_columns
+                track_data,
+                training_tracklets,
+                track_id,
+                prediction=True,
+                ignore_columns=ignore_columns,
             )
 
     return training_tracklets
@@ -757,7 +767,7 @@ def create_analysis_tracklets(
     t_minus=None,
     t_plus=None,
     class_ratio=-1,
-    ignore_columns = []
+    ignore_columns=[],
 ):
     training_tracklets = {}
     if t_minus is not None and t_plus is not None:
