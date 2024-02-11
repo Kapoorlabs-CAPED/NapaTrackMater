@@ -1406,41 +1406,40 @@ def predict_supervised_clustering(
 
 def calculate_wcss(data, labels, centroids):
     wcss = 0
-    label_to_index = {label: i for i, label in enumerate(np.unique(labels))}
     for i in range(len(data)):
-        cluster_label = labels[i]
-        if cluster_label != -1:
-            centroid = centroids[label_to_index[cluster_label]]
+            cluster_label = labels[i]
+            centroid = centroids[cluster_label]
             distance = np.linalg.norm(data[i] - centroid)
             wcss += distance**2
     return wcss
 
-def calculate_intercluster_distance(data, labels):
+def calculate_intercluster_distance(compute_vectors, labels):
     intercluster_distances = {}
-    centroids = calculate_cluster_centroids(data, labels)
     for cluster_label in np.unique(labels):
-        cluster_indices = np.where(labels == cluster_label)[0]  
-        cluster_data = data[cluster_indices]
-        centroid = centroids[cluster_label - 1]
-        distances = []
-        for point in cluster_data:
-            
-            distance = np.linalg.norm(point - centroid)
-            if np.isnan(distance):
-                print(f"Found nan distance for cluster {cluster_label}")
-            distances.append(distance)
+        cluster_indices = np.where(labels == cluster_label)[0]
+        
+        compute_data = compute_vectors[cluster_indices]
+        mean_vector = np.mean(compute_data, axis=0)
+        
+        distances = np.linalg.norm(compute_data - mean_vector, axis=1)
+        
+        
         intercluster_distances[cluster_label] = distances
     return intercluster_distances
 
+
+
 def calculate_cluster_centroids(data, labels):
     unique_labels = np.unique(labels)
-    centroids = []
+    centroids = {}
     for label in unique_labels:
-        if label != -1:
-            cluster_data = data[labels == label]
-            centroid = np.mean(cluster_data, axis=0)
-            centroids.append(centroid)
-    return np.array(centroids)
+        cluster_data = data[labels == label]
+        
+        
+        centroid = np.mean(cluster_data, axis=0)
+        centroids[label] = centroid
+    return centroids
+
 
 
 def simple_unsupervised_clustering(
@@ -2066,41 +2065,48 @@ def convert_tracks_to_simple_arrays(
             criterion,
         )
 
-        for track_id in analysis_track_ids:
-            shape_dynamic_cluster_labels_dict = {
+        shape_dynamic_cluster_labels_dict = {
                 track_id: cluster_label
                 for track_id, cluster_label in zip(
                     analysis_track_ids, shape_dynamic_cluster_labels
                 )
             }
-            shape_cluster_labels_dict = {
-                track_id: cluster_label
-                for track_id, cluster_label in zip(
-                    analysis_track_ids, shape_cluster_labels
-                )
-            }
-            dynamic_cluster_labels_dict = {
-                track_id: cluster_label
-                for track_id, cluster_label in zip(
-                    analysis_track_ids, dynamic_cluster_labels
-                )
-            }
+        shape_cluster_labels_dict = {
+            track_id: cluster_label
+            for track_id, cluster_label in zip(
+                analysis_track_ids, shape_cluster_labels
+            )
+        }
+        dynamic_cluster_labels_dict = {
+            track_id: cluster_label
+            for track_id, cluster_label in zip(
+                analysis_track_ids, dynamic_cluster_labels
+            )
+        }
 
-           
-            cluster_distance_map_shape_dynamic_dict = {
-                track_id: cluster_distance_map_shape_dynamic[cluster_label]
-                for track_id, cluster_label in zip(analysis_track_ids, cluster_distance_map_shape_dynamic.keys())
-            }
-            
-            cluster_distance_map_shape_dict = {
-                track_id: cluster_distance_map_shape[cluster_label]
-                for track_id, cluster_label in zip(analysis_track_ids, cluster_distance_map_shape.keys())
-            }
+        cluster_distance_map_shape_dynamic_dict = {
+            track_id: cluster_distance_map_shape_dynamic[cluster_label]
+            for track_id, cluster_label in zip(
+                    analysis_track_ids, shape_dynamic_cluster_labels
+                )
+        }
+       
+        
+     
+        
+        cluster_distance_map_shape_dict = {
+            track_id: cluster_distance_map_shape[cluster_label]
+            for track_id, cluster_label in zip(
+                analysis_track_ids, shape_cluster_labels
+            )
+        }
 
-            cluster_distance_map_dynamic_dict = {
-                track_id: cluster_distance_map_dynamic[cluster_label]
-                for track_id, cluster_label in zip(analysis_track_ids, cluster_distance_map_dynamic.keys())
-            }
+        cluster_distance_map_dynamic_dict = {
+            track_id: cluster_distance_map_dynamic[cluster_label]
+            for track_id, cluster_label in zip(
+                analysis_track_ids, dynamic_cluster_labels
+            )
+        }
 
             
 
@@ -2161,24 +2167,20 @@ def core_clustering(
         compute_vectors = shape_eigenvectors_1d
     if distance_vectors == 'dynamic':
         compute_vectors = dynamic_eigenvectors_1d
+    if distance_vectors == 'shape_and_dynamic':
+        compute_vectors = shape_dynamic_eigenvectors_1d    
     else:
         compute_vectors = shape_eigenvectors_1d
     shape_dynamic_cosine_distance = pdist(shape_dynamic_eigenvectors_1d, metric=metric)
 
     shape_dynamic_linkage_matrix = linkage(shape_dynamic_cosine_distance, method=method)
-    try:
-        shape_dynamic_cluster_labels = fcluster(
+    shape_dynamic_cluster_labels = fcluster(
             shape_dynamic_linkage_matrix,
             cluster_threshold_shape_dynamic,
             criterion=criterion,
         )
-    except Exception as e:
-        print(e)
-        shape_dynamic_cluster_labels = fcluster(
-            shape_dynamic_linkage_matrix, 1, criterion="maxclust"
-        )    
     
-    cluster_distance_map_shape_dynamic = calculate_intercluster_distance(compute_vectors, shape_dynamic_cluster_labels)   
+    cluster_distance_map_shape_dynamic = calculate_intercluster_distance( compute_vectors, shape_dynamic_cluster_labels)   
     try:
 
         shape_dynamic_cluster_centroids = calculate_cluster_centroids(
@@ -2205,19 +2207,13 @@ def core_clustering(
     dynamic_cosine_distance = pdist(dynamic_eigenvectors_1d, metric=metric)
 
     dynamic_linkage_matrix = linkage(dynamic_cosine_distance, method=method)
-    try:
-        dynamic_cluster_labels = fcluster(
+    dynamic_cluster_labels = fcluster(
             dynamic_linkage_matrix,
             cluster_threshold_dynamic,
             criterion=criterion,
         )
-    except Exception as e:
-        print(f" Dynamic clustering error: {e} ")
-        dynamic_cluster_labels = fcluster(
-            dynamic_linkage_matrix, 1, criterion="maxclust"
-        )    
+ 
     
-
     cluster_distance_map_dynamic = calculate_intercluster_distance(compute_vectors, dynamic_cluster_labels)   
 
     try:
@@ -2244,14 +2240,10 @@ def core_clustering(
     shape_cosine_distance = pdist(shape_eigenvectors_1d, metric=metric)
 
     shape_linkage_matrix = linkage(shape_cosine_distance, method=method)
-    try:
-        shape_cluster_labels = fcluster(
+    shape_cluster_labels = fcluster(
             shape_linkage_matrix, cluster_threshold_shape, criterion=criterion
         )
-    except Exception as e:
-        print(f" Shape clustering error: {e}")
-        shape_cluster_labels = fcluster(shape_linkage_matrix, 1, criterion="maxclust")    
-
+      
     shape_cluster_centroids = calculate_cluster_centroids(
         shape_eigenvectors_1d, shape_cluster_labels
     )
@@ -2290,6 +2282,8 @@ def core_clustering(
         cluster_distance_map_dynamic,
         analysis_track_ids,
     )
+
+
 
 
 def compute_raw_matrix(track_arrays, t_delta):
