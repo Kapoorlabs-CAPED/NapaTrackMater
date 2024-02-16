@@ -702,18 +702,18 @@ def _iterate_over_tracklets(
                 "Cell_Axis_Mask",
             ]
         ].copy()
-
+   
     if ignore_columns is not None:
         for column in ignore_columns:
-            for dataframe in [
-                full_dataframe,
-                shape_dynamic_dataframe,
-                shape_dataframe,
-                dynamic_dataframe,
-            ]:
-                if column in dataframe.columns:
-                    dataframe = dataframe.drop(columns=[column])
-
+            if column in full_dataframe.columns:
+                full_dataframe.drop(columns=[column], inplace=True)
+            if column in shape_dynamic_dataframe.columns:
+                shape_dynamic_dataframe.drop(columns=[column], inplace=True)
+            if column in shape_dataframe.columns:
+                shape_dataframe.drop(columns=[column], inplace=True)
+            if column in dynamic_dataframe.columns:
+                dynamic_dataframe.drop(columns=[column], inplace=True)
+       
     latent_columns = [
         col for col in track_data.columns if col.startswith("latent_feature_number_")
     ]
@@ -778,6 +778,9 @@ def create_analysis_tracklets(
     else:
         local_shape_dynamic_dataframe = global_shape_dynamic_dataframe
 
+        
+            
+
     subset_dividing = local_shape_dynamic_dataframe[
         local_shape_dynamic_dataframe["Dividing"] == 1
     ]
@@ -822,8 +825,14 @@ def create_analysis_tracklets(
             training_tracklets = _iterate_over_tracklets(
                 track_data, training_tracklets, track_id, ignore_columns=ignore_columns
             )
+    modified_dataframe = local_shape_dynamic_dataframe.copy()        
+    if ignore_columns is not None:
+            for column in ignore_columns:
+                if column in modified_dataframe.columns:
+                    modified_dataframe.drop(columns=[column], inplace=True)
 
-    return training_tracklets, local_shape_dynamic_dataframe
+
+    return training_tracklets, modified_dataframe
 
 
 def z_score_normalization(data):
