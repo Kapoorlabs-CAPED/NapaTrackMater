@@ -172,6 +172,7 @@ class TrackMate:
         self.centroid_key = "centroid"
         self.eccentricity_comp_firstkey = "cloud_eccentricity_comp_first"
         self.eccentricity_comp_secondkey = "cloud_eccentricity_comp_second"
+        self.eccentricity_comp_thirdkey = "cloud_eccentricity_comp_third"
         self.surface_area_key = "cloud_surfacearea"
         self.radial_angle_key = "radial_angle_key"
         self.motion_angle_key = "motion_angle"
@@ -1104,12 +1105,16 @@ class TrackMate:
             eccentricity_comp_second = float(
                 all_dict_values[self.eccentricity_comp_secondkey]
             )
+            eccentricity_comp_third = float(
+                all_dict_values[self.eccentricity_comp_thirdkey]
+            )
             surface_area = float(all_dict_values[self.surface_area_key])
             cell_axis_mask = float(all_dict_values[self.cellaxis_mask_key])
 
         else:
             eccentricity_comp_first = -1
             eccentricity_comp_second = -1
+            eccentricity_comp_third = -1
             surface_area = -1
             cell_axis_mask = -1
 
@@ -1145,6 +1150,7 @@ class TrackMate:
                     volume_pixels,
                     eccentricity_comp_first,
                     eccentricity_comp_second,
+                    eccentricity_comp_third,
                     surface_area,
                     total_intensity,
                     speed,
@@ -1192,6 +1198,7 @@ class TrackMate:
                     volume_pixels,
                     eccentricity_comp_first,
                     eccentricity_comp_second,
+                    eccentricity_comp_third,
                     surface_area,
                     total_intensity,
                     speed,
@@ -1260,6 +1267,9 @@ class TrackMate:
                             ),
                             self.eccentricity_comp_secondkey: float(
                                 Spotobject.get(self.eccentricity_comp_secondkey)
+                            ),
+                            self.eccentricity_comp_thirdkey: float(
+                                Spotobject.get(self.eccentricity_comp_thirdkey)
                             ),
                             self.surface_area_key: float(
                                 Spotobject.get(self.surface_area_key)
@@ -1811,41 +1821,18 @@ class TrackMate:
             ) = timed_cluster_label[time_key]
             scale_1 = 1
             scale_2 = 1
+            scale_3 = 1
             for i in range(len(output_cluster_centroid)):
               centroid = output_cluster_centroid[i]
               quality = output_largest_eigenvalue[i]
               eccentricity_comp_firstyz = output_cloud_eccentricity[i]
-              essentricity_dimension = output_dimensions[i]
-              if not isinstance(essentricity_dimension, int):
-                if essentricity_dimension[0] == 2:
-                    scale_1 = self.zcalibration
-                    if essentricity_dimension[1] == 1:
-                        scale_2 = self.ycalibration
-
-                if essentricity_dimension[0] == 2:
-                    scale_1 = self.zcalibration
-                    if essentricity_dimension[1] == 0:
-                        scale_2 = self.xcalibration
-
-                if essentricity_dimension[0] == 1:
-                    scale_1 = self.ycalibration
-                    if essentricity_dimension[1] == 0:
-                        scale_2 = self.xcalibration
-
-                if essentricity_dimension[0] == 1:
-                    scale_1 = self.ycalibration
-                    if essentricity_dimension[1] == 2:
-                        scale_2 = self.zcalibration
-
-                if essentricity_dimension[0] == 0:
-                    scale_1 = self.xcalibration
-                    if essentricity_dimension[1] == 1:
-                        scale_2 = self.ycalibration
-
-                if essentricity_dimension[0] == 0:
-                    scale_1 = self.xcalibration
-                    if essentricity_dimension[1] == 2:
-                        scale_2 = self.zcalibration
+              eccentricity_dimension = output_dimensions[i]
+              if not isinstance(eccentricity_dimension, int):
+                scale = set_scale(eccentricity_dimension,self.xcalibration, self.ycalibration,self.zcalibration)
+                scale_1 = scale[0]
+                scale_2 = scale[1]
+                scale_3 = scale[2]
+                
 
                 cell_axis = output_largest_eigenvector[i]
                 surface_area = (
@@ -1912,6 +1899,16 @@ class TrackMate:
                                 * scale_2
                             }
                         )
+
+                        self.unique_spot_properties[int(closest_cell_id)].update(
+                            {
+                                self.eccentricity_comp_thirdkey: eccentricity_comp_firstyz[
+                                    2
+                                ]
+                                * scale_3
+                            }
+                        )
+
                         self.unique_spot_properties[int(closest_cell_id)].update(
                             {self.surface_area_key: surface_area}
                         )
@@ -1930,6 +1927,9 @@ class TrackMate:
                             {self.eccentricity_comp_secondkey: -1}
                         )
                         self.unique_spot_properties[int(closest_cell_id)].update(
+                            {self.eccentricity_comp_thirdkey: -1}
+                        )
+                        self.unique_spot_properties[int(closest_cell_id)].update(
                             {self.surface_area_key: -1}
                         )
                         self.unique_spot_properties[int(closest_cell_id)].update(
@@ -1941,6 +1941,8 @@ class TrackMate:
 
             for (k, v) in self.root_spots.items():
                 self.root_spots[k] = self.unique_spot_properties[k]
+    
+
 
     def _compute_phenotypes(self):
 
@@ -2284,6 +2286,9 @@ class TrackMate:
         )
         self.unique_spot_properties[int(cell_id)].update(
             {self.eccentricity_comp_secondkey: -1}
+        )
+        self.unique_spot_properties[int(cell_id)].update(
+            {self.eccentricity_comp_thirdkey: -1}
         )
         self.unique_spot_properties[int(cell_id)].update({self.surface_area_key: -1})
         self.unique_spot_properties[int(cell_id)].update({self.cellaxis_mask_key: -1})
@@ -2919,3 +2924,10 @@ def get_feature_dict(unique_tracks_properties):
     }
 
     return features
+
+
+def set_scale(dimensions, x_calibration, y_calibration, z_calibration):
+
+    scale = [x_calibration, y_calibration, z_calibration]
+    arranged_scale = [scale[dim] for dim in dimensions]
+    return tuple(arranged_scale)

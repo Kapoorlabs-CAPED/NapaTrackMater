@@ -648,7 +648,7 @@ def get_eccentricity(point_cloud):
     largest_eigen_value = eigenvalues[idx[0]]
     if np.any(eigenvalues < 0):
         return None
-    eccentricities = np.sqrt(eigenvalues / eigenvalues.min() + 1.0e-6)
+    eccentricities = np.sqrt(eigenvalues)
     dimensions = idx
 
     return eccentricities, largest_eigen_vector, largest_eigen_value, dimensions

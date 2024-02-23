@@ -272,6 +272,7 @@ class TrackVector(TrackMate):
                     volume,
                     eccentricity_comp_first,
                     eccentricity_comp_second,
+                    eccentricity_comp_third,
                     surface_area,
                     latent_features,
                 ) = unique_shape_properties_tracklet
@@ -298,6 +299,7 @@ class TrackVector(TrackMate):
                         volume,
                         eccentricity_comp_first,
                         eccentricity_comp_second,
+                        eccentricity_comp_third,
                         surface_area,
                         speed,
                         motion_angle,
@@ -500,6 +502,7 @@ class TrackVector(TrackMate):
             surface_area = spot_properties[self.surface_area_key]
             eccentricity_comp_first = spot_properties[self.eccentricity_comp_firstkey]
             eccentricity_comp_second = spot_properties[self.eccentricity_comp_secondkey]
+            eccentricity_comp_third = spot_properties[self.eccentricity_comp_thirdkey]
             radius = spot_properties[self.radius_key]
             volume = spot_properties[self.quality_key]
             speed = spot_properties[self.speed_key]
@@ -518,6 +521,7 @@ class TrackVector(TrackMate):
                 "Surface Area": surface_area,
                 "Eccentricity Comp First": eccentricity_comp_first,
                 "Eccentricity Comp Second": eccentricity_comp_second,
+                "Eccentricity Comp Third": eccentricity_comp_third,
                 "Radius": radius,
                 "Volume": volume,
                 "Speed": speed,
@@ -562,6 +566,7 @@ class TrackVector(TrackMate):
                     "Volume",
                     "Eccentricity Comp First",
                     "Eccentricity Comp Second",
+                    "Eccentricity Comp Third",
                     "Surface Area",
                     "Speed",
                     "Motion_Angle",
@@ -628,6 +633,7 @@ def _iterate_over_tracklets(
             "Volume",
             "Eccentricity Comp First",
             "Eccentricity Comp Second",
+            "Eccentricity Comp Third",
             "Surface Area",
             "Speed",
             "Motion_Angle",
@@ -644,6 +650,7 @@ def _iterate_over_tracklets(
             "Volume",
             "Eccentricity Comp First",
             "Eccentricity Comp Second",
+            "Eccentricity Comp Third",
             "Surface Area",
         ]
     ].copy()
@@ -672,6 +679,7 @@ def _iterate_over_tracklets(
                 "Volume",
                 "Eccentricity Comp First",
                 "Eccentricity Comp Second",
+                "Eccentricity Comp Third",
                 "Surface Area",
                 "Speed",
                 "Motion_Angle",
@@ -693,6 +701,7 @@ def _iterate_over_tracklets(
                 "Volume",
                 "Eccentricity Comp First",
                 "Eccentricity Comp Second",
+                "Eccentricity Comp Third",
                 "Surface Area",
                 "Speed",
                 "Motion_Angle",
@@ -1135,6 +1144,7 @@ def create_gt_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame
                 "Volume",
                 "Eccentricity Comp First",
                 "Eccentricity Comp Second",
+                "Eccentricity Comp Third",
                 "Surface Area",
                 "Speed",
                 "Motion_Angle",
@@ -1163,6 +1173,7 @@ def create_gt_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame
                 "Volume",
                 "Eccentricity Comp First",
                 "Eccentricity Comp Second",
+                "Eccentricity Comp Third",
                 "Surface Area",
                 "Speed",
                 "Motion_Angle",
