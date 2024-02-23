@@ -1951,9 +1951,11 @@ class TrackMate:
             track_id = k
             tracklet_properties = self.unique_track_properties[k]
             tracks = self.unique_tracks[k]
+            
             Z = tracks[:, 2]
             Y = tracks[:, 3]
             X = tracks[:, 4]
+            
             time = tracklet_properties[:, 0]
             unique_ids = tracklet_properties[:, 1]
             unique_ids_set = set(unique_ids)
@@ -1962,25 +1964,26 @@ class TrackMate:
             volume = tracklet_properties[:, 4]
             eccentricity_comp_first = tracklet_properties[:, 5]
             eccentricity_comp_second = tracklet_properties[:, 6]
-            surface_area = tracklet_properties[:, 7]
+            eccentricity_comp_third = tracklet_properties[:, 7]
+            surface_area = tracklet_properties[:, 8]
 
-            intensity = tracklet_properties[:, 8]
-            speed = tracklet_properties[:, 9]
-            motion_angle = tracklet_properties[:, 10]
-            acceleration = tracklet_properties[:, 11]
-            distance_cell_mask = tracklet_properties[:, 12]
-            radial_angle = tracklet_properties[:, 13]
-            cell_axis_mask = tracklet_properties[:, 14]
-            track_displacement = tracklet_properties[:, 15]
+            intensity = tracklet_properties[:, 9]
+            speed = tracklet_properties[:, 10]
+            motion_angle = tracklet_properties[:, 11]
+            acceleration = tracklet_properties[:, 12]
+            distance_cell_mask = tracklet_properties[:, 13]
+            radial_angle = tracklet_properties[:, 14]
+            cell_axis_mask = tracklet_properties[:, 15]
+            track_displacement = tracklet_properties[:, 16]
 
-            total_track_distance = tracklet_properties[:, 16]
+            total_track_distance = tracklet_properties[:, 17]
 
-            max_track_distance = tracklet_properties[:, 17]
+            max_track_distance = tracklet_properties[:, 18]
 
-            track_duration = tracklet_properties[:, 18]
+            track_duration = tracklet_properties[:, 19]
             
-            if tracklet_properties.shape[1] > 19:
-                latent_shape_features = tracklet_properties[:, 19:]
+            if tracklet_properties.shape[1] > 20:
+                latent_shape_features = tracklet_properties[:, 20:]
             else:
                 latent_shape_features = []    
 
@@ -2014,6 +2017,7 @@ class TrackMate:
                 current_distance_cell_mask = []
                 current_eccentricity_comp_first = []
                 current_eccentricity_comp_second = []
+                current_eccentricity_comp_third = []
                 current_surface_area = []
                 current_latent_shape_features = []
                 current_radial_angle = []
@@ -2043,6 +2047,10 @@ class TrackMate:
                         current_eccentricity_comp_second.append(
                             eccentricity_comp_second[j]
                         )
+                        current_eccentricity_comp_third.append(
+                            eccentricity_comp_third[j]
+                        )
+
                         current_surface_area.append(surface_area[j])
                         if latent_shape_features != []: 
                            current_latent_shape_features.append(latent_shape_features[j])
@@ -2063,6 +2071,9 @@ class TrackMate:
                 )
                 current_eccentricity_comp_second = np.asarray(
                     current_eccentricity_comp_second, dtype=np.float32
+                )
+                current_eccentricity_comp_third = np.asarray(
+                    current_eccentricity_comp_third, dtype=np.float32
                 )
                 current_surface_area = np.asarray(
                     current_surface_area, dtype=np.float32
@@ -2125,6 +2136,7 @@ class TrackMate:
                     current_volume,
                     current_eccentricity_comp_first,
                     current_eccentricity_comp_second,
+                    current_eccentricity_comp_third,
                     current_surface_area,
                     current_latent_shape_features
                     
