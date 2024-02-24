@@ -711,7 +711,7 @@ def _iterate_over_tracklets(
                 "Cell_Axis_Mask",
             ]
         ].copy()
-   
+
     if ignore_columns is not None:
         for column in ignore_columns:
             if column in full_dataframe.columns:
@@ -722,7 +722,7 @@ def _iterate_over_tracklets(
                 shape_dataframe.drop(columns=[column], inplace=True)
             if column in dynamic_dataframe.columns:
                 dynamic_dataframe.drop(columns=[column], inplace=True)
-       
+
     latent_columns = [
         col for col in track_data.columns if col.startswith("latent_feature_number_")
     ]
@@ -787,9 +787,6 @@ def create_analysis_tracklets(
     else:
         local_shape_dynamic_dataframe = global_shape_dynamic_dataframe
 
-        
-            
-
     subset_dividing = local_shape_dynamic_dataframe[
         local_shape_dynamic_dataframe["Dividing"] == 1
     ]
@@ -834,12 +831,11 @@ def create_analysis_tracklets(
             training_tracklets = _iterate_over_tracklets(
                 track_data, training_tracklets, track_id, ignore_columns=ignore_columns
             )
-    modified_dataframe = local_shape_dynamic_dataframe.copy()        
+    modified_dataframe = local_shape_dynamic_dataframe.copy()
     if ignore_columns is not None:
-            for column in ignore_columns:
-                if column in modified_dataframe.columns:
-                    modified_dataframe.drop(columns=[column], inplace=True)
-
+        for column in ignore_columns:
+            if column in modified_dataframe.columns:
+                modified_dataframe.drop(columns=[column], inplace=True)
 
     return training_tracklets, modified_dataframe
 
@@ -1423,36 +1419,38 @@ def predict_supervised_clustering(
     result_dataframe.to_csv(csv_file_name, index=False)
 
 
-
 def calculate_wcss(data, labels, centroids):
     wcss = 0
     for i in range(len(data)):
-            cluster_label = labels[i]
-            centroid = centroids[cluster_label]
-            distance = np.linalg.norm(data[i] - centroid)
-            wcss += distance**2
+        cluster_label = labels[i]
+        centroid = centroids[cluster_label]
+        distance = np.linalg.norm(data[i] - centroid)
+        wcss += distance**2
     return wcss
 
-def calculate_intercluster_distance(compute_vectors, labels, return_mean = True):
+
+def calculate_intercluster_distance(compute_vectors, labels, return_mean=True):
     intercluster_distances = {}
     for cluster_label in np.unique(labels):
         cluster_indices = np.where(labels == cluster_label)[0]
-        
+
         compute_data = compute_vectors[cluster_indices]
         mean_vector = np.mean(compute_data, axis=0)
-        
+
         distances = np.linalg.norm(compute_data - mean_vector, axis=1)
         if return_mean:
             mean_distance = np.mean(distances)
             mean_distance = np.full_like(distances, mean_distance)
         else:
-            mean_distance = distances    
-        
+            mean_distance = distances
+
         intercluster_distances[cluster_label] = mean_distance
     return intercluster_distances
 
 
-def calculate_intercluster_eucledian_distance(compute_vectors, labels, return_mean= True):
+def calculate_intercluster_eucledian_distance(
+    compute_vectors, labels, return_mean=True
+):
 
     intercluster_eucledian_distances = {}
     for cluster_label in np.unique(labels):
@@ -1467,11 +1465,7 @@ def calculate_intercluster_eucledian_distance(compute_vectors, labels, return_me
             mean_distance = distances
         intercluster_eucledian_distances[cluster_label] = mean_distance
 
-
     return intercluster_eucledian_distances
-
-
-
 
 
 def calculate_cluster_centroids(data, labels):
@@ -1479,12 +1473,10 @@ def calculate_cluster_centroids(data, labels):
     centroids = {}
     for label in unique_labels:
         cluster_data = data[labels == label]
-        
-        
+
         centroid = np.mean(cluster_data, axis=0)
         centroids[label] = centroid
     return centroids
-
 
 
 def simple_unsupervised_clustering(
@@ -1524,9 +1516,12 @@ def simple_unsupervised_clustering(
         dynamic_track_array = np.array(
             [[item for item in record.values()] for record in dynamic_dataframe_list]
         )
-        columns_of_interest = ['t', 'z', 'y', 'x']
-        position_track_array = np.array([
-            [record[col] for col in columns_of_interest] for record in full_dataframe_list]
+        columns_of_interest = ["t", "z", "y", "x"]
+        position_track_array = np.array(
+            [
+                [record[col] for col in columns_of_interest]
+                for record in full_dataframe_list
+            ]
         )
         assert (
             shape_dynamic_track_array.shape[0]
@@ -1547,8 +1542,9 @@ def simple_unsupervised_clustering(
                 dynamic_track_array, t_delta=t_delta
             )
             position_computation = compute_raw_matrix(
-                position_track_array, t_delta=t_delta
+                position_track_array, t_delta=t_delta, take_center=True
             )
+
             if (
                 covariance_computation_shape_dynamic is not None
                 and covaraince_computation_shape is not None
@@ -1649,25 +1645,23 @@ def simple_unsupervised_clustering(
         )
         np.save(wcss_file_name, shape_wcss_value)
 
-
         cluster_distance_map_shape_dynamic_file_name = os.path.join(
             csv_file_name_original
             + "shape_dynamic"
             + "_cluster_distance_map_shape_dynamic.npy"
         )
-        np.save(cluster_distance_map_shape_dynamic_file_name, cluster_distance_map_shape_dynamic)
+        np.save(
+            cluster_distance_map_shape_dynamic_file_name,
+            cluster_distance_map_shape_dynamic,
+        )
 
         cluster_distance_map_shape_file_name = os.path.join(
-            csv_file_name_original
-            + "shape"
-            + "_cluster_distance_map_shape.npy"
+            csv_file_name_original + "shape" + "_cluster_distance_map_shape.npy"
         )
         np.save(cluster_distance_map_shape_file_name, cluster_distance_map_shape)
 
         cluster_distance_map_dynamic_file_name = os.path.join(
-            csv_file_name_original
-            + "dynamic"
-            + "_cluster_distance_map_dynamic.npy"
+            csv_file_name_original + "dynamic" + "_cluster_distance_map_dynamic.npy"
         )
         np.save(cluster_distance_map_dynamic_file_name, cluster_distance_map_dynamic)
 
@@ -1676,25 +1670,30 @@ def simple_unsupervised_clustering(
             + "shape_dynamic"
             + "_cluster_eucledian_distance_map_shape_dynamic.npy"
         )
-        np.save(cluster_eucledian_distance_map_shape_dynamic_file_name, cluster_eucledian_distance_map_shape_dynamic)
+        np.save(
+            cluster_eucledian_distance_map_shape_dynamic_file_name,
+            cluster_eucledian_distance_map_shape_dynamic,
+        )
 
         cluster_eucledian_distance_map_shape_file_name = os.path.join(
             csv_file_name_original
             + "shape"
             + "_cluster_eucledian_distance_map_shape.npy"
         )
-        np.save(cluster_eucledian_distance_map_shape_file_name, cluster_eucledian_distance_map_shape)
+        np.save(
+            cluster_eucledian_distance_map_shape_file_name,
+            cluster_eucledian_distance_map_shape,
+        )
 
         cluster_eucledian_distance_map_dynamic_file_name = os.path.join(
             csv_file_name_original
             + "dynamic"
             + "_cluster_eucledian_distance_map_dynamic.npy"
         )
-        np.save(cluster_eucledian_distance_map_dynamic_file_name, cluster_eucledian_distance_map_dynamic)
-
-        
-
-        
+        np.save(
+            cluster_eucledian_distance_map_dynamic_file_name,
+            cluster_eucledian_distance_map_dynamic,
+        )
 
 
 def unsupervised_clustering(
@@ -1849,52 +1848,55 @@ def unsupervised_clustering(
         )
         np.save(wcss_file_name, shape_wcss_value)
 
-
         cluster_distance_map_shape_dynamic_file_name = os.path.join(
             csv_file_name_original
             + "shape_dynamic"
             + "_cluster_distance_map_shape_dynamic.npy"
         )
-        np.save(cluster_distance_map_shape_dynamic_file_name, cluster_distance_map_shape_dynamic)
+        np.save(
+            cluster_distance_map_shape_dynamic_file_name,
+            cluster_distance_map_shape_dynamic,
+        )
 
         cluster_distance_map_shape_file_name = os.path.join(
-            csv_file_name_original
-            + "shape"
-            + "_cluster_distance_map_shape.npy"
+            csv_file_name_original + "shape" + "_cluster_distance_map_shape.npy"
         )
         np.save(cluster_distance_map_shape_file_name, cluster_distance_map_shape)
 
         cluster_distance_map_dynamic_file_name = os.path.join(
-            csv_file_name_original
-            + "dynamic"
-            + "_cluster_distance_map_dynamic.npy"
+            csv_file_name_original + "dynamic" + "_cluster_distance_map_dynamic.npy"
         )
         np.save(cluster_distance_map_dynamic_file_name, cluster_distance_map_dynamic)
-
 
         cluster_eucledian_distance_map_shape_dynamic_file_name = os.path.join(
             csv_file_name_original
             + "shape_dynamic"
             + "_cluster_eucledian_distance_map_shape_dynamic.npy"
         )
-        np.save(cluster_eucledian_distance_map_shape_dynamic_file_name, cluster_eucledian_distance_map_shape_dynamic)
-        
+        np.save(
+            cluster_eucledian_distance_map_shape_dynamic_file_name,
+            cluster_eucledian_distance_map_shape_dynamic,
+        )
 
         cluster_eucledian_distance_map_dynamic_file_name = os.path.join(
             csv_file_name_original
             + "dynamic"
             + "_cluster_eucledian_distance_map_dynamic.npy"
         )
-        np.save(cluster_eucledian_distance_map_dynamic_file_name, cluster_eucledian_distance_map_dynamic)
+        np.save(
+            cluster_eucledian_distance_map_dynamic_file_name,
+            cluster_eucledian_distance_map_dynamic,
+        )
 
         cluster_eucledian_distance_map_shape_file_name = os.path.join(
             csv_file_name_original
             + "shape"
             + "_cluster_eucledian_distance_map_shape.npy"
         )
-        np.save(cluster_eucledian_distance_map_shape_file_name, cluster_eucledian_distance_map_shape)
-
-
+        np.save(
+            cluster_eucledian_distance_map_shape_file_name,
+            cluster_eucledian_distance_map_shape,
+        )
 
 
 def convert_tracks_to_arrays(
@@ -1924,9 +1926,7 @@ def convert_tracks_to_arrays(
         dynamic_track_array = np.array(
             [[item for item in record.values()] for record in dynamic_dataframe_list]
         )
-        full_track_array = np.array(
-            [[item for item in record.values()] for record in full_dataframe_list]
-        )
+
         assert (
             shape_dynamic_track_array.shape[0]
             == shape_track_array.shape[0]
@@ -2102,9 +2102,12 @@ def convert_tracks_to_simple_arrays(
         dynamic_track_array = np.array(
             [[item for item in record.values()] for record in dynamic_dataframe_list]
         )
-        columns_of_interest = ['t', 'z', 'y', 'x']
-        position_track_array = np.array([
-            [record[col] for col in columns_of_interest] for record in full_dataframe_list]
+        columns_of_interest = ["z", "y", "x"]
+        position_track_array = np.array(
+            [
+                [record[col] for col in columns_of_interest]
+                for record in full_dataframe_list
+            ]
         )
         assert (
             shape_dynamic_track_array.shape[0]
@@ -2129,9 +2132,8 @@ def convert_tracks_to_simple_arrays(
             )
 
             position_computation = compute_raw_matrix(
-                position_track_array, t_delta=t_delta
+                position_track_array, t_delta=t_delta, take_center=True
             )
-
             if (
                 covariance_shape_dynamic is not None
                 and covariance_shape is not None
@@ -2191,16 +2193,14 @@ def convert_tracks_to_simple_arrays(
         )
 
         shape_dynamic_cluster_labels_dict = {
-                track_id: cluster_label
-                for track_id, cluster_label in zip(
-                    analysis_track_ids, shape_dynamic_cluster_labels
-                )
-            }
-        shape_cluster_labels_dict = {
             track_id: cluster_label
             for track_id, cluster_label in zip(
-                analysis_track_ids, shape_cluster_labels
+                analysis_track_ids, shape_dynamic_cluster_labels
             )
+        }
+        shape_cluster_labels_dict = {
+            track_id: cluster_label
+            for track_id, cluster_label in zip(analysis_track_ids, shape_cluster_labels)
         }
         dynamic_cluster_labels_dict = {
             track_id: cluster_label
@@ -2212,16 +2212,13 @@ def convert_tracks_to_simple_arrays(
         cluster_distance_map_shape_dynamic_dict = {
             track_id: cluster_distance_map_shape_dynamic[cluster_label]
             for track_id, cluster_label in zip(
-                    analysis_track_ids, shape_dynamic_cluster_labels
-                )
+                analysis_track_ids, shape_dynamic_cluster_labels
+            )
         }
-       
-        
+
         cluster_distance_map_shape_dict = {
             track_id: cluster_distance_map_shape[cluster_label]
-            for track_id, cluster_label in zip(
-                analysis_track_ids, shape_cluster_labels
-            )
+            for track_id, cluster_label in zip(analysis_track_ids, shape_cluster_labels)
         }
 
         cluster_distance_map_dynamic_dict = {
@@ -2234,16 +2231,13 @@ def convert_tracks_to_simple_arrays(
         cluster_eucledian_distance_map_shape_dynamic_dict = {
             track_id: cluster_eucledian_distance_map_shape_dynamic[cluster_label]
             for track_id, cluster_label in zip(
-                    analysis_track_ids, shape_dynamic_cluster_labels
-                )
+                analysis_track_ids, shape_dynamic_cluster_labels
+            )
         }
-       
-        
+
         cluster_eucledian_distance_map_shape_dict = {
             track_id: cluster_eucledian_distance_map_shape[cluster_label]
-            for track_id, cluster_label in zip(
-                analysis_track_ids, shape_cluster_labels
-            )
+            for track_id, cluster_label in zip(analysis_track_ids, shape_cluster_labels)
         }
 
         cluster_eucledian_distance_map_dynamic_dict = {
@@ -2251,8 +2245,7 @@ def convert_tracks_to_simple_arrays(
             for track_id, cluster_label in zip(
                 analysis_track_ids, dynamic_cluster_labels
             )
-        }    
-
+        }
 
         return (
             shape_dynamic_eigenvectors_1d,
@@ -2292,16 +2285,14 @@ def core_clustering(
     cluster_threshold_dynamic,
     cluster_threshold_shape,
     criterion,
-    distance_vectors = 'shape'
+    distance_vectors="shape",
 ):
     shape_dynamic_eigenvectors_3d = np.dstack(shape_dynamic_eigenvectors_matrix)
     shape_eigenvectors_3d = np.dstack(shape_eigenvectors_matrix)
     dynamic_eigenvectors_3d = np.dstack(dynamic_eigenvectors_matrix)
     position_vectors_3d = np.dstack(position_matrix)
-    T = position_vectors_3d.shape[1]
-    central_t_index = T // 2
-    position_vector_2d = position_vectors_3d[:,central_t_index,:]
-    position_vector_2d = position_vector_2d.reshape(len(analysis_track_ids), -1)
+
+    position_vector_2d = position_vectors_3d.reshape(len(analysis_track_ids), -1)
     shape_dynamic_eigenvectors_2d = shape_dynamic_eigenvectors_3d.reshape(
         len(analysis_track_ids), -1
     )
@@ -2309,37 +2300,44 @@ def core_clustering(
     dynamic_eigenvectors_2d = dynamic_eigenvectors_3d.reshape(
         len(analysis_track_ids), -1
     )
-
+    print(
+        f"position vectors 3d {position_vector_2d.shape}, {dynamic_eigenvectors_2d.shape}"
+    )
     shape_dynamic_eigenvectors_1d = np.array(shape_dynamic_eigenvectors_2d)
     shape_eigenvectors_1d = np.array(shape_eigenvectors_2d)
     dynamic_eigenvectors_1d = np.array(dynamic_eigenvectors_2d)
     position_vector_1d = np.array(position_vector_2d)
-    
-    if distance_vectors == 'shape':
+
+    if distance_vectors == "shape":
         compute_vectors = shape_eigenvectors_1d
-    if distance_vectors == 'dynamic':
+    if distance_vectors == "dynamic":
         compute_vectors = dynamic_eigenvectors_1d
-    if distance_vectors == 'shape_and_dynamic':
-        compute_vectors = shape_dynamic_eigenvectors_1d    
+    if distance_vectors == "shape_and_dynamic":
+        compute_vectors = shape_dynamic_eigenvectors_1d
     else:
         compute_vectors = shape_eigenvectors_1d
     shape_dynamic_cosine_distance = pdist(shape_dynamic_eigenvectors_1d, metric=metric)
 
     shape_dynamic_linkage_matrix = linkage(shape_dynamic_cosine_distance, method=method)
     shape_dynamic_cluster_labels = fcluster(
-            shape_dynamic_linkage_matrix,
-            cluster_threshold_shape_dynamic,
-            criterion=criterion,
+        shape_dynamic_linkage_matrix,
+        cluster_threshold_shape_dynamic,
+        criterion=criterion,
+    )
+
+    cluster_distance_map_shape_dynamic = calculate_intercluster_distance(
+        compute_vectors, shape_dynamic_cluster_labels
+    )
+    cluster_eucledian_distance_map_shape_dynamic = (
+        calculate_intercluster_eucledian_distance(
+            position_vector_1d, shape_dynamic_cluster_labels
         )
-    
-    cluster_distance_map_shape_dynamic = calculate_intercluster_distance( compute_vectors, shape_dynamic_cluster_labels)   
-    cluster_eucledian_distance_map_shape_dynamic = calculate_intercluster_eucledian_distance(position_vector_1d, shape_dynamic_cluster_labels)
+    )
     try:
 
         shape_dynamic_cluster_centroids = calculate_cluster_centroids(
-        shape_dynamic_eigenvectors_1d, shape_dynamic_cluster_labels
-    )
-        
+            shape_dynamic_eigenvectors_1d, shape_dynamic_cluster_labels
+        )
 
         shape_dynamic_silhouette = silhouette_score(
             shape_dynamic_eigenvectors_1d,
@@ -2354,28 +2352,29 @@ def core_clustering(
     except Exception as e:
         print(e)
         shape_dynamic_silhouette = np.nan
-        shape_dynamic_wcss_value = np.nan     
-    
-        
+        shape_dynamic_wcss_value = np.nan
+
     dynamic_cosine_distance = pdist(dynamic_eigenvectors_1d, metric=metric)
 
     dynamic_linkage_matrix = linkage(dynamic_cosine_distance, method=method)
     dynamic_cluster_labels = fcluster(
-            dynamic_linkage_matrix,
-            cluster_threshold_dynamic,
-            criterion=criterion,
-        )
- 
-    
-    cluster_distance_map_dynamic = calculate_intercluster_distance(compute_vectors, dynamic_cluster_labels)   
-    cluster_eucledian_distance_map_dynamic = calculate_intercluster_eucledian_distance(position_vector_1d, dynamic_cluster_labels)
+        dynamic_linkage_matrix,
+        cluster_threshold_dynamic,
+        criterion=criterion,
+    )
+
+    cluster_distance_map_dynamic = calculate_intercluster_distance(
+        compute_vectors, dynamic_cluster_labels
+    )
+    cluster_eucledian_distance_map_dynamic = calculate_intercluster_eucledian_distance(
+        position_vector_1d, dynamic_cluster_labels
+    )
 
     try:
 
         dynamic_cluster_centroids = calculate_cluster_centroids(
-        dynamic_eigenvectors_1d, dynamic_cluster_labels
-    )
-        
+            dynamic_eigenvectors_1d, dynamic_cluster_labels
+        )
 
         dynamic_silhouette = silhouette_score(
             dynamic_eigenvectors_1d, dynamic_cluster_labels, metric=metric
@@ -2387,22 +2386,25 @@ def core_clustering(
         )
     except Exception as e:
         print(e)
-        dynamic_silhouette = np.nan 
-        dynamic_wcss_value = np.nan     
-    
+        dynamic_silhouette = np.nan
+        dynamic_wcss_value = np.nan
 
     shape_cosine_distance = pdist(shape_eigenvectors_1d, metric=metric)
 
     shape_linkage_matrix = linkage(shape_cosine_distance, method=method)
     shape_cluster_labels = fcluster(
-            shape_linkage_matrix, cluster_threshold_shape, criterion=criterion
-        )
-      
+        shape_linkage_matrix, cluster_threshold_shape, criterion=criterion
+    )
+
     shape_cluster_centroids = calculate_cluster_centroids(
         shape_eigenvectors_1d, shape_cluster_labels
     )
-    cluster_distance_map_shape = calculate_intercluster_distance(compute_vectors, shape_cluster_labels)   
-    cluster_eucledian_distance_map_shape = calculate_intercluster_eucledian_distance(position_vector_1d, shape_cluster_labels)
+    cluster_distance_map_shape = calculate_intercluster_distance(
+        compute_vectors, shape_cluster_labels
+    )
+    cluster_eucledian_distance_map_shape = calculate_intercluster_eucledian_distance(
+        position_vector_1d, shape_cluster_labels
+    )
 
     try:
         shape_silhouette = silhouette_score(
@@ -2413,9 +2415,8 @@ def core_clustering(
         )
     except Exception as e:
         print(e)
-        shape_silhouette = np.nan 
-        shape_wcss_value = np.nan    
-    
+        shape_silhouette = np.nan
+        shape_wcss_value = np.nan
 
     return (
         shape_dynamic_eigenvectors_1d,
@@ -2443,9 +2444,7 @@ def core_clustering(
     )
 
 
-
-
-def compute_raw_matrix(track_arrays, t_delta):
+def compute_raw_matrix(track_arrays, t_delta, take_center=False):
     track_duration = track_arrays.shape[0]
     t_delta = int(t_delta)
 
@@ -2458,8 +2457,10 @@ def compute_raw_matrix(track_arrays, t_delta):
         result_matrix = track_arrays[:t_delta, :]
     else:
         result_matrix = track_arrays
-
-    flattened_array = result_matrix.flatten()
+    if take_center:
+        flattened_array = result_matrix[result_matrix.shape[0] // 2, :]
+    else:
+        flattened_array = result_matrix.flatten()
 
     return flattened_array
 
