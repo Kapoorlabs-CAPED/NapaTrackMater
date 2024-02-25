@@ -1429,7 +1429,7 @@ def calculate_wcss(data, labels, centroids):
     return wcss
 
 
-def calculate_intercluster_distance(compute_vectors, labels, return_mean=True):
+def calculate_intercluster_distance(compute_vectors, labels):
     intercluster_distances = {}
     for cluster_label in np.unique(labels):
         cluster_indices = np.where(labels == cluster_label)[0]
@@ -1438,19 +1438,13 @@ def calculate_intercluster_distance(compute_vectors, labels, return_mean=True):
         mean_vector = np.mean(compute_data, axis=0)
 
         distances = np.linalg.norm(compute_data - mean_vector, axis=1)
-        if return_mean:
-            mean_distance = np.mean(distances)
-            mean_distance = np.full_like(distances, mean_distance)
-        else:
-            mean_distance = distances
+        mean_distance = np.mean(distances)
 
         intercluster_distances[cluster_label] = mean_distance
     return intercluster_distances
 
 
-def calculate_intercluster_eucledian_distance(
-    compute_vectors, labels, return_mean=True
-):
+def calculate_intercluster_eucledian_distance(compute_vectors, labels):
 
     intercluster_eucledian_distances = {}
     for cluster_label in np.unique(labels):
@@ -1458,11 +1452,7 @@ def calculate_intercluster_eucledian_distance(
         compute_data = compute_vectors[cluster_indices]
         mean_vector = np.mean(compute_data, axis=0)
         distances = np.linalg.norm(compute_data - mean_vector, axis=1)
-        if return_mean:
-            mean_distance = np.mean(distances)
-            mean_distance = np.full_like(distances, mean_distance)
-        else:
-            mean_distance = distances
+        mean_distance = np.mean(distances)
         intercluster_eucledian_distances[cluster_label] = mean_distance
 
     return intercluster_eucledian_distances
