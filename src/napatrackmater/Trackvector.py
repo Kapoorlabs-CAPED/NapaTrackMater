@@ -2287,13 +2287,13 @@ def core_clustering(
 
     best_threshold_shape_dynamic = None
     best_silhouette_shape_dynamic = -np.inf
-    best_wcss_shape_dynamic_value = -np.inf
+    best_wcss_shape_dynamic_value = np.inf
     best_threshold_dynamic = None
     best_silhouette_dynamic = -np.inf
-    best_wcss_dynamic_value = -np.inf
+    best_wcss_dynamic_value = np.inf
     best_threshold_shape = None
     best_silhouette_shape = -np.inf
-    best_wcss_shape_value = -np.inf
+    best_wcss_shape_value = np.inf
     best_shape_dynamic_cluster_labels = None
     best_dynamic_cluster_labels = None
     best_shape_cluster_labels = None
@@ -2503,13 +2503,13 @@ def core_clustering(
             shape_silhouette = np.nan
             shape_wcss_value = np.nan
     print(
-        f"best threshold value for shape dynamic {best_threshold_shape_dynamic} with silhouette score of {best_silhouette_shape_dynamic}, number of clusters {len(np.unique(best_shape_dynamic_cluster_labels))}"
+        f"best threshold value for shape dynamic {best_threshold_shape_dynamic} with silhouette score of {best_silhouette_shape_dynamic} and with wcss score of {best_wcss_shape_dynamic_value}, number of clusters {len(np.unique(best_shape_dynamic_cluster_labels))}"
     )
     print(
-        f"best threshold value for dynamic {best_threshold_dynamic} with silhouette score of {best_silhouette_dynamic}, number of clusters {len(np.unique(best_dynamic_cluster_labels))}"
+        f"best threshold value for dynamic {best_threshold_dynamic} with silhouette score of {best_silhouette_dynamic} and with wcss score of {best_wcss_dynamic_value}, number of clusters {len(np.unique(best_dynamic_cluster_labels))}"
     )
     print(
-        f"best threshold value for shape {best_threshold_shape} with silhouette score of {best_silhouette_shape}, number of clusters {len(np.unique(best_shape_cluster_labels))}"
+        f"best threshold value for shape {best_threshold_shape} with silhouette score of {best_silhouette_shape} and with wcss score of {best_wcss_shape_value}, number of clusters {len(np.unique(best_shape_cluster_labels))}"
     )
 
     return (
