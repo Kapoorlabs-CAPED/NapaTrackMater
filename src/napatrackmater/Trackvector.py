@@ -1480,6 +1480,7 @@ def simple_unsupervised_clustering(
     metric="euclidean",
     method="centroid",
     criterion="distance",
+    use_sillhouette_criteria=True,
 ):
 
     csv_file_name_original = csv_file_name
@@ -1591,6 +1592,7 @@ def simple_unsupervised_clustering(
             cluster_threshold_dynamic,
             cluster_threshold_shape,
             criterion,
+            use_sillhouette_criteria=use_sillhouette_criteria,
         )
 
         silhouette_file_name = os.path.join(
@@ -1696,6 +1698,7 @@ def unsupervised_clustering(
     metric="euclidean",
     method="ward",
     criterion="maxclust",
+    use_sillhouette_criteria=True,
 ):
 
     csv_file_name_original = csv_file_name
@@ -1794,6 +1797,7 @@ def unsupervised_clustering(
             cluster_threshold_dynamic,
             cluster_threshold_shape,
             criterion,
+            use_sillhouette_criteria=use_sillhouette_criteria,
         )
 
         silhouette_file_name = os.path.join(
@@ -2067,6 +2071,7 @@ def convert_tracks_to_simple_arrays(
     method="ward",
     criterion="maxclust",
     t_delta=10,
+    use_sillhouette_criteria=True,
 ):
 
     analysis_track_ids = []
@@ -2180,6 +2185,7 @@ def convert_tracks_to_simple_arrays(
             cluster_threshold_dynamic,
             cluster_threshold_shape,
             criterion,
+            use_sillhouette_criteria=use_sillhouette_criteria,
         )
 
         shape_dynamic_cluster_labels_dict = {
@@ -2276,6 +2282,7 @@ def core_clustering(
     cluster_threshold_shape_range,
     criterion,
     distance_vectors="shape",
+    use_sillhouette_criteria=True,
 ):
 
     best_threshold_shape_dynamic = None
@@ -2372,8 +2379,12 @@ def core_clustering(
                 shape_dynamic_cluster_labels,
                 shape_dynamic_cluster_centroids,
             )
+            if use_sillhouette_criteria:
+                condition = shape_dynamic_silhouette > best_silhouette_shape_dynamic
+            else:
+                condition = shape_dynamic_wcss_value < best_wcss_shape_dynamic_value
 
-            if shape_dynamic_silhouette > best_silhouette_shape_dynamic:
+            if condition:
                 best_silhouette_shape_dynamic = shape_dynamic_silhouette
                 best_threshold_shape_dynamic = cluster_threshold_shape_dynamic
                 best_wcss_shape_dynamic_value = shape_dynamic_wcss_value
@@ -2424,8 +2435,12 @@ def core_clustering(
                 dynamic_cluster_labels,
                 dynamic_cluster_centroids,
             )
+            if use_sillhouette_criteria:
+                condition = dynamic_silhouette > best_silhouette_dynamic
+            else:
+                condition = dynamic_wcss_value < best_wcss_dynamic_value
 
-            if dynamic_silhouette > best_silhouette_dynamic:
+            if condition:
                 best_silhouette_dynamic = dynamic_silhouette
                 best_threshold_dynamic = cluster_threshold_dynamic
                 best_wcss_dynamic_value = dynamic_wcss_value
@@ -2467,8 +2482,12 @@ def core_clustering(
             shape_wcss_value = calculate_wcss(
                 shape_eigenvectors_1d, shape_cluster_labels, shape_cluster_centroids
             )
+            if use_sillhouette_criteria:
+                condition = shape_silhouette > best_silhouette_shape
+            else:
+                condition = shape_wcss_value < best_wcss_shape_value
 
-            if shape_silhouette > best_silhouette_shape:
+            if condition:
                 best_silhouette_shape = shape_silhouette
                 best_threshold_shape = cluster_threshold_shape
                 best_wcss_shape_value = shape_wcss_value
