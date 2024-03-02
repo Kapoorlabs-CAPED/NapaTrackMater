@@ -20,13 +20,13 @@ class TrackMate:
     def __init__(
         self,
         xml_path,
-        spot_csv_path,
-        track_csv_path,
-        edges_csv_path,
-        AttributeBoxname,
-        TrackAttributeBoxname,
-        TrackidBox,
-        axes,
+        spot_csv_path=None,
+        track_csv_path=None,
+        edges_csv_path=None,
+        AttributeBoxname="AttributeIDBox",
+        TrackAttributeBoxname="TrackAttributeIDBox",
+        TrackidBox="All",
+        axes='TZYX',
         scale_z=1.0,
         scale_xy=1.0,
         latent_features = 1,
@@ -85,9 +85,12 @@ class TrackMate:
         self.master_extra_name = master_extra_name
 
         self.num_points = num_points
-        self.spot_dataset, self.spot_dataset_index = get_csv_data(self.spot_csv_path)
-        self.track_dataset, self.track_dataset_index = get_csv_data(self.track_csv_path)
-        self.edges_dataset, self.edges_dataset_index = get_csv_data(self.edges_csv_path)
+        if self.spot_csv_path is not None:
+           self.spot_dataset, self.spot_dataset_index = get_csv_data(self.spot_csv_path)
+        if self.track_csv_path is not None:   
+           self.track_dataset, self.track_dataset_index = get_csv_data(self.track_csv_path)
+        if self.edges_csv_path is not None:   
+           self.edges_dataset, self.edges_dataset_index = get_csv_data(self.edges_csv_path)
         self.progress_bar = progress_bar
         self.axes = axes
         self.batch_size = batch_size
@@ -1463,7 +1466,8 @@ class TrackMate:
             self.graph_tracks[daughter_track_id] = parent_track_id
 
         print("getting attributes")
-        self._get_attributes()
+        if self.spot_csv_path is not None and self.track_csv_path is not None and self.edges_csv_path is not None:
+           self._get_attributes()
         if self.autoencoder_model is not None:
             self._compute_latent_space()
         self.count = 0
@@ -1669,7 +1673,8 @@ class TrackMate:
                 )
             )
             self.graph_tracks[daughter_track_id] = parent_track_id
-        self._get_attributes()
+        if self.spot_csv_path is not None and self.track_csv_path is not None and self.edges_csv_path is not None:    
+            self._get_attributes()
         if self.autoencoder_model and self.seg_image is not None:
             print("Getting clouds")
             
