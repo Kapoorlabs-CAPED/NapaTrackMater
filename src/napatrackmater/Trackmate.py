@@ -2380,8 +2380,8 @@ class TrackMate:
     def _temporal_plots_trackmate(self):
 
         self.Attr = {}
-        starttime = int(min(self.AllValues[self.frameid_key]))
-        endtime = int(max(self.AllValues[self.frameid_key]))
+        starttime = int(self.tstart)
+        endtime = int(self.tend)
 
         self.time = []
         self.mitotic_mean_disp_z = []
