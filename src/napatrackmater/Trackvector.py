@@ -32,12 +32,12 @@ import random
 class TrackVector(TrackMate):
     def __init__(
         self,
-        viewer: napari.Viewer,
-        image: np.ndarray,
         master_xml_path: Path,
-        spot_csv_path: Path,
-        track_csv_path: Path,
-        edges_csv_path: Path,
+        viewer: napari.Viewer = None,
+        image: np.ndarray = None,
+        spot_csv_path: Path = None,
+        track_csv_path: Path = None,
+        edges_csv_path: Path = None,
         t_minus: int = 0,
         t_plus: int = 10,
         x_start: int = 0,
@@ -358,7 +358,12 @@ class TrackVector(TrackMate):
             [r.result() for r in concurrent.futures.as_completed(futures)]
 
         print("getting attributes")
-        self._get_attributes()
+        if (
+            self.spot_csv_path is not None
+            and self.track_csv_path is not None
+            and self.edges_csv_path is not None
+        ):
+            self._get_attributes()
         if self.autoencoder_model is not None:
             self._compute_latent_space()
         self.unique_tracks = {}
@@ -2298,6 +2303,9 @@ def core_clustering(
     best_dynamic_cluster_labels = None
     best_shape_cluster_labels = None
     best_shape_dynamic_linkage_matrix = None
+    best_dynamic_linkage_matrix = None
+    best_shape_linkage_matrix = None
+    best_shape_dynamic_linkage_matrix = None
 
     best_cluster_distance_map_shape_dynamic = None
     best_cluster_distance_map_dynamic = None
@@ -2349,11 +2357,16 @@ def core_clustering(
         shape_dynamic_linkage_matrix = linkage(
             shape_dynamic_cosine_distance, method=method
         )
-        shape_dynamic_cluster_labels = fcluster(
-            shape_dynamic_linkage_matrix,
-            cluster_threshold_shape_dynamic,
-            criterion=criterion,
-        )
+        try:
+            shape_dynamic_cluster_labels = fcluster(
+                shape_dynamic_linkage_matrix,
+                cluster_threshold_shape_dynamic,
+                criterion=criterion,
+            )
+        except Exception:
+            shape_dynamic_cluster_labels = fcluster(
+                shape_dynamic_linkage_matrix, 1, criterion="maxclust"
+            )
 
         cluster_distance_map_shape_dynamic = calculate_intercluster_distance(
             compute_vectors, shape_dynamic_cluster_labels
@@ -2363,54 +2376,64 @@ def core_clustering(
                 position_vector_1d, shape_dynamic_cluster_labels
             )
         )
+
+        shape_dynamic_cluster_centroids = calculate_cluster_centroids(
+            shape_dynamic_eigenvectors_1d, shape_dynamic_cluster_labels
+        )
         try:
-
-            shape_dynamic_cluster_centroids = calculate_cluster_centroids(
-                shape_dynamic_eigenvectors_1d, shape_dynamic_cluster_labels
-            )
-
             shape_dynamic_silhouette = silhouette_score(
                 shape_dynamic_eigenvectors_1d,
                 shape_dynamic_cluster_labels,
                 metric=metric,
             )
+        except Exception:
+            shape_dynamic_silhouette = 0
+        try:
             shape_dynamic_wcss_value = calculate_wcss(
                 shape_dynamic_eigenvectors_1d,
                 shape_dynamic_cluster_labels,
                 shape_dynamic_cluster_centroids,
             )
-            if use_sillhouette_criteria:
-                condition = shape_dynamic_silhouette > best_silhouette_shape_dynamic
-            else:
-                condition = shape_dynamic_wcss_value < best_wcss_shape_dynamic_value
-
-            if condition:
-                best_silhouette_shape_dynamic = shape_dynamic_silhouette
-                best_threshold_shape_dynamic = cluster_threshold_shape_dynamic
-                best_wcss_shape_dynamic_value = shape_dynamic_wcss_value
-                best_shape_dynamic_cluster_labels = shape_dynamic_cluster_labels
-                best_shape_dynamic_linkage_matrix = shape_dynamic_linkage_matrix
-                best_cluster_distance_map_shape_dynamic = (
-                    cluster_distance_map_shape_dynamic
-                )
-                best_cluster_eucledian_distance_map_shape_dynamic = (
-                    cluster_eucledian_distance_map_shape_dynamic
-                )
         except Exception:
+            shape_dynamic_wcss_value = np.inf
 
-            shape_dynamic_silhouette = np.nan
-            shape_dynamic_wcss_value = np.nan
+        if use_sillhouette_criteria:
+            condition = (shape_dynamic_silhouette > best_silhouette_shape_dynamic) & (
+                shape_dynamic_silhouette > 0
+            )
+        else:
+            condition = (shape_dynamic_wcss_value < best_wcss_shape_dynamic_value) & (
+                shape_dynamic_wcss_value > 0
+            )
+
+        if condition:
+            best_silhouette_shape_dynamic = shape_dynamic_silhouette
+            best_threshold_shape_dynamic = cluster_threshold_shape_dynamic
+            best_wcss_shape_dynamic_value = shape_dynamic_wcss_value
+            best_shape_dynamic_cluster_labels = shape_dynamic_cluster_labels
+            best_shape_dynamic_linkage_matrix = shape_dynamic_linkage_matrix
+            best_cluster_distance_map_shape_dynamic = cluster_distance_map_shape_dynamic
+            best_cluster_eucledian_distance_map_shape_dynamic = (
+                cluster_eucledian_distance_map_shape_dynamic
+            )
 
     for cluster_threshold_dynamic in cluster_threshold_dynamic_range:
 
         dynamic_cosine_distance = pdist(dynamic_eigenvectors_1d, metric=metric)
 
         dynamic_linkage_matrix = linkage(dynamic_cosine_distance, method=method)
-        dynamic_cluster_labels = fcluster(
-            dynamic_linkage_matrix,
-            cluster_threshold_dynamic,
-            criterion=criterion,
-        )
+        try:
+            dynamic_cluster_labels = fcluster(
+                dynamic_linkage_matrix,
+                cluster_threshold_dynamic,
+                criterion=criterion,
+            )
+        except Exception:
+            dynamic_cluster_labels = fcluster(
+                dynamic_linkage_matrix,
+                1,
+                criterion="maxclust",
+            )
 
         cluster_distance_map_dynamic = calculate_intercluster_distance(
             compute_vectors, dynamic_cluster_labels
@@ -2421,47 +2444,55 @@ def core_clustering(
             )
         )
 
+        dynamic_cluster_centroids = calculate_cluster_centroids(
+            dynamic_eigenvectors_1d, dynamic_cluster_labels
+        )
         try:
-
-            dynamic_cluster_centroids = calculate_cluster_centroids(
-                dynamic_eigenvectors_1d, dynamic_cluster_labels
-            )
-
             dynamic_silhouette = silhouette_score(
                 dynamic_eigenvectors_1d, dynamic_cluster_labels, metric=metric
             )
+        except Exception:
+            dynamic_silhouette = 0
+        try:
             dynamic_wcss_value = calculate_wcss(
                 dynamic_eigenvectors_1d,
                 dynamic_cluster_labels,
                 dynamic_cluster_centroids,
             )
-            if use_sillhouette_criteria:
-                condition = dynamic_silhouette > best_silhouette_dynamic
-            else:
-                condition = dynamic_wcss_value < best_wcss_dynamic_value
-
-            if condition:
-                best_silhouette_dynamic = dynamic_silhouette
-                best_threshold_dynamic = cluster_threshold_dynamic
-                best_wcss_dynamic_value = dynamic_wcss_value
-                best_dynamic_cluster_labels = dynamic_cluster_labels
-                best_dynamic_linkage_matrix = dynamic_linkage_matrix
-                best_cluster_distance_map_dynamic = cluster_distance_map_dynamic
-                best_cluster_eucledian_distance_map_dynamic = (
-                    cluster_eucledian_distance_map_dynamic
-                )
-
         except Exception:
+            dynamic_wcss_value = np.inf
+        if use_sillhouette_criteria:
+            condition = (dynamic_silhouette > best_silhouette_dynamic) & (
+                dynamic_silhouette > 0
+            )
+        else:
+            condition = (dynamic_wcss_value < best_wcss_dynamic_value) & (
+                dynamic_wcss_value > 0
+            )
 
-            dynamic_silhouette = np.nan
-            dynamic_wcss_value = np.nan
+        if condition:
+            best_silhouette_dynamic = dynamic_silhouette
+            best_threshold_dynamic = cluster_threshold_dynamic
+            best_wcss_dynamic_value = dynamic_wcss_value
+            best_dynamic_cluster_labels = dynamic_cluster_labels
+            best_dynamic_linkage_matrix = dynamic_linkage_matrix
+            best_cluster_distance_map_dynamic = cluster_distance_map_dynamic
+            best_cluster_eucledian_distance_map_dynamic = (
+                cluster_eucledian_distance_map_dynamic
+            )
+
     for cluster_threshold_shape in cluster_threshold_shape_range:
         shape_cosine_distance = pdist(shape_eigenvectors_1d, metric=metric)
 
         shape_linkage_matrix = linkage(shape_cosine_distance, method=method)
-        shape_cluster_labels = fcluster(
-            shape_linkage_matrix, cluster_threshold_shape, criterion=criterion
-        )
+        try:
+            shape_cluster_labels = fcluster(
+                shape_linkage_matrix, cluster_threshold_shape, criterion=criterion
+            )
+        except Exception:
+            shape_cluster_labels = fcluster(
+                shape_linkage_matrix, 1, criterion="maxclust"
+            )
 
         shape_cluster_centroids = calculate_cluster_centroids(
             shape_eigenvectors_1d, shape_cluster_labels
@@ -2479,29 +2510,34 @@ def core_clustering(
             shape_silhouette = silhouette_score(
                 shape_eigenvectors_1d, shape_cluster_labels, metric=metric
             )
+        except Exception:
+            shape_silhouette = 0
+        try:
             shape_wcss_value = calculate_wcss(
                 shape_eigenvectors_1d, shape_cluster_labels, shape_cluster_centroids
             )
-            if use_sillhouette_criteria:
-                condition = shape_silhouette > best_silhouette_shape
-            else:
-                condition = shape_wcss_value < best_wcss_shape_value
-
-            if condition:
-                best_silhouette_shape = shape_silhouette
-                best_threshold_shape = cluster_threshold_shape
-                best_wcss_shape_value = shape_wcss_value
-                best_shape_cluster_labels = shape_cluster_labels
-                best_shape_linkage_matrix = shape_linkage_matrix
-                best_cluster_distance_map_shape = cluster_distance_map_shape
-                best_cluster_eucledian_distance_map_shape = (
-                    cluster_eucledian_distance_map_shape
-                )
-
         except Exception:
+            shape_wcss_value = np.inf
+        if use_sillhouette_criteria:
+            condition = (shape_silhouette > best_silhouette_shape) & (
+                shape_silhouette > 0
+            )
+        else:
+            condition = (shape_wcss_value < best_wcss_shape_value) & (
+                shape_wcss_value > 0
+            )
 
-            shape_silhouette = np.nan
-            shape_wcss_value = np.nan
+        if condition:
+            best_silhouette_shape = shape_silhouette
+            best_threshold_shape = cluster_threshold_shape
+            best_wcss_shape_value = shape_wcss_value
+            best_shape_cluster_labels = shape_cluster_labels
+            best_shape_linkage_matrix = shape_linkage_matrix
+            best_cluster_distance_map_shape = cluster_distance_map_shape
+            best_cluster_eucledian_distance_map_shape = (
+                cluster_eucledian_distance_map_shape
+            )
+
     print(
         f"best threshold value for shape dynamic {best_threshold_shape_dynamic} with silhouette score of {best_silhouette_shape_dynamic} and with wcss score of {best_wcss_shape_dynamic_value}, number of clusters {len(np.unique(best_shape_dynamic_cluster_labels))}"
     )
