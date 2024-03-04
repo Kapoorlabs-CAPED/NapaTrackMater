@@ -2537,16 +2537,37 @@ def core_clustering(
             best_cluster_eucledian_distance_map_shape = (
                 cluster_eucledian_distance_map_shape
             )
+    unique_labels, label_counts = np.unique(best_shape_dynamic_cluster_labels, return_counts=True)
+
+    cluster_cell_counts = dict(zip(unique_labels, label_counts))
+
+   
+    print(
+        f"best threshold value for shape dynamic {best_threshold_shape_dynamic} with silhouette score of {best_silhouette_shape_dynamic} and with wcss score of {best_wcss_shape_dynamic_value}, number of clusters {len(np.unique(best_shape_dynamic_cluster_labels))}, total track ids {len(analysis_track_ids)}"
+    )
+    for label, count in cluster_cell_counts.items():
+        print("Cluster", label, ":", count, "cells")
+
+    unique_labels, label_counts = np.unique(best_dynamic_cluster_labels, return_counts=True)
+
+    cluster_cell_counts = dict(zip(unique_labels, label_counts))
+     
+    print(
+        f"best threshold value for dynamic {best_threshold_dynamic} with silhouette score of {best_silhouette_dynamic} and with wcss score of {best_wcss_dynamic_value}, number of clusters {len(np.unique(best_dynamic_cluster_labels))}, total track ids {len(analysis_track_ids)}"
+    )
+    for label, count in cluster_cell_counts.items():
+        print("Cluster", label, ":", count, "cells")
+
+    unique_labels, label_counts = np.unique(best_dynamic_cluster_labels, return_counts=True)
+
+    cluster_cell_counts = dict(zip(unique_labels, label_counts))
 
     print(
-        f"best threshold value for shape dynamic {best_threshold_shape_dynamic} with silhouette score of {best_silhouette_shape_dynamic} and with wcss score of {best_wcss_shape_dynamic_value}, number of clusters {len(np.unique(best_shape_dynamic_cluster_labels))}"
+        f"best threshold value for shape {best_threshold_shape} with silhouette score of {best_silhouette_shape} and with wcss score of {best_wcss_shape_value}, number of clusters {len(np.unique(best_shape_cluster_labels))}, total track ids {len(analysis_track_ids)}"
     )
-    print(
-        f"best threshold value for dynamic {best_threshold_dynamic} with silhouette score of {best_silhouette_dynamic} and with wcss score of {best_wcss_dynamic_value}, number of clusters {len(np.unique(best_dynamic_cluster_labels))}"
-    )
-    print(
-        f"best threshold value for shape {best_threshold_shape} with silhouette score of {best_silhouette_shape} and with wcss score of {best_wcss_shape_value}, number of clusters {len(np.unique(best_shape_cluster_labels))}"
-    )
+    for label, count in cluster_cell_counts.items():
+        print("Cluster", label, ":", count, "cells")
+
 
     return (
         shape_dynamic_eigenvectors_1d,
