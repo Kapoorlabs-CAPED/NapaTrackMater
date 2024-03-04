@@ -1485,7 +1485,6 @@ def simple_unsupervised_clustering(
     metric="euclidean",
     method="centroid",
     criterion="distance",
-    use_sillhouette_criteria=True,
 ):
 
     csv_file_name_original = csv_file_name
@@ -1597,7 +1596,6 @@ def simple_unsupervised_clustering(
             cluster_threshold_dynamic,
             cluster_threshold_shape,
             criterion,
-            use_sillhouette_criteria=use_sillhouette_criteria,
         )
 
         silhouette_file_name = os.path.join(
@@ -1703,7 +1701,6 @@ def unsupervised_clustering(
     metric="euclidean",
     method="ward",
     criterion="maxclust",
-    use_sillhouette_criteria=True,
 ):
 
     csv_file_name_original = csv_file_name
@@ -1802,7 +1799,6 @@ def unsupervised_clustering(
             cluster_threshold_dynamic,
             cluster_threshold_shape,
             criterion,
-            use_sillhouette_criteria=use_sillhouette_criteria,
         )
 
         silhouette_file_name = os.path.join(
@@ -2076,7 +2072,6 @@ def convert_tracks_to_simple_arrays(
     method="ward",
     criterion="maxclust",
     t_delta=10,
-    use_sillhouette_criteria=True,
 ):
 
     analysis_track_ids = []
@@ -2190,7 +2185,6 @@ def convert_tracks_to_simple_arrays(
             cluster_threshold_dynamic,
             cluster_threshold_shape,
             criterion,
-            use_sillhouette_criteria=use_sillhouette_criteria,
         )
 
         shape_dynamic_cluster_labels_dict = {
@@ -2287,7 +2281,6 @@ def core_clustering(
     cluster_threshold_shape_range,
     criterion,
     distance_vectors="shape",
-    use_sillhouette_criteria=True,
 ):
 
     best_threshold_shape_dynamic = None
@@ -2397,15 +2390,11 @@ def core_clustering(
         except Exception:
             shape_dynamic_wcss_value = np.inf
 
-        if use_sillhouette_criteria:
-            condition = (shape_dynamic_silhouette > best_silhouette_shape_dynamic) & (
-                shape_dynamic_silhouette > 0
-            )
-        else:
-            condition = (shape_dynamic_wcss_value < best_wcss_shape_dynamic_value) & (
-                shape_dynamic_wcss_value > 0
-            )
+        sil_condition = (shape_dynamic_silhouette > best_silhouette_shape_dynamic) & (
+            shape_dynamic_silhouette > 0
+        )
 
+        condition = sil_condition
         if condition:
             best_silhouette_shape_dynamic = shape_dynamic_silhouette
             best_threshold_shape_dynamic = cluster_threshold_shape_dynamic
@@ -2461,15 +2450,11 @@ def core_clustering(
             )
         except Exception:
             dynamic_wcss_value = np.inf
-        if use_sillhouette_criteria:
-            condition = (dynamic_silhouette > best_silhouette_dynamic) & (
-                dynamic_silhouette > 0
-            )
-        else:
-            condition = (dynamic_wcss_value < best_wcss_dynamic_value) & (
-                dynamic_wcss_value > 0
-            )
+        sil_condition = (dynamic_silhouette > best_silhouette_dynamic) & (
+            dynamic_silhouette > 0
+        )
 
+        condition = sil_condition
         if condition:
             best_silhouette_dynamic = dynamic_silhouette
             best_threshold_dynamic = cluster_threshold_dynamic
@@ -2518,15 +2503,11 @@ def core_clustering(
             )
         except Exception:
             shape_wcss_value = np.inf
-        if use_sillhouette_criteria:
-            condition = (shape_silhouette > best_silhouette_shape) & (
-                shape_silhouette > 0
-            )
-        else:
-            condition = (shape_wcss_value < best_wcss_shape_value) & (
-                shape_wcss_value > 0
-            )
+        sil_condition = (shape_silhouette > best_silhouette_shape) & (
+            shape_silhouette > 0
+        )
 
+        condition = sil_condition
         if condition:
             best_silhouette_shape = shape_silhouette
             best_threshold_shape = cluster_threshold_shape
@@ -2537,37 +2518,18 @@ def core_clustering(
             best_cluster_eucledian_distance_map_shape = (
                 cluster_eucledian_distance_map_shape
             )
-    unique_labels, label_counts = np.unique(best_shape_dynamic_cluster_labels, return_counts=True)
 
-    cluster_cell_counts = dict(zip(unique_labels, label_counts))
-
-   
     print(
         f"best threshold value for shape dynamic {best_threshold_shape_dynamic} with silhouette score of {best_silhouette_shape_dynamic} and with wcss score of {best_wcss_shape_dynamic_value}, number of clusters {len(np.unique(best_shape_dynamic_cluster_labels))}, total track ids {len(analysis_track_ids)}"
     )
-    for label, count in cluster_cell_counts.items():
-        print("Cluster", label, ":", count, "cells")
 
-    unique_labels, label_counts = np.unique(best_dynamic_cluster_labels, return_counts=True)
-
-    cluster_cell_counts = dict(zip(unique_labels, label_counts))
-     
     print(
         f"best threshold value for dynamic {best_threshold_dynamic} with silhouette score of {best_silhouette_dynamic} and with wcss score of {best_wcss_dynamic_value}, number of clusters {len(np.unique(best_dynamic_cluster_labels))}, total track ids {len(analysis_track_ids)}"
     )
-    for label, count in cluster_cell_counts.items():
-        print("Cluster", label, ":", count, "cells")
-
-    unique_labels, label_counts = np.unique(best_dynamic_cluster_labels, return_counts=True)
-
-    cluster_cell_counts = dict(zip(unique_labels, label_counts))
 
     print(
         f"best threshold value for shape {best_threshold_shape} with silhouette score of {best_silhouette_shape} and with wcss score of {best_wcss_shape_value}, number of clusters {len(np.unique(best_shape_cluster_labels))}, total track ids {len(analysis_track_ids)}"
     )
-    for label, count in cluster_cell_counts.items():
-        print("Cluster", label, ":", count, "cells")
-
 
     return (
         shape_dynamic_eigenvectors_1d,
