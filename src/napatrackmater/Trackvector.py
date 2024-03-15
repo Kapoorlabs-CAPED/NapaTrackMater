@@ -581,6 +581,18 @@ class TrackVector(TrackMate):
                     "Cell_Axis_Mask",
                 ],
             )
+
+            cols_to_replace = [
+                "Radius",
+                "Volume",
+                "Eccentricity Comp First",
+                "Eccentricity Comp Second",
+                "Eccentricity Comp Third",
+                "Surface Area",
+            ]
+            shape_dynamic_dataframe[cols_to_replace] = shape_dynamic_dataframe[
+                cols_to_replace
+            ].apply(lambda x: np.where(x < 0, np.nan, x))
             if len(latent_shape_features) > 0:
                 new_columns = [
                     f"latent_feature_number_{i}"
@@ -738,6 +750,13 @@ def _iterate_over_tracklets(
         shape_dynamic_dataframe = pd.concat(
             [shape_dynamic_dataframe, latent_features], axis=1
         )
+
+    # Drop rows with NaN values
+    shape_dynamic_dataframe.dropna(inplace=True)
+    shape_dataframe.dropna(inplace=True)
+    dynamic_dataframe.dropna(inplace=True)
+    full_dataframe.dropna(inplace=True)
+
     shape_dynamic_dataframe_list = shape_dynamic_dataframe.to_dict(orient="records")
     shape_dataframe_list = shape_dataframe.to_dict(orient="records")
     dynamic_dataframe_list = dynamic_dataframe.to_dict(orient="records")
@@ -1922,11 +1941,6 @@ def convert_tracks_to_arrays(
             [[item for item in record.values()] for record in dynamic_dataframe_list]
         )
 
-        assert (
-            shape_dynamic_track_array.shape[0]
-            == shape_track_array.shape[0]
-            == dynamic_track_array.shape[0]
-        ), "Shape dynamic, shape and dynamic track arrays must have the same length."
         if (
             shape_dynamic_track_array.shape[0] > 1
             and shape_dynamic_track_array.shape[0] >= min_length
@@ -2012,12 +2026,11 @@ def local_track_covaraince(analysis_vectors):
         dynamic_track_array = np.array(
             [[item for item in record.values()] for record in dynamic_dataframe_list]
         )
-        assert (
-            shape_dynamic_track_array.shape[0]
-            == shape_track_array.shape[0]
-            == dynamic_track_array.shape[0]
-        ), "Shape dynamic, shape and dynamic track arrays must have the same length."
-        if shape_dynamic_track_array.shape[0] > 1:
+
+        if (
+            shape_dynamic_track_array.shape[0] > 1
+            and len(shape_dynamic_track_array.shape) > 1
+        ):
 
             (
                 covariance_shape_dynamic,
@@ -2104,22 +2117,15 @@ def convert_tracks_to_simple_arrays(
                 for record in full_dataframe_list
             ]
         )
-        assert (
-            shape_dynamic_track_array.shape[0]
-            == shape_track_array.shape[0]
-            == dynamic_track_array.shape[0]
-        ), "Shape dynamic, shape and dynamic track arrays must have the same length."
+
         if (
             shape_dynamic_track_array.shape[0] > 1
-            and shape_dynamic_track_array.shape[0] >= min_length
-            if min_length is not None
-            else True
+            and len(shape_dynamic_track_array.shape) > 1
         ):
 
             covariance_shape_dynamic = compute_raw_matrix(
                 shape_dynamic_track_array, t_delta=t_delta
             )
-
             covariance_shape = compute_raw_matrix(shape_track_array, t_delta=t_delta)
 
             covariance_dynamic = compute_raw_matrix(
@@ -2129,6 +2135,7 @@ def convert_tracks_to_simple_arrays(
             position_computation = compute_raw_matrix(
                 position_track_array, t_delta=t_delta, take_center=True
             )
+
             if (
                 covariance_shape_dynamic is not None
                 and covariance_shape is not None
