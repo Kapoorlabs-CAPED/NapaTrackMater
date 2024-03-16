@@ -2086,9 +2086,9 @@ def cell_fate_recipe(track_data):
         1, -1
     )
 
-    dividing_shape_dynamic_covariance_2d = np.array(dividing_shape_dynamic_eigenvectors_2d)
-    dividing_shape_covariance_2d = np.array(dividing_shape_eigenvectors_2d)
-    dividing_dynamic_covariance_2d = np.array(dividing_dynamic_eigenvectors_2d)
+    dividing_shape_dynamic_covariance_2d = np.array(dividing_shape_dynamic_eigenvectors_2d[0, :].tolist())
+    dividing_shape_covariance_2d = np.array(dividing_shape_eigenvectors_2d[0, :].tolist())
+    dividing_dynamic_covariance_2d = np.array(dividing_dynamic_eigenvectors_2d[0, :].tolist())
 
     return dividing_shape_dynamic_covariance_2d, dividing_shape_covariance_2d, dividing_dynamic_covariance_2d
 
@@ -2783,40 +2783,28 @@ class DenseNet1d(nn.Module):
         self,
         num_init_features: int = 32,
         in_channels: int = 1,
-        num_classes_1: int = 1,
+        num_classes: int = 1,
     ):
 
         super().__init__()
-
-        self.features = nn.Sequential(
-            nn.Conv1d(in_channels, num_init_features, kernel_size=3),
-            nn.GroupNorm(1, num_init_features),
-            nn.ReLU(inplace=True),
-            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
-        )
-
-        num_features = num_init_features
-        
-        self.final_pool = nn.AdaptiveAvgPool1d(1)
-        self.classifier_1 = nn.Linear(num_features, num_classes_1)
-
-
-    def forward_features(self, x):
-        out = self.features(x)
-        out = self.final_pool(out)
-        return out
+        self.conv1 = nn.Conv1d(in_channels=in_channels, out_channels=num_init_features, kernel_size=3)
+        self.relu = nn.ReLU()
+        self.pool = nn.MaxPool1d(kernel_size=2, stride=2)
+        self.fc = nn.Linear(num_init_features * (in_channels // 2), num_classes)
+    
 
     def forward(self, x):
-        features = self.forward_features(x)
-        features = features.squeeze(-1)
-        out_1 = self.classifier_1(features)
-        return out_1
 
-    def reset_classifier(self):
-        self.classifier = nn.Identity()
 
-    def get_classifier(self):
-        return self.classifier
+        x = self.conv1(x)
+        x = self.relu(x)
+        x = self.pool(x)
+        x = x.view(x.size(0), -1) 
+        x = self.fc(x)
+        return x
+        
+
+
 
 
 class MitosisNet(nn.Module):
@@ -3040,8 +3028,6 @@ def predict_with_model(
     num_init_features = model_info["num_init_features"]
 
     model = MitosisNet(
-        growth_rate=growth_rate,
-        block_config=tuple(block_config),
         num_init_features=num_init_features,
         num_classes_class1=num_classes_class1,
     )
