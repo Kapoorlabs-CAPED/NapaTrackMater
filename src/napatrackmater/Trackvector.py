@@ -2788,20 +2788,15 @@ class DenseNet1d(nn.Module):
 
         super().__init__()
 
-        self.conv1d = nn.Conv1d(in_channels,num_init_features,kernel_size=1)
-        self.relu = nn.ReLU(inplace=True)
-        self.fc1 = nn.Linear(num_init_features*2,50)
-        self.fc2 = nn.Linear(50,num_classes)
+       
+        self.lstm = nn.LSTM(in_channels, num_init_features)
+        self.linear = nn.Linear(num_init_features, num_classes)
         
     def forward(self,x):
-        x = self.conv1d(x)
-        x = self.relu(x)
-        x = x.view(-1)
-        x = self.fc1(x)
-        x = self.relu(x)
-        x = self.fc2(x)
         
-        return x
+        out, _ = self.lstm(x)
+        out = self.linear(out)
+        return out
 
         
 
