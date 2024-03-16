@@ -2808,19 +2808,21 @@ class MitosisNet(nn.Module):
         self,
         num_init_features,
         num_classes_class1,
-    ):
-        super().__init__()
-        self.densenet = DenseNet1d(
-            num_init_features=num_init_features,
-            in_channels=1,
-            num_classes=num_classes_class1,
-        )
-
-        self.num_classes_class1 = num_classes_class1
-
+    ):#
+        self.hidden_size = num_init_features
+        self.num_layers = 1
+        self.lstm = nn.LSTM(1, self.hidden_size, 1, batch_first=True)
+        self.fc = nn.Linear(self.hidden_size, num_classes_class1)
+    
     def forward(self, x):
-        class_output1 = self.densenet(x)
-        return class_output1
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        
+        out, _ = self.lstm(x, (h0, c0))  
+        
+        out = self.fc(out[:, -1, :]) 
+        return out
+        
 
 
 def train_mitosis_neural_net(
