@@ -2809,20 +2809,15 @@ class MitosisNet(nn.Module):
         num_init_features,
         num_classes_class1,
     ):#
-        self.hidden_size = num_init_features
-        self.num_layers = 1
-        self.lstm = nn.LSTM(1, self.hidden_size, 1, batch_first=True)
-        self.fc = nn.Linear(self.hidden_size, num_classes_class1)
-    
-    def forward(self, x):
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
-        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        super().__init__()
+        self.lstm = nn.LSTM(1, num_init_features, batch_first = True)
+        self.linear = nn.Linear(num_init_features, num_classes_class1)
         
-        out, _ = self.lstm(x, (h0, c0))  
+    def forward(self,x):
         
-        out = self.fc(out[:, -1, :]) 
+        out, _ = self.lstm(x)
+        out = self.linear(out)
         return out
-        
 
 
 def train_mitosis_neural_net(
@@ -2902,7 +2897,7 @@ def train_mitosis_neural_net(
         with tqdm(total=len(train_loader), desc=f"Epoch {epoch + 1}/{epochs}") as pbar:
             for i, data in enumerate(train_loader):
                 inputs, labels_class1 = data
-                inputs_with_channel = inputs.unsqueeze(1)
+                inputs_with_channel = inputs.unsqueeze(2)
                 optimizer.zero_grad()
                 class_output1 = model(inputs_with_channel)
 
