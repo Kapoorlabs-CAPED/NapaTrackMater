@@ -2817,7 +2817,7 @@ class MitosisNet(nn.Module):
         self.densenet = DenseNet1d(
             num_init_features=num_init_features,
             in_channels=1,
-            num_classes_1=num_classes_class1,
+            num_classes=num_classes_class1,
         )
 
         self.num_classes_class1 = num_classes_class1
