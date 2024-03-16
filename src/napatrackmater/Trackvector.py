@@ -2789,7 +2789,7 @@ class DenseNet1d(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv1d(in_channels=in_channels, out_channels=num_init_features, kernel_size=3)
         self.relu = nn.ReLU()
-        self.pool = nn.MaxPool1d(kernel_size=2, stride=2)
+        self.pool = nn.MaxPool1d(kernel_size=2)
         self.fc = nn.Linear(num_init_features, num_classes)
     
 
