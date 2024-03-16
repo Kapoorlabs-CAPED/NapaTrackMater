@@ -2787,21 +2787,22 @@ class DenseNet1d(nn.Module):
     ):
 
         super().__init__()
-        self.conv1 = nn.Conv1d(in_channels=in_channels, out_channels=num_init_features, kernel_size=3)
-        self.relu = nn.ReLU()
-        self.pool = nn.MaxPool1d(kernel_size=2)
-        self.fc = nn.Linear(num_init_features, num_classes)
-    
 
-    def forward(self, x):
-
-
-        x = self.conv1(x)
+        self.conv1d = nn.Conv1d(in_channels,num_init_features,kernel_size=1)
+        self.relu = nn.ReLU(inplace=True)
+        self.fc1 = nn.Linear(num_init_features*2,50)
+        self.fc2 = nn.Linear(50,num_classes)
+        
+    def forward(self,x):
+        x = self.conv1d(x)
         x = self.relu(x)
-        x = self.pool(x)
-        x = x.view(x.size(0), -1) 
-        x = self.fc(x)
+        x = x.view(-1)
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.fc2(x)
+        
         return x
+
         
 
 
