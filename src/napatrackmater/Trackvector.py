@@ -2822,15 +2822,11 @@ class DenseNet1d(nn.Module):
 class MitosisNet(nn.Module):
     def __init__(
         self,
-        growth_rate,
-        block_config,
         num_init_features,
         num_classes_class1,
     ):
         super().__init__()
         self.densenet = DenseNet1d(
-            growth_rate=growth_rate,
-            block_config=block_config,
             num_init_features=num_init_features,
             in_channels=1,
             num_classes_1=num_classes_class1,
