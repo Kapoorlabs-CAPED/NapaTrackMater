@@ -22,7 +22,8 @@ from .Trackvector import (
     create_analysis_tracklets,
     create_dividing_prediction_tracklets,
     convert_tracks_to_simple_arrays,
-    local_track_covaraince
+    local_track_covaraince,
+    cell_fate_recipe
 )
 from .CloudAutoEncoder import CloudAutoEncoder
 import json

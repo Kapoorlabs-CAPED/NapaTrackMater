@@ -2002,6 +2002,96 @@ def convert_tracks_to_arrays(
         )
 
 
+def cell_fate_recipe(track_data):
+
+    dividing_shape_dynamic_dataframe = track_data[
+        [
+            "Radius",
+            "Volume",
+            "Eccentricity Comp First",
+            "Eccentricity Comp Second",
+            "Eccentricity Comp Third",
+            "Surface Area",
+            "Speed",
+            "Motion_Angle",
+            "Acceleration",
+            "Distance_Cell_mask",
+            "Radial_Angle",
+            "Cell_Axis_Mask",
+        ]
+    ].copy()
+
+    dividing_shape_dataframe = track_data[
+        [
+            "Radius",
+            "Volume",
+            "Eccentricity Comp First",
+            "Eccentricity Comp Second",
+            "Eccentricity Comp Third",
+            "Surface Area",
+        ]
+    ].copy()
+
+    dividing_dynamic_dataframe = track_data[
+        [
+            "Speed",
+            "Motion_Angle",
+            "Acceleration",
+            "Distance_Cell_mask",
+            "Radial_Angle",
+            "Cell_Axis_Mask",
+        ]
+    ].copy()
+
+    dividing_shape_dynamic_dataframe.dropna(inplace=True)
+    dividing_shape_dataframe.dropna(inplace=True)
+    dividing_dynamic_dataframe.dropna(inplace=True)
+
+    dividing_shape_dynamic_dataframe_list = dividing_shape_dynamic_dataframe.to_dict(orient="records")
+    dividing_shape_dataframe_list = dividing_shape_dataframe.to_dict(orient="records")
+    dividing_dynamic_dataframe_list = dividing_dynamic_dataframe.to_dict(orient="records")
+
+    dividing_shape_dynamic_track_array = np.array(
+                [
+                    [item for item in record.values()]
+                    for record in dividing_shape_dynamic_dataframe_list
+                ]
+            )
+    dividing_shape_track_array = np.array(
+        [[item for item in record.values()] for record in dividing_shape_dataframe_list]
+    )
+    dividing_dynamic_track_array = np.array(
+        [[item for item in record.values()] for record in dividing_dynamic_dataframe_list]
+    )
+
+    dividing_covariance_shape_dynamic, dividing_eigenvectors_shape_dynamic  = compute_covariance_matrix(
+                    dividing_shape_dynamic_track_array
+                )
+
+    dividing_covariance_shape, dividing_eigenvectors_shape = compute_covariance_matrix(dividing_shape_track_array)
+
+    dividing_covariance_dynamic, dividing_eigenvectors_dynamic = compute_covariance_matrix(dividing_dynamic_track_array)
+
+
+    dividing_shape_dynamic_eigenvectors_3d = np.dstack(dividing_eigenvectors_shape_dynamic)
+    dividing_shape_eigenvectors_3d = np.dstack(dividing_eigenvectors_shape)
+    dividing_dynamic_eigenvectors_3d = np.dstack(dividing_eigenvectors_dynamic)
+    dividing_shape_dynamic_eigenvectors_2d = dividing_shape_dynamic_eigenvectors_3d.reshape(
+        1, -1
+    )
+    dividing_shape_eigenvectors_2d = dividing_shape_eigenvectors_3d.reshape(
+        1, -1
+    )
+    dividing_dynamic_eigenvectors_2d = dividing_dynamic_eigenvectors_3d.reshape(
+        1, -1
+    )
+
+    dividing_shape_dynamic_covariance_2d = np.array(dividing_shape_dynamic_eigenvectors_2d)
+    dividing_shape_covariance_2d = np.array(dividing_shape_eigenvectors_2d)
+    dividing_dynamic_covariance_2d = np.array(dividing_dynamic_eigenvectors_2d)
+
+    return dividing_shape_dynamic_covariance_2d, dividing_shape_covariance_2d, dividing_dynamic_covariance_2d
+
 def local_track_covaraince(analysis_vectors):
 
     analysis_track_ids = []
@@ -2077,7 +2167,6 @@ def local_track_covaraince(analysis_vectors):
 
 def convert_tracks_to_simple_arrays(
     analysis_vectors,
-    min_length=None,
     metric="euclidean",
     cluster_threshold_shape_dynamic=4,
     cluster_threshold_dynamic=4,
@@ -2692,17 +2781,12 @@ class TransitionBlock(nn.Module):
 class DenseNet1d(nn.Module):
     def __init__(
         self,
-        growth_rate: int = 32,
-        block_config: tuple = (6, 12, 24, 16),
         num_init_features: int = 32,
-        bottleneck_size: int = 4,
-        kernel_size: int = 3,
         in_channels: int = 1,
         num_classes_1: int = 1,
     ):
 
         super().__init__()
-        self._initialize_weights()
 
         self.features = nn.Sequential(
             nn.Conv1d(in_channels, num_init_features, kernel_size=3),
@@ -2712,45 +2796,13 @@ class DenseNet1d(nn.Module):
         )
 
         num_features = num_init_features
-        for i, num_layers in enumerate(block_config):
-            block = DenseBlock(
-                num_layers=num_layers,
-                in_channels=num_features,
-                growth_rate=growth_rate,
-                kernel_size=kernel_size,
-                bottleneck_size=bottleneck_size,
-            )
-            self.features.add_module(f"denseblock{i}", block)
-            num_features = num_features + num_layers * growth_rate
-            if i != len(block_config) - 1:
-                trans = TransitionBlock(
-                    in_channels=num_features, out_channels=num_features // 2
-                )
-                self.features.add_module(f"transition{i}", trans)
-                num_features = num_features // 2
-
-        self.final_bn = nn.GroupNorm(1, num_features)
-        self.final_act = nn.ReLU(inplace=True)
+        
         self.final_pool = nn.AdaptiveAvgPool1d(1)
         self.classifier_1 = nn.Linear(num_features, num_classes_1)
 
-    def _initialize_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv1d):
-                init.kaiming_normal_(m.weight)
-                if m.bias is not None:
-                    init.constant_(m.bias, 0)
-            elif isinstance(m, nn.BatchNorm1d) or isinstance(m, nn.GroupNorm):
-                init.constant_(m.weight, 1)
-                init.constant_(m.bias, 0)
-            elif isinstance(m, nn.Linear):
-                init.kaiming_normal_(m.weight)
-                init.constant_(m.bias, 0)
 
     def forward_features(self, x):
         out = self.features(x)
-        out = self.final_bn(out)
-        out = self.final_act(out)
         out = self.final_pool(out)
         return out
 
@@ -2799,8 +2851,6 @@ def train_mitosis_neural_net(
     save_path,
     batch_size=64,
     learning_rate=0.001,
-    growth_rate: int = 4,
-    block_config: tuple = (3, 3),
     weight_decay: float = 1e-5,
     eps: float = 1e-1,
     num_init_features: int = 32,
@@ -2828,8 +2878,6 @@ def train_mitosis_neural_net(
     X_val_tensor = X_val_tensor.float()
     num_classes1 = int(torch.max(y_train_class1_tensor)) + 1
     model_info = {
-        "growth_rate": growth_rate,
-        "block_config": list(block_config),
         "num_init_features": num_init_features,
         "input_size": input_size,
         "num_classes1": num_classes1,
@@ -2838,8 +2886,6 @@ def train_mitosis_neural_net(
         json.dump(model_info, json_file)
 
     model = MitosisNet(
-        growth_rate=growth_rate,
-        block_config=block_config,
         num_init_features=num_init_features,
         num_classes_class1=num_classes1,
     )
