@@ -2837,7 +2837,9 @@ class MitosisNet(nn.Module):
         
     def forward(self, x):
         out, (hn, cn) = self.lstm_layer(x)
+        print(out.shape)
         x = out[:, -1, :]
+        print(x.shape)
         output = self.classifier(x)
         return output      
         
