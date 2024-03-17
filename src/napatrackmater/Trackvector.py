@@ -2844,6 +2844,7 @@ class MitosisNet(nn.Module):
         x = self.conv_layer(x)
         x = x.squeeze(1)
         x = self.bn(x)
+        x = x.view(x.size(0), -1)
         output = self.classifier(x)
         return output      
         
