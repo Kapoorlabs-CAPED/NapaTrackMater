@@ -2900,14 +2900,13 @@ def train_mitosis_neural_net(
                 inputs, labels_class1 = data
                 inputs_with_channel = inputs.unsqueeze(2)
                 optimizer.zero_grad()
-                class_output1 = model(inputs_with_channel)
+                outputs_class1 = model(inputs_with_channel)
 
-                loss_class1 = criterion_class1(class_output1, labels_class1)
+                loss_class1 = criterion_class1(outputs_class1, labels_class1)
                 loss_class1.backward()
 
                 optimizer.step()
 
-                outputs_class1 = model(inputs_with_channel)
 
                 _, predicted_class1 = torch.max(outputs_class1.data, 1)
 
@@ -2941,7 +2940,7 @@ def train_mitosis_neural_net(
             with torch.no_grad():
                 for i, data in enumerate(val_loader):
                     inputs, labels_class1 = data
-                    inputs_with_channel = inputs.unsqueeze(1)
+                    inputs_with_channel = inputs.unsqueeze(2)
                     outputs_class1 = model(inputs_with_channel)
 
                     _, predicted_class1 = torch.max(outputs_class1.data, 1)
