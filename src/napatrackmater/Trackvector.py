@@ -2800,25 +2800,108 @@ class DenseNet1d(nn.Module):
 
         
 
+    
 
+class DenseNet1d(nn.Module):
+    def __init__(
+        self,
+        growth_rate: int = 32,
+        block_config: tuple = (6, 12, 24, 16),
+        num_init_features: int = 32,
+        bottleneck_size: int = 4,
+        kernel_size: int = 3,
+        in_channels: int = 1,
+        num_classes_1: int = 1,
+    ):
+
+        super().__init__()
+        self._initialize_weights()
+
+        self.features = nn.Sequential(
+            nn.Conv1d(in_channels, num_init_features, kernel_size=3),
+            nn.GroupNorm(1, num_init_features),
+            nn.ReLU(inplace=True),
+            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
+        )
+
+        num_features = num_init_features
+        for i, num_layers in enumerate(block_config):
+            block = DenseBlock(
+                num_layers=num_layers,
+                in_channels=num_features,
+                growth_rate=growth_rate,
+                kernel_size=kernel_size,
+                bottleneck_size=bottleneck_size,
+            )
+            self.features.add_module(f"denseblock{i}", block)
+            num_features = num_features + num_layers * growth_rate
+            if i != len(block_config) - 1:
+                trans = TransitionBlock(
+                    in_channels=num_features, out_channels=num_features // 2
+                )
+                self.features.add_module(f"transition{i}", trans)
+                num_features = num_features // 2
+
+        self.final_bn = nn.GroupNorm(1, num_features)
+        self.final_act = nn.ReLU(inplace=True)
+        self.final_pool = nn.AdaptiveAvgPool1d(1)
+        self.classifier_1 = nn.Linear(num_features, num_classes_1)
+
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv1d):
+                init.kaiming_normal_(m.weight)
+                if m.bias is not None:
+                    init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm1d) or isinstance(m, nn.GroupNorm):
+                init.constant_(m.weight, 1)
+                init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                init.kaiming_normal_(m.weight)
+                init.constant_(m.bias, 0)
+
+    def forward_features(self, x):
+        out = self.features(x)
+        out = self.final_bn(out)
+        out = self.final_act(out)
+        out = self.final_pool(out)
+        return out
+
+    def forward(self, x):
+        features = self.forward_features(x)
+        features = features.squeeze(-1)
+        out_1 = self.classifier_1(features)
+        return out_1
+
+    def reset_classifier(self):
+        self.classifier = nn.Identity()
+
+    def get_classifier(self):
+        return self.classifier
 
 
 class MitosisNet(nn.Module):
     def __init__(
         self,
+        growth_rate,
+        block_config,
         num_init_features,
         num_classes_class1,
-    ):#
+    ):
         super().__init__()
-        self.lstm = nn.LSTM(1, num_init_features, batch_first = True)
-        self.linear = nn.Linear(num_init_features, num_classes_class1)
-        
-    def forward(self,x):
-        
-        out, _ = self.lstm(x)
-        out = out[:, -1, :]
-        out = self.linear(out)
-        return out
+        self.densenet = DenseNet1d(
+            growth_rate=growth_rate,
+            block_config=block_config,
+            num_init_features=num_init_features,
+            in_channels=1,
+            num_classes_1=num_classes_class1,
+        )
+
+        self.num_classes_class1 = num_classes_class1
+
+    def forward(self, x):
+        class_output1 = self.densenet(x)
+        return class_output1
 
 
 def train_mitosis_neural_net(
@@ -2898,7 +2981,7 @@ def train_mitosis_neural_net(
         with tqdm(total=len(train_loader), desc=f"Epoch {epoch + 1}/{epochs}") as pbar:
             for i, data in enumerate(train_loader):
                 inputs, labels_class1 = data
-                inputs_with_channel = inputs.unsqueeze(2)
+                inputs_with_channel = inputs.unsqueeze(1)
                 optimizer.zero_grad()
                 outputs_class1 = model(inputs_with_channel)
 
@@ -2940,7 +3023,7 @@ def train_mitosis_neural_net(
             with torch.no_grad():
                 for i, data in enumerate(val_loader):
                     inputs, labels_class1 = data
-                    inputs_with_channel = inputs.unsqueeze(2)
+                    inputs_with_channel = inputs.unsqueeze(1)
                     outputs_class1 = model(inputs_with_channel)
 
                     _, predicted_class1 = torch.max(outputs_class1.data, 1)
