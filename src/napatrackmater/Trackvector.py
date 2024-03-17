@@ -2825,6 +2825,7 @@ class MitosisNet(nn.Module):
             out_channels=num_init_features,
             kernel_size=3
         )
+        self.bn = nn.BatchNorm1d(num_init_features)
         self.classifier = nn.Sequential(
             nn.Linear(sequence_length, num_init_features),
             nn.BatchNorm1d(num_init_features),
@@ -2834,8 +2835,7 @@ class MitosisNet(nn.Module):
             nn.ReLU(inplace=True),
             nn.Linear(num_init_features, num_classes_class1)
         )
-        self.bn = nn.BatchNorm1d(num_init_features)
-        # Initialize weights using Kaiming initialization
+        
         for layer in self.classifier:
             if isinstance(layer, nn.Linear):
                 nn.init.kaiming_normal_(layer.weight)
