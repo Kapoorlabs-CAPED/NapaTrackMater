@@ -2732,30 +2732,6 @@ class TransitionBlock(nn.Module):
 class DenseNet1d(nn.Module):
     def __init__(
         self,
-        num_init_features: int = 32,
-        in_channels: int = 1,
-        num_classes: int = 1,
-    ):
-
-        super().__init__()
-
-       
-        self.lstm = nn.LSTM(in_channels, num_init_features)
-        self.linear = nn.Linear(num_init_features, num_classes)
-        
-    def forward(self,x):
-        
-        out, _ = self.lstm(x)
-        out = self.linear(out)
-        return out
-
-        
-
-    
-
-class DenseNet1d(nn.Module):
-    def __init__(
-        self,
         growth_rate: int = 32,
         block_config: tuple = (6, 12, 24, 16),
         num_init_features: int = 32,
@@ -2769,10 +2745,10 @@ class DenseNet1d(nn.Module):
         self._initialize_weights()
 
         self.features = nn.Sequential(
-            nn.Conv1d(in_channels, num_init_features, kernel_size=3),
+            nn.Conv1d(in_channels, num_init_features, kernel_size=1),
             nn.GroupNorm(1, num_init_features),
             nn.ReLU(inplace=True),
-            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
+            nn.MaxPool1d(kernel_size=1, stride=2, padding=1),
         )
 
         num_features = num_init_features
@@ -3061,6 +3037,8 @@ def predict_with_model(
     num_init_features = model_info["num_init_features"]
 
     model = MitosisNet(
+        growth_rate = growth_rate,
+        block_config = block_config,
         num_init_features=num_init_features,
         num_classes_class1=num_classes_class1,
     )
