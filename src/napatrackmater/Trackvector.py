@@ -864,9 +864,6 @@ def create_analysis_tracklets(
     return training_tracklets, modified_dataframe
 
 
-def z_score_normalization(data):
-    normalized_data = data
-    return normalized_data
 
 
 def append_data_to_npz(file_path, key, data):
@@ -999,9 +996,6 @@ def create_mitosis_training_data(
     training_data_shape = []
     training_data_dynamic = []
     analysis_track_ids = np.asarray(analysis_track_ids)
-    shape_dynamic_track_arrays = z_score_normalization(shape_dynamic_track_arrays)
-    shape_track_arrays = z_score_normalization(shape_track_arrays)
-    dynamic_track_arrays = z_score_normalization(dynamic_track_arrays)
     for idx in range(analysis_track_ids.shape[0]):
         current_track_id = analysis_track_ids[idx]
         filtered_data = global_shape_dynamic_dataframe[
@@ -1958,7 +1952,6 @@ def cell_fate_recipe(track_data):
     dividing_shape_dynamic_dataframe = track_data[
         [
             "Radius",
-            "Volume",
             "Eccentricity Comp First",
             "Eccentricity Comp Second",
             "Eccentricity Comp Third",
@@ -1975,7 +1968,6 @@ def cell_fate_recipe(track_data):
     dividing_shape_dataframe = track_data[
         [
             "Radius",
-            "Volume",
             "Eccentricity Comp First",
             "Eccentricity Comp Second",
             "Eccentricity Comp Third",
@@ -1987,7 +1979,6 @@ def cell_fate_recipe(track_data):
         [
             "Speed",
             "Motion_Angle",
-            "Acceleration",
             "Distance_Cell_mask",
             "Radial_Angle",
             "Cell_Axis_Mask",
@@ -2037,11 +2028,23 @@ def cell_fate_recipe(track_data):
         1, -1
     )
 
-    dividing_shape_dynamic_covariance_2d = np.array(dividing_shape_dynamic_eigenvectors_2d[0, :].tolist())
-    dividing_shape_covariance_2d = np.array(dividing_shape_eigenvectors_2d[0, :].tolist())
-    dividing_dynamic_covariance_2d = np.array(dividing_dynamic_eigenvectors_2d[0, :].tolist())
+    dividing_shape_dynamic_covariance_2d = np.array(dividing_shape_dynamic_eigenvectors_2d)
+    dividing_shape_covariance_2d = np.array(dividing_shape_eigenvectors_2d)
+    dividing_dynamic_covariance_2d = np.array(dividing_dynamic_eigenvectors_2d)
 
+    
     return dividing_shape_dynamic_covariance_2d, dividing_shape_covariance_2d, dividing_dynamic_covariance_2d
+
+
+def cov_normalize(matrix):
+    mean = np.mean(matrix, axis=0)  
+    std = np.std(matrix, axis=0)  
+    min = np.min(matrix)
+    max = np.max(matrix)  
+    normalized_matrix = matrix
+    #normalized_matrix = (matrix - mean) / std
+    #normalized_matrix = (matrix - min) / max
+    return normalized_matrix
 
 def local_track_covaraince(analysis_vectors):
 
@@ -3050,7 +3053,6 @@ def predict_with_model(
     predicted_classes1 = []
     for idx in range(features_array.shape[0]):
         feature_type = features_array[idx, :].tolist()
-        feature_type = z_score_normalization(feature_type)
         features_tensor = torch.tensor(feature_type).to(device)
         new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(0)
 
