@@ -2818,15 +2818,33 @@ class MitosisNet(nn.Module):
         num_classes_class1,
     ):
         super().__init__()
+        
 
-        self.regressor = nn.Sequential(nn.Linear(sequence_length, num_init_features),
-                                       nn.ReLU(inplace=True),
-                                       nn.Linear(num_init_features, num_init_features),
-                                       nn.ReLU(inplace=True),
-                                       nn.Linear(num_init_features, num_classes_class1))
+        self.conv_layer = nn.Conv1d(
+            in_channels=1,
+            out_channels=num_init_features,
+            kernel_size=3
+        )
+        self.classifier = nn.Sequential(
+            nn.Linear(sequence_length, num_init_features),
+            nn.BatchNorm1d(num_init_features),
+            nn.ReLU(inplace=True),
+            nn.Linear(num_init_features, num_init_features),
+            nn.BatchNorm1d(num_init_features),
+            nn.ReLU(inplace=True),
+            nn.Linear(num_init_features, num_classes_class1)
+        )
+        self.bn = nn.BatchNorm1d(num_init_features)
+        # Initialize weights using Kaiming initialization
+        for layer in self.classifier:
+            if isinstance(layer, nn.Linear):
+                nn.init.kaiming_normal_(layer.weight)
+        
     def forward(self, x):
+        x = self.conv_layer(x)
         x = x.squeeze(1)
-        output = self.regressor(x)
+        x = self.bn(x)
+        output = self.classifier(x)
         return output      
         
 
