@@ -2827,7 +2827,7 @@ class MitosisNet(nn.Module):
         )
         self.bn = nn.BatchNorm1d(num_init_features)
         self.classifier = nn.Sequential(
-            nn.Linear(sequence_length, num_init_features),
+            nn.Linear(sequence_length * num_init_features, num_init_features),
             nn.BatchNorm1d(num_init_features),
             nn.ReLU(inplace=True),
             nn.Linear(num_init_features, num_init_features),
