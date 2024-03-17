@@ -1393,55 +1393,6 @@ def supervised_clustering(
     return model
 
 
-def predict_supervised_clustering(
-    model: KNeighborsClassifier, csv_file_name, full_dataframe, analysis_vectors
-):
-    track_ids = []
-    data_list = []
-    for track_id, (
-        shape_dynamic_dataframe_list,
-        shape_dataframe_list,
-        dynamic_dataframe_list,
-        full_dataframe_list,
-    ) in analysis_vectors.items():
-
-        shape_dynamic_track_array = np.array(
-            [
-                [item for item in record.values()]
-                for record in shape_dynamic_dataframe_list
-            ]
-        )
-        if shape_dynamic_track_array.shape[0] > 1:
-            track_ids.append(track_id)
-            (
-                shape_dynamic_covariance,
-                shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array)
-            upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
-
-            flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
-            data_list.append(
-                {
-                    "Flattened_Covariance": flattened_covariance,
-                }
-            )
-    result_dataframe = pd.DataFrame(data_list)
-    X = np.vstack(result_dataframe["Flattened_Covariance"].values)
-
-    class_labels = model.predict(X)
-
-    track_id_to_cluster = {
-        track_id: cluster_label
-        for track_id, cluster_label in zip(track_ids, class_labels)
-    }
-    full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
-    result_dataframe = full_dataframe[["Track ID", "t", "z", "y", "x", "Cluster"]]
-    csv_file_name = csv_file_name + ".csv"
-
-    if os.path.exists(csv_file_name):
-        os.remove(csv_file_name)
-    result_dataframe.to_csv(csv_file_name, index=False)
-
 
 def calculate_wcss(data, labels, centroids):
     wcss = 0
@@ -1775,9 +1726,9 @@ def unsupervised_clustering(
                     dynamic_covaraince,
                     dynamic_eigenvectors,
                 ) = covaraince_computation_dynamic
-                shape_dynamic_covariance_matrix.extend(shape_dynamic_eigenvectors)
-                shape_covariance_matrix.extend(shape_eigenvectors)
-                dynamic_covariance_matrix.extend(dynamic_eigenvectors)
+                shape_dynamic_covariance_matrix.extend(shape_dynamic_covariance)
+                shape_covariance_matrix.extend(shape_covariance)
+                dynamic_covariance_matrix.extend(dynamic_covaraince)
                 analysis_track_ids.append(track_id)
     if (
         len(shape_dynamic_covariance_matrix) > 0
@@ -1966,9 +1917,9 @@ def convert_tracks_to_arrays(
                 ) = covariance_shape_dynamic
                 shape_covariance, shape_eigenvectors = covariance_shape
                 dynamic_covaraince, dynamic_eigenvectors = covariance_dynamic
-                shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_eigenvectors)
-                shape_eigenvectors_matrix.extend(shape_eigenvectors)
-                dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
+                shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_covariance)
+                shape_eigenvectors_matrix.extend(shape_covariance)
+                dynamic_eigenvectors_matrix.extend(dynamic_covaraince)
                 analysis_track_ids.append(track_id)
     if (
         len(shape_dynamic_eigenvectors_matrix) > 0
@@ -2073,9 +2024,9 @@ def cell_fate_recipe(track_data):
     dividing_covariance_dynamic, dividing_eigenvectors_dynamic = compute_covariance_matrix(dividing_dynamic_track_array)
 
 
-    dividing_shape_dynamic_eigenvectors_3d = np.dstack(dividing_eigenvectors_shape_dynamic)
-    dividing_shape_eigenvectors_3d = np.dstack(dividing_eigenvectors_shape)
-    dividing_dynamic_eigenvectors_3d = np.dstack(dividing_eigenvectors_dynamic)
+    dividing_shape_dynamic_eigenvectors_3d = np.dstack(dividing_covariance_shape_dynamic)
+    dividing_shape_eigenvectors_3d = np.dstack(dividing_covariance_shape)
+    dividing_dynamic_eigenvectors_3d = np.dstack(dividing_covariance_dynamic)
     dividing_shape_dynamic_eigenvectors_2d = dividing_shape_dynamic_eigenvectors_3d.reshape(
         1, -1
     )
