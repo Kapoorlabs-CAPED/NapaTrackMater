@@ -2816,6 +2816,7 @@ class MitosisNet(nn.Module):
     def forward(self,x):
         
         out, _ = self.lstm(x)
+        out = out[:, -1, :]
         out = self.linear(out)
         return out
 
@@ -2853,7 +2854,7 @@ def train_mitosis_neural_net(
 
     X_train_tensor = X_train_tensor.float()
     X_val_tensor = X_val_tensor.float()
-    num_classes1 = int(torch.max(y_train_class1_tensor)) 
+    num_classes1 = int(torch.max(y_train_class1_tensor)) + 1
     model_info = {
         "num_init_features": num_init_features,
         "input_size": input_size,
