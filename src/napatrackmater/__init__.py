@@ -9,7 +9,6 @@ from .Trackvector import (
     supervised_clustering,
     create_global_gt_dataframe,
     create_gt_analysis_vectors_dict,
-    predict_supervised_clustering,
     create_mitosis_training_data,
     train_mitosis_classifier,
     train_mitosis_neural_net,
