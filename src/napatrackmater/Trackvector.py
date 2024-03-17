@@ -2819,13 +2819,8 @@ class MitosisNet(nn.Module):
     ):
         super().__init__()
         
-
-        self.conv_layer = nn.Conv1d(
-            in_channels=1,
-            out_channels=num_init_features,
-            kernel_size=3
-        )
-        self.bn = nn.BatchNorm1d(num_init_features)
+        self.lstm_layer = nn.LSTM(sequence_length,num_init_features, batch_first = True )
+        
         self.classifier = nn.Sequential(
             nn.Linear(sequence_length * num_init_features, num_init_features),
             nn.BatchNorm1d(num_init_features),
@@ -2841,10 +2836,8 @@ class MitosisNet(nn.Module):
                 nn.init.kaiming_normal_(layer.weight)
         
     def forward(self, x):
-        x = self.conv_layer(x)
-        x = x.squeeze(1)
-        x = self.bn(x)
-        x = x.view(x.size(0), -1)
+        out, (hn, cn) = self.lstm_layer(x)
+        x = out[:, -1, :]
         output = self.classifier(x)
         return output      
         
