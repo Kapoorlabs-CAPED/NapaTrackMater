@@ -2813,25 +2813,20 @@ class DenseNet1d(nn.Module):
 class MitosisNet(nn.Module):
     def __init__(
         self,
-        growth_rate,
-        block_config,
         num_init_features,
         num_classes_class1,
     ):
         super().__init__()
-        self.densenet = DenseNet1d(
-            growth_rate=growth_rate,
-            block_config=block_config,
-            num_init_features=num_init_features,
-            in_channels=1,
-            num_classes_1=num_classes_class1,
-        )
 
-        self.num_classes_class1 = num_classes_class1
-
+        self.regressor = nn.Sequential(nn.Linear(1, num_init_features),
+                                       nn.ReLU(inplace=True),
+                                       nn.Linear(num_init_features, num_init_features),
+                                       nn.ReLU(inplace=True),
+                                       nn.Linear(num_init_features, num_classes_class1))
     def forward(self, x):
-        class_output1 = self.densenet(x)
-        return class_output1
+        output = self.regressor(x)
+        return output      
+        
 
 
 def train_mitosis_neural_net(
@@ -2842,8 +2837,6 @@ def train_mitosis_neural_net(
     save_path,
     batch_size=64,
     learning_rate=0.001,
-    growth_rate: int = 4,
-    block_config: tuple = (3, 3),
     weight_decay: float = 1e-5,
     eps: float = 1e-1,
     num_init_features: int = 32,
@@ -2871,8 +2864,6 @@ def train_mitosis_neural_net(
     X_val_tensor = X_val_tensor.float()
     num_classes1 = int(torch.max(y_train_class1_tensor)) + 1
     model_info = {
-         "growth_rate": growth_rate,
-        "block_config": list(block_config),
         "num_init_features": num_init_features,
         "input_size": input_size,
         "num_classes1": num_classes1,
@@ -2882,8 +2873,6 @@ def train_mitosis_neural_net(
 
     model = MitosisNet(
         num_init_features=num_init_features,
-        growth_rate=growth_rate,
-        block_config=block_config,
         num_classes_class1=num_classes1,
     )
 
