@@ -2813,17 +2813,19 @@ class DenseNet1d(nn.Module):
 class MitosisNet(nn.Module):
     def __init__(
         self,
+        sequence_length,
         num_init_features,
         num_classes_class1,
     ):
         super().__init__()
 
-        self.regressor = nn.Sequential(nn.Linear(1, num_init_features),
+        self.regressor = nn.Sequential(nn.Linear(sequence_length, num_init_features),
                                        nn.ReLU(inplace=True),
                                        nn.Linear(num_init_features, num_init_features),
                                        nn.ReLU(inplace=True),
                                        nn.Linear(num_init_features, num_classes_class1))
     def forward(self, x):
+        x = x.squeeze(1)
         output = self.regressor(x)
         return output      
         
@@ -2833,7 +2835,7 @@ def train_mitosis_neural_net(
     features_array,
     labels_array_class1,
     labels_array_class2,
-    input_size,
+    sequence_length,
     save_path,
     batch_size=64,
     learning_rate=0.001,
@@ -2865,7 +2867,7 @@ def train_mitosis_neural_net(
     num_classes1 = int(torch.max(y_train_class1_tensor)) + 1
     model_info = {
         "num_init_features": num_init_features,
-        "input_size": input_size,
+        "sequence_length": sequence_length,
         "num_classes1": num_classes1,
     }
     with open(save_path + "_model_info.json", "w") as json_file:
@@ -2906,7 +2908,7 @@ def train_mitosis_neural_net(
         with tqdm(total=len(train_loader), desc=f"Epoch {epoch + 1}/{epochs}") as pbar:
             for i, data in enumerate(train_loader):
                 inputs, labels_class1 = data
-                inputs_with_channel = inputs
+                inputs_with_channel = inputs.unsqueeze(1)
                 optimizer.zero_grad()
                 outputs_class1 = model(inputs_with_channel)
 
@@ -2948,7 +2950,7 @@ def train_mitosis_neural_net(
             with torch.no_grad():
                 for i, data in enumerate(val_loader):
                     inputs, labels_class1 = data
-                    inputs_with_channel = inputs
+                    inputs_with_channel = inputs.unsqueeze(1)
                     outputs_class1 = model(inputs_with_channel)
 
                     _, predicted_class1 = torch.max(outputs_class1.data, 1)
