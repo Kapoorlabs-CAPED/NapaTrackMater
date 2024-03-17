@@ -2912,6 +2912,8 @@ def train_mitosis_neural_net(
     save_path,
     batch_size=64,
     learning_rate=0.001,
+    growth_rate: int = 4,
+    block_config: tuple = (3, 3),
     weight_decay: float = 1e-5,
     eps: float = 1e-1,
     num_init_features: int = 32,
@@ -2948,6 +2950,8 @@ def train_mitosis_neural_net(
 
     model = MitosisNet(
         num_init_features=num_init_features,
+        growth_rate=growth_rate,
+        block_config=block_config,
         num_classes_class1=num_classes1,
     )
 
