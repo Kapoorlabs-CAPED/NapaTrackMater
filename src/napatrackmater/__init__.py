@@ -22,7 +22,7 @@ from .Trackvector import (
     create_dividing_prediction_tracklets,
     convert_tracks_to_simple_arrays,
     local_track_covaraince,
-    cell_fate_recipe
+    cell_fate_recipe,
 )
 from .CloudAutoEncoder import CloudAutoEncoder
 import json
@@ -90,7 +90,8 @@ __all__ = (
     "create_embeddings_with_gt",
     "create_analysis_tracklets",
     "local_track_covaraince",
-    "create_dividing_prediction_tracklets"
+    "create_dividing_prediction_tracklets",
+    "cell_fate_recipe",
 )
 
 clear_models_and_aliases(CloudAutoEncoder)
@@ -107,7 +108,6 @@ register_model(
     "https://zenodo.org/record/8025269/files/xenopus_membrane_autoencoder.zip",
     "b8763726e1a9e15202960a6f384093d6",
 )
-
 
 
 register_aliases(

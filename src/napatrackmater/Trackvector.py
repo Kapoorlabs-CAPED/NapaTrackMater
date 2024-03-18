@@ -24,7 +24,6 @@ from tqdm import tqdm
 from torch.optim.lr_scheduler import MultiStepLR
 import matplotlib.pyplot as plt
 from typing import List, Union
-from torchsummary import summary
 import torch.nn.init as init
 import random
 
@@ -864,8 +863,6 @@ def create_analysis_tracklets(
     return training_tracklets, modified_dataframe
 
 
-
-
 def append_data_to_npz(file_path, key, data):
     existing_data = np.load(file_path, allow_pickle=True)[key]
 
@@ -911,9 +908,6 @@ def create_embeddings_with_gt(
     prediction_data_shape = []
     prediction_data_dynamic = []
     analysis_track_ids = np.asarray(analysis_track_ids)
-    shape_dynamic_track_arrays = z_score_normalization(shape_dynamic_track_arrays)
-    shape_track_arrays = z_score_normalization(shape_track_arrays)
-    dynamic_track_arrays = z_score_normalization(dynamic_track_arrays)
 
     for idx in range(analysis_track_ids.shape[0]):
         current_track_id = analysis_track_ids[idx]
@@ -1385,7 +1379,6 @@ def supervised_clustering(
         dump(model, model_filename)
 
     return model
-
 
 
 def calculate_wcss(data, labels, centroids):
@@ -1958,7 +1951,6 @@ def cell_fate_recipe(track_data):
             "Surface Area",
             "Speed",
             "Motion_Angle",
-            "Acceleration",
             "Distance_Cell_mask",
             "Radial_Angle",
             "Cell_Axis_Mask",
@@ -1989,62 +1981,73 @@ def cell_fate_recipe(track_data):
     dividing_shape_dataframe.dropna(inplace=True)
     dividing_dynamic_dataframe.dropna(inplace=True)
 
-    dividing_shape_dynamic_dataframe_list = dividing_shape_dynamic_dataframe.to_dict(orient="records")
+    dividing_shape_dynamic_dataframe_list = dividing_shape_dynamic_dataframe.to_dict(
+        orient="records"
+    )
     dividing_shape_dataframe_list = dividing_shape_dataframe.to_dict(orient="records")
-    dividing_dynamic_dataframe_list = dividing_dynamic_dataframe.to_dict(orient="records")
+    dividing_dynamic_dataframe_list = dividing_dynamic_dataframe.to_dict(
+        orient="records"
+    )
 
     dividing_shape_dynamic_track_array = np.array(
-                [
-                    [item for item in record.values()]
-                    for record in dividing_shape_dynamic_dataframe_list
-                ]
-            )
+        [
+            [item for item in record.values()]
+            for record in dividing_shape_dynamic_dataframe_list
+        ]
+    )
     dividing_shape_track_array = np.array(
         [[item for item in record.values()] for record in dividing_shape_dataframe_list]
     )
     dividing_dynamic_track_array = np.array(
-        [[item for item in record.values()] for record in dividing_dynamic_dataframe_list]
+        [
+            [item for item in record.values()]
+            for record in dividing_dynamic_dataframe_list
+        ]
     )
 
-    dividing_covariance_shape_dynamic, dividing_eigenvectors_shape_dynamic  = compute_covariance_matrix(
-                    dividing_shape_dynamic_track_array
-                )
+    (
+        dividing_covariance_shape_dynamic,
+        dividing_eigenvectors_shape_dynamic,
+    ) = compute_covariance_matrix(dividing_shape_dynamic_track_array)
 
-    dividing_covariance_shape, dividing_eigenvectors_shape = compute_covariance_matrix(dividing_shape_track_array)
+    dividing_covariance_shape, dividing_eigenvectors_shape = compute_covariance_matrix(
+        dividing_shape_track_array
+    )
 
-    dividing_covariance_dynamic, dividing_eigenvectors_dynamic = compute_covariance_matrix(dividing_dynamic_track_array)
+    (
+        dividing_covariance_dynamic,
+        dividing_eigenvectors_dynamic,
+    ) = compute_covariance_matrix(dividing_dynamic_track_array)
 
-
-    dividing_shape_dynamic_eigenvectors_3d = np.dstack(dividing_covariance_shape_dynamic)
+    dividing_shape_dynamic_eigenvectors_3d = np.dstack(
+        dividing_covariance_shape_dynamic
+    )
     dividing_shape_eigenvectors_3d = np.dstack(dividing_covariance_shape)
     dividing_dynamic_eigenvectors_3d = np.dstack(dividing_covariance_dynamic)
-    dividing_shape_dynamic_eigenvectors_2d = dividing_shape_dynamic_eigenvectors_3d.reshape(
-        1, -1
+    dividing_shape_dynamic_eigenvectors_2d = (
+        dividing_shape_dynamic_eigenvectors_3d.reshape(1, -1)
     )
-    dividing_shape_eigenvectors_2d = dividing_shape_eigenvectors_3d.reshape(
-        1, -1
-    )
-    dividing_dynamic_eigenvectors_2d = dividing_dynamic_eigenvectors_3d.reshape(
-        1, -1
-    )
+    dividing_shape_eigenvectors_2d = dividing_shape_eigenvectors_3d.reshape(1, -1)
+    dividing_dynamic_eigenvectors_2d = dividing_dynamic_eigenvectors_3d.reshape(1, -1)
 
-    dividing_shape_dynamic_covariance_2d = np.array(dividing_shape_dynamic_eigenvectors_2d)
+    dividing_shape_dynamic_covariance_2d = np.array(
+        dividing_shape_dynamic_eigenvectors_2d
+    )
     dividing_shape_covariance_2d = np.array(dividing_shape_eigenvectors_2d)
     dividing_dynamic_covariance_2d = np.array(dividing_dynamic_eigenvectors_2d)
 
-    
-    return dividing_shape_dynamic_covariance_2d, dividing_shape_covariance_2d, dividing_dynamic_covariance_2d
+    return (
+        dividing_shape_dynamic_track_array,
+        dividing_shape_track_array,
+        dividing_dynamic_track_array,
+        dividing_covariance_shape_dynamic,
+        dividing_covariance_shape,
+        dividing_covariance_dynamic,
+        dividing_shape_dynamic_covariance_2d,
+        dividing_shape_covariance_2d,
+        dividing_dynamic_covariance_2d,
+    )
 
-
-def cov_normalize(matrix):
-    mean = np.mean(matrix, axis=0)  
-    std = np.std(matrix, axis=0)  
-    min = np.min(matrix)
-    max = np.max(matrix)  
-    normalized_matrix = matrix
-    #normalized_matrix = (matrix - mean) / std
-    #normalized_matrix = (matrix - min) / max
-    return normalized_matrix
 
 def local_track_covaraince(analysis_vectors):
 
@@ -2818,28 +2821,25 @@ class MitosisNet(nn.Module):
         num_classes_class1,
     ):
         super().__init__()
-        
-        self.lstm_layer = nn.LSTM(sequence_length,num_init_features, batch_first = True )
-        
+
+        self.lstm_layer = nn.LSTM(sequence_length, num_init_features, batch_first=True)
+
         self.classifier = nn.Sequential(
             nn.Linear(num_init_features, num_init_features),
             nn.BatchNorm1d(num_init_features),
             nn.ReLU(inplace=True),
-            nn.Linear(num_init_features, num_classes_class1)
+            nn.Linear(num_init_features, num_classes_class1),
         )
-        
+
         for layer in self.classifier:
             if isinstance(layer, nn.Linear):
                 nn.init.kaiming_normal_(layer.weight)
-        
+
     def forward(self, x):
         out, (hn, cn) = self.lstm_layer(x)
-        print(out.shape)
         x = out[:, -1, :]
-        print(x.shape)
         output = self.classifier(x)
-        return output      
-        
+        return output
 
 
 def train_mitosis_neural_net(
@@ -2891,7 +2891,6 @@ def train_mitosis_neural_net(
     )
 
     model.to(device)
-    
 
     criterion_class1 = nn.CrossEntropyLoss()
     optimizer = optim.Adam(
@@ -2928,7 +2927,6 @@ def train_mitosis_neural_net(
                 loss_class1.backward()
 
                 optimizer.step()
-
 
                 _, predicted_class1 = torch.max(outputs_class1.data, 1)
 
@@ -3043,8 +3041,8 @@ def predict_with_model(
     num_init_features = model_info["num_init_features"]
 
     model = MitosisNet(
-        growth_rate = growth_rate,
-        block_config = block_config,
+        growth_rate=growth_rate,
+        block_config=block_config,
         num_init_features=num_init_features,
         num_classes_class1=num_classes_class1,
     )
