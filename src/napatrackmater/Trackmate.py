@@ -2911,7 +2911,7 @@ def prob_sigmoid(x):
 
 def angular_change(vec_mask, vec_cell):
 
-    vec = vec_cell - vec_mask
+    vec = np.asarray(vec_cell) - np.asarray(vec_mask)
     vec = vec / np.linalg.norm(vec)
     num_dimensions = len(vec)
     unit_vector = np.ones(num_dimensions) / num_dimensions
