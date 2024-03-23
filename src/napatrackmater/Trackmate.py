@@ -2913,8 +2913,7 @@ def angular_change(vec_mask, vec_cell):
 
     vec = np.asarray(vec_cell) - np.asarray(vec_mask)
     vec = vec / np.linalg.norm(vec)
-    num_dimensions = len(vec)
-    unit_vector = np.ones(num_dimensions) / num_dimensions
+    unit_vector = np.array([1, 0, 0])
     angle = np.arccos(np.clip(np.dot(vec, unit_vector), -1.0, 1.0))
     angle = angle * 180 / np.pi
     return angle
