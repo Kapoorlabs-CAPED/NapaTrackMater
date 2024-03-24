@@ -2004,49 +2004,51 @@ def cell_fate_recipe(track_data):
             for record in dividing_dynamic_dataframe_list
         ]
     )
+    if (
+            dividing_shape_dynamic_track_array.shape[0] > 1 
+    ):
+        (
+            dividing_covariance_shape_dynamic,
+            dividing_eigenvectors_shape_dynamic,
+        ) = compute_covariance_matrix(dividing_shape_dynamic_track_array)
 
-    (
-        dividing_covariance_shape_dynamic,
-        dividing_eigenvectors_shape_dynamic,
-    ) = compute_covariance_matrix(dividing_shape_dynamic_track_array)
+        dividing_covariance_shape, dividing_eigenvectors_shape = compute_covariance_matrix(
+            dividing_shape_track_array
+        )
 
-    dividing_covariance_shape, dividing_eigenvectors_shape = compute_covariance_matrix(
-        dividing_shape_track_array
-    )
+        (
+            dividing_covariance_dynamic,
+            dividing_eigenvectors_dynamic,
+        ) = compute_covariance_matrix(dividing_dynamic_track_array)
 
-    (
-        dividing_covariance_dynamic,
-        dividing_eigenvectors_dynamic,
-    ) = compute_covariance_matrix(dividing_dynamic_track_array)
+        dividing_shape_dynamic_eigenvectors_3d = np.dstack(
+            dividing_covariance_shape_dynamic
+        )
+        dividing_shape_eigenvectors_3d = np.dstack(dividing_covariance_shape)
+        dividing_dynamic_eigenvectors_3d = np.dstack(dividing_covariance_dynamic)
+        dividing_shape_dynamic_eigenvectors_2d = (
+            dividing_shape_dynamic_eigenvectors_3d.reshape(1, -1)
+        )
+        dividing_shape_eigenvectors_2d = dividing_shape_eigenvectors_3d.reshape(1, -1)
+        dividing_dynamic_eigenvectors_2d = dividing_dynamic_eigenvectors_3d.reshape(1, -1)
 
-    dividing_shape_dynamic_eigenvectors_3d = np.dstack(
-        dividing_covariance_shape_dynamic
-    )
-    dividing_shape_eigenvectors_3d = np.dstack(dividing_covariance_shape)
-    dividing_dynamic_eigenvectors_3d = np.dstack(dividing_covariance_dynamic)
-    dividing_shape_dynamic_eigenvectors_2d = (
-        dividing_shape_dynamic_eigenvectors_3d.reshape(1, -1)
-    )
-    dividing_shape_eigenvectors_2d = dividing_shape_eigenvectors_3d.reshape(1, -1)
-    dividing_dynamic_eigenvectors_2d = dividing_dynamic_eigenvectors_3d.reshape(1, -1)
+        dividing_shape_dynamic_covariance_2d = np.array(
+            dividing_shape_dynamic_eigenvectors_2d
+        )
+        dividing_shape_covariance_2d = np.array(dividing_shape_eigenvectors_2d)
+        dividing_dynamic_covariance_2d = np.array(dividing_dynamic_eigenvectors_2d)
 
-    dividing_shape_dynamic_covariance_2d = np.array(
-        dividing_shape_dynamic_eigenvectors_2d
-    )
-    dividing_shape_covariance_2d = np.array(dividing_shape_eigenvectors_2d)
-    dividing_dynamic_covariance_2d = np.array(dividing_dynamic_eigenvectors_2d)
-
-    return (
-        dividing_shape_dynamic_track_array,
-        dividing_shape_track_array,
-        dividing_dynamic_track_array,
-        dividing_covariance_shape_dynamic,
-        dividing_covariance_shape,
-        dividing_covariance_dynamic,
-        dividing_shape_dynamic_covariance_2d,
-        dividing_shape_covariance_2d,
-        dividing_dynamic_covariance_2d,
-    )
+        return (
+            dividing_shape_dynamic_track_array,
+            dividing_shape_track_array,
+            dividing_dynamic_track_array,
+            dividing_covariance_shape_dynamic,
+            dividing_covariance_shape,
+            dividing_covariance_dynamic,
+            dividing_shape_dynamic_covariance_2d,
+            dividing_shape_covariance_2d,
+            dividing_dynamic_covariance_2d,
+        )
 
 
 def local_track_covaraince(analysis_vectors):
