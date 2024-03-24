@@ -2912,10 +2912,10 @@ def prob_sigmoid(x):
 def angular_change(vec_mask, vec_cell):
 
     vec = np.asarray(vec_cell) - np.asarray(vec_mask)
-    vec = vec / np.linalg.norm(vec)
-    unit_vector = np.array([1, 0, 0])
-    angle = np.arccos(np.clip(np.dot(vec, unit_vector), -1.0, 1.0))
-    angle = angle * 180 / np.pi
+    r = np.linalg.norm(vec)
+    costheta = np.clip(vec[-1] / r, -1.0, 1.0)
+    theta = np.arccos(costheta)
+    angle = np.rad2deg(theta)
     return angle
 
 
