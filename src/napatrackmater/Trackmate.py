@@ -2912,8 +2912,8 @@ def cell_angular_change(vec_cell):
     vec = np.asarray(vec_cell)
     vec = vec / np.linalg.norm(vec)
     num_dims = len(vec)
-    unit_vector = np.ones(num_dims)
-    unit_vector[-1] = 0
+    unit_vector = np.zeros(num_dims)
+    unit_vector[-1] = 1
     unit_vector = unit_vector / np.linalg.norm(unit_vector)
     theta = np.arccos(np.clip(np.dot(vec, unit_vector), -1.0, 1.0))
     angle = np.rad2deg(theta)
