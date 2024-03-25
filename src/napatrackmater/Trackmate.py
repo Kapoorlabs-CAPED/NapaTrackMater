@@ -1916,7 +1916,7 @@ class TrackMate:
                                 ]
                             ),
                         ]
-                        cell_axis_mask = angular_change(mask_vector, cell_axis)
+                        cell_axis_mask = cell_angular_change( cell_axis)
 
                         self.unique_spot_properties[int(closest_cell_id)].update(
                             {self.cellaxis_mask_key: cell_axis_mask}
@@ -2363,7 +2363,7 @@ class TrackMate:
             speed = np.sqrt(np.dot(vec_1, vec_1)) / self.tcalibration
             self.unique_spot_properties[int(cell_id)].update({self.speed_key: speed})
 
-            motion_angle = angular_change(vec_mask, vec_1)
+            motion_angle = cell_angular_change(vec_1)
 
             self.unique_spot_properties[int(cell_id)].update(
                 {self.motion_angle_key: motion_angle}
@@ -2919,8 +2919,21 @@ def angular_change(vec_mask, vec_cell):
     unit_vector = unit_vector/np.linalg.norm(unit_vector)
     theta = np.arccos(np.clip(np.dot(vec,unit_vector), -1.0, 1.0))
     angle = np.rad2deg(theta)
-    
+
     return angle
+
+def cell_angular_change( vec_cell):
+
+    vec = np.asarray(vec_cell)
+    vec = vec/np.linalg.norm(vec)
+    num_dims = len(vec)
+    unit_vector = np.ones(num_dims)
+    unit_vector[-1] = 0
+    unit_vector = unit_vector/np.linalg.norm(unit_vector)
+    theta = np.arccos(np.clip(np.dot(vec,unit_vector), -1.0, 1.0))
+    angle = np.rad2deg(theta)
+    
+    return angle    
 
 
 def check_and_update_mask(mask, image):
