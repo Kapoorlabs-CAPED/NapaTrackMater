@@ -1899,24 +1899,8 @@ class TrackMate:
                             closest_centroid[2],
                         )
                         closest_cell_id = self.unique_spot_centroid[frame_spot_centroid]
-                        mask_vector = [
-                            float(
-                                self.unique_spot_properties[int(closest_cell_id)][
-                                    self.maskcentroid_x_key
-                                ]
-                            ),
-                            float(
-                                self.unique_spot_properties[int(closest_cell_id)][
-                                    self.maskcentroid_y_key
-                                ]
-                            ),
-                            float(
-                                self.unique_spot_properties[int(closest_cell_id)][
-                                    self.maskcentroid_z_key
-                                ]
-                            ),
-                        ]
-                        cell_axis_mask = cell_angular_change( cell_axis)
+
+                        cell_axis_mask = cell_angular_change(cell_axis)
 
                         self.unique_spot_properties[int(closest_cell_id)].update(
                             {self.cellaxis_mask_key: cell_axis_mask}
@@ -2912,28 +2896,29 @@ def prob_sigmoid(x):
 def angular_change(vec_mask, vec_cell):
 
     vec = np.asarray(vec_cell) - np.asarray(vec_mask)
-    vec = vec/np.linalg.norm(vec)
+    vec = vec / np.linalg.norm(vec)
     num_dims = len(vec)
-    unit_vector = np.ones(num_dims)
-    unit_vector[-1] = 0
-    unit_vector = unit_vector/np.linalg.norm(unit_vector)
-    theta = np.arccos(np.clip(np.dot(vec,unit_vector), -1.0, 1.0))
+    unit_vector = np.zeros(num_dims)
+    unit_vector[-1] = 1
+    unit_vector = unit_vector / np.linalg.norm(unit_vector)
+    theta = np.arccos(np.clip(np.dot(vec, unit_vector), -1.0, 1.0))
     angle = np.rad2deg(theta)
 
     return angle
 
-def cell_angular_change( vec_cell):
+
+def cell_angular_change(vec_cell):
 
     vec = np.asarray(vec_cell)
-    vec = vec/np.linalg.norm(vec)
+    vec = vec / np.linalg.norm(vec)
     num_dims = len(vec)
     unit_vector = np.ones(num_dims)
     unit_vector[-1] = 0
-    unit_vector = unit_vector/np.linalg.norm(unit_vector)
-    theta = np.arccos(np.clip(np.dot(vec,unit_vector), -1.0, 1.0))
+    unit_vector = unit_vector / np.linalg.norm(unit_vector)
+    theta = np.arccos(np.clip(np.dot(vec, unit_vector), -1.0, 1.0))
     angle = np.rad2deg(theta)
-    
-    return angle    
+
+    return angle
 
 
 def check_and_update_mask(mask, image):
