@@ -30,11 +30,11 @@ import random
 
 SHAPE_FEATURES = [
     "Radius",
-    "Radius Pixel",
-    "Eccentricity Comp First",
-    "Eccentricity Comp Second",
-    "Eccentricity Comp Third",
-    "Surface Area",
+    "Radius_Pixel",
+    "Eccentricity_Comp_First",
+    "Eccentricity_Comp_Second",
+    "Eccentricity_Comp_Third",
+    "Surface_Area",
 ]
 
 DYNAMIC_FEATURES = [
@@ -47,9 +47,9 @@ DYNAMIC_FEATURES = [
     "Radial_Angle_Z",
     "Radial_Angle_Y",
     "Radial_Angle_X",
-    "Cell_Axis_Mask_Z",
-    "Cell_Axis_Mask_Y",
-    "Cell_Axis_Mask_X",
+    "Cell_Axis_Z",
+    "Cell_Axis_Y",
+    "Cell_Axis_X",
 ]
 
 IDENTITY_FEATURES = ["Track ID", "t", "z", "y", "x", "Dividing", "Number_Dividing"]
@@ -290,9 +290,9 @@ class TrackVector(TrackMate):
                     radial_angle_z,
                     radial_angle_y,
                     radial_angle_x,
-                    cell_axis_mask_z,
-                    cell_axis_mask_y,
-                    cell_axis_mask_x,
+                    cell_axis_z,
+                    cell_axis_y,
+                    cell_axis_x,
                     _,
                     _,
                     _,
@@ -348,9 +348,9 @@ class TrackVector(TrackMate):
                         radial_angle_z,
                         radial_angle_y,
                         radial_angle_x,
-                        cell_axis_mask_z,
-                        cell_axis_mask_y,
-                        cell_axis_mask_x,
+                        cell_axis_z,
+                        cell_axis_y,
+                        cell_axis_x,
                     ]
                     + (
                         [latent_features[i] for i in range(len(latent_features))]
@@ -564,33 +564,33 @@ class TrackVector(TrackMate):
             radial_angle_z = spot_properties[self.radial_angle_z_key]
             radial_angle_y = spot_properties[self.radial_angle_y_key]
             radial_angle_x = spot_properties[self.radial_angle_x_key]
-            cell_axis_mask_z = spot_properties[self.cellaxis_mask_z_key]
-            cell_axis_mask_y = spot_properties[self.cellaxis_mask_y_key]
-            cell_axis_mask_x = spot_properties[self.cellaxis_mask_x_key]
+            cell_axis_z = spot_properties[self.cell_axis_z_key]
+            cell_axis_y = spot_properties[self.cell_axis_y_key]
+            cell_axis_x = spot_properties[self.cell_axis_x_key]
 
             data = {
-                "Track ID": track_id,
-                "Unique ID": unique_id,
-                "Tracklet ID": tracklet_id,
-                "Number Times Divided": number_times_divided,
-                "Surface Area": surface_area,
-                "Eccentricity Comp First": eccentricity_comp_first,
-                "Eccentricity Comp Second": eccentricity_comp_second,
-                "Eccentricity Comp Third": eccentricity_comp_third,
+                "Track_ID": track_id,
+                "Unique_ID": unique_id,
+                "Tracklet_ID": tracklet_id,
+                "Number_Times_Divided": number_times_divided,
+                "Surface_Area": surface_area,
+                "Eccentricity_Comp_First": eccentricity_comp_first,
+                "Eccentricity_Comp_Second": eccentricity_comp_second,
+                "Eccentricity_Comp_Third": eccentricity_comp_third,
                 "Radius": radius,
-                "Radius Pixel": radius_pixel,
+                "Radius_Pixel": radius_pixel,
                 "Speed": speed,
-                "Motion Angle Z": motion_angle_z,
-                "Motion Angle Y": motion_angle_y,
-                "Motion Angle X": motion_angle_x,
+                "Motion_Angle_Z": motion_angle_z,
+                "Motion_Angle_Y": motion_angle_y,
+                "Motion_Angle_X": motion_angle_x,
                 "Acceleration": acceleration,
-                "Distance Cell Mask": distance_cell_mask,
-                "Radial Angle Z": radial_angle_z,
-                "Radial Angle Y": radial_angle_y,
-                "Radial Angle X": radial_angle_x,
-                "Cell Axis Mask Z": cell_axis_mask_z,
-                "Cell Axis Mask Y": cell_axis_mask_y,
-                "Cell Axis Mask X": cell_axis_mask_x,
+                "Distance_Cell_Mask": distance_cell_mask,
+                "Radial_Angle_Z": radial_angle_z,
+                "Radial_Angle_Y": radial_angle_y,
+                "Radial_Angle_X": radial_angle_x,
+                "cell_axis_Z": cell_axis_z,
+                "cell_axis_Y": cell_axis_y,
+                "cell_axis_X": cell_axis_x,
             }
 
             all_split_data.append(data)
@@ -621,10 +621,10 @@ class TrackVector(TrackMate):
 
             cols_to_replace = [
                 "Radius",
-                "Radius Pixel",
-                "Eccentricity Comp First",
-                "Eccentricity Comp Second",
-                "Eccentricity Comp Third",
+                "Radius_Pixel",
+                "Eccentricity_Comp_First",
+                "Eccentricity_Comp_Second",
+                "Eccentricity_Comp_Third",
                 "Surface Area",
             ]
             shape_dynamic_dataframe[cols_to_replace] = shape_dynamic_dataframe[

@@ -176,9 +176,9 @@ class TrackMate:
         self.maskcentroid_x_key = "maskcentroid_x_key"
         self.maskcentroid_z_key = "maskcentroid_z_key"
         self.maskcentroid_y_key = "maskcentroid_y_key"
-        self.cellaxis_mask_z_key = "cellaxis_mask_z_key"
-        self.cellaxis_mask_y_key = "cellaxis_mask_y_key"
-        self.cellaxis_mask_x_key = "cellaxis_mask_x_key"
+        self.cell_axis_z_key = "cell_axis_z_key"
+        self.cell_axis_y_key = "cell_axis_y_key"
+        self.cell_axis_x_key = "cell_axis_x_key"
         self.cellid_key = "cell_id"
         self.acceleration_key = "acceleration"
         self.centroid_key = "centroid"
@@ -1133,18 +1133,18 @@ class TrackMate:
                 all_dict_values[self.eccentricity_comp_thirdkey]
             )
             surface_area = float(all_dict_values[self.surface_area_key])
-            cell_axis_mask_z = float(all_dict_values[self.cellaxis_mask_z_key])
-            cell_axis_mask_y = float(all_dict_values[self.cellaxis_mask_y_key])
-            cell_axis_mask_x = float(all_dict_values[self.cellaxis_mask_x_key])
+            cell_axis_z = float(all_dict_values[self.cell_axis_z_key])
+            cell_axis_y = float(all_dict_values[self.cell_axis_y_key])
+            cell_axis_x = float(all_dict_values[self.cell_axis_x_key])
 
         else:
             eccentricity_comp_first = -1
             eccentricity_comp_second = -1
             eccentricity_comp_third = -1
             surface_area = -1
-            cell_axis_mask_z = -1
-            cell_axis_mask_y = -1
-            cell_axis_mask_x = -1
+            cell_axis_z = -1
+            cell_axis_y = -1
+            cell_axis_x = -1
 
         frame_spot_centroid = (
             t,
@@ -1190,9 +1190,9 @@ class TrackMate:
                 radial_angle_z,
                 radial_angle_y,
                 radial_angle_x,
-                cell_axis_mask_z,
-                cell_axis_mask_y,
-                cell_axis_mask_x,
+                cell_axis_z,
+                cell_axis_y,
+                cell_axis_x,
                 track_displacement,
                 total_track_distance,
                 max_track_distance,
@@ -1248,9 +1248,9 @@ class TrackMate:
                 radial_angle_z,
                 radial_angle_y,
                 radial_angle_x,
-                cell_axis_mask_z,
-                cell_axis_mask_y,
-                cell_axis_mask_x,
+                cell_axis_z,
+                cell_axis_y,
+                cell_axis_x,
                 track_displacement,
                 total_track_distance,
                 max_track_distance,
@@ -1334,14 +1334,14 @@ class TrackMate:
                             self.surface_area_key: float(
                                 Spotobject.get(self.surface_area_key)
                             ),
-                            self.cellaxis_mask_z_key: float(
-                                Spotobject.get(self.cellaxis_mask_z_key)
+                            self.cell_axis_z_key: float(
+                                Spotobject.get(self.cell_axis_z_key)
                             ),
-                            self.cellaxis_mask_y_key: float(
-                                Spotobject.get(self.cellaxis_mask_y_key)
+                            self.cell_axis_y_key: float(
+                                Spotobject.get(self.cell_axis_y_key)
                             ),
-                            self.cellaxis_mask_x_key: float(
-                                Spotobject.get(self.cellaxis_mask_x_key)
+                            self.cell_axis_x_key: float(
+                                Spotobject.get(self.cell_axis_x_key)
                             ),
                         }
                     )
@@ -1956,18 +1956,18 @@ class TrackMate:
                         )
                         closest_cell_id = self.unique_spot_centroid[frame_spot_centroid]
 
-                        cell_axis_mask_x = cell_angular_change_x(cell_axis_x)
-                        cell_axis_mask_y = cell_angular_change_y(cell_axis_y)
-                        cell_axis_mask_z = cell_angular_change_z(cell_axis_z)
+                        cell_axis_x = cell_angular_change_x(cell_axis_x)
+                        cell_axis_y = cell_angular_change_y(cell_axis_y)
+                        cell_axis_z = cell_angular_change_z(cell_axis_z)
 
                         self.unique_spot_properties[int(closest_cell_id)].update(
-                            {self.cellaxis_mask_x_key: cell_axis_mask_x}
+                            {self.cell_axis_x_key: cell_axis_x}
                         )
                         self.unique_spot_properties[int(closest_cell_id)].update(
-                            {self.cellaxis_mask_y_key: cell_axis_mask_y}
+                            {self.cell_axis_y_key: cell_axis_y}
                         )
                         self.unique_spot_properties[int(closest_cell_id)].update(
-                            {self.cellaxis_mask_z_key: cell_axis_mask_z}
+                            {self.cell_axis_z_key: cell_axis_z}
                         )
                         if (
                             self.unique_spot_properties[int(closest_cell_id)][
@@ -2071,9 +2071,9 @@ class TrackMate:
             radial_angle_y = tracklet_properties[:, 17]
             radial_angle_x = tracklet_properties[:, 18]
 
-            cell_axis_mask_z = tracklet_properties[:, 19]
-            cell_axis_mask_y = tracklet_properties[:, 20]
-            cell_axis_mask_x = tracklet_properties[:, 21]
+            cell_axis_z = tracklet_properties[:, 19]
+            cell_axis_y = tracklet_properties[:, 20]
+            cell_axis_x = tracklet_properties[:, 21]
 
             track_displacement = tracklet_properties[:, 22]
 
@@ -2127,9 +2127,9 @@ class TrackMate:
                 current_radial_angle_z = []
                 current_radial_angle_y = []
                 current_radial_angle_x = []
-                current_cell_axis_mask_z = []
-                current_cell_axis_mask_y = []
-                current_cell_axis_mask_x = []
+                current_cell_axis_z = []
+                current_cell_axis_y = []
+                current_cell_axis_x = []
                 current_track_displacement = []
                 current_total_track_distance = []
                 current_max_track_distance = []
@@ -2171,9 +2171,9 @@ class TrackMate:
                         current_radial_angle_y.append(radial_angle_y[j])
                         current_radial_angle_x.append(radial_angle_x[j])
 
-                        current_cell_axis_mask_z.append(cell_axis_mask_z[j])
-                        current_cell_axis_mask_y.append(cell_axis_mask_y[j])
-                        current_cell_axis_mask_x.append(cell_axis_mask_x[j])
+                        current_cell_axis_z.append(cell_axis_z[j])
+                        current_cell_axis_y.append(cell_axis_y[j])
+                        current_cell_axis_x.append(cell_axis_x[j])
 
                         current_track_displacement.append(track_displacement[j])
                         current_total_track_distance.append(total_track_distance[j])
@@ -2230,15 +2230,9 @@ class TrackMate:
                     current_radial_angle_x, dtype=np.float32
                 )
 
-                current_cell_axis_mask_z = np.asarray(
-                    current_cell_axis_mask_z, dtype=np.float32
-                )
-                current_cell_axis_mask_y = np.asarray(
-                    current_cell_axis_mask_y, dtype=np.float32
-                )
-                current_cell_axis_mask_x = np.asarray(
-                    current_cell_axis_mask_x, dtype=np.float32
-                )
+                current_cell_axis_z = np.asarray(current_cell_axis_z, dtype=np.float32)
+                current_cell_axis_y = np.asarray(current_cell_axis_y, dtype=np.float32)
+                current_cell_axis_x = np.asarray(current_cell_axis_x, dtype=np.float32)
 
                 current_track_displacement = np.asarray(
                     current_track_displacement, dtype=np.float32
@@ -2291,9 +2285,9 @@ class TrackMate:
                     current_radial_angle_z,
                     current_radial_angle_y,
                     current_radial_angle_x,
-                    current_cell_axis_mask_z,
-                    current_cell_axis_mask_y,
-                    current_cell_axis_mask_x,
+                    current_cell_axis_z,
+                    current_cell_axis_y,
+                    current_cell_axis_x,
                     current_track_displacement,
                     current_total_track_distance,
                     current_max_track_distance,
@@ -2459,9 +2453,9 @@ class TrackMate:
             {self.eccentricity_comp_thirdkey: -1}
         )
         self.unique_spot_properties[int(cell_id)].update({self.surface_area_key: -1})
-        self.unique_spot_properties[int(cell_id)].update({self.cellaxis_mask_z_key: -1})
-        self.unique_spot_properties[int(cell_id)].update({self.cellaxis_mask_y_key: -1})
-        self.unique_spot_properties[int(cell_id)].update({self.cellaxis_mask_x_key: -1})
+        self.unique_spot_properties[int(cell_id)].update({self.cell_axis_z_key: -1})
+        self.unique_spot_properties[int(cell_id)].update({self.cell_axis_y_key: -1})
+        self.unique_spot_properties[int(cell_id)].update({self.cell_axis_x_key: -1})
         if source_id is not None:
             self.unique_spot_properties[int(cell_id)].update(
                 {self.beforeid_key: int(source_id)}
@@ -3251,15 +3245,9 @@ def get_feature_dict(unique_tracks_properties):
         "radial_angle_z": np.asarray(unique_tracks_properties, dtype="float16")[:, 16],
         "radial_angle_y": np.asarray(unique_tracks_properties, dtype="float16")[:, 17],
         "radial_angle_x": np.asarray(unique_tracks_properties, dtype="float16")[:, 18],
-        "cell_axis_mask_z": np.asarray(unique_tracks_properties, dtype="float16")[
-            :, 19
-        ],
-        "cell_axis_mask_y": np.asarray(unique_tracks_properties, dtype="float16")[
-            :, 20
-        ],
-        "cell_axis_mask_x": np.asarray(unique_tracks_properties, dtype="float16")[
-            :, 21
-        ],
+        "cell_axis_z": np.asarray(unique_tracks_properties, dtype="float16")[:, 19],
+        "cell_axis_y": np.asarray(unique_tracks_properties, dtype="float16")[:, 20],
+        "cell_axis_x": np.asarray(unique_tracks_properties, dtype="float16")[:, 21],
         "track_displacement": np.asarray(unique_tracks_properties, dtype="float16")[
             :, 22
         ],
