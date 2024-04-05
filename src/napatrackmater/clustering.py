@@ -631,7 +631,7 @@ def get_panda_cloud_xy(points):
 
 def get_panda_cloud_xyz(points):
 
-    cloud = PyntCloud(pd.DataFrame(data=points, columns=["x", "y", "z"]))
+    cloud = PyntCloud(pd.DataFrame(data=points, columns=["z", "y", "x"]))
 
     return cloud
 
