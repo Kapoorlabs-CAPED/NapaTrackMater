@@ -1935,6 +1935,10 @@ class TrackMate:
                     cell_axis_x = output_eigenvectors[i][2]
                     cell_axis_y = output_eigenvectors[i][1]
                     cell_axis_z = output_eigenvectors[i][0]
+                    print('x',cell_axis_x)
+                    print('y',cell_axis_y)
+                    print('z',cell_axis_z)
+
                     surface_area = (
                         output_cloud_surface_area[i]
                         * self.zcalibration
@@ -1956,18 +1960,18 @@ class TrackMate:
                         )
                         closest_cell_id = self.unique_spot_centroid[frame_spot_centroid]
 
-                        cell_axis_x = cell_angular_change_x(cell_axis_x)
-                        cell_axis_y = cell_angular_change_y(cell_axis_y)
-                        cell_axis_z = cell_angular_change_z(cell_axis_z)
+                        angle_cell_axis_x = cell_angular_change_x(cell_axis_x)
+                        angle_cell_axis_y = cell_angular_change_y(cell_axis_y)
+                        angle_cell_axis_z = cell_angular_change_z(cell_axis_z)
 
                         self.unique_spot_properties[int(closest_cell_id)].update(
-                            {self.cell_axis_x_key: cell_axis_x}
+                            {self.cell_axis_x_key: angle_cell_axis_x}
                         )
                         self.unique_spot_properties[int(closest_cell_id)].update(
-                            {self.cell_axis_y_key: cell_axis_y}
+                            {self.cell_axis_y_key: angle_cell_axis_y}
                         )
                         self.unique_spot_properties[int(closest_cell_id)].update(
-                            {self.cell_axis_z_key: cell_axis_z}
+                            {self.cell_axis_z_key: angle_cell_axis_z}
                         )
                         if (
                             self.unique_spot_properties[int(closest_cell_id)][
