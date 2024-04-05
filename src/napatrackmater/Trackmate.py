@@ -1919,9 +1919,9 @@ class TrackMate:
             for i in range(len(output_cluster_centroid)):
                 centroid = output_cluster_centroid[i]
                 quality = math.pow(
-                    output_eigenvalues[i][0]
+                    output_eigenvalues[i][2]
                     * output_eigenvalues[i][1]
-                    * output_eigenvalues[i][2],
+                    * output_eigenvalues[i][0],
                     1.0 / 3.0,
                 )
                 eccentricity_comp_firstyz = output_cloud_eccentricity[i]
@@ -1935,9 +1935,6 @@ class TrackMate:
                     cell_axis_x = output_eigenvectors[i][2]
                     cell_axis_y = output_eigenvectors[i][1]
                     cell_axis_z = output_eigenvectors[i][0]
-                    print('x',cell_axis_x)
-                    print('y',cell_axis_y)
-                    print('z',cell_axis_z)
 
                     surface_area = (
                         output_cloud_surface_area[i]
