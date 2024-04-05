@@ -637,16 +637,14 @@ def get_panda_cloud_xyz(points):
 
 
 def get_eccentricity(point_cloud):
-   
-   
     cov_mat = np.cov(point_cloud, rowvar=False)
-  
-    cov_mat[[0, -1]] = cov_mat[[-1, 0]]
+
     eigenvalues, eigenvectors = np.linalg.eigh(cov_mat)
-    
+
     if np.any(eigenvalues < 0):
         return None
-
+    eigenvectors = eigenvectors[:, ::-1]
+    eigenvalues = eigenvalues[::-1]
     eccentricities = np.sqrt(eigenvalues)
     dimensions = np.arange(len(eigenvalues))
 
@@ -655,7 +653,6 @@ def get_eccentricity(point_cloud):
 
 def get_surface_area(point_cloud):
     # Compute the convex hull of the point cloud
-    
     hull = ConvexHull(point_cloud)
 
     # Compute the areas of the triangles in the convex hull
