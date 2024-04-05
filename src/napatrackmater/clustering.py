@@ -638,23 +638,13 @@ def get_eccentricity(point_cloud):
 
     eigenvalues, eigenvectors = np.linalg.eigh(cov_mat)
 
-    x_values = point_cloud[:, 0]
-    y_values = point_cloud[:, 1]
-    z_values = point_cloud[:, 2]
-
-    sorted_indices = np.lexsort((y_values, x_values, z_values))
-
-    eigenvectors_sorted = eigenvectors[:, sorted_indices[::-1]]
-
-    eigenvalues_sorted = eigenvalues[sorted_indices[::-1]]
-
-    if np.any(eigenvalues_sorted < 0):
+    if np.any(eigenvalues < 0):
         return None
 
-    eccentricities = np.sqrt(eigenvalues_sorted)
-    dimensions = np.arange(len(eigenvalues_sorted))
+    eccentricities = np.sqrt(eigenvalues)
+    dimensions = np.arange(len(eigenvalues))
 
-    return eccentricities, eigenvectors_sorted, eigenvalues_sorted, dimensions
+    return eccentricities, eigenvectors, eigenvalues, dimensions
 
 
 
