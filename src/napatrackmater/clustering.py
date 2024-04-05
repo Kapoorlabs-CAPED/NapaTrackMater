@@ -14,7 +14,6 @@ from scipy.spatial import ConvexHull
 from scipy.spatial.qhull import QhullError
 from lightning import Trainer
 from typing import List
-from tqdm import tqdm
 
 
 class PointCloudDataset(Dataset):
@@ -29,17 +28,16 @@ class PointCloudDataset(Dataset):
 
     def __getitem__(self, idx):
         point_cloud = self.clouds[idx]
-        mean = 0.0  
+        mean = 0.0
         point_cloud = torch.tensor(point_cloud.points.values).float()
 
         if self.center:
-            mean = torch.mean(point_cloud, 0).float()  
+            mean = torch.mean(point_cloud, 0).float()
 
         scale = torch.tensor([[self.scale_z, self.scale_xy, self.scale_xy]]).float()
         point_cloud = (point_cloud - mean) / scale
 
         return point_cloud
-
 
 
 class Clustering:
@@ -457,7 +455,7 @@ def _model_output(
 
         outputs_list = pretrainer.predict(model=model, dataloaders=dataloader)
 
-        for outputs in tqdm(outputs_list, desc="Autoencoder model", unit="batch"):
+        for outputs in outputs_list:
             output_cloud_eccentricity = output_cloud_eccentricity + [
                 tuple(get_eccentricity(cloud_input.detach().cpu().numpy()))[0]
                 for cloud_input in outputs
@@ -481,9 +479,7 @@ def _model_output(
 
     else:
 
-        for cloud_input in tqdm(
-            marching_cube_points, desc="Marching cubes", unit="cloud_input"
-        ):
+        for cloud_input in marching_cube_points:
             try:
                 ConvexHull(cloud_input)
 
@@ -547,7 +543,14 @@ def _label_cluster(label_image, num_points, min_size, ndim, compute_with_autoenc
 
 
 def get_label_centroid_cloud(
-    binary_image, num_points, ndim, label, centroid, min_size, compute_with_autoencoder, padding_size = 3
+    binary_image,
+    num_points,
+    ndim,
+    label,
+    centroid,
+    min_size,
+    compute_with_autoencoder,
+    padding_size=3,
 ):
 
     valid = []
@@ -565,17 +568,18 @@ def get_label_centroid_cloud(
     if False not in valid:
 
         try:
-            
-            binary_image_padded = np.pad(binary_image, padding_size, mode='constant', constant_values=0)
+
+            binary_image_padded = np.pad(
+                binary_image, padding_size, mode="constant", constant_values=0
+            )
             vertices, faces, normals, values = marching_cubes(binary_image_padded)
         except Exception as e:
-            print(f'Zero padding not possible {e}')    
+            print(f"Zero padding not possible {e}")
             try:
                 vertices, faces, normals, values = marching_cubes(binary_image)
             except RuntimeError:
                 vertices = None
 
-        
         if vertices is not None:
             mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
             simple_clouds = np.asarray(mesh_obj.sample(num_points).data)
@@ -632,7 +636,6 @@ def get_panda_cloud_xyz(points):
     return cloud
 
 
-
 def get_eccentricity(point_cloud):
     cov_mat = np.cov(point_cloud, rowvar=False)
 
@@ -645,7 +648,6 @@ def get_eccentricity(point_cloud):
     dimensions = np.arange(len(eigenvalues))
 
     return eccentricities, eigenvectors, eigenvalues, dimensions
-
 
 
 def get_surface_area(point_cloud):
