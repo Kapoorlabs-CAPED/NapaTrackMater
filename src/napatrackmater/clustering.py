@@ -97,7 +97,7 @@ class Clustering:
             (
                 latent_features,
                 cluster_centroids,
-                output_largest_eigenvalues,
+                output_eigenvalues,
             ) = _extract_latent_features(
                 self.model,
                 self.accelerator,
@@ -112,7 +112,7 @@ class Clustering:
             self.timed_latent_features[str(self.key)] = (
                 latent_features,
                 cluster_centroids,
-                output_largest_eigenvalues,
+                output_eigenvalues,
             )
 
         # ZYX image
@@ -130,7 +130,7 @@ class Clustering:
                 (
                     latent_features,
                     cluster_centroids,
-                    output_largest_eigenvalues,
+                    output_eigenvalues,
                 ) = _extract_latent_features(
                     self.model,
                     self.accelerator,
@@ -145,7 +145,7 @@ class Clustering:
                 self.timed_latent_features[str(self.key)] = (
                     latent_features,
                     cluster_centroids,
-                    output_largest_eigenvalues,
+                    output_eigenvalues,
                 )
 
         # TYX
@@ -155,12 +155,12 @@ class Clustering:
                 (
                     latent_features,
                     cluster_centroids,
-                    output_largest_eigenvalues,
+                    output_eigenvalues,
                 ) = self._latent_computer(i, ndim - 1)
                 self.timed_latent_features[str(i)] = (
                     latent_features,
                     cluster_centroids,
-                    output_largest_eigenvalues,
+                    output_eigenvalues,
                 )
 
         # TZYX image
@@ -170,12 +170,12 @@ class Clustering:
                 (
                     latent_features,
                     cluster_centroids,
-                    output_largest_eigenvalues,
+                    output_eigenvalues,
                 ) = self._latent_computer(i, ndim)
                 self.timed_latent_features[str(i)] = (
                     latent_features,
                     cluster_centroids,
-                    output_largest_eigenvalues,
+                    output_eigenvalues,
                 )
 
     def _latent_computer(self, i, dim):
@@ -193,7 +193,7 @@ class Clustering:
             (
                 latent_features,
                 cluster_centroids,
-                output_largest_eigenvalues,
+                output_eigenvalues,
             ) = _extract_latent_features(
                 self.model,
                 self.accelerator,
@@ -204,7 +204,7 @@ class Clustering:
                 self.scale_z,
                 self.scale_xy,
             )
-            return latent_features, cluster_centroids, output_largest_eigenvalues
+            return latent_features, cluster_centroids, output_eigenvalues
 
     def _create_cluster_labels(self):
 
@@ -223,8 +223,8 @@ class Clustering:
                 output_labels,
                 output_cluster_centroid,
                 output_cloud_eccentricity,
-                output_largest_eigenvector,
-                output_largest_eigenvalue,
+                output_eigenvectors,
+                output_eigenvalues,
                 output_dimensions,
                 output_cloud_surface_area,
             ) = _model_output(
@@ -243,8 +243,8 @@ class Clustering:
                 output_labels,
                 output_cluster_centroid,
                 output_cloud_eccentricity,
-                output_largest_eigenvector,
-                output_largest_eigenvalue,
+                output_eigenvectors,
+                output_eigenvalues,
                 output_dimensions,
                 output_cloud_surface_area,
             ]
@@ -265,8 +265,8 @@ class Clustering:
                     output_labels,
                     output_cluster_centroid,
                     output_cloud_eccentricity,
-                    output_largest_eigenvector,
-                    output_largest_eigenvalue,
+                    output_eigenvectors,
+                    output_eigenvalues,
                     output_dimensions,
                     output_cloud_surface_area,
                 ) = _model_output(
@@ -285,8 +285,8 @@ class Clustering:
                     output_labels,
                     output_cluster_centroid,
                     output_cloud_eccentricity,
-                    output_largest_eigenvector,
-                    output_largest_eigenvalue,
+                    output_eigenvectors,
+                    output_eigenvalues,
                     output_dimensions,
                     output_cloud_surface_area,
                 ]
@@ -300,8 +300,8 @@ class Clustering:
                     output_labels,
                     output_cluster_centroid,
                     output_cloud_eccentricity,
-                    output_largest_eigenvector,
-                    output_largest_eigenvalue,
+                    output_eigenvectors,
+                    output_eigenvalues,
                     output_dimensions,
                     output_cloud_surface_area,
                 ) = self._label_computer(i, ndim - 1)
@@ -309,8 +309,8 @@ class Clustering:
                     output_labels,
                     output_cluster_centroid,
                     output_cloud_eccentricity,
-                    output_largest_eigenvector,
-                    output_largest_eigenvalue,
+                    output_eigenvectors,
+                    output_eigenvalues,
                     output_dimensions,
                     output_cloud_surface_area,
                 ]
@@ -324,8 +324,8 @@ class Clustering:
                     output_labels,
                     output_cluster_centroid,
                     output_cloud_eccentricity,
-                    output_largest_eigenvector,
-                    output_largest_eigenvalue,
+                    output_eigenvectors,
+                    output_eigenvalues,
                     output_dimensions,
                     output_cloud_surface_area,
                 ) = self._label_computer(i, ndim)
@@ -333,8 +333,8 @@ class Clustering:
                     output_labels,
                     output_cluster_centroid,
                     output_cloud_eccentricity,
-                    output_largest_eigenvector,
-                    output_largest_eigenvalue,
+                    output_eigenvectors,
+                    output_eigenvalues,
                     output_dimensions,
                     output_cloud_surface_area,
                 ]
@@ -355,8 +355,8 @@ class Clustering:
                 output_labels,
                 output_cluster_centroid,
                 output_cloud_eccentricity,
-                output_largest_eigenvector,
-                output_largest_eigenvalue,
+                output_eigenvectors,
+                output_eigenvalues,
                 output_dimensions,
                 output_cloud_surface_area,
             ) = _model_output(
@@ -376,8 +376,8 @@ class Clustering:
                 output_labels,
                 output_cluster_centroid,
                 output_cloud_eccentricity,
-                output_largest_eigenvector,
-                output_largest_eigenvalue,
+                output_eigenvectors,
+                output_eigenvalues,
                 output_dimensions,
                 output_cloud_surface_area,
             )
@@ -405,7 +405,7 @@ def _extract_latent_features(
     device = accelerator
     torch_model.to(device)
     latent_features = []
-    output_largest_eigenvalue = [
+    output_eigenvalues = [
         get_eccentricity(cloud_input)[2]
         if get_eccentricity(cloud_input) is not None
         else -1
@@ -420,7 +420,7 @@ def _extract_latent_features(
             for latent_representation in latent_representation_list:
                 latent_features.append(latent_representation.cpu().numpy())
 
-    return latent_features, output_cluster_centroids, output_largest_eigenvalue
+    return latent_features, output_cluster_centroids, output_eigenvalues
 
 
 def _model_output(
@@ -440,8 +440,8 @@ def _model_output(
     output_cluster_centroid = []
     output_cloud_eccentricity = []
     output_cloud_surface_area = []
-    output_largest_eigenvector = []
-    output_largest_eigenvalue = []
+    output_eigenvectors = []
+    output_eigenvalues = []
     output_dimensions = []
     dataset = PointCloudDataset(clouds, scale_z=scale_z, scale_xy=scale_xy)
     dataloader = DataLoader(dataset, batch_size=batch_size)
@@ -462,11 +462,11 @@ def _model_output(
                 tuple(get_eccentricity(cloud_input.detach().cpu().numpy()))[0]
                 for cloud_input in outputs
             ]
-            output_largest_eigenvector = output_largest_eigenvector + [
+            output_eigenvectors = output_eigenvectors + [
                 get_eccentricity(cloud_input.detach().cpu().numpy())[1]
                 for cloud_input in outputs
             ]
-            output_largest_eigenvalue = output_largest_eigenvalue + [
+            output_eigenvalues = output_eigenvalues + [
                 get_eccentricity(cloud_input.detach().cpu().numpy())[2]
                 for cloud_input in outputs
             ]
@@ -491,22 +491,22 @@ def _model_output(
                     tuple(get_eccentricity(cloud_input))[0]
                 )
 
-                output_largest_eigenvector.append(get_eccentricity(cloud_input)[1])
-                output_largest_eigenvalue.append(get_eccentricity(cloud_input)[2])
+                output_eigenvectors.append(get_eccentricity(cloud_input)[1])
+                output_eigenvalues.append(get_eccentricity(cloud_input)[2])
                 output_dimensions.append(get_eccentricity(cloud_input)[3])
                 output_cloud_surface_area.append(float(get_surface_area(cloud_input)))
             except QhullError:
                 output_cloud_eccentricity.append(-1)
-                output_largest_eigenvector.append(-1)
-                output_largest_eigenvalue.append(-1)
+                output_eigenvectors.append(-1)
+                output_eigenvalues.append(-1)
                 output_dimensions.append(-1)
                 output_cloud_surface_area.append(-1)
     return (
         output_labels,
         output_cluster_centroid,
         output_cloud_eccentricity,
-        output_largest_eigenvector,
-        output_largest_eigenvalue,
+        output_eigenvectors,
+        output_eigenvalues,
         output_dimensions,
         output_cloud_surface_area,
     )
@@ -632,26 +632,30 @@ def get_panda_cloud_xyz(points):
     return cloud
 
 
-def get_eccentricity(point_cloud):
 
-    # Compute the covariance matrix of the point cloud
+def get_eccentricity(point_cloud):
     cov_mat = np.cov(point_cloud, rowvar=False)
 
-    # Compute the eigenvectors and eigenvalues of the covariance matrix
     eigenvalues, eigenvectors = np.linalg.eigh(cov_mat)
 
-    # Sort the eigenvectors in descending order of their corresponding eigenvalues
-    idx = eigenvalues.argsort()[::-1]
-    eigenvectors = eigenvectors[:, idx]
-    eigenvalues = eigenvalues[idx]
-    largest_eigen_vector = eigenvectors[:, idx[0]]
-    largest_eigen_value = eigenvalues[idx[0]]
-    if np.any(eigenvalues < 0):
-        return None
-    eccentricities = np.sqrt(eigenvalues)
-    dimensions = idx
+    x_values = point_cloud[:, 0]
+    y_values = point_cloud[:, 1]
+    z_values = point_cloud[:, 2]
 
-    return eccentricities, largest_eigen_vector, largest_eigen_value, dimensions
+    sorted_indices = np.lexsort((y_values, x_values, z_values))
+
+    eigenvectors_sorted = eigenvectors[:, sorted_indices[::-1]]
+
+    eigenvalues_sorted = eigenvalues[sorted_indices[::-1]]
+
+    if np.any(eigenvalues_sorted < 0):
+        return None
+
+    eccentricities = np.sqrt(eigenvalues_sorted)
+    dimensions = np.arange(len(eigenvalues_sorted))
+
+    return eccentricities, eigenvectors_sorted, eigenvalues_sorted, dimensions
+
 
 
 def get_surface_area(point_cloud):

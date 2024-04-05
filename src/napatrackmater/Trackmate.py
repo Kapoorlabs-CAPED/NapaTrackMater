@@ -176,7 +176,9 @@ class TrackMate:
         self.maskcentroid_x_key = "maskcentroid_x_key"
         self.maskcentroid_z_key = "maskcentroid_z_key"
         self.maskcentroid_y_key = "maskcentroid_y_key"
-        self.cellaxis_mask_key = "cellaxis_mask_key"
+        self.cellaxis_mask_z_key = "cellaxis_mask_z_key"
+        self.cellaxis_mask_y_key = "cellaxis_mask_y_key"
+        self.cellaxis_mask_x_key = "cellaxis_mask_x_key"
         self.cellid_key = "cell_id"
         self.acceleration_key = "acceleration"
         self.centroid_key = "centroid"
@@ -184,8 +186,12 @@ class TrackMate:
         self.eccentricity_comp_secondkey = "cloud_eccentricity_comp_second"
         self.eccentricity_comp_thirdkey = "cloud_eccentricity_comp_third"
         self.surface_area_key = "cloud_surfacearea"
-        self.radial_angle_key = "radial_angle_key"
-        self.motion_angle_key = "motion_angle"
+        self.radial_angle_z_key = "radial_angle_z_key"
+        self.radial_angle_y_key = "radial_angle_y_key"
+        self.radial_angle_x_key = "radial_angle_x_key"
+        self.motion_angle_z_key = "motion_angle_z"
+        self.motion_angle_y_key = "motion_angle_y"
+        self.motion_angle_x_key = "motion_angle_x"
         self.latent_shape_features_key = "latent_shape_features"
 
         self.mean_intensity_ch1_key = self.track_analysis_spot_keys[
@@ -1087,8 +1093,14 @@ class TrackMate:
         gen_id = int(float(all_dict_values[self.generationid_key]))
         speed = float(all_dict_values[self.speed_key])
         acceleration = float(all_dict_values[self.acceleration_key])
-        motion_angle = float(all_dict_values[self.motion_angle_key])
-        radial_angle = float(all_dict_values[self.radial_angle_key])
+        motion_angle_z = float(all_dict_values[self.motion_angle_z_key])
+        motion_angle_y = float(all_dict_values[self.motion_angle_y_key])
+        motion_angle_x = float(all_dict_values[self.motion_angle_x_key])
+
+        radial_angle_z = float(all_dict_values[self.radial_angle_z_key])
+        radial_angle_y = float(all_dict_values[self.radial_angle_y_key])
+        radial_angle_x = float(all_dict_values[self.radial_angle_x_key])
+        
         radius = float(all_dict_values[self.radius_key])
         volume_pixels = int(float(all_dict_values[self.quality_key]))
         total_intensity = float(all_dict_values[self.total_intensity_key])
@@ -1121,7 +1133,9 @@ class TrackMate:
                 all_dict_values[self.eccentricity_comp_thirdkey]
             )
             surface_area = float(all_dict_values[self.surface_area_key])
-            cell_axis_mask = float(all_dict_values[self.cellaxis_mask_key])
+            cell_axis_mask_z = float(all_dict_values[self.cellaxis_mask_z_key])
+            cell_axis_mask_y = float(all_dict_values[self.cellaxis_mask_y_key])
+            cell_axis_mask_x = float(all_dict_values[self.cellaxis_mask_x_key])
 
         else:
             eccentricity_comp_first = -1
@@ -1166,11 +1180,17 @@ class TrackMate:
                 surface_area,
                 total_intensity,
                 speed,
-                motion_angle,
+                motion_angle_z,
+                motion_angle_y,
+                motion_angle_x,
                 acceleration,
                 distance_cell_mask,
-                radial_angle,
-                cell_axis_mask,
+                radial_angle_z,
+                radial_angle_y,
+                radial_angle_x,
+                cell_axis_mask_z,
+                cell_axis_mask_y,
+                cell_axis_mask_x,
                 track_displacement,
                 total_track_distance,
                 max_track_distance,
@@ -1218,11 +1238,17 @@ class TrackMate:
                 surface_area,
                 total_intensity,
                 speed,
-                motion_angle,
+                motion_angle_z,
+                motion_angle_y,
+                motion_angle_x,
                 acceleration,
                 distance_cell_mask,
-                radial_angle,
-                cell_axis_mask,
+                radial_angle_z,
+                radial_angle_y,
+                radial_angle_x,
+                cell_axis_mask_z,
+                cell_axis_mask_y,
+                cell_axis_mask_x,
                 track_displacement,
                 total_track_distance,
                 max_track_distance,
@@ -1854,8 +1880,8 @@ class TrackMate:
                 output_labels,
                 output_cluster_centroid,
                 output_cloud_eccentricity,
-                output_largest_eigenvector,
-                output_largest_eigenvalue,
+                output_eigenvectors,
+                output_eigenvalues,
                 output_dimensions,
                 output_cloud_surface_area,
             ) = timed_cluster_label[time_key]
@@ -1864,21 +1890,18 @@ class TrackMate:
             scale_3 = 1
             for i in range(len(output_cluster_centroid)):
                 centroid = output_cluster_centroid[i]
-                quality = output_largest_eigenvalue[i]
+                quality = math.pow(output_eigenvalues[i][0] * output_eigenvalues[i][1] * output_eigenvalues[i][2], 1.0/3.0 )
                 eccentricity_comp_firstyz = output_cloud_eccentricity[i]
                 eccentricity_dimension = output_dimensions[i]
                 if not isinstance(eccentricity_dimension, int):
-                    scale = set_scale(
-                        eccentricity_dimension,
-                        self.xcalibration,
-                        self.ycalibration,
-                        self.zcalibration,
-                    )
-                    scale_1 = scale[0]
-                    scale_2 = scale[1]
-                    scale_3 = scale[2]
+                    
+                    scale_1 = self.xcalibration
+                    scale_2 = self.ycalibration
+                    scale_3 = self.zcalibration
 
-                    cell_axis = output_largest_eigenvector[i]
+                    cell_axis_x = output_eigenvectors[i][0]
+                    cell_axis_y = output_eigenvectors[i][1]
+                    cell_axis_z = output_eigenvectors[i][2]
                     surface_area = (
                         output_cloud_surface_area[i]
                         * self.zcalibration
@@ -1900,10 +1923,18 @@ class TrackMate:
                         )
                         closest_cell_id = self.unique_spot_centroid[frame_spot_centroid]
 
-                        cell_axis_mask = cell_angular_change(cell_axis)
+                        cell_axis_mask_x = cell_angular_change_x(cell_axis_x)
+                        cell_axis_mask_y = cell_angular_change_y(cell_axis_y)
+                        cell_axis_mask_z = cell_angular_change_z(cell_axis_z)
 
                         self.unique_spot_properties[int(closest_cell_id)].update(
-                            {self.cellaxis_mask_key: cell_axis_mask}
+                            {self.cellaxis_mask_x_key: cell_axis_mask_x}
+                        )
+                        self.unique_spot_properties[int(closest_cell_id)].update(
+                            {self.cellaxis_mask_y_key: cell_axis_mask_y}
+                        )
+                        self.unique_spot_properties[int(closest_cell_id)].update(
+                            {self.cellaxis_mask_z_key: cell_axis_mask_z}
                         )
                         if (
                             self.unique_spot_properties[int(closest_cell_id)][
@@ -1995,21 +2026,33 @@ class TrackMate:
 
             intensity = tracklet_properties[:, 9]
             speed = tracklet_properties[:, 10]
-            motion_angle = tracklet_properties[:, 11]
-            acceleration = tracklet_properties[:, 12]
-            distance_cell_mask = tracklet_properties[:, 13]
-            radial_angle = tracklet_properties[:, 14]
-            cell_axis_mask = tracklet_properties[:, 15]
-            track_displacement = tracklet_properties[:, 16]
+            
+            motion_angle_z = tracklet_properties[:, 11]
+            motion_angle_y = tracklet_properties[:, 12]
+            motion_angle_x = tracklet_properties[:, 13]
 
-            total_track_distance = tracklet_properties[:, 17]
+            acceleration = tracklet_properties[:, 14]
+            distance_cell_mask = tracklet_properties[:, 15]
 
-            max_track_distance = tracklet_properties[:, 18]
+            radial_angle_z = tracklet_properties[:, 16]
+            radial_angle_y = tracklet_properties[:, 17]
+            radial_angle_x = tracklet_properties[:, 18]
+            
+            cell_axis_mask_z = tracklet_properties[:, 19]
+            cell_axis_mask_y = tracklet_properties[:, 20]
+            cell_axis_mask_x = tracklet_properties[:, 21]
 
-            track_duration = tracklet_properties[:, 19]
 
-            if tracklet_properties.shape[1] > 20:
-                latent_shape_features = tracklet_properties[:, 20:]
+            track_displacement = tracklet_properties[:, 22]
+
+            total_track_distance = tracklet_properties[:, 23]
+
+            max_track_distance = tracklet_properties[:, 24]
+
+            track_duration = tracklet_properties[:, 25]
+
+            if tracklet_properties.shape[1] > 25:
+                latent_shape_features = tracklet_properties[:, 26:]
             else:
                 latent_shape_features = []
 
@@ -2038,7 +2081,10 @@ class TrackMate:
                 current_radius = []
                 current_volume = []
                 current_speed = []
-                current_motion_angle = []
+                current_motion_angle_z = []
+                current_motion_angle_y = []
+                current_motion_angle_x = []
+
                 current_acceleration = []
                 current_distance_cell_mask = []
                 current_eccentricity_comp_first = []
@@ -2046,8 +2092,12 @@ class TrackMate:
                 current_eccentricity_comp_third = []
                 current_surface_area = []
                 current_latent_shape_features = []
-                current_radial_angle = []
-                current_cell_axis_mask = []
+                current_radial_angle_z = []
+                current_radial_angle_y = []
+                current_radial_angle_x = []
+                current_cell_axis_mask_z = []
+                current_cell_axis_mask_y = []
+                current_cell_axis_mask_x = []
                 current_track_displacement = []
                 current_total_track_distance = []
                 current_max_track_distance = []
@@ -2064,7 +2114,10 @@ class TrackMate:
                         current_radius.append(radius[j])
                         current_volume.append(volume[j])
                         current_speed.append(speed[j])
-                        current_motion_angle.append(motion_angle[j])
+                        current_motion_angle_z.append(motion_angle_z[j])
+                        current_motion_angle_y.append(motion_angle_y[j])
+                        current_motion_angle_x.append(motion_angle_x[j])
+
                         current_acceleration.append(acceleration[j])
                         current_distance_cell_mask.append(distance_cell_mask[j])
                         current_eccentricity_comp_first.append(
@@ -2082,8 +2135,15 @@ class TrackMate:
                             current_latent_shape_features.append(
                                 latent_shape_features[j]
                             )
-                        current_radial_angle.append(radial_angle[j])
-                        current_cell_axis_mask.append(cell_axis_mask[j])
+                        current_radial_angle_z.append(radial_angle_z[j])
+                        current_radial_angle_y.append(radial_angle_y[j])
+                        current_radial_angle_x.append(radial_angle_x[j])
+                        
+                        current_cell_axis_mask_z.append(cell_axis_mask_z[j])
+                        current_cell_axis_mask_y.append(cell_axis_mask_y[j])
+                        current_cell_axis_mask_x.append(cell_axis_mask_x[j])
+
+
                         current_track_displacement.append(track_displacement[j])
                         current_total_track_distance.append(total_track_distance[j])
                         current_max_track_distance.append(max_track_distance[j])
@@ -2112,8 +2172,14 @@ class TrackMate:
                 )
 
                 current_speed = np.asarray(current_speed, dtype=np.float32)
-                current_motion_angle = np.asarray(
-                    current_motion_angle, dtype=np.float32
+                current_motion_angle_z = np.asarray(
+                    current_motion_angle_z, dtype=np.float32
+                )
+                current_motion_angle_y = np.asarray(
+                    current_motion_angle_y, dtype=np.float32
+                )
+                current_motion_angle_x = np.asarray(
+                    current_motion_angle_x, dtype=np.float32
                 )
                 current_acceleration = np.asarray(
                     current_acceleration, dtype=np.float32
@@ -2121,11 +2187,24 @@ class TrackMate:
                 current_distance_cell_mask = np.asarray(
                     current_distance_cell_mask, dtype=np.float32
                 )
-                current_radial_angle = np.asarray(
-                    current_radial_angle, dtype=np.float32
+                current_radial_angle_z = np.asarray(
+                    current_radial_angle_z, dtype=np.float32
                 )
-                current_cell_axis_mask = np.asarray(
-                    current_cell_axis_mask, dtype=np.float32
+                current_radial_angle_y = np.asarray(
+                    current_radial_angle_y, dtype=np.float32
+                )
+                current_radial_angle_x = np.asarray(
+                    current_radial_angle_x, dtype=np.float32
+                )
+
+                current_cell_axis_mask_z = np.asarray(
+                    current_cell_axis_mask_z, dtype=np.float32
+                )
+                current_cell_axis_mask_y = np.asarray(
+                    current_cell_axis_mask_y, dtype=np.float32
+                )
+                current_cell_axis_mask_x = np.asarray(
+                    current_cell_axis_mask_x, dtype=np.float32
                 )
 
                 current_track_displacement = np.asarray(
@@ -2171,11 +2250,17 @@ class TrackMate:
                 unique_dynamic_properties_tracklet[current_unique_id] = (
                     current_time,
                     current_speed,
-                    current_motion_angle,
+                    current_motion_angle_z,
+                    current_motion_angle_y,
+                    current_motion_angle_x,
                     current_acceleration,
                     current_distance_cell_mask,
-                    current_radial_angle,
-                    current_cell_axis_mask,
+                    current_radial_angle_z,
+                    current_radial_angle_y,
+                    current_radial_angle_x,
+                    current_cell_axis_mask_z,
+                    current_cell_axis_mask_y,
+                    current_cell_axis_mask_x,
                     current_track_displacement,
                     current_total_track_distance,
                     current_max_track_distance,
@@ -2300,10 +2385,13 @@ class TrackMate:
             float(self.unique_spot_properties[int(cell_id)][self.zposid_key]),
         ]
 
-        angle = angular_change(vec_mask, vec_cell)
+        angle_x = angular_change_x(vec_mask, vec_cell)
+        angle_y = angular_change_y(vec_mask, vec_cell)
+        angle_z = angular_change_z(vec_mask, vec_cell)
 
-        self.unique_spot_properties[int(cell_id)].update({self.radial_angle_key: angle})
-
+        self.unique_spot_properties[int(cell_id)].update({self.radial_angle_x_key: angle_x})
+        self.unique_spot_properties[int(cell_id)].update({self.radial_angle_y_key: angle_y})
+        self.unique_spot_properties[int(cell_id)].update({self.radial_angle_z_key: angle_z})
         unique_tracklet_ids.append(str(unique_id))
         self.unique_spot_properties[int(cell_id)].update(
             {self.uniqueid_key: str(unique_id)}
@@ -2317,7 +2405,9 @@ class TrackMate:
         self.unique_spot_properties[int(cell_id)].update(
             {self.trackid_key: str(track_id)}
         )
-        self.unique_spot_properties[int(cell_id)].update({self.motion_angle_key: 0.0})
+        self.unique_spot_properties[int(cell_id)].update({self.motion_angle_z_key: 0.0})
+        self.unique_spot_properties[int(cell_id)].update({self.motion_angle_y_key: 0.0})
+        self.unique_spot_properties[int(cell_id)].update({self.motion_angle_x_key: 0.0})
         self.unique_spot_properties[int(cell_id)].update({self.speed_key: 0.0})
         self.unique_spot_properties[int(cell_id)].update({self.acceleration_key: 0.0})
         self.unique_spot_properties[int(cell_id)].update(
@@ -2330,8 +2420,9 @@ class TrackMate:
             {self.eccentricity_comp_thirdkey: -1}
         )
         self.unique_spot_properties[int(cell_id)].update({self.surface_area_key: -1})
-        self.unique_spot_properties[int(cell_id)].update({self.cellaxis_mask_key: -1})
-
+        self.unique_spot_properties[int(cell_id)].update({self.cellaxis_mask_z_key: -1})
+        self.unique_spot_properties[int(cell_id)].update({self.cellaxis_mask_y_key: -1})
+        self.unique_spot_properties[int(cell_id)].update({self.cellaxis_mask_x_key: -1})
         if source_id is not None:
             self.unique_spot_properties[int(cell_id)].update(
                 {self.beforeid_key: int(source_id)}
@@ -2347,10 +2438,20 @@ class TrackMate:
             speed = np.sqrt(np.dot(vec_1, vec_1)) / self.tcalibration
             self.unique_spot_properties[int(cell_id)].update({self.speed_key: speed})
 
-            motion_angle = cell_angular_change(vec_1)
+            motion_angle_x = cell_angular_change_x(vec_1)
+            motion_angle_y = cell_angular_change_y(vec_1)
+            motion_angle_z = cell_angular_change_z(vec_1)
 
             self.unique_spot_properties[int(cell_id)].update(
-                {self.motion_angle_key: motion_angle}
+                {self.motion_angle_x_key: motion_angle_x}
+            )
+
+            self.unique_spot_properties[int(cell_id)].update(
+                {self.motion_angle_y_key: motion_angle_y}
+            )
+
+            self.unique_spot_properties[int(cell_id)].update(
+                {self.motion_angle_z_key: motion_angle_z}
             )
 
             if source_id in self.edge_source_lookup:
@@ -2424,8 +2525,14 @@ class TrackMate:
         self.mitotic_mean_acc = []
         self.mitotic_var_acc = []
 
-        self.mitotic_mean_directional_change = []
-        self.mitotic_var_directional_change = []
+        self.mitotic_mean_directional_change_z = []
+        self.mitotic_var_directional_change_z = []
+
+        self.mitotic_mean_directional_change_y = []
+        self.mitotic_var_directional_change_y = []
+
+        self.mitotic_mean_directional_change_x = []
+        self.mitotic_var_directional_change_x = []
 
         self.mitotic_mean_distance_cell_mask = []
         self.mitotic_var_distance_cell_mask = []
@@ -2448,8 +2555,14 @@ class TrackMate:
         self.non_mitotic_mean_acc = []
         self.non_mitotic_var_acc = []
 
-        self.non_mitotic_mean_directional_change = []
-        self.non_mitotic_var_directional_change = []
+        self.non_mitotic_mean_directional_change_z = []
+        self.non_mitotic_var_directional_change_z = []
+
+        self.non_mitotic_mean_directional_change_y = []
+        self.non_mitotic_var_directional_change_y = []
+
+        self.non_mitotic_mean_directional_change_x = []
+        self.non_mitotic_var_directional_change_x = [] 
 
         self.non_mitotic_mean_distance_cell_mask = []
         self.non_mitotic_var_distance_cell_mask = []
@@ -2472,8 +2585,14 @@ class TrackMate:
         self.all_mean_acc = []
         self.all_var_acc = []
 
-        self.all_mean_directional_change = []
-        self.all_var_directional_change = []
+        self.all_mean_directional_change_z = []
+        self.all_var_directional_change_z = []
+
+        self.all_mean_directional_change_y = []
+        self.all_var_directional_change_y = []
+
+        self.all_mean_directional_change_x = []
+        self.all_var_directional_change_x = []
 
         self.all_mean_distance_cell_mask = []
         self.all_var_distance_cell_mask = []
@@ -2505,7 +2624,9 @@ class TrackMate:
         mitotic_radius = []
         mitotic_speed = []
         mitotic_acc = []
-        mitotic_directional_change = []
+        mitotic_directional_change_z = []
+        mitotic_directional_change_y = []
+        mitotic_directional_change_x = []
         mitotic_distance_cell_mask = []
 
         non_mitotic_disp_z = []
@@ -2514,7 +2635,9 @@ class TrackMate:
         non_mitotic_radius = []
         non_mitotic_speed = []
         non_mitotic_acc = []
-        non_mitotic_directional_change = []
+        non_mitotic_directional_change_z = []
+        non_mitotic_directional_change_y = []
+        non_mitotic_directional_change_x = []
         non_mitotic_distance_cell_mask = []
 
         all_disp_z = []
@@ -2523,7 +2646,9 @@ class TrackMate:
         all_radius = []
         all_speed = []
         all_acc = []
-        all_directional_change = []
+        all_directional_change_z = []
+        all_directional_change_y = []
+        all_directional_change_x = []
         all_distance_cell_mask = []
 
         for (k, v) in all_spots_tracks.items():
@@ -2542,8 +2667,14 @@ class TrackMate:
                         mitotic_radius.append(None)
                     mitotic_speed.append(all_spots_tracks[k][self.speed_key])
                     mitotic_acc.append(all_spots_tracks[k][self.acceleration_key])
-                    mitotic_directional_change.append(
-                        all_spots_tracks[k][self.motion_angle_key]
+                    mitotic_directional_change_z.append(
+                        all_spots_tracks[k][self.motion_angle_z_key]
+                    )
+                    mitotic_directional_change_y.append(
+                        all_spots_tracks[k][self.motion_angle_y_key]
+                    )
+                    mitotic_directional_change_x.append(
+                        all_spots_tracks[k][self.motion_angle_x_key]
                     )
                     mitotic_distance_cell_mask.append(
                         all_spots_tracks[k][self.distance_cell_mask_key]
@@ -2559,8 +2690,14 @@ class TrackMate:
                         non_mitotic_radius.append(None)
                     non_mitotic_speed.append(all_spots_tracks[k][self.speed_key])
                     non_mitotic_acc.append(all_spots_tracks[k][self.acceleration_key])
-                    non_mitotic_directional_change.append(
-                        all_spots_tracks[k][self.motion_angle_key]
+                    non_mitotic_directional_change_z.append(
+                        all_spots_tracks[k][self.motion_angle_z_key]
+                    )
+                    non_mitotic_directional_change_y.append(
+                        all_spots_tracks[k][self.motion_angle_y_key]
+                    )
+                    non_mitotic_directional_change_x.append(
+                        all_spots_tracks[k][self.motion_angle_x_key]
                     )
                     non_mitotic_distance_cell_mask.append(
                         all_spots_tracks[k][self.distance_cell_mask_key]
@@ -2575,8 +2712,14 @@ class TrackMate:
                     all_radius.append(None)
                 all_speed.append(all_spots_tracks[k][self.speed_key])
                 all_acc.append(all_spots_tracks[k][self.acceleration_key])
-                all_directional_change.append(
-                    all_spots_tracks[k][self.motion_angle_key]
+                all_directional_change_z.append(
+                    all_spots_tracks[k][self.motion_angle_z_key]
+                )
+                all_directional_change_y.append(
+                    all_spots_tracks[k][self.motion_angle_y_key]
+                )
+                all_directional_change_x.append(
+                    all_spots_tracks[k][self.motion_angle_x_key]
                 )
                 all_distance_cell_mask.append(
                     all_spots_tracks[k][self.distance_cell_mask_key]
@@ -2616,8 +2759,16 @@ class TrackMate:
         self.mitotic_mean_acc.append(np.mean(mitotic_acc))
         self.mitotic_var_acc.append(np.std(mitotic_acc))
 
-        self.mitotic_mean_directional_change.append(np.mean(mitotic_directional_change))
-        self.mitotic_var_directional_change.append(np.std(mitotic_directional_change))
+        self.mitotic_mean_directional_change_z.append(np.mean(mitotic_directional_change_z))
+        self.mitotic_var_directional_change_z.append(np.std(mitotic_directional_change_z))
+
+        self.mitotic_mean_directional_change_y.append(np.mean(mitotic_directional_change_y))
+        self.mitotic_var_directional_change_y.append(np.std(mitotic_directional_change_y))
+
+        self.mitotic_mean_directional_change_x.append(np.mean(mitotic_directional_change_x))
+        self.mitotic_var_directional_change_x.append(np.std(mitotic_directional_change_x))
+
+
 
         self.mitotic_mean_distance_cell_mask.append(np.mean(mitotic_distance_cell_mask))
         self.mitotic_var_distance_cell_mask.append(np.std(mitotic_distance_cell_mask))
@@ -2642,11 +2793,25 @@ class TrackMate:
         self.non_mitotic_mean_acc.append(np.mean(non_mitotic_acc))
         self.non_mitotic_var_acc.append(np.std(non_mitotic_acc))
 
-        self.non_mitotic_mean_directional_change.append(
-            np.mean(non_mitotic_directional_change)
+        self.non_mitotic_mean_directional_change_z.append(
+            np.mean(non_mitotic_directional_change_z)
         )
-        self.non_mitotic_var_directional_change.append(
-            np.std(non_mitotic_directional_change)
+        self.non_mitotic_var_directional_change_z.append(
+            np.std(non_mitotic_directional_change_z)
+        )
+
+        self.non_mitotic_mean_directional_change_y.append(
+            np.mean(non_mitotic_directional_change_y)
+        )
+        self.non_mitotic_var_directional_change_y.append(
+            np.std(non_mitotic_directional_change_y)
+        )
+
+        self.non_mitotic_mean_directional_change_x.append(
+            np.mean(non_mitotic_directional_change_x)
+        )
+        self.non_mitotic_var_directional_change_x.append(
+            np.std(non_mitotic_directional_change_x)
         )
 
         self.non_mitotic_mean_distance_cell_mask.append(
@@ -2676,8 +2841,14 @@ class TrackMate:
         self.all_mean_acc.append(np.mean(all_acc))
         self.all_var_acc.append(np.std(all_acc))
 
-        self.all_mean_directional_change.append(np.mean(all_directional_change))
-        self.all_var_directional_change.append(np.std(all_directional_change))
+        self.all_mean_directional_change_z.append(np.mean(all_directional_change_z))
+        self.all_var_directional_change_z.append(np.std(all_directional_change_z))
+
+        self.all_mean_directional_change_y.append(np.mean(all_directional_change_y))
+        self.all_var_directional_change_y.append(np.std(all_directional_change_y))
+
+        self.all_mean_directional_change_x.append(np.mean(all_directional_change_x))
+        self.all_var_directional_change_x.append(np.std(all_directional_change_x))
 
         self.all_mean_distance_cell_mask.append(np.mean(all_distance_cell_mask))
         self.all_var_distance_cell_mask.append(np.std(all_distance_cell_mask))
@@ -2893,7 +3064,7 @@ def prob_sigmoid(x):
     return 1 - math.exp(-x)
 
 
-def angular_change(vec_mask, vec_cell):
+def angular_change_z(vec_mask, vec_cell):
 
     vec = np.asarray(vec_cell) - np.asarray(vec_mask)
     vec = vec / np.linalg.norm(vec)
@@ -2907,7 +3078,7 @@ def angular_change(vec_mask, vec_cell):
     return angle
 
 
-def cell_angular_change(vec_cell):
+def cell_angular_change_z(vec_cell):
 
     vec = np.asarray(vec_cell)
     vec = vec / np.linalg.norm(vec)
@@ -2920,6 +3091,60 @@ def cell_angular_change(vec_cell):
 
     return angle
 
+
+def angular_change_y(vec_mask, vec_cell):
+
+    vec = np.asarray(vec_cell) - np.asarray(vec_mask)
+    vec = vec / np.linalg.norm(vec)
+    num_dims = len(vec)
+    unit_vector = np.zeros(num_dims)
+    unit_vector[-2] = 1
+    unit_vector = unit_vector / np.linalg.norm(unit_vector)
+    theta = np.arccos(np.clip(np.dot(vec, unit_vector), -1.0, 1.0))
+    angle = np.rad2deg(theta)
+
+    return angle
+
+
+def cell_angular_change_y(vec_cell):
+
+    vec = np.asarray(vec_cell)
+    vec = vec / np.linalg.norm(vec)
+    num_dims = len(vec)
+    unit_vector = np.zeros(num_dims)
+    unit_vector[-2] = 1
+    unit_vector = unit_vector / np.linalg.norm(unit_vector)
+    theta = np.arccos(np.clip(np.dot(vec, unit_vector), -1.0, 1.0))
+    angle = np.rad2deg(theta)
+
+    return angle
+
+def angular_change_x(vec_mask, vec_cell):
+
+    vec = np.asarray(vec_cell) - np.asarray(vec_mask)
+    vec = vec / np.linalg.norm(vec)
+    num_dims = len(vec)
+    unit_vector = np.zeros(num_dims)
+    unit_vector[0] = 1
+    unit_vector = unit_vector / np.linalg.norm(unit_vector)
+    theta = np.arccos(np.clip(np.dot(vec, unit_vector), -1.0, 1.0))
+    angle = np.rad2deg(theta)
+
+    return angle
+
+
+def cell_angular_change_x(vec_cell):
+
+    vec = np.asarray(vec_cell)
+    vec = vec / np.linalg.norm(vec)
+    num_dims = len(vec)
+    unit_vector = np.zeros(num_dims)
+    unit_vector[0] = 1
+    unit_vector = unit_vector / np.linalg.norm(unit_vector)
+    theta = np.arccos(np.clip(np.dot(vec, unit_vector), -1.0, 1.0))
+    angle = np.rad2deg(theta)
+
+    return angle
 
 def check_and_update_mask(mask, image):
     if len(mask.shape) < len(image.shape):
