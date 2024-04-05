@@ -1294,14 +1294,22 @@ class TrackMate:
                     self.trackletid_key: str(Spotobject.get(self.trackletid_key)),
                     self.generationid_key: str(Spotobject.get(self.generationid_key)),
                     self.trackid_key: str(Spotobject.get(self.trackid_key)),
-                    self.motion_angle_key: (
-                        float(Spotobject.get(self.motion_angle_key))
+                    self.motion_angle_z_key: (
+                        float(Spotobject.get(self.motion_angle_z_key))
+                    ),
+                    self.motion_angle_y_key: (
+                        float(Spotobject.get(self.motion_angle_y_key))
+                    ),
+                    self.motion_angle_x_key: (
+                        float(Spotobject.get(self.motion_angle_x_key))
                     ),
                     self.speed_key: (float(Spotobject.get(self.speed_key))),
                     self.acceleration_key: (
                         float(Spotobject.get(self.acceleration_key))
                     ),
-                    self.radial_angle_key: float(Spotobject.get(self.radial_angle_key)),
+                    self.radial_angle_z_key: float(Spotobject.get(self.radial_angle_z_key)),
+                    self.radial_angle_y_key: float(Spotobject.get(self.radial_angle_y_key)),
+                    self.radial_angle_x_key: float(Spotobject.get(self.radial_angle_x_key)),
                 }
                 if self.surface_area_key in Spotobject.keys():
                     self.unique_spot_properties[int(cell_id)].update(
@@ -1318,9 +1326,16 @@ class TrackMate:
                             self.surface_area_key: float(
                                 Spotobject.get(self.surface_area_key)
                             ),
-                            self.cellaxis_mask_key: float(
-                                Spotobject.get(self.cellaxis_mask_key)
+                            self.cellaxis_mask_z_key: float(
+                                Spotobject.get(self.cellaxis_mask_z_key)
                             ),
+                            self.cellaxis_mask_y_key: float(
+                                Spotobject.get(self.cellaxis_mask_y_key)
+                            ),
+                            self.cellaxis_mask_x_key: float(
+                                Spotobject.get(self.cellaxis_mask_x_key)
+                            ),
+
                         }
                     )
 
@@ -3184,26 +3199,41 @@ def get_feature_dict(unique_tracks_properties):
         "eccentricity_comp_second": np.asarray(
             unique_tracks_properties, dtype="float16"
         )[:, 6],
-        "surface_area": np.asarray(unique_tracks_properties, dtype="float16")[:, 7],
-        "total_intensity": np.asarray(unique_tracks_properties, dtype="float16")[:, 8],
-        "speed": np.asarray(unique_tracks_properties, dtype="float16")[:, 9],
-        "motion_angle": np.asarray(unique_tracks_properties, dtype="float16")[:, 10],
-        "acceleration": np.asarray(unique_tracks_properties, dtype="float16")[:, 11],
+        "eccentricity_comp_third": np.asarray(
+            unique_tracks_properties, dtype="float16"
+        )[:, 7],
+        "surface_area": np.asarray(unique_tracks_properties, dtype="float16")[:, 8],
+        "total_intensity": np.asarray(unique_tracks_properties, dtype="float16")[:, 9],
+        "speed": np.asarray(unique_tracks_properties, dtype="float16")[:, 10],
+        "motion_angle_z": np.asarray(unique_tracks_properties, dtype="float16")[:, 11],
+        "motion_angle_y": np.asarray(unique_tracks_properties, dtype="float16")[:, 12],
+        "motion_angle_x": np.asarray(unique_tracks_properties, dtype="float16")[:, 13],
+
+
+
+        "acceleration": np.asarray(unique_tracks_properties, dtype="float16")[:, 14],
         "distance_cell_mask": np.asarray(unique_tracks_properties, dtype="float16")[
-            :, 12
-        ],
-        "radial_angle": np.asarray(unique_tracks_properties, dtype="float16")[:, 13],
-        "cell_axis_mask": np.asarray(unique_tracks_properties, dtype="float16")[:, 14],
-        "track_displacement": np.asarray(unique_tracks_properties, dtype="float16")[
             :, 15
         ],
+        "radial_angle_z": np.asarray(unique_tracks_properties, dtype="float16")[:, 16],
+        "radial_angle_y": np.asarray(unique_tracks_properties, dtype="float16")[:, 17],
+        "radial_angle_x": np.asarray(unique_tracks_properties, dtype="float16")[:, 18],
+
+        "cell_axis_mask_z": np.asarray(unique_tracks_properties, dtype="float16")[:, 19],
+        "cell_axis_mask_y": np.asarray(unique_tracks_properties, dtype="float16")[:, 20],
+        "cell_axis_mask_x": np.asarray(unique_tracks_properties, dtype="float16")[:, 21],
+
+
+        "track_displacement": np.asarray(unique_tracks_properties, dtype="float16")[
+            :, 22
+        ],
         "total_track_distance": np.asarray(unique_tracks_properties, dtype="float16")[
-            :, 16
+            :, 23
         ],
         "max_track_distance": np.asarray(unique_tracks_properties, dtype="float16")[
-            :, 17
+            :, 24
         ],
-        "track_duration": np.asarray(unique_tracks_properties, dtype="float16")[:, 18],
+        "track_duration": np.asarray(unique_tracks_properties, dtype="float16")[:, 25],
     }
 
     return features
