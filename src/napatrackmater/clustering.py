@@ -640,7 +640,7 @@ def get_eccentricity(point_cloud):
     cov_mat = np.cov(point_cloud, rowvar=False)
 
     eigenvalues, eigenvectors = np.linalg.eigh(cov_mat)
-
+    eigenvectors[:, [0, -1]] = eigenvectors[:, [-1, 0]]
     if np.any(eigenvalues < 0):
         return None
 
