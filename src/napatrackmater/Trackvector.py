@@ -28,55 +28,40 @@ import torch.nn.init as init
 import random
 
 
-
 SHAPE_FEATURES = [
-            "Radius",
-            "Volume",
-            "Eccentricity Comp First",
-            "Eccentricity Comp Second",
-            "Eccentricity Comp Third",
-            "Surface Area"
-    ]
+    "Radius",
+    "Radius Pixel",
+    "Eccentricity Comp First",
+    "Eccentricity Comp Second",
+    "Eccentricity Comp Third",
+    "Surface Area",
+]
 
 DYNAMIC_FEATURES = [
-        "Speed",
-        "Motion_Angle_Z",
-        "Motion_Angle_Y",
-        "Motion_Angle_X",
-        "Acceleration",
-        "Distance_Cell_mask",
-        "Radial_Angle_Z",
-        "Radial_Angle_Y",
-        "Radial_Angle_X",
-        "Cell_Axis_Mask_Z",
-        "Cell_Axis_Mask_Y",
-        "Cell_Axis_Mask_X"
+    "Speed",
+    "Motion_Angle_Z",
+    "Motion_Angle_Y",
+    "Motion_Angle_X",
+    "Acceleration",
+    "Distance_Cell_mask",
+    "Radial_Angle_Z",
+    "Radial_Angle_Y",
+    "Radial_Angle_X",
+    "Cell_Axis_Mask_Z",
+    "Cell_Axis_Mask_Y",
+    "Cell_Axis_Mask_X",
 ]
 
-IDENTITY_FEATURES = [
-        "Track ID",
-        "t",
-        "z",
-        "y",
-        "x",
-        "Dividing",
-        "Number_Dividing"
-]
+IDENTITY_FEATURES = ["Track ID", "t", "z", "y", "x", "Dividing", "Number_Dividing"]
 
-STATUS_FEATURES = [
-        "Dividing",
-        "Number_Dividing"
-]
+STATUS_FEATURES = ["Dividing", "Number_Dividing"]
 
 SHAPE_DYNAMIC_FEATURES = SHAPE_FEATURES + DYNAMIC_FEATURES
 
 ALL_FEATURES = IDENTITY_FEATURES + SHAPE_DYNAMIC_FEATURES
 
+
 class TrackVector(TrackMate):
-
-    
-
-
     def __init__(
         self,
         master_xml_path: Path,
@@ -322,7 +307,7 @@ class TrackVector(TrackMate):
                     current_y,
                     current_x,
                     radius,
-                    volume,
+                    radius_pixel,
                     eccentricity_comp_first,
                     eccentricity_comp_second,
                     eccentricity_comp_third,
@@ -349,7 +334,7 @@ class TrackVector(TrackMate):
                         dividing_array,
                         number_dividing_array,
                         radius,
-                        volume,
+                        radius_pixel,
                         eccentricity_comp_first,
                         eccentricity_comp_second,
                         eccentricity_comp_third,
@@ -365,7 +350,7 @@ class TrackVector(TrackMate):
                         radial_angle_x,
                         cell_axis_mask_z,
                         cell_axis_mask_y,
-                        cell_axis_mask_x
+                        cell_axis_mask_x,
                     ]
                     + (
                         [latent_features[i] for i in range(len(latent_features))]
@@ -568,7 +553,7 @@ class TrackVector(TrackMate):
             eccentricity_comp_second = spot_properties[self.eccentricity_comp_secondkey]
             eccentricity_comp_third = spot_properties[self.eccentricity_comp_thirdkey]
             radius = spot_properties[self.radius_key]
-            volume = spot_properties[self.quality_key]
+            radius_pixel = spot_properties[self.quality_key]
             speed = spot_properties[self.speed_key]
 
             motion_angle_z = spot_properties[self.motion_angle_z_key]
@@ -593,7 +578,7 @@ class TrackVector(TrackMate):
                 "Eccentricity Comp Second": eccentricity_comp_second,
                 "Eccentricity Comp Third": eccentricity_comp_third,
                 "Radius": radius,
-                "Volume": volume,
+                "Radius Pixel": radius_pixel,
                 "Speed": speed,
                 "Motion Angle Z": motion_angle_z,
                 "Motion Angle Y": motion_angle_y,
@@ -636,7 +621,7 @@ class TrackVector(TrackMate):
 
             cols_to_replace = [
                 "Radius",
-                "Volume",
+                "Radius Pixel",
                 "Eccentricity Comp First",
                 "Eccentricity Comp Second",
                 "Eccentricity Comp Third",
@@ -696,25 +681,15 @@ def _iterate_over_tracklets(
     track_data, training_tracklets, track_id, prediction=False, ignore_columns=[]
 ):
 
-    shape_dynamic_dataframe = track_data[
-        SHAPE_DYNAMIC_FEATURES
-    ].copy()
+    shape_dynamic_dataframe = track_data[SHAPE_DYNAMIC_FEATURES].copy()
 
-    shape_dataframe = track_data[
-        SHAPE_FEATURES
-    ].copy()
+    shape_dataframe = track_data[SHAPE_FEATURES].copy()
 
-    dynamic_dataframe = track_data[
-        DYNAMIC_FEATURES
-    ].copy()
+    dynamic_dataframe = track_data[DYNAMIC_FEATURES].copy()
     if not prediction:
-        full_dataframe = track_data[
-            ALL_FEATURES
-        ].copy()
+        full_dataframe = track_data[ALL_FEATURES].copy()
     else:
-        full_dataframe = track_data[
-            ALL_FEATURES - STATUS_FEATURES
-        ].copy()
+        full_dataframe = track_data[ALL_FEATURES - STATUS_FEATURES].copy()
 
     if ignore_columns is not None:
         for column in ignore_columns:
@@ -1134,18 +1109,14 @@ def create_gt_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame
         track_data = global_shape_dynamic_dataframe[
             global_shape_dynamic_dataframe["Track ID"] == track_id
         ].sort_values(by="t")
-        shape_dynamic_dataframe = track_data[
-           SHAPE_DYNAMIC_FEATURES
-        ]
+        shape_dynamic_dataframe = track_data[SHAPE_DYNAMIC_FEATURES]
         gt_dataframe = track_data[
             [
                 "Cluster",
             ]
         ]
 
-        full_dataframe = track_data[
-            ALL_FEATURES
-        ]
+        full_dataframe = track_data[ALL_FEATURES]
 
         latent_columns = [
             col
@@ -1896,17 +1867,11 @@ def convert_tracks_to_arrays(
 
 def cell_fate_recipe(track_data):
 
-    dividing_shape_dynamic_dataframe = track_data[
-       SHAPE_DYNAMIC_FEATURES
-    ].copy()
+    dividing_shape_dynamic_dataframe = track_data[SHAPE_DYNAMIC_FEATURES].copy()
 
-    dividing_shape_dataframe = track_data[
-       SHAPE_FEATURES
-    ].copy()
+    dividing_shape_dataframe = track_data[SHAPE_FEATURES].copy()
 
-    dividing_dynamic_dataframe = track_data[
-       DYNAMIC_FEATURES
-    ].copy()
+    dividing_dynamic_dataframe = track_data[DYNAMIC_FEATURES].copy()
 
     dividing_shape_dynamic_dataframe.dropna(inplace=True)
     dividing_shape_dataframe.dropna(inplace=True)
@@ -1935,17 +1900,16 @@ def cell_fate_recipe(track_data):
             for record in dividing_dynamic_dataframe_list
         ]
     )
-    if (
-            dividing_shape_dynamic_track_array.shape[0] > 1 
-    ):
+    if dividing_shape_dynamic_track_array.shape[0] > 1:
         (
             dividing_covariance_shape_dynamic,
             dividing_eigenvectors_shape_dynamic,
         ) = compute_covariance_matrix(dividing_shape_dynamic_track_array)
 
-        dividing_covariance_shape, dividing_eigenvectors_shape = compute_covariance_matrix(
-            dividing_shape_track_array
-        )
+        (
+            dividing_covariance_shape,
+            dividing_eigenvectors_shape,
+        ) = compute_covariance_matrix(dividing_shape_track_array)
 
         (
             dividing_covariance_dynamic,
@@ -1961,7 +1925,9 @@ def cell_fate_recipe(track_data):
             dividing_shape_dynamic_eigenvectors_3d.reshape(1, -1)
         )
         dividing_shape_eigenvectors_2d = dividing_shape_eigenvectors_3d.reshape(1, -1)
-        dividing_dynamic_eigenvectors_2d = dividing_dynamic_eigenvectors_3d.reshape(1, -1)
+        dividing_dynamic_eigenvectors_2d = dividing_dynamic_eigenvectors_3d.reshape(
+            1, -1
+        )
 
         dividing_shape_dynamic_covariance_2d = np.array(
             dividing_shape_dynamic_eigenvectors_2d

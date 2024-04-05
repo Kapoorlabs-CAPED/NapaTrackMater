@@ -1102,7 +1102,7 @@ class TrackMate:
         radial_angle_x = float(all_dict_values[self.radial_angle_x_key])
 
         radius = float(all_dict_values[self.radius_key])
-        volume_pixels = int(float(all_dict_values[self.quality_key]))
+        radius_pixel = int(float(all_dict_values[self.quality_key]))
         total_intensity = float(all_dict_values[self.total_intensity_key])
 
         distance_cell_mask = float(all_dict_values[self.distance_cell_mask_key])
@@ -1175,7 +1175,7 @@ class TrackMate:
                 int(float(unique_id)),
                 gen_id,
                 radius,
-                volume_pixels,
+                radius_pixel,
                 eccentricity_comp_first,
                 eccentricity_comp_second,
                 eccentricity_comp_third,
@@ -1233,7 +1233,7 @@ class TrackMate:
                 int(float(unique_id)),
                 gen_id,
                 radius,
-                volume_pixels,
+                radius_pixel,
                 eccentricity_comp_first,
                 eccentricity_comp_second,
                 eccentricity_comp_third,
@@ -1830,16 +1830,18 @@ class TrackMate:
             (
                 timed_latent_features,
                 output_cluster_centroids,
-                output_largest_eigenvalues,
+                output_eigenvalues,
             ) = cluster_eval.timed_latent_features[time_key]
 
-            output_latent_features = timed_latent_features
-            output_cluster_centroid = output_cluster_centroids
-            output_largest_eigenvalue = output_largest_eigenvalues
-            for i in range(len(output_latent_features)):
-                latent_feature_list = output_latent_features[i]
-                centroid = output_cluster_centroid[i]
-                quality = output_largest_eigenvalue[i]
+            for i in range(len(timed_latent_features)):
+                latent_feature_list = timed_latent_features[i]
+                centroid = output_cluster_centroids[i]
+                quality = math.pow(
+                    output_eigenvalues[i][0]
+                    * output_eigenvalues[i][1]
+                    * output_eigenvalues[i][2],
+                    1.0 / 3.0,
+                )
                 dist, index = tree.query(centroid)
 
                 if dist < quality:
@@ -2049,7 +2051,7 @@ class TrackMate:
             unique_ids_set = set(unique_ids)
             # generation_ids = tracklet_properties[:, 2]
             radius = tracklet_properties[:, 3]
-            volume = tracklet_properties[:, 4]
+            radius_pixel = tracklet_properties[:, 4]
             eccentricity_comp_first = tracklet_properties[:, 5]
             eccentricity_comp_second = tracklet_properties[:, 6]
             eccentricity_comp_third = tracklet_properties[:, 7]
@@ -2109,7 +2111,7 @@ class TrackMate:
                 current_x = []
                 current_intensity = []
                 current_radius = []
-                current_volume = []
+                current_radius_pixel = []
                 current_speed = []
                 current_motion_angle_z = []
                 current_motion_angle_y = []
@@ -2142,7 +2144,7 @@ class TrackMate:
                         expanded_intensity[int(time[j])] = intensity[j]
                         current_intensity.append(intensity[j])
                         current_radius.append(radius[j])
-                        current_volume.append(volume[j])
+                        current_radius_pixel.append(radius_pixel[j])
                         current_speed.append(speed[j])
                         current_motion_angle_z.append(motion_angle_z[j])
                         current_motion_angle_y.append(motion_angle_y[j])
@@ -2182,7 +2184,9 @@ class TrackMate:
                 current_intensity = np.asarray(current_intensity, dtype=np.float32)
 
                 current_radius = np.asarray(current_radius, dtype=np.float32)
-                current_volume = np.asarray(current_volume, dtype=np.float32)
+                current_radius_pixel = np.asarray(
+                    current_radius_pixel, dtype=np.float32
+                )
                 current_eccentricity_comp_first = np.asarray(
                     current_eccentricity_comp_first, dtype=np.float32
                 )
@@ -2269,7 +2273,7 @@ class TrackMate:
                     current_y,
                     current_x,
                     current_radius,
-                    current_volume,
+                    current_radius_pixel,
                     current_eccentricity_comp_first,
                     current_eccentricity_comp_second,
                     current_eccentricity_comp_third,
@@ -2919,7 +2923,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             real_indices[j][1] = real_indices[j][1] * xcalibration
 
         tree = spatial.cKDTree(real_indices)
-        # This object contains list of all the points for all the labels in the Mask image with the label id and volume of each label
+        # This object contains list of all the points for all the labels in the Mask image with the label id and radius_pixel of each label
         timed_mask[str(0)] = [tree, indices, regioncentroid]
 
     # TYX shaped object
@@ -3224,7 +3228,7 @@ def get_feature_dict(unique_tracks_properties):
         "time": np.asarray(unique_tracks_properties, dtype="float16")[:, 0],
         "generation": np.asarray(unique_tracks_properties, dtype="float16")[:, 2],
         "radius": np.asarray(unique_tracks_properties, dtype="float16")[:, 3],
-        "volume_pixels": np.asarray(unique_tracks_properties, dtype="float16")[:, 4],
+        "radius_pixel": np.asarray(unique_tracks_properties, dtype="float16")[:, 4],
         "eccentricity_comp_first": np.asarray(
             unique_tracks_properties, dtype="float16"
         )[:, 5],
