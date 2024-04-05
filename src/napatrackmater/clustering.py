@@ -643,8 +643,10 @@ def get_eccentricity(point_cloud):
 
     if np.any(eigenvalues < 0):
         return None
-    eigenvectors = eigenvectors[:, ::-1]
-    eigenvalues = eigenvalues[::-1]
+    #eigenvectors = eigenvectors[:, ::-1]
+    #eigenvalues = eigenvalues[::-1]
+    print('eig', eigenvectors, eigenvalues)
+    print('eigrev', eigenvectors[:, ::-1], eigenvalues[::-1] )
     eccentricities = np.sqrt(eigenvalues)
     dimensions = np.arange(len(eigenvalues))
 
