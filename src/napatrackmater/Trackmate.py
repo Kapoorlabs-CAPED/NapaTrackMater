@@ -1932,9 +1932,9 @@ class TrackMate:
                     scale_2 = self.ycalibration
                     scale_3 = self.zcalibration
 
-                    cell_axis_x = output_eigenvectors[i][0]
+                    cell_axis_x = output_eigenvectors[i][2]
                     cell_axis_y = output_eigenvectors[i][1]
-                    cell_axis_z = output_eigenvectors[i][2]
+                    cell_axis_z = output_eigenvectors[i][0]
                     print('x',cell_axis_x)
                     print('y',cell_axis_y)
                     print('z',cell_axis_z)
@@ -1982,7 +1982,7 @@ class TrackMate:
                             self.unique_spot_properties[int(closest_cell_id)].update(
                                 {
                                     self.eccentricity_comp_firstkey: eccentricity_comp_firstyz[
-                                        0
+                                        2
                                     ]
                                     * scale_1
                                 }
@@ -1999,7 +1999,7 @@ class TrackMate:
                             self.unique_spot_properties[int(closest_cell_id)].update(
                                 {
                                     self.eccentricity_comp_thirdkey: eccentricity_comp_firstyz[
-                                        2
+                                        0
                                     ]
                                     * scale_3
                                 }
