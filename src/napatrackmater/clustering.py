@@ -638,9 +638,10 @@ def get_panda_cloud_xyz(points):
 
 def get_eccentricity(point_cloud):
    
-    point_cloud_array = np.transpose(point_cloud)
-    cov_mat = np.cov(point_cloud_array, rowvar=False)
-
+   
+    cov_mat = np.cov(point_cloud, rowvar=False)
+  
+    cov_mat[[0, -1]] = cov_mat[[-1, 0]]
     eigenvalues, eigenvectors = np.linalg.eigh(cov_mat)
     
     if np.any(eigenvalues < 0):
