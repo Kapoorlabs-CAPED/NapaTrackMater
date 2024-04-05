@@ -1978,7 +1978,7 @@ class TrackMate:
                             self.unique_spot_properties[int(closest_cell_id)].update(
                                 {
                                     self.eccentricity_comp_firstkey: eccentricity_comp_firstyz[
-                                        0
+                                        2
                                     ]
                                     * scale_1
                                 }
@@ -1995,7 +1995,7 @@ class TrackMate:
                             self.unique_spot_properties[int(closest_cell_id)].update(
                                 {
                                     self.eccentricity_comp_thirdkey: eccentricity_comp_firstyz[
-                                        2
+                                        0
                                     ]
                                     * scale_3
                                 }
