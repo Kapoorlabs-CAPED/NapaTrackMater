@@ -2401,21 +2401,15 @@ class TrackMate:
 
         unique_id = str(track_id) + str(generation_id) + str(tracklet_id)
 
-        vec_mask = [
-            float(self.unique_spot_properties[int(cell_id)][self.maskcentroid_x_key]),
-            float(self.unique_spot_properties[int(cell_id)][self.maskcentroid_y_key]),
-            float(self.unique_spot_properties[int(cell_id)][self.maskcentroid_z_key]),
-        ]
-
         vec_cell = [
             float(self.unique_spot_properties[int(cell_id)][self.xposid_key]),
             float(self.unique_spot_properties[int(cell_id)][self.yposid_key]),
             float(self.unique_spot_properties[int(cell_id)][self.zposid_key]),
         ]
 
-        angle_x = angular_change_x(vec_mask, vec_cell)
-        angle_y = angular_change_y(vec_mask, vec_cell)
-        angle_z = angular_change_z(vec_mask, vec_cell)
+        angle_x = cell_angular_change_x(vec_cell)
+        angle_y = cell_angular_change_y(vec_cell)
+        angle_z = cell_angular_change_z(vec_cell)
 
         self.unique_spot_properties[int(cell_id)].update(
             {self.radial_angle_x_key: angle_x}
@@ -3108,20 +3102,6 @@ def prob_sigmoid(x):
     return 1 - math.exp(-x)
 
 
-def angular_change_z(vec_mask, vec_cell):
-
-    vec = np.asarray(vec_cell) - np.asarray(vec_mask)
-    vec = vec / np.linalg.norm(vec)
-    num_dims = len(vec)
-    unit_vector = np.zeros(num_dims)
-    unit_vector[-1] = 1
-    unit_vector = unit_vector / np.linalg.norm(unit_vector)
-    theta = np.arccos(np.clip(np.dot(vec, unit_vector), -1.0, 1.0))
-    angle = np.rad2deg(theta)
-
-    return angle
-
-
 def cell_angular_change_z(vec_cell):
 
     vec = np.asarray(vec_cell)
@@ -3136,20 +3116,6 @@ def cell_angular_change_z(vec_cell):
     return angle
 
 
-def angular_change_y(vec_mask, vec_cell):
-
-    vec = np.asarray(vec_cell) - np.asarray(vec_mask)
-    vec = vec / np.linalg.norm(vec)
-    num_dims = len(vec)
-    unit_vector = np.zeros(num_dims)
-    unit_vector[-2] = 1
-    unit_vector = unit_vector / np.linalg.norm(unit_vector)
-    theta = np.arccos(np.clip(np.dot(vec, unit_vector), -1.0, 1.0))
-    angle = np.rad2deg(theta)
-
-    return angle
-
-
 def cell_angular_change_y(vec_cell):
 
     vec = np.asarray(vec_cell)
@@ -3157,20 +3123,6 @@ def cell_angular_change_y(vec_cell):
     num_dims = len(vec)
     unit_vector = np.zeros(num_dims)
     unit_vector[-2] = 1
-    unit_vector = unit_vector / np.linalg.norm(unit_vector)
-    theta = np.arccos(np.clip(np.dot(vec, unit_vector), -1.0, 1.0))
-    angle = np.rad2deg(theta)
-
-    return angle
-
-
-def angular_change_x(vec_mask, vec_cell):
-
-    vec = np.asarray(vec_cell) - np.asarray(vec_mask)
-    vec = vec / np.linalg.norm(vec)
-    num_dims = len(vec)
-    unit_vector = np.zeros(num_dims)
-    unit_vector[0] = 1
     unit_vector = unit_vector / np.linalg.norm(unit_vector)
     theta = np.arccos(np.clip(np.dot(vec, unit_vector), -1.0, 1.0))
     angle = np.rad2deg(theta)
