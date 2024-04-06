@@ -625,7 +625,7 @@ class TrackVector(TrackMate):
                 "Eccentricity_Comp_First",
                 "Eccentricity_Comp_Second",
                 "Eccentricity_Comp_Third",
-                "Surface Area",
+                "Surface_Area",
             ]
             shape_dynamic_dataframe[cols_to_replace] = shape_dynamic_dataframe[
                 cols_to_replace
