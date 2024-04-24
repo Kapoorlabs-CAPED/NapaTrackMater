@@ -2463,7 +2463,10 @@ class TrackMate:
                 float(self.unique_spot_properties[int(cell_id)][self.zposid_key])
                 - float(self.unique_spot_properties[int(source_id)][self.zposid_key]),
             ]
-            speed = np.sqrt(np.dot(vec_1, vec_1)) / self.tcalibration
+
+            time_vec_1 = max(1, abs(int(float(self.unique_spot_properties[int(cell_id)][self.frameid_key]) - float(self.unique_spot_properties[int(source_id)][self.frameid_key]))))
+
+            speed = np.sqrt(np.dot(vec_1, vec_1)) / (time_vec_1 * self.tcalibration)
             self.unique_spot_properties[int(cell_id)].update({self.speed_key: speed})
 
             motion_angle_x = cell_angular_change_x(vec_1)
@@ -2511,7 +2514,10 @@ class TrackMate:
                         self.unique_spot_properties[int(pre_source_id)][self.zposid_key]
                     ),
                 ]
-                acc = np.sqrt(np.dot(vec_2, vec_2)) / self.tcalibration
+
+                time_vec_2 = max(1, abs(int(float(self.unique_spot_properties[int(cell_id)][self.frameid_key]) - float(self.unique_spot_properties[int(pre_source_id)][self.frameid_key]))))
+
+                acc = np.sqrt(np.dot(vec_2, vec_2)) / (time_vec_2 * self.tcalibration)
 
                 self.unique_spot_properties[int(cell_id)].update(
                     {self.acceleration_key: acc}
