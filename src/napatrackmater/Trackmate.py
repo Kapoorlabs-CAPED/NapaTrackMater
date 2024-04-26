@@ -670,14 +670,14 @@ class TrackMate:
         
         current_frame_image = self.seg_image[int(float(frame)),:]
         z_test, y_test, x_test = test_location
-       
+        
 
-        min_z = max(0, z_test - self.cell_veto_box)
-        max_z = min(current_frame_image.shape[0] - 1, z_test + self.cell_veto_box)
-        min_y = max(0, y_test - self.cell_veto_box)
-        max_y = min(current_frame_image.shape[1] - 1, y_test + self.cell_veto_box)
-        min_x = max(0, x_test - self.cell_veto_box)
-        max_x = min(current_frame_image.shape[2] - 1, x_test + self.cell_veto_box)
+        min_z = max(0, int(z_test - self.cell_veto_box))
+        max_z = min(current_frame_image.shape[0] - 1, int(z_test + self.cell_veto_box))
+        min_y = max(0, int(y_test - self.cell_veto_box))
+        max_y = min(current_frame_image.shape[1] - 1, int(y_test + self.cell_veto_box))
+        min_x = max(0, int(x_test - self.cell_veto_box))
+        max_x = min(current_frame_image.shape[2] - 1, int(x_test + self.cell_veto_box))
         
         subvolume = current_frame_image[min_z:max_z + 1, min_y:max_y + 1, min_x:max_x + 1]
         
@@ -2449,15 +2449,18 @@ class TrackMate:
 
     def _get_cal(self, frame):
 
-        
+        frame = int(float(frame))
+         
         if self.variable_t_calibration is not None:
                  
-                 items = list(self.variable_t_calibration .items())
-                 last_time, last_cal = items[-1]
-                 first_time, first_cal = items[0]
-                 for max_time, cal_value in self.variable_t_calibration.items():
-                     if frame < max_time:
-                         self.tcalibration = cal_value
+                 for key_time in sorted(self.variable_t_calibration.keys()):
+                     key_time = int(float(key_time))
+                     if frame <= key_time:
+                         self.tcalibration = float(self.variable_t_calibration[key_time])
+                         return 
+                     
+
+                             
 
 
 
