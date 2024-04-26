@@ -1752,7 +1752,7 @@ class TrackMate:
         self._get_boundary_points()
         self._get_cell_sizes()
         print("Iterating over spots in frame")
-        self._correct_track_status()
+        
         self.count = 0
         futures = []
 
@@ -1776,6 +1776,8 @@ class TrackMate:
                 if self.progress_bar is not None:
                     self.progress_bar.value = self.count
                 r.result()
+                
+        self._correct_track_status()        
         print(f"Iterating over tracks {len(self.filtered_track_ids)}")
         self.count = 0
         if self.progress_bar is not None:
@@ -3273,13 +3275,13 @@ def get_track_dataset(
 
 
 
-def find_closest_key(test_point, unique_track_centroid, time_veto, space_veto):
+def find_closest_key(test_point, unique_dict, time_veto, space_veto):
     closest_key = None
     min_distance = float('inf') 
     
     t_test, z_test, y_test, x_test = test_point
     print('test', test_point)
-    for key in unique_track_centroid.keys():
+    for key in unique_dict.keys():
         t_key, z_key, y_key, x_key = key
         print('act',key)
         time_distance = abs(t_key - t_test)
