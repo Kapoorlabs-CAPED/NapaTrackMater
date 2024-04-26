@@ -245,7 +245,9 @@ class TrackMate:
         self.unique_dynamic_properties = {}
         self.unique_spot_properties = {}
         self.unique_spot_centroid = {}
+        self.unique_oneat_spot_centroid = {}
         self.unique_track_centroid = {}
+        
         self.root_spots = {}
         self.all_current_cell_ids = {}
         self.channel_unique_spot_properties = {}
@@ -479,7 +481,6 @@ class TrackMate:
            for cell_id in list(self.oneat_dividing_tracks.keys()):
                if cell_id in all_source_ids:
                   root_splits.append(cell_id)
-        print(root_splits)
         # Get the root id
         for source_id in all_source_ids:
             if source_id in self.edge_source_lookup:
@@ -892,8 +893,9 @@ class TrackMate:
                 round(x) / self.xcalibration,
             )
 
-            self.unique_spot_centroid[frame_spot_centroid] = k
+            
             self.unique_track_centroid[frame_spot_centroid] = track_id
+            self.unique_spot_centroid[frame_spot_centroid] = k
 
             if str(t) in self._timed_centroid:
                 tree, spot_centroids = self._timed_centroid[str(t)]
@@ -1477,6 +1479,16 @@ class TrackMate:
                 self.local_cell_density_key: float(local_cell_density)
             }
 
+            frame_spot_centroid = (
+                int(float(Spotobject.get(self.frameid_key))),
+                round(float(Spotobject.get(self.zposid_key))) / self.zcalibration,
+                round(float(Spotobject.get(self.yposid_key))) / self.ycalibration,
+                round(float(Spotobject.get(self.xposid_key))) / self.xcalibration,
+            )
+            self.unique_oneat_spot_centroid[frame_spot_centroid] = cell_id
+
+
+
     def _get_master_xml_data(self):
         if self.channel_seg_image is not None:
             self.channel_xml_content = self.xml_content
@@ -1850,11 +1862,10 @@ class TrackMate:
                 x = round(row['X'])
 
                 spot = (t,z,y,x)
-                spot_track_id = find_closest_key(spot, self.unique_track_centroid, 0, 5)
                 
-                spot_id = find_closest_key(spot, self.unique_spot_centroid, 0, 5)
+                spot_id = find_closest_key(spot, self.unique_oneat_spot_centroid, 0, 5)
 
-                self.oneat_dividing_tracks[spot_id] = spot_track_id
+                self.oneat_dividing_tracks[spot_id] = spot
     
 
     def _create_master_xml(self):
