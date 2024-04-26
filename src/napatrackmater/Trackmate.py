@@ -477,9 +477,9 @@ class TrackMate:
         root_leaf = []
         root_root = []
         root_splits = []
+        print(self.oneat_dividing_tracks.keys(), len(list(self.oneat_dividing_tracks.keys())) )
         if len(list(self.oneat_dividing_tracks.keys())) > 1:
            for cell_id in list(self.oneat_dividing_tracks.keys()):
-               if cell_id in all_source_ids:
                   root_splits.append(cell_id)
         print('Oneat root splits', root_splits)          
         # Get the root id
@@ -1481,9 +1481,9 @@ class TrackMate:
 
             frame_spot_centroid = (
                 int(float(Spotobject.get(self.frameid_key))),
-                round(float(Spotobject.get(self.zposid_key))) / self.zcalibration,
-                round(float(Spotobject.get(self.yposid_key))) / self.ycalibration,
-                round(float(Spotobject.get(self.xposid_key))) / self.xcalibration,
+                float(Spotobject.get(self.zposid_key)) / self.zcalibration,
+                float(Spotobject.get(self.yposid_key)) / self.ycalibration,
+                float(Spotobject.get(self.xposid_key)) / self.xcalibration,
             )
             self.unique_oneat_spot_centroid[frame_spot_centroid] = cell_id
 
@@ -1858,10 +1858,10 @@ class TrackMate:
             filtered_detections = detections[detections['Score'] > cutoff_score]
             
             for index, row in filtered_detections.iterrows():
-                t = row['T']
-                z = round(row['Z'])
-                y = round(row['Y'])
-                x = round(row['X'])
+                t = int(row['T'])
+                z = row['Z']
+                y = row['Y']
+                x = row['X']
 
                 spot = (t,z,y,x)
                 
