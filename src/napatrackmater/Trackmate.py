@@ -500,8 +500,9 @@ class TrackMate:
         if len(list(self.oneat_dividing_tracks.keys())) > 1:
            for cell_id in list(self.oneat_dividing_tracks.keys()):
                   root_splits.append(cell_id) 
+        print('s', len(root_splits))          
         root_splits = [x for x in root_splits if x not in root_leaf_source]          
-                       
+        print('s', len(root_splits))                 
 
         return root_root, root_splits, root_leaf
 
