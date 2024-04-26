@@ -481,6 +481,7 @@ class TrackMate:
            for cell_id in list(self.oneat_dividing_tracks.keys()):
                if cell_id in all_source_ids:
                   root_splits.append(cell_id)
+        print('Oneat root splits', root_splits)          
         # Get the root id
         for source_id in all_source_ids:
             if source_id in self.edge_source_lookup:
@@ -503,7 +504,6 @@ class TrackMate:
         cell_id_times = []
         split_cell_ids = []
         for root_split in root_splits:
-            print(root_split)
             split_cell_id_time = self.unique_spot_properties[root_split][
                 self.frameid_key
             ]
@@ -3283,7 +3283,7 @@ def find_closest_key(test_point, unique_dict, time_veto, space_veto):
     print('test', test_point)
     for key in unique_dict.keys():
         t_key, z_key, y_key, x_key = key
-        print('act',key)
+        
         time_distance = abs(t_key - t_test)
         space_distance = np.sqrt((z_key - z_test)**2 + (y_key - y_test)**2 + (x_key - x_test)**2)
         
@@ -3291,7 +3291,7 @@ def find_closest_key(test_point, unique_dict, time_veto, space_veto):
             if time_distance + space_distance < min_distance:
                 min_distance = time_distance + space_distance
                 closest_key = key
-    
+    print('act',closest_key)
     return closest_key
 
 def get_edges_dataset(
