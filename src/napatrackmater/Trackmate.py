@@ -1859,9 +1859,9 @@ class TrackMate:
             
             for index, row in filtered_detections.iterrows():
                 t = int(row['T'])
-                z = row['Z']
-                y = row['Y']
-                x = row['X']
+                z = round(row['Z'])
+                y = round(row['Y'])
+                x = round(row['X'])
 
                 spot = (t,z,y,x)
                 
@@ -3277,6 +3277,7 @@ def get_track_dataset(
 
 def find_closest_key(test_point, unique_dict, time_veto, space_veto):
     closest_key = None
+    spot_id = None
     min_distance = float('inf') 
     
     t_test, z_test, y_test, x_test = test_point
@@ -3291,8 +3292,9 @@ def find_closest_key(test_point, unique_dict, time_veto, space_veto):
             if time_distance + space_distance < min_distance:
                 min_distance = time_distance + space_distance
                 closest_key = key
+    spot_id = unique_dict[closest_key]
     print('act',closest_key)
-    return closest_key
+    return spot_id
 
 def get_edges_dataset(
     edges_dataset,
