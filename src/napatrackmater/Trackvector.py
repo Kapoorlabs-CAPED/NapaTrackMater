@@ -35,6 +35,7 @@ SHAPE_FEATURES = [
     "Eccentricity_Comp_Second",
     "Eccentricity_Comp_Third",
     "Surface_Area",
+    "Local_Cell_Density",
 ]
 
 DYNAMIC_FEATURES = [
@@ -311,6 +312,7 @@ class TrackVector(TrackMate):
                     eccentricity_comp_first,
                     eccentricity_comp_second,
                     eccentricity_comp_third,
+                    local_cell_density,
                     surface_area,
                     latent_features,
                 ) = unique_shape_properties_tracklet
@@ -338,6 +340,7 @@ class TrackVector(TrackMate):
                         eccentricity_comp_first,
                         eccentricity_comp_second,
                         eccentricity_comp_third,
+                        local_cell_density,
                         surface_area,
                         speed,
                         motion_angle_z,
@@ -552,6 +555,7 @@ class TrackVector(TrackMate):
             eccentricity_comp_first = spot_properties[self.eccentricity_comp_firstkey]
             eccentricity_comp_second = spot_properties[self.eccentricity_comp_secondkey]
             eccentricity_comp_third = spot_properties[self.eccentricity_comp_thirdkey]
+            local_cell_density = spot_properties[self.local_cell_density_key]
             radius = spot_properties[self.radius_key]
             radius_pixel = spot_properties[self.quality_key]
             speed = spot_properties[self.speed_key]
@@ -577,6 +581,7 @@ class TrackVector(TrackMate):
                 "Eccentricity_Comp_First": eccentricity_comp_first,
                 "Eccentricity_Comp_Second": eccentricity_comp_second,
                 "Eccentricity_Comp_Third": eccentricity_comp_third,
+                "Local_Cell_Density": local_cell_density,
                 "Radius": radius,
                 "Radius_Pixel": radius_pixel,
                 "Speed": speed,
@@ -625,6 +630,7 @@ class TrackVector(TrackMate):
                 "Eccentricity_Comp_First",
                 "Eccentricity_Comp_Second",
                 "Eccentricity_Comp_Third",
+                "Local_Cell_Density",
                 "Surface_Area",
             ]
             shape_dynamic_dataframe[cols_to_replace] = shape_dynamic_dataframe[

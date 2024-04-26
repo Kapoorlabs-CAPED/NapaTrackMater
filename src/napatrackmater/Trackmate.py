@@ -192,6 +192,7 @@ class TrackMate:
         self.motion_angle_z_key = "motion_angle_z"
         self.motion_angle_y_key = "motion_angle_y"
         self.motion_angle_x_key = "motion_angle_x"
+        self.local_cell_density_key = "local_density"
         self.latent_shape_features_key = "latent_shape_features"
 
         self.mean_intensity_ch1_key = self.track_analysis_spot_keys[
@@ -250,6 +251,7 @@ class TrackMate:
         self.graph_tracks = {}
         self._timed_centroid = {}
         self.count = 0
+        self.cell_veto_box = 0
         xml_parser = et.XMLParser(huge_tree=True)
         if self.master_xml_path is None:
             self.master_xml_path = Path(".")
@@ -377,6 +379,16 @@ class TrackMate:
             self.track_analysis_edges_keys,
         )
         print("obtained edge attributes")
+
+
+
+    
+    def _get_cell_sizes(self):
+        
+        print('Getting largest cell size')
+        if self.seg_image is not None:
+            self.timed_cell_size = get_largest_size(compute_cell_size(self.seg_image))
+        self.cell_veto_box =  4 * self.timed_cell_size   
 
     def _get_boundary_points(self):
 
@@ -651,13 +663,33 @@ class TrackMate:
 
         self._iterate_dividing(root_root, root_leaf, root_splits)
 
+
+    def _get_label_density(self, frame, test_location):
+        
+        current_frame_image = self.seg_image[frame,:]
+        z_test, y_test, x_test = test_location
+       
+
+        min_z = max(0, z_test - self.cell_veto_box)
+        max_z = min(current_frame_image.shape[0] - 1, z_test + self.cell_veto_box)
+        min_y = max(0, y_test - self.cell_veto_box)
+        max_y = min(current_frame_image.shape[1] - 1, y_test + self.cell_veto_box)
+        min_x = max(0, x_test - self.cell_veto_box)
+        max_x = min(current_frame_image.shape[2] - 1, x_test + self.cell_veto_box)
+        
+        subvolume = current_frame_image[min_z:max_z + 1, min_y:max_y + 1, min_x:max_x + 1]
+        
+        unique_labels = np.unique(subvolume)
+        local_cell_density = len(unique_labels)
+        
+        return local_cell_density 
+
     def _get_boundary_dist(self, frame, testlocation):
 
         if self.mask is not None:
 
             tree, indices, maskcentroid = self.timed_mask[str(int(float(frame)))]
 
-            # Get the location and distance to the nearest boundary point
             distance_cell_mask, locationindex = tree.query(testlocation)
             distance_cell_mask = max(0, distance_cell_mask)
 
@@ -1106,6 +1138,7 @@ class TrackMate:
         total_intensity = float(all_dict_values[self.total_intensity_key])
 
         distance_cell_mask = float(all_dict_values[self.distance_cell_mask_key])
+        local_cell_density = float(all_dict_values[self.local_cell_density_key])
 
         track_displacement = float(all_dict_values[self.displacement_key])
         total_track_distance = float(all_dict_values[self.total_track_distance_key])
@@ -1187,6 +1220,7 @@ class TrackMate:
                 motion_angle_x,
                 acceleration,
                 distance_cell_mask,
+                local_cell_density,
                 radial_angle_z,
                 radial_angle_y,
                 radial_angle_x,
@@ -1245,6 +1279,7 @@ class TrackMate:
                 motion_angle_x,
                 acceleration,
                 distance_cell_mask,
+                local_cell_density,
                 radial_angle_z,
                 radial_angle_y,
                 radial_angle_x,
@@ -1291,6 +1326,9 @@ class TrackMate:
                     self.quality_key: quality,
                     self.distance_cell_mask_key: (
                         float(Spotobject.get(self.distance_cell_mask_key))
+                    ),
+                    self.local_cell_density_key: (
+                        float(Spotobject.get(self.local_cell_density_key))
                     ),
                     self.uniqueid_key: str(Spotobject.get(self.uniqueid_key)),
                     self.trackletid_key: str(Spotobject.get(self.trackletid_key)),
@@ -1407,6 +1445,8 @@ class TrackMate:
                 frame, testlocation
             )
 
+            local_cell_density = self._get_label_density(frame, testlocation)
+
             self.unique_spot_properties[cell_id] = {
                 self.cellid_key: int(cell_id),
                 self.frameid_key: int(float(Spotobject.get(self.frameid_key))),
@@ -1421,6 +1461,7 @@ class TrackMate:
                 self.maskcentroid_z_key: float(maskcentroid[0]),
                 self.maskcentroid_y_key: float(maskcentroid[1]),
                 self.maskcentroid_x_key: float(maskcentroid[2]),
+                self.local_cell_density_key: float(local_cell_density)
             }
 
     def _get_master_xml_data(self):
@@ -1595,6 +1636,11 @@ class TrackMate:
                     self.distance_cell_mask_key
                 ]
 
+                new_local_density =  self.channel_unique_spot_properties[cell_id][
+                    self.local_cell_density_key
+                ]
+
+
                 Spotobject.set(self.xposid_key, str(new_positionx))
                 Spotobject.set(self.yposid_key, str(new_positiony))
                 Spotobject.set(self.zposid_key, str(new_positionz))
@@ -1604,6 +1650,7 @@ class TrackMate:
                 Spotobject.set(self.radius_key, str(new_radius))
                 Spotobject.set(self.quality_key, str(new_quality))
                 Spotobject.set(self.distance_cell_mask_key, str(new_distance_cell_mask))
+                Spotobject.set(self.local_cell_density_key, str(new_local_density))
                 track_id = self.channel_unique_spot_properties[int(cell_id)][
                     self.trackid_key
                 ]
@@ -2067,25 +2114,26 @@ class TrackMate:
 
             acceleration = tracklet_properties[:, 14]
             distance_cell_mask = tracklet_properties[:, 15]
+            local_density = tracklet_properties[:, 16]
 
-            radial_angle_z = tracklet_properties[:, 16]
-            radial_angle_y = tracklet_properties[:, 17]
-            radial_angle_x = tracklet_properties[:, 18]
+            radial_angle_z = tracklet_properties[:, 17]
+            radial_angle_y = tracklet_properties[:, 18]
+            radial_angle_x = tracklet_properties[:, 19]
 
-            cell_axis_z = tracklet_properties[:, 19]
-            cell_axis_y = tracklet_properties[:, 20]
-            cell_axis_x = tracklet_properties[:, 21]
+            cell_axis_z = tracklet_properties[:, 20]
+            cell_axis_y = tracklet_properties[:, 21]
+            cell_axis_x = tracklet_properties[:, 22]
 
-            track_displacement = tracklet_properties[:, 22]
+            track_displacement = tracklet_properties[:, 23]
 
-            total_track_distance = tracklet_properties[:, 23]
+            total_track_distance = tracklet_properties[:, 24]
 
-            max_track_distance = tracklet_properties[:, 24]
+            max_track_distance = tracklet_properties[:, 25]
 
-            track_duration = tracklet_properties[:, 25]
+            track_duration = tracklet_properties[:, 26]
 
-            if tracklet_properties.shape[1] > 25:
-                latent_shape_features = tracklet_properties[:, 26:]
+            if tracklet_properties.shape[1] > 26:
+                latent_shape_features = tracklet_properties[:, 27:]
             else:
                 latent_shape_features = []
 
@@ -2120,6 +2168,7 @@ class TrackMate:
 
                 current_acceleration = []
                 current_distance_cell_mask = []
+                current_local_density = []
                 current_eccentricity_comp_first = []
                 current_eccentricity_comp_second = []
                 current_eccentricity_comp_third = []
@@ -2153,6 +2202,7 @@ class TrackMate:
 
                         current_acceleration.append(acceleration[j])
                         current_distance_cell_mask.append(distance_cell_mask[j])
+                        current_local_density.append(local_density[j])
                         current_eccentricity_comp_first.append(
                             eccentricity_comp_first[j]
                         )
@@ -2221,6 +2271,10 @@ class TrackMate:
                 current_distance_cell_mask = np.asarray(
                     current_distance_cell_mask, dtype=np.float32
                 )
+
+                current_local_density = np.asarray(
+                    current_local_density, dtype=np.float32
+                )
                 current_radial_angle_z = np.asarray(
                     current_radial_angle_z, dtype=np.float32
                 )
@@ -2283,6 +2337,7 @@ class TrackMate:
                     current_motion_angle_x,
                     current_acceleration,
                     current_distance_cell_mask,
+                    current_local_density,
                     current_radial_angle_z,
                     current_radial_angle_y,
                     current_radial_angle_x,
@@ -2357,6 +2412,7 @@ class TrackMate:
         )
 
         distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, location)
+        local_density = self._get_label_density(frame, location)
         if dist <= 2 * veto_radius:
             self.channel_unique_spot_properties[cell_id] = {
                 self.cellid_key: int(cell_id),
@@ -2370,6 +2426,7 @@ class TrackMate:
                 self.radius_key: (float(RADIUS)),
                 self.quality_key: (float(QUALITY)),
                 self.distance_cell_mask_key: float(distance_cell_mask),
+                self.local_cell_density_key: float(local_density),
                 self.maskcentroid_z_key: float(maskcentroid[0]),
                 self.maskcentroid_y_key: float(maskcentroid[1]),
                 self.maskcentroid_x_key: float(maskcentroid[2]),
@@ -2571,6 +2628,11 @@ class TrackMate:
         self.mitotic_mean_distance_cell_mask = []
         self.mitotic_var_distance_cell_mask = []
 
+        self.mitotic_mean_local_cell_density = []
+        self.mitotic_var_local_cell_density = []
+
+
+
         self.non_mitotic_mean_disp_z = []
         self.non_mitotic_var_disp_z = []
 
@@ -2601,6 +2663,10 @@ class TrackMate:
         self.non_mitotic_mean_distance_cell_mask = []
         self.non_mitotic_var_distance_cell_mask = []
 
+        self.non_mitotic_mean_local_cell_density = []
+        self.non_mitotic_var_local_cell_density = []
+
+
         self.all_mean_disp_z = []
         self.all_var_disp_z = []
 
@@ -2630,6 +2696,19 @@ class TrackMate:
 
         self.all_mean_distance_cell_mask = []
         self.all_var_distance_cell_mask = []
+
+        self.all_mean_distance_cell_mask = []
+        self.all_var_distance_cell_mask = []
+
+
+        self.all_mean_local_cell_density = []
+        self.all_var_local_cell_density = []
+
+        self.all_mean_local_cell_density = []
+        self.all_var_local_cell_density = []
+
+
+
 
         all_spots_tracks = {}
         for (k, v) in self.unique_spot_properties.items():
@@ -2662,6 +2741,7 @@ class TrackMate:
         mitotic_directional_change_y = []
         mitotic_directional_change_x = []
         mitotic_distance_cell_mask = []
+        mitotic_local_cell_density = []
 
         non_mitotic_disp_z = []
         non_mitotic_disp_y = []
@@ -2673,6 +2753,7 @@ class TrackMate:
         non_mitotic_directional_change_y = []
         non_mitotic_directional_change_x = []
         non_mitotic_distance_cell_mask = []
+        non_mitotic_local_cell_density = []
 
         all_disp_z = []
         all_disp_y = []
@@ -2684,6 +2765,7 @@ class TrackMate:
         all_directional_change_y = []
         all_directional_change_x = []
         all_distance_cell_mask = []
+        all_local_cell_density = []
 
         for (k, v) in all_spots_tracks.items():
 
@@ -2713,6 +2795,9 @@ class TrackMate:
                     mitotic_distance_cell_mask.append(
                         all_spots_tracks[k][self.distance_cell_mask_key]
                     )
+                    mitotic_local_cell_density.append(
+                        all_spots_tracks[k][self.local_cell_density_key]
+                    )
 
                 if not mitotic:
                     non_mitotic_disp_z.append(all_spots_tracks[k][self.zposid_key])
@@ -2736,6 +2821,9 @@ class TrackMate:
                     non_mitotic_distance_cell_mask.append(
                         all_spots_tracks[k][self.distance_cell_mask_key]
                     )
+                    non_mitotic_local_cell_density.append(
+                        all_spots_tracks[k][self.local_cell_density_key]
+                    )
 
                 all_disp_z.append(all_spots_tracks[k][self.zposid_key])
                 all_disp_y.append(all_spots_tracks[k][self.yposid_key])
@@ -2757,6 +2845,9 @@ class TrackMate:
                 )
                 all_distance_cell_mask.append(
                     all_spots_tracks[k][self.distance_cell_mask_key]
+                )
+                all_local_cell_density.append(
+                    all_spots_tracks[k][self.local_cell_density_key]
                 )
 
         mitotic_disp_z = np.abs(np.diff(mitotic_disp_z))
@@ -2817,6 +2908,10 @@ class TrackMate:
         self.mitotic_mean_distance_cell_mask.append(np.mean(mitotic_distance_cell_mask))
         self.mitotic_var_distance_cell_mask.append(np.std(mitotic_distance_cell_mask))
 
+        self.mitotic_mean_local_cell_density.append(np.mean(mitotic_local_cell_density))
+        self.mitotic_var_local_cell_density.append(np.std(mitotic_local_cell_density))
+
+
         self.non_mitotic_mean_disp_z.append(np.mean(non_mitotic_disp_z))
         self.non_mitotic_var_disp_z.append(np.std(non_mitotic_disp_z))
 
@@ -2865,6 +2960,13 @@ class TrackMate:
             np.std(non_mitotic_distance_cell_mask)
         )
 
+        self.non_mitotic_mean_local_cell_density.append(
+            np.mean(non_mitotic_local_cell_density)
+        )
+        self.non_mitotic_var_local_cell_density.append(
+            np.std(non_mitotic_local_cell_density)
+        )
+
         self.all_mean_disp_z.append(np.mean(all_disp_z))
         self.all_var_disp_z.append(np.std(all_disp_z))
 
@@ -2896,6 +2998,34 @@ class TrackMate:
 
         self.all_mean_distance_cell_mask.append(np.mean(all_distance_cell_mask))
         self.all_var_distance_cell_mask.append(np.std(all_distance_cell_mask))
+
+        self.all_mean_local_cell_density.append(np.mean(all_local_cell_density))
+        self.all_var_local_cell_density.append(np.std(all_local_cell_density))
+
+
+
+
+def get_largest_size(timed_cell_size):
+        largest_size = max(timed_cell_size.values()) 
+        return largest_size
+    
+def compute_cell_size(seg_image):
+
+    ndim = len(seg_image.shape)
+    timed_cell_size = {}
+    if ndim == 2:
+                props = measure.regionprops(seg_image)
+                largest_size = max(props, key=lambda prop: prop.feret_diameter_max)
+                timed_cell_size[str(0)] = largest_size
+
+    if ndim in (3, 4):
+        for i in tqdm(range(0, seg_image.shape[0])):
+
+                props = measure.regionprops(seg_image[i,:])
+                largest_size = max(props, key=lambda prop: prop.feret_diameter_max)
+                timed_cell_size[str(i)] = largest_size
+
+    return timed_cell_size
 
 
 def boundary_points(mask, xcalibration, ycalibration, zcalibration):
@@ -3201,22 +3331,25 @@ def get_feature_dict(unique_tracks_properties):
         "distance_cell_mask": np.asarray(unique_tracks_properties, dtype="float16")[
             :, 15
         ],
-        "radial_angle_z": np.asarray(unique_tracks_properties, dtype="float16")[:, 16],
-        "radial_angle_y": np.asarray(unique_tracks_properties, dtype="float16")[:, 17],
-        "radial_angle_x": np.asarray(unique_tracks_properties, dtype="float16")[:, 18],
-        "cell_axis_z": np.asarray(unique_tracks_properties, dtype="float16")[:, 19],
-        "cell_axis_y": np.asarray(unique_tracks_properties, dtype="float16")[:, 20],
-        "cell_axis_x": np.asarray(unique_tracks_properties, dtype="float16")[:, 21],
-        "track_displacement": np.asarray(unique_tracks_properties, dtype="float16")[
-            :, 22
+        "local_cell_density": np.asarray(unique_tracks_properties, dtype="float16")[
+            :, 16
         ],
-        "total_track_distance": np.asarray(unique_tracks_properties, dtype="float16")[
+        "radial_angle_z": np.asarray(unique_tracks_properties, dtype="float16")[:, 17],
+        "radial_angle_y": np.asarray(unique_tracks_properties, dtype="float16")[:, 18],
+        "radial_angle_x": np.asarray(unique_tracks_properties, dtype="float16")[:, 19],
+        "cell_axis_z": np.asarray(unique_tracks_properties, dtype="float16")[:, 20],
+        "cell_axis_y": np.asarray(unique_tracks_properties, dtype="float16")[:, 21],
+        "cell_axis_x": np.asarray(unique_tracks_properties, dtype="float16")[:, 22],
+        "track_displacement": np.asarray(unique_tracks_properties, dtype="float16")[
             :, 23
         ],
-        "max_track_distance": np.asarray(unique_tracks_properties, dtype="float16")[
+        "total_track_distance": np.asarray(unique_tracks_properties, dtype="float16")[
             :, 24
         ],
-        "track_duration": np.asarray(unique_tracks_properties, dtype="float16")[:, 25],
+        "max_track_distance": np.asarray(unique_tracks_properties, dtype="float16")[
+            :, 25
+        ],
+        "track_duration": np.asarray(unique_tracks_properties, dtype="float16")[:, 26],
     }
 
     return features

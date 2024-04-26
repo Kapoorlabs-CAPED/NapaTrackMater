@@ -58,6 +58,7 @@ class Clustering:
         scale_xy=1.0,
         center=True,
         compute_with_autoencoder=True,
+
     ):
 
         self.pretrainer = pretrainer
@@ -440,6 +441,7 @@ def _model_output(
     output_cloud_surface_area = []
     output_eigenvectors = []
     output_eigenvalues = []
+    output_density = []
     output_dimensions = []
     dataset = PointCloudDataset(clouds, scale_z=scale_z, scale_xy=scale_xy)
     dataloader = DataLoader(dataset, batch_size=batch_size)
