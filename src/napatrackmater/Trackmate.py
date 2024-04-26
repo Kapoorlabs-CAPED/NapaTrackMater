@@ -1849,12 +1849,19 @@ class TrackMate:
                 round(filtered_detections['X']),
 
             )
-            spot_track_id = find_closest_key(frame_spot_centroid, self.unique_track_centroid, 0, 5)
-            
-            spot_id = find_closest_key(frame_spot_centroid, self.unique_spot_centroid, 0, 5)
+            for index, row in frame_spot_centroid.iterrows():
+                t = row['T']
+                z = round(row['Z'])
+                y = round(row['Y'])
+                x = round(row['X'])
 
-            self.oneat_dividing_tracks[spot_id] = spot_track_id
- 
+                spot = (t,z,y,x)
+                spot_track_id = find_closest_key(spot, self.unique_track_centroid, 0, 5)
+                
+                spot_id = find_closest_key(spot, self.unique_spot_centroid, 0, 5)
+
+                self.oneat_dividing_tracks[spot_id] = spot_track_id
+    
 
     def _create_master_xml(self):
 
@@ -3266,10 +3273,10 @@ def find_closest_key(test_point, unique_track_centroid, time_veto, space_veto):
     min_distance = float('inf') 
     
     t_test, z_test, y_test, x_test = test_point
-    print(test_point)
+    print('test', test_point)
     for key in unique_track_centroid.keys():
         t_key, z_key, y_key, x_key = key
-        print(key)
+        print('act',key)
         time_distance = abs(t_key - t_test)
         space_distance = np.sqrt((z_key - z_test)**2 + (y_key - y_test)**2 + (x_key - x_test)**2)
         
