@@ -477,9 +477,7 @@ class TrackMate:
         root_leaf = []
         root_root = []
         root_splits = []
-        #if len(list(self.oneat_dividing_tracks.keys())) > 1:
-        #   for cell_id in list(self.oneat_dividing_tracks.keys()):
-        #          root_splits.append(cell_id)
+        root_leaf_source = []
                
         # Get the root id
         for source_id in all_source_ids:
@@ -496,6 +494,14 @@ class TrackMate:
                     root_splits.append(source_id)
             if target_target_id[0] not in self.edge_target_lookup:
                 root_leaf.append(target_target_id[0])
+                leaf_source = self.edge_source_lookup[target_target_id[0]]
+                root_leaf_source.append(leaf_source)
+
+        if len(list(self.oneat_dividing_tracks.keys())) > 1:
+           for cell_id in list(self.oneat_dividing_tracks.keys()):
+                  root_splits.append(cell_id) 
+        root_splits = [x for x in root_splits if x not in root_leaf_source]          
+                       
 
         return root_root, root_splits, root_leaf
 
@@ -2518,9 +2524,6 @@ class TrackMate:
         source_id: int,
         target_id: int,
     ):
-        if cell_id not in self.generation_dict.keys():
-            print('missing', cell_id,  len(self.generation_dict.keys()))
-        if cell_id in self.generation_dict.keys():
                 generation_id = self.generation_dict[cell_id]
                 tracklet_id = self.tracklet_dict[cell_id]
 
