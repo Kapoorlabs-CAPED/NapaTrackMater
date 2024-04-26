@@ -476,6 +476,7 @@ class TrackMate:
         root_root = []
         root_splits = []
         root_splits.extend(list(self.oneat_dividing_tracks.keys()))
+        print(root_splits)
         # Get the root id
         for source_id in all_source_ids:
             if source_id in self.edge_source_lookup:
@@ -498,6 +499,7 @@ class TrackMate:
         cell_id_times = []
         split_cell_ids = []
         for root_split in root_splits:
+            print(root_split)
             split_cell_id_time = self.unique_spot_properties[root_split][
                 self.frameid_key
             ]
