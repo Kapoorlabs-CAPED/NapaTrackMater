@@ -2548,7 +2548,8 @@ class TrackMate:
             time_vec_1 = max(1, abs(int(float(self.unique_spot_properties[int(cell_id)][self.frameid_key]) - float(self.unique_spot_properties[int(source_id)][self.frameid_key]))))
             frame = int(float(self.unique_spot_properties[int(cell_id)][self.frameid_key])) 
             self._get_cal(frame)
-            print(f'I am your calibration for {frame}, {self.tcalibration}')
+            if frame == 0 or frame == 100 or frame == 150:
+              print(f'I am your calibration for {frame}, {self.tcalibration}')
             speed = np.sqrt(np.dot(vec_1, vec_1)) / (time_vec_1 * self.tcalibration)
             self.unique_spot_properties[int(cell_id)].update({self.speed_key: speed})
 
