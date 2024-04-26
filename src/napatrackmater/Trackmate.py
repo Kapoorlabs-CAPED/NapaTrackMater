@@ -679,9 +679,12 @@ class TrackMate:
         min_x = max(0, int(x_test - self.cell_veto_box))
         max_x = min(current_frame_image.shape[2] - 1, int(x_test + self.cell_veto_box))
         
-        subvolume = current_frame_image[min_z:max_z + 1, min_y:max_y + 1, min_x:max_x + 1]
         
+        subvolume = current_frame_image[min_z:max_z + 1, min_y:max_y + 1, min_x:max_x + 1]
+        print(min_z, max_z, min_y, max_y, min_x, max_x)
+        print(subvolume.shape)
         unique_labels = np.unique(subvolume)
+        print(unique_labels)
         local_cell_density = len(unique_labels)
         
         return local_cell_density 
