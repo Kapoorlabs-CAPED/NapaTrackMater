@@ -2519,7 +2519,7 @@ class TrackMate:
         target_id: int,
     ):
         if cell_id not in self.generation_dict.keys():
-            print('missing', cell_id in len(self.generation_dict.keys()))
+            print('missing', cell_id,  len(self.generation_dict.keys()))
         if cell_id in self.generation_dict.keys():
                 generation_id = self.generation_dict[cell_id]
                 tracklet_id = self.tracklet_dict[cell_id]
