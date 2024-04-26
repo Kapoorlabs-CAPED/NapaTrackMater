@@ -46,7 +46,9 @@ class TrackMate:
         num_points=2048,
         batch_size=1,
         compute_with_autoencoder=True,
-        variable_t_calibration: dict = None
+        variable_t_calibration: dict = None,
+        oneat_csv_file: str = None,
+        oneat_threshold_cutoff: int = 0.5
     ):
 
         self.xml_path = xml_path
@@ -61,6 +63,8 @@ class TrackMate:
         self.center = center
         self.compute_with_autoencoder = compute_with_autoencoder
         self.variable_t_calibration = variable_t_calibration
+        self.oneat_csv_file = oneat_csv_file
+        self.oneat_threshold_cutoff = oneat_threshold_cutoff
         self.latent_features = latent_features
         self.pretrainer = Trainer(accelerator=self.accelerator, devices=self.devices)
         if image is not None:
@@ -252,6 +256,7 @@ class TrackMate:
         self.graph_split = {}
         self.graph_tracks = {}
         self._timed_centroid = {}
+        self.oneat_dividing_tracks = {}
         self.count = 0
         self.cell_veto_box = 0
         xml_parser = et.XMLParser(huge_tree=True)
@@ -470,6 +475,7 @@ class TrackMate:
         root_leaf = []
         root_root = []
         root_splits = []
+        root_splits.extend(list(self.oneat_dividing_tracks.keys()))
         # Get the root id
         for source_id in all_source_ids:
             if source_id in self.edge_source_lookup:
@@ -1729,6 +1735,7 @@ class TrackMate:
         self._get_boundary_points()
         self._get_cell_sizes()
         print("Iterating over spots in frame")
+        self._correct_track_status()
         self.count = 0
         futures = []
 
@@ -1820,6 +1827,29 @@ class TrackMate:
         print("computing Phenotypes")
         self._compute_phenotypes()
         self._temporal_plots_trackmate()
+
+         
+
+    def _correct_track_status(self):
+
+        if self.oneat_csv_file is not None:
+            print('Improving mitosis track classification using Oneat')
+            detections = pd.read_csv(self.oneat_csv_file, delimiter=',')
+            cutoff_score = self.oneat_threshold_cutoff
+            filtered_detections = detections[detections['Score'] > cutoff_score]
+            frame_spot_centroid = (
+                filtered_detections['T'],
+                round(filtered_detections['Z']),
+                round(filtered_detections['Y']),
+                round(filtered_detections['X']),
+
+            )
+            spot_track_id = find_closest_key(frame_spot_centroid, self.unique_track_centroid, 0, 5)
+            
+            spot_id = find_closest_key(frame_spot_centroid, self.unique_spot_centroid, 0, 5)
+
+            self.oneat_dividing_tracks[spot_id] = spot_track_id
+ 
 
     def _create_master_xml(self):
 
@@ -2460,10 +2490,6 @@ class TrackMate:
                          self.tcalibration = float(self.variable_t_calibration[key_time])
                          return 
                      
-
-                             
-
-
 
 
     def _dict_update(
@@ -3228,6 +3254,26 @@ def get_track_dataset(
 
     return TrackAttributeids, AllTrackValues
 
+
+
+def find_closest_key(test_point, unique_track_centroid, time_veto, space_veto):
+    closest_key = None
+    min_distance = float('inf') 
+    
+    t_test, z_test, y_test, x_test = test_point
+    
+    for key in unique_track_centroid.keys():
+        t_key, z_key, y_key, x_key = key
+        
+        time_distance = abs(t_key - t_test)
+        space_distance = np.sqrt((z_key - z_test)**2 + (y_key - y_test)**2 + (x_key - x_test)**2)
+        
+        if time_distance <= time_veto and space_distance <= space_veto:
+            if time_distance + space_distance < min_distance:
+                min_distance = time_distance + space_distance
+                closest_key = key
+    
+    return closest_key
 
 def get_edges_dataset(
     edges_dataset,
