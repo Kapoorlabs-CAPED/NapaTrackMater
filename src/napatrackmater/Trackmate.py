@@ -681,10 +681,7 @@ class TrackMate:
         
         
         subvolume = current_frame_image[min_z:max_z + 1, min_y:max_y + 1, min_x:max_x + 1]
-        print(min_z, max_z, min_y, max_y, min_x, max_x)
-        print(subvolume.shape)
         unique_labels = np.unique(subvolume)
-        print(unique_labels)
         local_cell_density = len(unique_labels)
         
         return local_cell_density 
@@ -1730,6 +1727,7 @@ class TrackMate:
         self.tstart = int(float(self.basicsettings.get("tstart")))
         self.tend = int(float(self.basicsettings.get("tend")))
         self._get_boundary_points()
+        self._get_cell_sizes()
         print("Iterating over spots in frame")
         self.count = 0
         futures = []
@@ -2548,8 +2546,7 @@ class TrackMate:
             time_vec_1 = max(1, abs(int(float(self.unique_spot_properties[int(cell_id)][self.frameid_key]) - float(self.unique_spot_properties[int(source_id)][self.frameid_key]))))
             frame = int(float(self.unique_spot_properties[int(cell_id)][self.frameid_key])) 
             self._get_cal(frame)
-            if frame == 0 or frame == 100 or frame == 150:
-              print(f'I am your calibration for {frame}, {self.tcalibration}')
+            
             speed = np.sqrt(np.dot(vec_1, vec_1)) / (time_vec_1 * self.tcalibration)
             self.unique_spot_properties[int(cell_id)].update({self.speed_key: speed})
 
