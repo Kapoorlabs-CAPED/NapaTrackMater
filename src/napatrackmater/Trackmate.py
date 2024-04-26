@@ -2543,7 +2543,9 @@ class TrackMate:
             ]
 
             time_vec_1 = max(1, abs(int(float(self.unique_spot_properties[int(cell_id)][self.frameid_key]) - float(self.unique_spot_properties[int(source_id)][self.frameid_key]))))
-
+            frame = int(float(self.unique_spot_properties[int(cell_id)][self.frameid_key])) 
+            self._get_cal(frame)
+            print(f'I am your calibration for {frame}, {self.tcalibration}')
             speed = np.sqrt(np.dot(vec_1, vec_1)) / (time_vec_1 * self.tcalibration)
             self.unique_spot_properties[int(cell_id)].update({self.speed_key: speed})
 
@@ -2794,6 +2796,8 @@ class TrackMate:
             mitotic = all_spots_tracks[k][self.dividing_key]
 
             if i == int(current_time):
+
+                self._get_cal(current_time)
                 if mitotic:
                     mitotic_disp_z.append(all_spots_tracks[k][self.zposid_key])
                     mitotic_disp_y.append(all_spots_tracks[k][self.yposid_key])
