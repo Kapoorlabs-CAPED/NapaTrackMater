@@ -1866,8 +1866,8 @@ class TrackMate:
                 spot = (t,z,y,x)
                 
                 spot_id = find_closest_key(spot, self.unique_oneat_spot_centroid, 0, 5)
-
-                self.oneat_dividing_tracks[spot_id] = spot
+                if spot_id is not None:
+                   self.oneat_dividing_tracks[spot_id] = spot
     
 
     def _create_master_xml(self):
@@ -3292,8 +3292,9 @@ def find_closest_key(test_point, unique_dict, time_veto, space_veto):
             if time_distance + space_distance < min_distance:
                 min_distance = time_distance + space_distance
                 closest_key = key
-    spot_id = unique_dict[closest_key]
-    print('act',closest_key)
+    if closest_key is not None:            
+      spot_id = unique_dict[closest_key]
+    print('act',closest_key, spot_id)
     return spot_id
 
 def get_edges_dataset(
