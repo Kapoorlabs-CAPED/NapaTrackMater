@@ -1842,14 +1842,8 @@ class TrackMate:
             detections = pd.read_csv(self.oneat_csv_file, delimiter=',')
             cutoff_score = self.oneat_threshold_cutoff
             filtered_detections = detections[detections['Score'] > cutoff_score]
-            frame_spot_centroid = (
-                filtered_detections['T'],
-                round(filtered_detections['Z']),
-                round(filtered_detections['Y']),
-                round(filtered_detections['X']),
-
-            )
-            for index, row in frame_spot_centroid.iterrows():
+            
+            for index, row in filtered_detections.iterrows():
                 t = row['T']
                 z = round(row['Z'])
                 y = round(row['Y'])
