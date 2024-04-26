@@ -477,9 +477,9 @@ class TrackMate:
         root_leaf = []
         root_root = []
         root_splits = []
-        if len(list(self.oneat_dividing_tracks.keys())) > 1:
-           for cell_id in list(self.oneat_dividing_tracks.keys()):
-                  root_splits.append(cell_id)
+        #if len(list(self.oneat_dividing_tracks.keys())) > 1:
+        #   for cell_id in list(self.oneat_dividing_tracks.keys()):
+        #          root_splits.append(cell_id)
                
         # Get the root id
         for source_id in all_source_ids:
