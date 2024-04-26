@@ -475,7 +475,10 @@ class TrackMate:
         root_leaf = []
         root_root = []
         root_splits = []
-        root_splits.extend(list(self.oneat_dividing_tracks.keys()))
+        if len(list(self.oneat_dividing_tracks.keys())) > 1:
+           for cell_id in list(self.oneat_dividing_tracks.keys()):
+               if cell_id in all_source_ids:
+                  root_splits.append(cell_id)
         print(root_splits)
         # Get the root id
         for source_id in all_source_ids:
@@ -3263,10 +3266,10 @@ def find_closest_key(test_point, unique_track_centroid, time_veto, space_veto):
     min_distance = float('inf') 
     
     t_test, z_test, y_test, x_test = test_point
-    
+    print(test_point)
     for key in unique_track_centroid.keys():
         t_key, z_key, y_key, x_key = key
-        
+        print(key)
         time_distance = abs(t_key - t_test)
         space_distance = np.sqrt((z_key - z_test)**2 + (y_key - y_test)**2 + (x_key - x_test)**2)
         
