@@ -3094,7 +3094,7 @@ def compute_cell_size(seg_image):
                 timed_cell_size[str(0)] = float(largest_size.feret_diameter_max)
 
     if ndim in (3, 4):
-        for i in tqdm(range(0, seg_image.shape[0])):
+        for i in tqdm(range(0, seg_image.shape[0], seg_image.shape[0]/10)):
 
                 props = measure.regionprops(seg_image[i,:])
                 largest_size = max(props, key=lambda prop: prop.feret_diameter_max)
