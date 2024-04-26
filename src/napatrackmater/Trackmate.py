@@ -46,6 +46,7 @@ class TrackMate:
         num_points=2048,
         batch_size=1,
         compute_with_autoencoder=True,
+        variable_t_calibration: dict = None
     ):
 
         self.xml_path = xml_path
@@ -59,6 +60,7 @@ class TrackMate:
         self.scale_xy = scale_xy
         self.center = center
         self.compute_with_autoencoder = compute_with_autoencoder
+        self.variable_t_calibration = variable_t_calibration
         self.latent_features = latent_features
         self.pretrainer = Trainer(accelerator=self.accelerator, devices=self.devices)
         if image is not None:
@@ -666,7 +668,7 @@ class TrackMate:
 
     def _get_label_density(self, frame, test_location):
         
-        current_frame_image = self.seg_image[frame,:]
+        current_frame_image = self.seg_image[int(float(frame)),:]
         z_test, y_test, x_test = test_location
        
 
@@ -2443,6 +2445,22 @@ class TrackMate:
             )
             self.channel_unique_spot_properties[cell_id].update({self.radius_key: -1})
             self.channel_unique_spot_properties[cell_id].update({self.quality_key: -1})
+
+
+    def _get_cal(self, frame):
+
+        
+        if self.variable_t_calibration is not None:
+                 
+                 items = list(self.variable_t_calibration .items())
+                 last_time, last_cal = items[-1]
+                 first_time, first_cal = items[0]
+                 for max_time, cal_value in self.variable_t_calibration.items():
+                     if frame < max_time:
+                         self.tcalibration = cal_value
+
+
+
 
     def _dict_update(
         self,
