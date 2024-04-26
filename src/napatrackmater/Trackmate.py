@@ -477,11 +477,10 @@ class TrackMate:
         root_leaf = []
         root_root = []
         root_splits = []
-        print(self.oneat_dividing_tracks.keys(), len(list(self.oneat_dividing_tracks.keys())) )
         if len(list(self.oneat_dividing_tracks.keys())) > 1:
            for cell_id in list(self.oneat_dividing_tracks.keys()):
                   root_splits.append(cell_id)
-        print('Oneat root splits', root_splits)          
+               
         # Get the root id
         for source_id in all_source_ids:
             if source_id in self.edge_source_lookup:
@@ -3281,7 +3280,6 @@ def find_closest_key(test_point, unique_dict, time_veto, space_veto):
     min_distance = float('inf') 
     
     t_test, z_test, y_test, x_test = test_point
-    print('test', test_point)
     for key in unique_dict.keys():
         t_key, z_key, y_key, x_key = key
         
@@ -3294,7 +3292,6 @@ def find_closest_key(test_point, unique_dict, time_veto, space_veto):
                 closest_key = key
     if closest_key is not None:            
       spot_id = unique_dict[closest_key]
-    print('act',closest_key, spot_id)
     return spot_id
 
 def get_edges_dataset(
