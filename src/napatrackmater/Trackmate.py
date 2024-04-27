@@ -1419,6 +1419,14 @@ class TrackMate:
                     self.quality_key: QUALITY,
                 }
 
+            frame_spot_centroid = (
+                int(float(Spotobject.get(self.frameid_key))),
+                float(Spotobject.get(self.zposid_key)) / self.zcalibration,
+                float(Spotobject.get(self.yposid_key)) / self.ycalibration,
+                float(Spotobject.get(self.xposid_key)) / self.xcalibration,
+            )
+            self.unique_oneat_spot_centroid[frame_spot_centroid] = cell_id    
+
     def _spot_computer(self, frame):
 
         for Spotobject in frame.findall("Spot"):
