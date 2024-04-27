@@ -2,7 +2,7 @@ from tqdm import tqdm
 import numpy as np
 import lxml.etree as et
 
-# import xml.etree.ElementTree as et
+
 import pandas as pd
 import math
 from skimage import measure
@@ -1425,7 +1425,7 @@ class TrackMate:
                 float(Spotobject.get(self.yposid_key)) / self.ycalibration,
                 float(Spotobject.get(self.xposid_key)) / self.xcalibration,
             )
-            self.unique_oneat_spot_centroid[frame_spot_centroid] = cell_id    
+            self.unique_oneat_spot_centroid[frame_spot_centroid] = cell_id
 
     def _spot_computer(self, frame):
 
