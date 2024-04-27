@@ -493,7 +493,7 @@ class TrackMate:
 
         if len(list(self.oneat_dividing_tracks.keys())) > 1:
             for cell_id in list(self.oneat_dividing_tracks.keys()):
-                if cell_id in all_source_ids:
+                if cell_id in all_source_ids and cell_id not in root_splits:
                     root_splits.append(cell_id)
 
         return root_root, root_splits, root_leaf
