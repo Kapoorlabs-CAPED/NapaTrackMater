@@ -500,7 +500,7 @@ class TrackMate:
            for cell_id in list(self.oneat_dividing_tracks.keys()):
                   if cell_id in all_source_ids:
                       root_splits.append(cell_id) 
-                    
+                      print(f'I am only half wrong')              
 
         return root_root, root_splits, root_leaf
 
