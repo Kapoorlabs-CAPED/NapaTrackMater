@@ -48,7 +48,7 @@ class TrackMate:
         compute_with_autoencoder=True,
         variable_t_calibration: dict = None,
         oneat_csv_file: str = None,
-        oneat_threshold_cutoff: int = 0.5
+        oneat_threshold_cutoff: int = 0.5,
     ):
 
         self.xml_path = xml_path
@@ -247,7 +247,7 @@ class TrackMate:
         self.unique_spot_centroid = {}
         self.unique_oneat_spot_centroid = {}
         self.unique_track_centroid = {}
-        
+
         self.root_spots = {}
         self.all_current_cell_ids = {}
         self.channel_unique_spot_properties = {}
@@ -389,15 +389,12 @@ class TrackMate:
         )
         print("obtained edge attributes")
 
-
-
-    
     def _get_cell_sizes(self):
-        
-        print('Getting largest cell size')
+
+        print("Getting largest cell size")
         if self.seg_image is not None:
             self.timed_cell_size = get_largest_size(compute_cell_size(self.seg_image))
-        self.cell_veto_box =  4 * self.timed_cell_size   
+        self.cell_veto_box = 4 * self.timed_cell_size
 
     def _get_boundary_points(self):
 
@@ -477,8 +474,7 @@ class TrackMate:
         root_leaf = []
         root_root = []
         root_splits = []
-        
-               
+
         # Get the root id
         for source_id in all_source_ids:
             if source_id in self.edge_source_lookup:
@@ -494,14 +490,11 @@ class TrackMate:
                     root_splits.append(source_id)
             if target_target_id[0] not in self.edge_target_lookup:
                 root_leaf.append(target_target_id[0])
-                
-        test_splits = []
+
         if len(list(self.oneat_dividing_tracks.keys())) > 1:
-           for cell_id in list(self.oneat_dividing_tracks.keys()):
-                  if cell_id in all_source_ids:
-                      root_splits.append(cell_id) 
-                      test_splits.append(cell_id)
-        print(f'I am only half wrong {test_splits}')              
+            for cell_id in list(self.oneat_dividing_tracks.keys()):
+                if cell_id in all_source_ids:
+                    root_splits.append(cell_id)
 
         return root_root, root_splits, root_leaf
 
@@ -682,12 +675,10 @@ class TrackMate:
 
         self._iterate_dividing(root_root, root_leaf, root_splits)
 
-
     def _get_label_density(self, frame, test_location):
-        
-        current_frame_image = self.seg_image[int(float(frame)),:]
+
+        current_frame_image = self.seg_image[int(float(frame)), :]
         z_test, y_test, x_test = test_location
-        
 
         min_z = max(0, int(z_test - self.cell_veto_box))
         max_z = min(current_frame_image.shape[0] - 1, int(z_test + self.cell_veto_box))
@@ -695,13 +686,14 @@ class TrackMate:
         max_y = min(current_frame_image.shape[1] - 1, int(y_test + self.cell_veto_box))
         min_x = max(0, int(x_test - self.cell_veto_box))
         max_x = min(current_frame_image.shape[2] - 1, int(x_test + self.cell_veto_box))
-        
-        
-        subvolume = current_frame_image[min_z:max_z + 1, min_y:max_y + 1, min_x:max_x + 1]
+
+        subvolume = current_frame_image[
+            min_z : max_z + 1, min_y : max_y + 1, min_x : max_x + 1
+        ]
         unique_labels = np.unique(subvolume)
         local_cell_density = len(unique_labels)
-        
-        return local_cell_density 
+
+        return local_cell_density
 
     def _get_boundary_dist(self, frame, testlocation):
 
@@ -898,7 +890,6 @@ class TrackMate:
                 round(x) / self.xcalibration,
             )
 
-            
             self.unique_track_centroid[frame_spot_centroid] = track_id
             self.unique_spot_centroid[frame_spot_centroid] = k
 
@@ -1481,7 +1472,7 @@ class TrackMate:
                 self.maskcentroid_z_key: float(maskcentroid[0]),
                 self.maskcentroid_y_key: float(maskcentroid[1]),
                 self.maskcentroid_x_key: float(maskcentroid[2]),
-                self.local_cell_density_key: float(local_cell_density)
+                self.local_cell_density_key: float(local_cell_density),
             }
 
             frame_spot_centroid = (
@@ -1491,8 +1482,6 @@ class TrackMate:
                 float(Spotobject.get(self.xposid_key)) / self.xcalibration,
             )
             self.unique_oneat_spot_centroid[frame_spot_centroid] = cell_id
-
-
 
     def _get_master_xml_data(self):
         if self.channel_seg_image is not None:
@@ -1666,10 +1655,9 @@ class TrackMate:
                     self.distance_cell_mask_key
                 ]
 
-                new_local_density =  self.channel_unique_spot_properties[cell_id][
+                new_local_density = self.channel_unique_spot_properties[cell_id][
                     self.local_cell_density_key
                 ]
-
 
                 Spotobject.set(self.xposid_key, str(new_positionx))
                 Spotobject.set(self.yposid_key, str(new_positiony))
@@ -1757,7 +1745,7 @@ class TrackMate:
         self._get_boundary_points()
         self._get_cell_sizes()
         print("Iterating over spots in frame")
-        
+
         self.count = 0
         futures = []
 
@@ -1781,8 +1769,8 @@ class TrackMate:
                 if self.progress_bar is not None:
                     self.progress_bar.value = self.count
                 r.result()
-                
-        self._correct_track_status()        
+
+        self._correct_track_status()
         print(f"Iterating over tracks {len(self.filtered_track_ids)}")
         self.count = 0
         if self.progress_bar is not None:
@@ -1852,28 +1840,25 @@ class TrackMate:
         self._compute_phenotypes()
         self._temporal_plots_trackmate()
 
-         
-
     def _correct_track_status(self):
 
         if self.oneat_csv_file is not None:
-            print('Improving mitosis track classification using Oneat')
-            detections = pd.read_csv(self.oneat_csv_file, delimiter=',')
+            print("Improving mitosis track classification using Oneat")
+            detections = pd.read_csv(self.oneat_csv_file, delimiter=",")
             cutoff_score = self.oneat_threshold_cutoff
-            filtered_detections = detections[detections['Score'] > cutoff_score]
-            
-            for index, row in filtered_detections.iterrows():
-                t = int(row['T'])
-                z = round(row['Z'])
-                y = round(row['Y'])
-                x = round(row['X'])
+            filtered_detections = detections[detections["Score"] > cutoff_score]
 
-                spot = (t,z,y,x)
-                
+            for index, row in filtered_detections.iterrows():
+                t = int(row["T"])
+                z = round(row["Z"])
+                y = round(row["Y"])
+                x = round(row["X"])
+
+                spot = (t, z, y, x)
+
                 spot_id = find_closest_key(spot, self.unique_oneat_spot_centroid, 0, 5)
                 if spot_id is not None:
-                   self.oneat_dividing_tracks[spot_id] = spot
-    
+                    self.oneat_dividing_tracks[spot_id] = spot
 
     def _create_master_xml(self):
 
@@ -2501,20 +2486,17 @@ class TrackMate:
             self.channel_unique_spot_properties[cell_id].update({self.radius_key: -1})
             self.channel_unique_spot_properties[cell_id].update({self.quality_key: -1})
 
-
     def _get_cal(self, frame):
 
         frame = int(float(frame))
-         
-        if self.variable_t_calibration is not None:
-                 
-                 for key_time in sorted(self.variable_t_calibration.keys()):
-                     key_time = int(float(key_time))
-                     if frame <= key_time:
-                         self.tcalibration = float(self.variable_t_calibration[key_time])
-                         return 
-                     
 
+        if self.variable_t_calibration is not None:
+
+            for key_time in sorted(self.variable_t_calibration.keys()):
+                key_time = int(float(key_time))
+                if frame <= key_time:
+                    self.tcalibration = float(self.variable_t_calibration[key_time])
+                    return
 
     def _dict_update(
         self,
@@ -2524,145 +2506,177 @@ class TrackMate:
         source_id: int,
         target_id: int,
     ):
-                generation_id = self.generation_dict[cell_id]
-                tracklet_id = self.tracklet_dict[cell_id]
+        generation_id = self.generation_dict[cell_id]
+        tracklet_id = self.tracklet_dict[cell_id]
 
-                unique_id = str(track_id) + str(generation_id) + str(tracklet_id)
+        unique_id = str(track_id) + str(generation_id) + str(tracklet_id)
 
-                vec_cell = [
-                    float(self.unique_spot_properties[int(cell_id)][self.xposid_key]),
-                    float(self.unique_spot_properties[int(cell_id)][self.yposid_key]),
-                    float(self.unique_spot_properties[int(cell_id)][self.zposid_key]),
+        vec_cell = [
+            float(self.unique_spot_properties[int(cell_id)][self.xposid_key]),
+            float(self.unique_spot_properties[int(cell_id)][self.yposid_key]),
+            float(self.unique_spot_properties[int(cell_id)][self.zposid_key]),
+        ]
+
+        angle_x = cell_angular_change_x(vec_cell)
+        angle_y = cell_angular_change_y(vec_cell)
+        angle_z = cell_angular_change_z(vec_cell)
+
+        self.unique_spot_properties[int(cell_id)].update(
+            {self.radial_angle_x_key: angle_x}
+        )
+        self.unique_spot_properties[int(cell_id)].update(
+            {self.radial_angle_y_key: angle_y}
+        )
+        self.unique_spot_properties[int(cell_id)].update(
+            {self.radial_angle_z_key: angle_z}
+        )
+        unique_tracklet_ids.append(str(unique_id))
+        self.unique_spot_properties[int(cell_id)].update(
+            {self.uniqueid_key: str(unique_id)}
+        )
+        self.unique_spot_properties[int(cell_id)].update(
+            {self.trackletid_key: str(tracklet_id)}
+        )
+        self.unique_spot_properties[int(cell_id)].update(
+            {self.generationid_key: str(generation_id)}
+        )
+        self.unique_spot_properties[int(cell_id)].update(
+            {self.trackid_key: str(track_id)}
+        )
+        self.unique_spot_properties[int(cell_id)].update({self.motion_angle_z_key: 0.0})
+        self.unique_spot_properties[int(cell_id)].update({self.motion_angle_y_key: 0.0})
+        self.unique_spot_properties[int(cell_id)].update({self.motion_angle_x_key: 0.0})
+        self.unique_spot_properties[int(cell_id)].update({self.speed_key: 0.0})
+        self.unique_spot_properties[int(cell_id)].update({self.acceleration_key: 0.0})
+        self.unique_spot_properties[int(cell_id)].update(
+            {self.eccentricity_comp_firstkey: -1}
+        )
+        self.unique_spot_properties[int(cell_id)].update(
+            {self.eccentricity_comp_secondkey: -1}
+        )
+        self.unique_spot_properties[int(cell_id)].update(
+            {self.eccentricity_comp_thirdkey: -1}
+        )
+        self.unique_spot_properties[int(cell_id)].update({self.surface_area_key: -1})
+        self.unique_spot_properties[int(cell_id)].update({self.cell_axis_z_key: -1})
+        self.unique_spot_properties[int(cell_id)].update({self.cell_axis_y_key: -1})
+        self.unique_spot_properties[int(cell_id)].update({self.cell_axis_x_key: -1})
+        if source_id is not None:
+            self.unique_spot_properties[int(cell_id)].update(
+                {self.beforeid_key: int(source_id)}
+            )
+            vec_1 = [
+                float(self.unique_spot_properties[int(cell_id)][self.xposid_key])
+                - float(self.unique_spot_properties[int(source_id)][self.xposid_key]),
+                float(self.unique_spot_properties[int(cell_id)][self.yposid_key])
+                - float(self.unique_spot_properties[int(source_id)][self.yposid_key]),
+                float(self.unique_spot_properties[int(cell_id)][self.zposid_key])
+                - float(self.unique_spot_properties[int(source_id)][self.zposid_key]),
+            ]
+
+            time_vec_1 = max(
+                1,
+                abs(
+                    int(
+                        float(
+                            self.unique_spot_properties[int(cell_id)][self.frameid_key]
+                        )
+                        - float(
+                            self.unique_spot_properties[int(source_id)][
+                                self.frameid_key
+                            ]
+                        )
+                    )
+                ),
+            )
+            frame = int(
+                float(self.unique_spot_properties[int(cell_id)][self.frameid_key])
+            )
+            self._get_cal(frame)
+
+            speed = np.sqrt(np.dot(vec_1, vec_1)) / (time_vec_1 * self.tcalibration)
+            self.unique_spot_properties[int(cell_id)].update({self.speed_key: speed})
+
+            motion_angle_x = cell_angular_change_x(vec_1)
+            motion_angle_y = cell_angular_change_y(vec_1)
+            motion_angle_z = cell_angular_change_z(vec_1)
+
+            self.unique_spot_properties[int(cell_id)].update(
+                {self.motion_angle_x_key: motion_angle_x}
+            )
+
+            self.unique_spot_properties[int(cell_id)].update(
+                {self.motion_angle_y_key: motion_angle_y}
+            )
+
+            self.unique_spot_properties[int(cell_id)].update(
+                {self.motion_angle_z_key: motion_angle_z}
+            )
+
+            if source_id in self.edge_source_lookup:
+                pre_source_id = self.edge_source_lookup[source_id]
+
+                vec_2 = [
+                    float(self.unique_spot_properties[int(cell_id)][self.xposid_key])
+                    - 2
+                    * float(
+                        self.unique_spot_properties[int(source_id)][self.xposid_key]
+                    )
+                    + float(
+                        self.unique_spot_properties[int(pre_source_id)][self.xposid_key]
+                    ),
+                    float(self.unique_spot_properties[int(cell_id)][self.yposid_key])
+                    - 2
+                    * float(
+                        self.unique_spot_properties[int(source_id)][self.yposid_key]
+                    )
+                    + float(
+                        self.unique_spot_properties[int(pre_source_id)][self.yposid_key]
+                    ),
+                    float(self.unique_spot_properties[int(cell_id)][self.zposid_key])
+                    - 2
+                    * float(
+                        self.unique_spot_properties[int(source_id)][self.zposid_key]
+                    )
+                    + float(
+                        self.unique_spot_properties[int(pre_source_id)][self.zposid_key]
+                    ),
                 ]
 
-                angle_x = cell_angular_change_x(vec_cell)
-                angle_y = cell_angular_change_y(vec_cell)
-                angle_z = cell_angular_change_z(vec_cell)
-
-                self.unique_spot_properties[int(cell_id)].update(
-                    {self.radial_angle_x_key: angle_x}
-                )
-                self.unique_spot_properties[int(cell_id)].update(
-                    {self.radial_angle_y_key: angle_y}
-                )
-                self.unique_spot_properties[int(cell_id)].update(
-                    {self.radial_angle_z_key: angle_z}
-                )
-                unique_tracklet_ids.append(str(unique_id))
-                self.unique_spot_properties[int(cell_id)].update(
-                    {self.uniqueid_key: str(unique_id)}
-                )
-                self.unique_spot_properties[int(cell_id)].update(
-                    {self.trackletid_key: str(tracklet_id)}
-                )
-                self.unique_spot_properties[int(cell_id)].update(
-                    {self.generationid_key: str(generation_id)}
-                )
-                self.unique_spot_properties[int(cell_id)].update(
-                    {self.trackid_key: str(track_id)}
-                )
-                self.unique_spot_properties[int(cell_id)].update({self.motion_angle_z_key: 0.0})
-                self.unique_spot_properties[int(cell_id)].update({self.motion_angle_y_key: 0.0})
-                self.unique_spot_properties[int(cell_id)].update({self.motion_angle_x_key: 0.0})
-                self.unique_spot_properties[int(cell_id)].update({self.speed_key: 0.0})
-                self.unique_spot_properties[int(cell_id)].update({self.acceleration_key: 0.0})
-                self.unique_spot_properties[int(cell_id)].update(
-                    {self.eccentricity_comp_firstkey: -1}
-                )
-                self.unique_spot_properties[int(cell_id)].update(
-                    {self.eccentricity_comp_secondkey: -1}
-                )
-                self.unique_spot_properties[int(cell_id)].update(
-                    {self.eccentricity_comp_thirdkey: -1}
-                )
-                self.unique_spot_properties[int(cell_id)].update({self.surface_area_key: -1})
-                self.unique_spot_properties[int(cell_id)].update({self.cell_axis_z_key: -1})
-                self.unique_spot_properties[int(cell_id)].update({self.cell_axis_y_key: -1})
-                self.unique_spot_properties[int(cell_id)].update({self.cell_axis_x_key: -1})
-                if source_id is not None:
-                    self.unique_spot_properties[int(cell_id)].update(
-                        {self.beforeid_key: int(source_id)}
-                    )
-                    vec_1 = [
-                        float(self.unique_spot_properties[int(cell_id)][self.xposid_key])
-                        - float(self.unique_spot_properties[int(source_id)][self.xposid_key]),
-                        float(self.unique_spot_properties[int(cell_id)][self.yposid_key])
-                        - float(self.unique_spot_properties[int(source_id)][self.yposid_key]),
-                        float(self.unique_spot_properties[int(cell_id)][self.zposid_key])
-                        - float(self.unique_spot_properties[int(source_id)][self.zposid_key]),
-                    ]
-
-                    time_vec_1 = max(1, abs(int(float(self.unique_spot_properties[int(cell_id)][self.frameid_key]) - float(self.unique_spot_properties[int(source_id)][self.frameid_key]))))
-                    frame = int(float(self.unique_spot_properties[int(cell_id)][self.frameid_key])) 
-                    self._get_cal(frame)
-                    
-                    speed = np.sqrt(np.dot(vec_1, vec_1)) / (time_vec_1 * self.tcalibration)
-                    self.unique_spot_properties[int(cell_id)].update({self.speed_key: speed})
-
-                    motion_angle_x = cell_angular_change_x(vec_1)
-                    motion_angle_y = cell_angular_change_y(vec_1)
-                    motion_angle_z = cell_angular_change_z(vec_1)
-
-                    self.unique_spot_properties[int(cell_id)].update(
-                        {self.motion_angle_x_key: motion_angle_x}
-                    )
-
-                    self.unique_spot_properties[int(cell_id)].update(
-                        {self.motion_angle_y_key: motion_angle_y}
-                    )
-
-                    self.unique_spot_properties[int(cell_id)].update(
-                        {self.motion_angle_z_key: motion_angle_z}
-                    )
-
-                    if source_id in self.edge_source_lookup:
-                        pre_source_id = self.edge_source_lookup[source_id]
-
-                        vec_2 = [
-                            float(self.unique_spot_properties[int(cell_id)][self.xposid_key])
-                            - 2
-                            * float(
-                                self.unique_spot_properties[int(source_id)][self.xposid_key]
+                time_vec_2 = max(
+                    1,
+                    abs(
+                        int(
+                            float(
+                                self.unique_spot_properties[int(cell_id)][
+                                    self.frameid_key
+                                ]
                             )
-                            + float(
-                                self.unique_spot_properties[int(pre_source_id)][self.xposid_key]
-                            ),
-                            float(self.unique_spot_properties[int(cell_id)][self.yposid_key])
-                            - 2
-                            * float(
-                                self.unique_spot_properties[int(source_id)][self.yposid_key]
+                            - float(
+                                self.unique_spot_properties[int(pre_source_id)][
+                                    self.frameid_key
+                                ]
                             )
-                            + float(
-                                self.unique_spot_properties[int(pre_source_id)][self.yposid_key]
-                            ),
-                            float(self.unique_spot_properties[int(cell_id)][self.zposid_key])
-                            - 2
-                            * float(
-                                self.unique_spot_properties[int(source_id)][self.zposid_key]
-                            )
-                            + float(
-                                self.unique_spot_properties[int(pre_source_id)][self.zposid_key]
-                            ),
-                        ]
-
-                        time_vec_2 = max(1, abs(int(float(self.unique_spot_properties[int(cell_id)][self.frameid_key]) - float(self.unique_spot_properties[int(pre_source_id)][self.frameid_key]))))
-
-                        acc = np.sqrt(np.dot(vec_2, vec_2)) / (time_vec_2 * self.tcalibration)
-
-                        self.unique_spot_properties[int(cell_id)].update(
-                            {self.acceleration_key: acc}
                         )
-                elif source_id is None:
-                    self.unique_spot_properties[int(cell_id)].update({self.beforeid_key: None})
+                    ),
+                )
 
-                if target_id is not None:
-                    self.unique_spot_properties[int(cell_id)].update(
-                        {self.afterid_key: int(target_id)}
-                    )
-                elif target_id is None:
-                    self.unique_spot_properties[int(cell_id)].update({self.afterid_key: None})
+                acc = np.sqrt(np.dot(vec_2, vec_2)) / (time_vec_2 * self.tcalibration)
 
-                self._second_channel_update(cell_id, track_id)
+                self.unique_spot_properties[int(cell_id)].update(
+                    {self.acceleration_key: acc}
+                )
+        elif source_id is None:
+            self.unique_spot_properties[int(cell_id)].update({self.beforeid_key: None})
+
+        if target_id is not None:
+            self.unique_spot_properties[int(cell_id)].update(
+                {self.afterid_key: int(target_id)}
+            )
+        elif target_id is None:
+            self.unique_spot_properties[int(cell_id)].update({self.afterid_key: None})
+
+        self._second_channel_update(cell_id, track_id)
 
     def _temporal_plots_trackmate(self):
 
@@ -2704,8 +2718,6 @@ class TrackMate:
         self.mitotic_mean_local_cell_density = []
         self.mitotic_var_local_cell_density = []
 
-
-
         self.non_mitotic_mean_disp_z = []
         self.non_mitotic_var_disp_z = []
 
@@ -2738,7 +2750,6 @@ class TrackMate:
 
         self.non_mitotic_mean_local_cell_density = []
         self.non_mitotic_var_local_cell_density = []
-
 
         self.all_mean_disp_z = []
         self.all_var_disp_z = []
@@ -2773,15 +2784,11 @@ class TrackMate:
         self.all_mean_distance_cell_mask = []
         self.all_var_distance_cell_mask = []
 
-
         self.all_mean_local_cell_density = []
         self.all_var_local_cell_density = []
 
         self.all_mean_local_cell_density = []
         self.all_var_local_cell_density = []
-
-
-
 
         all_spots_tracks = {}
         for (k, v) in self.unique_spot_properties.items():
@@ -2986,7 +2993,6 @@ class TrackMate:
         self.mitotic_mean_local_cell_density.append(np.mean(mitotic_local_cell_density))
         self.mitotic_var_local_cell_density.append(np.std(mitotic_local_cell_density))
 
-
         self.non_mitotic_mean_disp_z.append(np.mean(non_mitotic_disp_z))
         self.non_mitotic_var_disp_z.append(np.std(non_mitotic_disp_z))
 
@@ -3078,27 +3084,26 @@ class TrackMate:
         self.all_var_local_cell_density.append(np.std(all_local_cell_density))
 
 
-
-
 def get_largest_size(timed_cell_size):
-        largest_size = max(timed_cell_size.values()) 
-        return largest_size
-    
+    largest_size = max(timed_cell_size.values())
+    return largest_size
+
+
 def compute_cell_size(seg_image):
 
     ndim = len(seg_image.shape)
     timed_cell_size = {}
     if ndim == 2:
-                props = measure.regionprops(seg_image)
-                largest_size = max(props, key=lambda prop: prop.feret_diameter_max)
-                timed_cell_size[str(0)] = float(largest_size.feret_diameter_max)
+        props = measure.regionprops(seg_image)
+        largest_size = max(props, key=lambda prop: prop.feret_diameter_max)
+        timed_cell_size[str(0)] = float(largest_size.feret_diameter_max)
 
     if ndim in (3, 4):
-        for i in tqdm(range(0, seg_image.shape[0], int(seg_image.shape[0]/10))):
+        for i in tqdm(range(0, seg_image.shape[0], int(seg_image.shape[0] / 10))):
 
-                props = measure.regionprops(seg_image[i,:])
-                largest_size = max(props, key=lambda prop: prop.feret_diameter_max)
-                timed_cell_size[str(i)] = float(largest_size.feret_diameter_max) 
+            props = measure.regionprops(seg_image[i, :])
+            largest_size = max(props, key=lambda prop: prop.feret_diameter_max)
+            timed_cell_size[str(i)] = float(largest_size.feret_diameter_max)
 
     return timed_cell_size
 
@@ -3278,26 +3283,28 @@ def get_track_dataset(
     return TrackAttributeids, AllTrackValues
 
 
-
 def find_closest_key(test_point, unique_dict, time_veto, space_veto):
     closest_key = None
     spot_id = None
-    min_distance = float('inf') 
-    
+    min_distance = float("inf")
+
     t_test, z_test, y_test, x_test = test_point
     for key in unique_dict.keys():
         t_key, z_key, y_key, x_key = key
-        
+
         time_distance = abs(t_key - t_test)
-        space_distance = np.sqrt((z_key - z_test)**2 + (y_key - y_test)**2 + (x_key - x_test)**2)
-        
+        space_distance = np.sqrt(
+            (z_key - z_test) ** 2 + (y_key - y_test) ** 2 + (x_key - x_test) ** 2
+        )
+
         if time_distance <= time_veto and space_distance <= space_veto:
             if time_distance + space_distance < min_distance:
                 min_distance = time_distance + space_distance
                 closest_key = key
-    if closest_key is not None:            
-      spot_id = unique_dict[closest_key]
+    if closest_key is not None:
+        spot_id = unique_dict[closest_key]
     return spot_id
+
 
 def get_edges_dataset(
     edges_dataset,
