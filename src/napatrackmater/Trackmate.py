@@ -2383,6 +2383,7 @@ class TrackMate:
                     current_eccentricity_comp_first,
                     current_eccentricity_comp_second,
                     current_eccentricity_comp_third,
+                    current_local_density,
                     current_surface_area,
                     current_latent_shape_features,
                 )
@@ -2394,7 +2395,7 @@ class TrackMate:
                     current_motion_angle_x,
                     current_acceleration,
                     current_distance_cell_mask,
-                    current_local_density,
+                    
                     current_radial_angle_z,
                     current_radial_angle_y,
                     current_radial_angle_x,
