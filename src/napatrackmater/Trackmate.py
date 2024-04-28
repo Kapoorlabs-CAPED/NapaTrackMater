@@ -43,9 +43,10 @@ class TrackMate:
         mask: np.ndarray = None,
         fourier=True,
         autoencoder_model=None,
+        enhance_trackmate_xml:bool=True,
         num_points=2048,
         batch_size=1,
-        compute_with_autoencoder=True,
+        compute_with_autoencoder=False,
         variable_t_calibration: dict = None,
         oneat_csv_file: str = None,
         oneat_threshold_cutoff: int = 0.5,
@@ -66,7 +67,7 @@ class TrackMate:
         self.oneat_csv_file = oneat_csv_file
         self.oneat_threshold_cutoff = oneat_threshold_cutoff
         self.latent_features = latent_features
-        self.pretrainer = Trainer(accelerator=self.accelerator, devices=self.devices)
+        
         if image is not None:
             self.image = image.astype(np.uint8)
         else:
@@ -78,6 +79,9 @@ class TrackMate:
 
         self.fourier = fourier
         self.autoencoder_model = autoencoder_model
+        if self.autoencoder_model is not None:
+            self.pretrainer = Trainer(accelerator=self.accelerator, devices=self.devices)
+        self.enhance_trackmate_xml = enhance_trackmate_xml
         if channel_seg_image is not None:
             self.channel_seg_image = channel_seg_image.astype(np.uint16)
         else:
@@ -1700,7 +1704,7 @@ class TrackMate:
             self.channel_xml_name = new_name + ".xml"
             self.channel_xml_path = os.path.dirname(self.xml_path)
             self._create_channel_tree()
-        if self.autoencoder_model is not None and self.seg_image is not None:
+        if (self.autoencoder_model is not None or self.enhance_trackmate_xml )and self.seg_image is not None:
             self.master_xml_content = self.xml_content
             self.master_xml_tree = et.parse(self.xml_path)
             self.master_xml_root = self.master_xml_tree.getroot()
@@ -1823,7 +1827,7 @@ class TrackMate:
             and self.edges_csv_path is not None
         ):
             self._get_attributes()
-        if self.autoencoder_model and self.seg_image is not None:
+        if (self.autoencoder_model or self.enhance_trackmate_xml) and self.seg_image is not None:
             print("Getting clouds")
 
             self._assign_cluster_class()
@@ -3097,21 +3101,31 @@ def get_largest_size(timed_cell_size):
     return largest_size
 
 
-def compute_cell_size(seg_image):
 
+
+def compute_cell_size(seg_image):
     ndim = len(seg_image.shape)
     timed_cell_size = {}
+
     if ndim == 2:
-        props = measure.regionprops(seg_image)
-        largest_size = max(props, key=lambda prop: prop.feret_diameter_max)
-        timed_cell_size[str(0)] = float(largest_size.feret_diameter_max)
+        try:
+            props = measure.regionprops(seg_image)
+            largest_size = max(props, key=lambda prop: prop.feret_diameter_max)
+            timed_cell_size[str(0)] = float(largest_size.feret_diameter_max)
+        except ValueError as e:
+            print("Skipping:", e)
+            timed_cell_size[str(0)] = 1.0
 
     if ndim in (3, 4):
         for i in tqdm(range(0, seg_image.shape[0], int(seg_image.shape[0] / 10))):
-
-            props = measure.regionprops(seg_image[i, :])
-            largest_size = max(props, key=lambda prop: prop.feret_diameter_max)
-            timed_cell_size[str(i)] = float(largest_size.feret_diameter_max)
+            try:
+                props = measure.regionprops(seg_image[i, :])
+                largest_size = max(props, key=lambda prop: prop.feret_diameter_max)
+                timed_cell_size[str(i)] = float(largest_size.feret_diameter_max)
+            except ValueError as e:
+                print(f"Skipping at index {i}: {e}")
+                
+                continue
 
     return timed_cell_size
 
