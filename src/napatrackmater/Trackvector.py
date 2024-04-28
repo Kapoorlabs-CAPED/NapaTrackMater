@@ -34,8 +34,8 @@ SHAPE_FEATURES = [
     "Eccentricity_Comp_First",
     "Eccentricity_Comp_Second",
     "Eccentricity_Comp_Third",
-    "Surface_Area",
     "Local_Cell_Density",
+    "Surface_Area",
 ]
 
 DYNAMIC_FEATURES = [
