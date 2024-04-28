@@ -79,8 +79,11 @@ class TrackMate:
 
         self.fourier = fourier
         self.autoencoder_model = autoencoder_model
+
         if self.autoencoder_model is not None:
             self.pretrainer = Trainer(accelerator=self.accelerator, devices=self.devices)
+        else:
+            self.pretrainer = None
         self.enhance_trackmate_xml = enhance_trackmate_xml
         if channel_seg_image is not None:
             self.channel_seg_image = channel_seg_image.astype(np.uint16)
