@@ -1117,7 +1117,7 @@ class TrackMate:
             self._second_channel_spots(frame, z, y, x, cell_id, track_id)
 
     def _final_tracks(self, track_id):
-        if int(track_id) in self.all_current_cell_ids:
+       
             current_cell_ids = self.all_current_cell_ids[int(track_id)]
             current_tracklets = {}
             current_tracklets_properties = {}
