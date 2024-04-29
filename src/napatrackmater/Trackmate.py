@@ -43,7 +43,7 @@ class TrackMate:
         mask: np.ndarray = None,
         fourier=True,
         autoencoder_model=None,
-        enhance_trackmate_xml:bool=True,
+        enhance_trackmate_xml: bool = True,
         num_points=2048,
         batch_size=1,
         compute_with_autoencoder=False,
@@ -67,7 +67,7 @@ class TrackMate:
         self.oneat_csv_file = oneat_csv_file
         self.oneat_threshold_cutoff = oneat_threshold_cutoff
         self.latent_features = latent_features
-        
+
         if image is not None:
             self.image = image.astype(np.uint8)
         else:
@@ -81,7 +81,9 @@ class TrackMate:
         self.autoencoder_model = autoencoder_model
 
         if self.autoencoder_model is not None:
-            self.pretrainer = Trainer(accelerator=self.accelerator, devices=self.devices)
+            self.pretrainer = Trainer(
+                accelerator=self.accelerator, devices=self.devices
+            )
         else:
             self.pretrainer = None
         self.enhance_trackmate_xml = enhance_trackmate_xml
@@ -501,7 +503,11 @@ class TrackMate:
 
         if len(list(self.oneat_dividing_tracks.keys())) > 1:
             for cell_id in list(self.oneat_dividing_tracks.keys()):
-                if cell_id in all_source_ids and cell_id not in root_splits and cell_id not in root_leaf:
+                if (
+                    cell_id in all_source_ids
+                    and cell_id not in root_splits
+                    and cell_id not in root_leaf
+                ):
                     root_splits.append(cell_id)
 
         return root_root, root_splits, root_leaf
@@ -596,7 +602,6 @@ class TrackMate:
                     tracklet_count = self._unique_tracklet_count(
                         tracklet_count_taken, tracklet_count
                     )
-                    print(next_gen_count, tracklet_count, len(target_cells), sorted_root_splits)
                     tracklet_count_taken.append(tracklet_count)
                     self._iterate_dividing_recursive(
                         root_leaf,
@@ -676,9 +681,9 @@ class TrackMate:
     def _unique_tracklet_count(self, tracklet_count_taken, tracklet_count):
 
         while tracklet_count in tracklet_count_taken:
-            tracklet_count += 1 
+            tracklet_count += 1
             if tracklet_count not in tracklet_count_taken:
-               break
+                break
         return tracklet_count
 
     def _iterate_split_down(self, root_root, root_leaf, root_splits):
@@ -1710,7 +1715,9 @@ class TrackMate:
             self.channel_xml_name = new_name + ".xml"
             self.channel_xml_path = os.path.dirname(self.xml_path)
             self._create_channel_tree()
-        if (self.autoencoder_model is not None or self.enhance_trackmate_xml )and self.seg_image is not None:
+        if (
+            self.autoencoder_model is not None or self.enhance_trackmate_xml
+        ) and self.seg_image is not None:
             self.master_xml_content = self.xml_content
             self.master_xml_tree = et.parse(self.xml_path)
             self.master_xml_root = self.master_xml_tree.getroot()
@@ -1833,7 +1840,9 @@ class TrackMate:
             and self.edges_csv_path is not None
         ):
             self._get_attributes()
-        if (self.autoencoder_model or self.enhance_trackmate_xml) and self.seg_image is not None:
+        if (
+            self.autoencoder_model or self.enhance_trackmate_xml
+        ) and self.seg_image is not None:
             print("Getting clouds")
 
             self._assign_cluster_class()
@@ -2398,7 +2407,6 @@ class TrackMate:
                     current_motion_angle_x,
                     current_acceleration,
                     current_distance_cell_mask,
-                    
                     current_radial_angle_z,
                     current_radial_angle_y,
                     current_radial_angle_x,
@@ -3108,8 +3116,6 @@ def get_largest_size(timed_cell_size):
     return largest_size
 
 
-
-
 def compute_cell_size(seg_image):
     ndim = len(seg_image.shape)
     timed_cell_size = {}
@@ -3131,7 +3137,7 @@ def compute_cell_size(seg_image):
                 timed_cell_size[str(i)] = float(largest_size.feret_diameter_max)
             except ValueError as e:
                 print(f"Skipping at index {i}: {e}")
-                
+
                 continue
 
     return timed_cell_size
