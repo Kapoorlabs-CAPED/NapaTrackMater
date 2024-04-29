@@ -596,6 +596,7 @@ class TrackMate:
                     tracklet_count = self._unique_tracklet_count(
                         tracklet_count_taken, tracklet_count
                     )
+                    print(next_gen_count, tracklet_count, len(target_cells), sorted_root_splits)
                     tracklet_count_taken.append(tracklet_count)
                     self._iterate_dividing_recursive(
                         root_leaf,
