@@ -1895,6 +1895,7 @@ class TrackMate:
         self._compute_phenotypes()
         self._temporal_plots_trackmate()
 
+    
 
     def _correct_track_status(self):
         if self.oneat_csv_file is not None:
@@ -1902,8 +1903,7 @@ class TrackMate:
             detections = pd.read_csv(self.oneat_csv_file, delimiter=",")
             cutoff_score = self.oneat_threshold_cutoff
             filtered_detections = detections[detections["Score"] > cutoff_score]
-
-            def process_row(index, row):
+            def process_row(row):
                 t = int(row["T"])
                 z = round(row["Z"])
                 y = round(row["Y"])
@@ -1914,12 +1914,9 @@ class TrackMate:
                 spot_id = find_closest_key(spot, self.unique_oneat_spot_centroid, 0, 5)
                 if spot_id is not None:
                     self.oneat_dividing_tracks[spot_id] = spot
+            filtered_detections.apply(process_row, axis=1)
 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                futures = [executor.submit(process_row, index, row) for index, row in filtered_detections.iterrows()]
 
-                for future in concurrent.futures.as_completed(futures):
-                    pass 
 
     def _create_master_xml(self):
 
