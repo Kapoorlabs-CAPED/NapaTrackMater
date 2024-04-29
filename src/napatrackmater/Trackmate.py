@@ -1122,47 +1122,47 @@ class TrackMate:
             self._second_channel_spots(frame, z, y, x, cell_id, track_id)
 
     def _final_tracks(self, track_id):
+        if int(track_id) in self.all_current_cell_ids:
+            current_cell_ids = self.all_current_cell_ids[int(track_id)]
+            current_tracklets = {}
+            current_tracklets_properties = {}
 
-        current_cell_ids = self.all_current_cell_ids[int(track_id)]
-        current_tracklets = {}
-        current_tracklets_properties = {}
+            for i in range(len(current_cell_ids)):
 
-        for i in range(len(current_cell_ids)):
+                k = int(current_cell_ids[i])
+                all_dict_values = self.unique_spot_properties[k]
+                unique_id = str(all_dict_values[self.uniqueid_key])
+                current_track_id = str(all_dict_values[self.trackid_key])
+                t = int(float(all_dict_values[self.frameid_key]))
+                z = float(all_dict_values[self.zposid_key])
+                y = float(all_dict_values[self.yposid_key])
+                x = float(all_dict_values[self.xposid_key])
 
-            k = int(current_cell_ids[i])
-            all_dict_values = self.unique_spot_properties[k]
-            unique_id = str(all_dict_values[self.uniqueid_key])
-            current_track_id = str(all_dict_values[self.trackid_key])
-            t = int(float(all_dict_values[self.frameid_key]))
-            z = float(all_dict_values[self.zposid_key])
-            y = float(all_dict_values[self.yposid_key])
-            x = float(all_dict_values[self.xposid_key])
+                (
+                    current_tracklets,
+                    current_tracklets_properties,
+                ) = self._tracklet_and_properties(
+                    all_dict_values,
+                    t,
+                    z,
+                    y,
+                    x,
+                    k,
+                    current_track_id,
+                    unique_id,
+                    current_tracklets,
+                    current_tracklets_properties,
+                )
 
-            (
-                current_tracklets,
-                current_tracklets_properties,
-            ) = self._tracklet_and_properties(
-                all_dict_values,
-                t,
-                z,
-                y,
-                x,
-                k,
-                current_track_id,
-                unique_id,
-                current_tracklets,
-                current_tracklets_properties,
+            current_tracklets = np.asarray(
+                current_tracklets[str(track_id)], dtype=np.float32
+            )
+            current_tracklets_properties = np.asarray(
+                current_tracklets_properties[str(track_id)], dtype=np.float32
             )
 
-        current_tracklets = np.asarray(
-            current_tracklets[str(track_id)], dtype=np.float32
-        )
-        current_tracklets_properties = np.asarray(
-            current_tracklets_properties[str(track_id)], dtype=np.float32
-        )
-
-        self.unique_tracks[track_id] = current_tracklets
-        self.unique_track_properties[track_id] = current_tracklets_properties
+            self.unique_tracks[track_id] = current_tracklets
+            self.unique_track_properties[track_id] = current_tracklets_properties
 
     def _tracklet_and_properties(
         self,
