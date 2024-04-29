@@ -946,17 +946,10 @@ class TrackMate:
             max_track_distance,
             track_duration,
         ) = self._get_track_features(track)
-        
+
         all_source_ids, all_target_ids = self._generate_generations(track)
         root_root, root_leaf = self._create_root_leaf(all_source_ids)
-        for source_id in all_source_ids:
-            if source_id not in all_target_ids:
-                self.root_spots[int(source_id)] = self.unique_spot_properties[
-                int(source_id)
-            ]
 
-        current_cell_ids.extend(all_source_ids)
-        current_cell_ids.extend(all_target_ids) 
         master_spot = self.unique_spot_properties[all_source_ids[0]]
         number_dividing = master_spot[self.number_dividing_key]
         dividing_trajectory = master_spot[self.dividing_key]
