@@ -927,7 +927,7 @@ class TrackMate:
         all_source_ids, all_target_ids = self._generate_generations(track)
         current_cell_ids.extend(all_source_ids)
         current_cell_ids.extend(all_target_ids) 
-        master_spot = all_source_ids[0]
+        master_spot = self.unique_spot_properties[all_source_ids[0]]
         number_dividing = master_spot[self.number_dividing_key]
         dividing_trajectory = master_spot[self.dividing_key]
         if dividing_trajectory:
