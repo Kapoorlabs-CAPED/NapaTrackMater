@@ -478,8 +478,6 @@ class TrackMate:
 
         return all_source_ids, all_target_ids
 
-
-
     def _create_root_leaf(self, all_source_ids: list):
 
         root_leaf = []
@@ -939,7 +937,6 @@ class TrackMate:
     def _master_track_computer(self, track, track_id, t_start=None, t_end=None):
         current_cell_ids = []
 
-        
         (
             track_displacement,
             total_track_distance,
@@ -947,15 +944,9 @@ class TrackMate:
             track_duration,
         ) = self._get_track_features(track)
 
-
         all_source_ids, all_target_ids = self._generate_generations(track)
-        #root_root, root_leaf = self._create_root_leaf(all_source_ids)
-        #spot = all_source_ids[0]
-        #master_spot = self.unique_spot_properties[spot]
-        #number_dividing = master_spot[self.number_dividing_key]
         root_root, root_splits, root_leaf = self._create_generations(all_source_ids)
-        #self._iterate_split_down(root_root, root_leaf, root_splits)
- 
+
         # Determine if a track has divisions or none
         number_dividing = len(root_splits)
         if number_dividing > 0:
@@ -973,7 +964,6 @@ class TrackMate:
                 self.AllTrackIds.append(int(track_id))
             if int(track_id) not in self.NormalTrackIds:
                 self.NormalTrackIds.append(int(track_id))
-       
 
         for leaf in root_leaf:
             self._second_channel_update(leaf, track_id)
@@ -1094,9 +1084,8 @@ class TrackMate:
                     spot_centroids = []
                     spot_centroids.append(spot_centroid)
                     tree = spatial.cKDTree(spot_centroids)
-                    self._timed_centroid[str(t)] = tree, spot_centroids 
-         
-        
+                    self._timed_centroid[str(t)] = tree, spot_centroids
+
     def _second_channel_update(self, cell_id, track_id):
 
         if self.channel_seg_image is not None:
@@ -1117,47 +1106,47 @@ class TrackMate:
             self._second_channel_spots(frame, z, y, x, cell_id, track_id)
 
     def _final_tracks(self, track_id):
-       
-            current_cell_ids = self.all_current_cell_ids[int(track_id)]
-            current_tracklets = {}
-            current_tracklets_properties = {}
 
-            for i in range(len(current_cell_ids)):
+        current_cell_ids = self.all_current_cell_ids[int(track_id)]
+        current_tracklets = {}
+        current_tracklets_properties = {}
 
-                k = int(current_cell_ids[i])
-                all_dict_values = self.unique_spot_properties[k]
-                unique_id = str(all_dict_values[self.uniqueid_key])
-                current_track_id = str(all_dict_values[self.trackid_key])
-                t = int(float(all_dict_values[self.frameid_key]))
-                z = float(all_dict_values[self.zposid_key])
-                y = float(all_dict_values[self.yposid_key])
-                x = float(all_dict_values[self.xposid_key])
+        for i in range(len(current_cell_ids)):
 
-                (
-                    current_tracklets,
-                    current_tracklets_properties,
-                ) = self._tracklet_and_properties(
-                    all_dict_values,
-                    t,
-                    z,
-                    y,
-                    x,
-                    k,
-                    current_track_id,
-                    unique_id,
-                    current_tracklets,
-                    current_tracklets_properties,
-                )
+            k = int(current_cell_ids[i])
+            all_dict_values = self.unique_spot_properties[k]
+            unique_id = str(all_dict_values[self.uniqueid_key])
+            current_track_id = str(all_dict_values[self.trackid_key])
+            t = int(float(all_dict_values[self.frameid_key]))
+            z = float(all_dict_values[self.zposid_key])
+            y = float(all_dict_values[self.yposid_key])
+            x = float(all_dict_values[self.xposid_key])
 
-            current_tracklets = np.asarray(
-                current_tracklets[str(track_id)], dtype=np.float32
-            )
-            current_tracklets_properties = np.asarray(
-                current_tracklets_properties[str(track_id)], dtype=np.float32
+            (
+                current_tracklets,
+                current_tracklets_properties,
+            ) = self._tracklet_and_properties(
+                all_dict_values,
+                t,
+                z,
+                y,
+                x,
+                k,
+                current_track_id,
+                unique_id,
+                current_tracklets,
+                current_tracklets_properties,
             )
 
-            self.unique_tracks[track_id] = current_tracklets
-            self.unique_track_properties[track_id] = current_tracklets_properties
+        current_tracklets = np.asarray(
+            current_tracklets[str(track_id)], dtype=np.float32
+        )
+        current_tracklets_properties = np.asarray(
+            current_tracklets_properties[str(track_id)], dtype=np.float32
+        )
+
+        self.unique_tracks[track_id] = current_tracklets
+        self.unique_track_properties[track_id] = current_tracklets_properties
 
     def _tracklet_and_properties(
         self,
@@ -1407,33 +1396,20 @@ class TrackMate:
                     self.radial_angle_x_key: float(
                         Spotobject.get(self.radial_angle_x_key)
                     ),
-
                     self.number_dividing_key: float(
                         Spotobject.get(self.number_dividing_key)
                     ),
-
-                    self.dividing_key: bool(
-                        Spotobject.get(self.dividing_key)
-                    ),
-
-                    self.displacement_key: float(
-                        Spotobject.get(self.displacement_key)
-                    ),
+                    self.dividing_key: bool(Spotobject.get(self.dividing_key)),
+                    self.displacement_key: float(Spotobject.get(self.displacement_key)),
                     self.total_track_distance_key: float(
                         Spotobject.get(self.total_track_distance_key)
                     ),
                     self.max_distance_traveled_key: float(
                         Spotobject.get(self.max_distance_traveled_key)
                     ),
-                    
                     self.track_duration_key: float(
                         Spotobject.get(self.track_duration_key)
                     ),
-                    
-
-
-
-
                 }
                 if self.surface_area_key in Spotobject.keys():
                     self.unique_spot_properties[int(cell_id)].update(
@@ -1629,7 +1605,7 @@ class TrackMate:
                 if self.progress_bar is not None:
                     self.progress_bar.value = self.count
                 r.result()
-        self._correct_track_status()        
+        self._correct_track_status()
         print(f"Iterating over tracks {len(self.filtered_track_ids)}")
         self.count = 0
         futures = []
