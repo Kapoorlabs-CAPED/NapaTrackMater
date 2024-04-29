@@ -497,7 +497,7 @@ class TrackMate:
                     root_splits.append(source_id)
             if target_target_id[0] not in self.edge_target_lookup:
                 root_leaf.append(target_target_id[0])
-                root_pre_leaf.appens(source_id)
+                root_pre_leaf.append(source_id)
 
         if len(list(self.oneat_dividing_tracks.keys())) > 1:
             for cell_id in list(self.oneat_dividing_tracks.keys()):
