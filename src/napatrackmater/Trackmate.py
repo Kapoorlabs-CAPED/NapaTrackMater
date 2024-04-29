@@ -478,6 +478,23 @@ class TrackMate:
 
         return all_source_ids, all_target_ids
 
+
+
+    def _create_root_leaf(self, all_source_ids: list):
+
+        root_leaf = []
+        root_root = []
+        for source_id in all_source_ids:
+            if source_id in self.edge_source_lookup:
+                source_target_id = self.edge_source_lookup[source_id]
+            else:
+                source_target_id = None
+            if source_target_id is None:
+                if source_id not in root_root:
+                    root_root.append(source_id)
+
+        return root_root, root_leaf
+
     def _create_generations(self, all_source_ids: list):
 
         root_leaf = []
@@ -923,9 +940,15 @@ class TrackMate:
         current_cell_ids = []
 
         
-
+        (
+            track_displacement,
+            total_track_distance,
+            max_track_distance,
+            track_duration,
+        ) = self._get_track_features(track)
+        
         all_source_ids, all_target_ids = self._generate_generations(track)
-
+        root_root, root_leaf = self._create_root_leaf(all_source_ids)
         for source_id in all_source_ids:
             if source_id not in all_target_ids:
                 self.root_spots[int(source_id)] = self.unique_spot_properties[
@@ -955,6 +978,74 @@ class TrackMate:
                 self.NormalTrackIds.append(int(track_id))
 
         
+        
+        for leaf in root_leaf:
+            self._second_channel_update(leaf, track_id)
+            current_cell_ids.append(leaf)
+            self.unique_spot_properties[leaf].update(
+                {self.dividing_key: dividing_trajectory}
+            )
+            self.unique_spot_properties[leaf].update(
+                {self.number_dividing_key: number_dividing}
+            )
+            self.unique_spot_properties[leaf].update(
+                {self.displacement_key: track_displacement}
+            )
+            self.unique_spot_properties[leaf].update(
+                {self.total_track_distance_key: total_track_distance}
+            )
+            self.unique_spot_properties[leaf].update(
+                {self.max_distance_traveled_key: max_track_distance}
+            )
+            self.unique_spot_properties[leaf].update(
+                {self.track_duration_key: track_duration}
+            )
+
+        for source_id in all_source_ids:
+            self._second_channel_update(source_id, track_id)
+            self.unique_spot_properties[source_id].update(
+                {self.dividing_key: dividing_trajectory}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.number_dividing_key: number_dividing}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.displacement_key: track_displacement}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.total_track_distance_key: total_track_distance}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.max_distance_traveled_key: max_track_distance}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.track_duration_key: track_duration}
+            )
+            current_cell_ids.append(source_id)
+
+        for current_root in root_root:
+            self._second_channel_update(current_root, track_id)
+            self.root_spots[int(current_root)] = self.unique_spot_properties[
+                int(current_root)
+            ]
+            self.unique_spot_properties[source_id].update(
+                {self.dividing_key: dividing_trajectory}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.number_dividing_key: number_dividing}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.displacement_key: track_displacement}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.total_track_distance_key: total_track_distance}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.max_distance_traveled_key: max_track_distance}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.track_duration_key: track_duration}
+            )
 
         self.all_current_cell_ids[int(track_id)] = current_cell_ids
 
@@ -1038,39 +1129,38 @@ class TrackMate:
 
             k = int(current_cell_ids[i])
             all_dict_values = self.unique_spot_properties[k]
-            if self.uniqueid_key in all_dict_values.keys():
-                unique_id = str(all_dict_values[self.uniqueid_key])
-                current_track_id = str(all_dict_values[self.trackid_key])
-                t = int(float(all_dict_values[self.frameid_key]))
-                z = float(all_dict_values[self.zposid_key])
-                y = float(all_dict_values[self.yposid_key])
-                x = float(all_dict_values[self.xposid_key])
+            unique_id = str(all_dict_values[self.uniqueid_key])
+            current_track_id = str(all_dict_values[self.trackid_key])
+            t = int(float(all_dict_values[self.frameid_key]))
+            z = float(all_dict_values[self.zposid_key])
+            y = float(all_dict_values[self.yposid_key])
+            x = float(all_dict_values[self.xposid_key])
 
-                (
-                    current_tracklets,
-                    current_tracklets_properties,
-                ) = self._tracklet_and_properties(
-                    all_dict_values,
-                    t,
-                    z,
-                    y,
-                    x,
-                    k,
-                    current_track_id,
-                    unique_id,
-                    current_tracklets,
-                    current_tracklets_properties,
-                )
-
-            current_tracklets = np.asarray(
-                current_tracklets[str(track_id)], dtype=np.float32
-            )
-            current_tracklets_properties = np.asarray(
-                current_tracklets_properties[str(track_id)], dtype=np.float32
+            (
+                current_tracklets,
+                current_tracklets_properties,
+            ) = self._tracklet_and_properties(
+                all_dict_values,
+                t,
+                z,
+                y,
+                x,
+                k,
+                current_track_id,
+                unique_id,
+                current_tracklets,
+                current_tracklets_properties,
             )
 
-            self.unique_tracks[track_id] = current_tracklets
-            self.unique_track_properties[track_id] = current_tracklets_properties
+        current_tracklets = np.asarray(
+            current_tracklets[str(track_id)], dtype=np.float32
+        )
+        current_tracklets_properties = np.asarray(
+            current_tracklets_properties[str(track_id)], dtype=np.float32
+        )
+
+        self.unique_tracks[track_id] = current_tracklets
+        self.unique_track_properties[track_id] = current_tracklets_properties
 
     def _tracklet_and_properties(
         self,
