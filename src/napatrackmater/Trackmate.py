@@ -922,22 +922,18 @@ class TrackMate:
     def _master_track_computer(self, track, track_id, t_start=None, t_end=None):
         current_cell_ids = []
 
-        (
-            track_displacement,
-            total_track_distance,
-            max_track_distance,
-            track_duration,
-        ) = self._get_track_features(track)
+        
 
         all_source_ids, all_target_ids = self._generate_generations(track)
-        root_root, root_splits, root_leaf = self._create_generations(all_source_ids)
-        self._iterate_split_down(root_root, root_leaf, root_splits)
-
-        # Determine if a track has divisions or none
-        number_dividing = len(root_splits)
-        if len(root_splits) > 0:
+        current_cell_ids.extend(all_source_ids)
+        current_cell_ids.extend(all_target_ids) 
+        master_spot = all_source_ids[0]
+        number_dividing = master_spot[self.number_dividing_key]
+        dividing_trajectory = master_spot[self.dividing_key]
+        if dividing_trajectory:
+            
             self.unique_track_mitosis_label[track_id] = [1, number_dividing]
-            dividing_trajectory = True
+            
             if int(track_id) not in self.AllTrackIds:
                 self.AllTrackIds.append(int(track_id))
             if int(track_id) not in self.DividingTrackIds:
@@ -951,73 +947,7 @@ class TrackMate:
             if int(track_id) not in self.NormalTrackIds:
                 self.NormalTrackIds.append(int(track_id))
 
-        for leaf in root_leaf:
-            self._second_channel_update(leaf, track_id)
-            current_cell_ids.append(leaf)
-            self.unique_spot_properties[leaf].update(
-                {self.dividing_key: dividing_trajectory}
-            )
-            self.unique_spot_properties[leaf].update(
-                {self.number_dividing_key: number_dividing}
-            )
-            self.unique_spot_properties[leaf].update(
-                {self.displacement_key: track_displacement}
-            )
-            self.unique_spot_properties[leaf].update(
-                {self.total_track_distance_key: total_track_distance}
-            )
-            self.unique_spot_properties[leaf].update(
-                {self.max_distance_traveled_key: max_track_distance}
-            )
-            self.unique_spot_properties[leaf].update(
-                {self.track_duration_key: track_duration}
-            )
-
-        for source_id in all_source_ids:
-            self._second_channel_update(source_id, track_id)
-            self.unique_spot_properties[source_id].update(
-                {self.dividing_key: dividing_trajectory}
-            )
-            self.unique_spot_properties[source_id].update(
-                {self.number_dividing_key: number_dividing}
-            )
-            self.unique_spot_properties[source_id].update(
-                {self.displacement_key: track_displacement}
-            )
-            self.unique_spot_properties[source_id].update(
-                {self.total_track_distance_key: total_track_distance}
-            )
-            self.unique_spot_properties[source_id].update(
-                {self.max_distance_traveled_key: max_track_distance}
-            )
-            self.unique_spot_properties[source_id].update(
-                {self.track_duration_key: track_duration}
-            )
-            current_cell_ids.append(source_id)
-
-        for current_root in root_root:
-            self._second_channel_update(current_root, track_id)
-            self.root_spots[int(current_root)] = self.unique_spot_properties[
-                int(current_root)
-            ]
-            self.unique_spot_properties[source_id].update(
-                {self.dividing_key: dividing_trajectory}
-            )
-            self.unique_spot_properties[source_id].update(
-                {self.number_dividing_key: number_dividing}
-            )
-            self.unique_spot_properties[source_id].update(
-                {self.displacement_key: track_displacement}
-            )
-            self.unique_spot_properties[source_id].update(
-                {self.total_track_distance_key: total_track_distance}
-            )
-            self.unique_spot_properties[source_id].update(
-                {self.max_distance_traveled_key: max_track_distance}
-            )
-            self.unique_spot_properties[source_id].update(
-                {self.track_duration_key: track_duration}
-            )
+        
 
         self.all_current_cell_ids[int(track_id)] = current_cell_ids
 
@@ -1382,6 +1312,33 @@ class TrackMate:
                     self.radial_angle_x_key: float(
                         Spotobject.get(self.radial_angle_x_key)
                     ),
+
+                    self.number_dividing_key: float(
+                        Spotobject.get(self.number_dividing_key)
+                    ),
+
+                    self.dividing_key: float(
+                        Spotobject.get(self.dividing_key)
+                    ),
+
+                    self.displacement_key: float(
+                        Spotobject.get(self.displacement_key)
+                    ),
+                    self.total_track_distance_key: float(
+                        Spotobject.get(self.total_track_distance_key)
+                    ),
+                    self.max_distance_traveled_key: float(
+                        Spotobject.get(self.max_distance_traveled_key)
+                    ),
+                    
+                    self.track_duration_key: float(
+                        Spotobject.get(self.track_duration_key)
+                    ),
+                    
+
+
+
+
                 }
                 if self.surface_area_key in Spotobject.keys():
                     self.unique_spot_properties[int(cell_id)].update(
