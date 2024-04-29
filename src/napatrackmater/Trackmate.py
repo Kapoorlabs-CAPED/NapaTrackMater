@@ -949,159 +949,154 @@ class TrackMate:
 
         all_source_ids, all_target_ids = self._generate_generations(track)
         root_root, root_leaf = self._create_root_leaf(all_source_ids)
-
-        number_dividing = None
+        
+        number_dividing = 0
+        dividing_trajectory = False
         for spot in all_source_ids:
             master_spot = self.unique_spot_properties[spot]
             if number_dividing in master_spot.keys():
                 number_dividing = master_spot[self.number_dividing_key]
                 dividing_trajectory = master_spot[self.dividing_key]
                 break
-            
 
+        if number_dividing > 0:
+            self.unique_track_mitosis_label[track_id] = [1, number_dividing]
+            dividing_trajectory = True
+            if int(track_id) not in self.AllTrackIds:
+                self.AllTrackIds.append(int(track_id))
+            if int(track_id) not in self.DividingTrackIds:
+                self.DividingTrackIds.append(int(track_id))
 
-        if number_dividing is not None:
-        
-                if dividing_trajectory:
-                    
-                    self.unique_track_mitosis_label[track_id] = [1, number_dividing]
-                    
-                    if int(track_id) not in self.AllTrackIds:
-                        self.AllTrackIds.append(int(track_id))
-                    if int(track_id) not in self.DividingTrackIds:
-                        self.DividingTrackIds.append(int(track_id))
+        else:
+            self.unique_track_mitosis_label[track_id] = [0, 0]
+            dividing_trajectory = False
+            if int(track_id) not in self.AllTrackIds:
+                self.AllTrackIds.append(int(track_id))
+            if int(track_id) not in self.NormalTrackIds:
+                self.NormalTrackIds.append(int(track_id))
 
-                if not dividing_trajectory:
-                    self.unique_track_mitosis_label[track_id] = [0, 0]
-                    
-                    if int(track_id) not in self.AllTrackIds:
-                        self.AllTrackIds.append(int(track_id))
-                    if int(track_id) not in self.NormalTrackIds:
-                        self.NormalTrackIds.append(int(track_id))
+        for leaf in root_leaf:
+            self._second_channel_update(leaf, track_id)
+            current_cell_ids.append(leaf)
+            self.unique_spot_properties[leaf].update(
+                {self.dividing_key: dividing_trajectory}
+            )
+            self.unique_spot_properties[leaf].update(
+                {self.number_dividing_key: number_dividing}
+            )
+            self.unique_spot_properties[leaf].update(
+                {self.displacement_key: track_displacement}
+            )
+            self.unique_spot_properties[leaf].update(
+                {self.total_track_distance_key: total_track_distance}
+            )
+            self.unique_spot_properties[leaf].update(
+                {self.max_distance_traveled_key: max_track_distance}
+            )
+            self.unique_spot_properties[leaf].update(
+                {self.track_duration_key: track_duration}
+            )
 
-                
-                
-                for leaf in root_leaf:
-                    self._second_channel_update(leaf, track_id)
-                    current_cell_ids.append(leaf)
-                    self.unique_spot_properties[leaf].update(
-                        {self.dividing_key: dividing_trajectory}
-                    )
-                    self.unique_spot_properties[leaf].update(
-                        {self.number_dividing_key: number_dividing}
-                    )
-                    self.unique_spot_properties[leaf].update(
-                        {self.displacement_key: track_displacement}
-                    )
-                    self.unique_spot_properties[leaf].update(
-                        {self.total_track_distance_key: total_track_distance}
-                    )
-                    self.unique_spot_properties[leaf].update(
-                        {self.max_distance_traveled_key: max_track_distance}
-                    )
-                    self.unique_spot_properties[leaf].update(
-                        {self.track_duration_key: track_duration}
-                    )
+        for source_id in all_source_ids:
+            self._second_channel_update(source_id, track_id)
+            self.unique_spot_properties[source_id].update(
+                {self.dividing_key: dividing_trajectory}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.number_dividing_key: number_dividing}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.displacement_key: track_displacement}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.total_track_distance_key: total_track_distance}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.max_distance_traveled_key: max_track_distance}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.track_duration_key: track_duration}
+            )
+            current_cell_ids.append(source_id)
 
-                for source_id in all_source_ids:
-                    self._second_channel_update(source_id, track_id)
-                    self.unique_spot_properties[source_id].update(
-                        {self.dividing_key: dividing_trajectory}
-                    )
-                    self.unique_spot_properties[source_id].update(
-                        {self.number_dividing_key: number_dividing}
-                    )
-                    self.unique_spot_properties[source_id].update(
-                        {self.displacement_key: track_displacement}
-                    )
-                    self.unique_spot_properties[source_id].update(
-                        {self.total_track_distance_key: total_track_distance}
-                    )
-                    self.unique_spot_properties[source_id].update(
-                        {self.max_distance_traveled_key: max_track_distance}
-                    )
-                    self.unique_spot_properties[source_id].update(
-                        {self.track_duration_key: track_duration}
-                    )
-                    current_cell_ids.append(source_id)
+        for current_root in root_root:
+            self._second_channel_update(current_root, track_id)
+            self.root_spots[int(current_root)] = self.unique_spot_properties[
+                int(current_root)
+            ]
+            self.unique_spot_properties[source_id].update(
+                {self.dividing_key: dividing_trajectory}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.number_dividing_key: number_dividing}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.displacement_key: track_displacement}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.total_track_distance_key: total_track_distance}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.max_distance_traveled_key: max_track_distance}
+            )
+            self.unique_spot_properties[source_id].update(
+                {self.track_duration_key: track_duration}
+            )
 
-                for current_root in root_root:
-                    self._second_channel_update(current_root, track_id)
-                    self.root_spots[int(current_root)] = self.unique_spot_properties[
-                        int(current_root)
-                    ]
-                    self.unique_spot_properties[source_id].update(
-                        {self.dividing_key: dividing_trajectory}
-                    )
-                    self.unique_spot_properties[source_id].update(
-                        {self.number_dividing_key: number_dividing}
-                    )
-                    self.unique_spot_properties[source_id].update(
-                        {self.displacement_key: track_displacement}
-                    )
-                    self.unique_spot_properties[source_id].update(
-                        {self.total_track_distance_key: total_track_distance}
-                    )
-                    self.unique_spot_properties[source_id].update(
-                        {self.max_distance_traveled_key: max_track_distance}
-                    )
-                    self.unique_spot_properties[source_id].update(
-                        {self.track_duration_key: track_duration}
-                    )
+        self.all_current_cell_ids[int(track_id)] = current_cell_ids
 
-                self.all_current_cell_ids[int(track_id)] = current_cell_ids
+        for i in range(len(current_cell_ids)):
 
-                for i in range(len(current_cell_ids)):
+            k = int(current_cell_ids[i])
 
-                    k = int(current_cell_ids[i])
+            all_dict_values = self.unique_spot_properties[k]
 
-                    all_dict_values = self.unique_spot_properties[k]
+            t = int(float(all_dict_values[self.frameid_key]))
+            z = float(all_dict_values[self.zposid_key])
+            y = float(all_dict_values[self.yposid_key])
+            x = float(all_dict_values[self.xposid_key])
 
-                    t = int(float(all_dict_values[self.frameid_key]))
-                    z = float(all_dict_values[self.zposid_key])
-                    y = float(all_dict_values[self.yposid_key])
-                    x = float(all_dict_values[self.xposid_key])
+            spot_centroid = (
+                round(z) / self.zcalibration,
+                round(y) / self.ycalibration,
+                round(x) / self.xcalibration,
+            )
+            frame_spot_centroid = (
+                t,
+                round(z) / self.zcalibration,
+                round(y) / self.ycalibration,
+                round(x) / self.xcalibration,
+            )
 
-                    spot_centroid = (
-                        round(z) / self.zcalibration,
-                        round(y) / self.ycalibration,
-                        round(x) / self.xcalibration,
-                    )
-                    frame_spot_centroid = (
-                        t,
-                        round(z) / self.zcalibration,
-                        round(y) / self.ycalibration,
-                        round(x) / self.xcalibration,
-                    )
+            self.unique_spot_centroid[frame_spot_centroid] = k
+            self.unique_track_centroid[frame_spot_centroid] = track_id
 
-                    self.unique_spot_centroid[frame_spot_centroid] = k
-                    self.unique_track_centroid[frame_spot_centroid] = track_id
-
-                    if t_start is not None and t_end is not None:
-                        if t >= t_start and t <= t_end:
-                            if str(t) in self._timed_centroid:
-                                tree, spot_centroids = self._timed_centroid[str(t)]
-                                spot_centroids.append(spot_centroid)
-                                tree = spatial.cKDTree(spot_centroids)
-                                self._timed_centroid[str(t)] = tree, spot_centroids
-                            else:
-                                spot_centroids = []
-                                spot_centroids.append(spot_centroid)
-                                tree = spatial.cKDTree(spot_centroids)
-                                self._timed_centroid[str(t)] = tree, spot_centroids
+            if t_start is not None and t_end is not None:
+                if t >= t_start and t <= t_end:
+                    if str(t) in self._timed_centroid:
+                        tree, spot_centroids = self._timed_centroid[str(t)]
+                        spot_centroids.append(spot_centroid)
+                        tree = spatial.cKDTree(spot_centroids)
+                        self._timed_centroid[str(t)] = tree, spot_centroids
                     else:
+                        spot_centroids = []
+                        spot_centroids.append(spot_centroid)
+                        tree = spatial.cKDTree(spot_centroids)
+                        self._timed_centroid[str(t)] = tree, spot_centroids
+            else:
 
-                        if str(t) in self._timed_centroid:
-                            tree, spot_centroids = self._timed_centroid[str(t)]
-                            spot_centroids.append(spot_centroid)
-                            tree = spatial.cKDTree(spot_centroids)
-                            self._timed_centroid[str(t)] = tree, spot_centroids
-                        else:
-                            spot_centroids = []
-                            spot_centroids.append(spot_centroid)
-                            tree = spatial.cKDTree(spot_centroids)
-                            self._timed_centroid[str(t)] = tree, spot_centroids
-
+                if str(t) in self._timed_centroid:
+                    tree, spot_centroids = self._timed_centroid[str(t)]
+                    spot_centroids.append(spot_centroid)
+                    tree = spatial.cKDTree(spot_centroids)
+                    self._timed_centroid[str(t)] = tree, spot_centroids
+                else:
+                    spot_centroids = []
+                    spot_centroids.append(spot_centroid)
+                    tree = spatial.cKDTree(spot_centroids)
+                    self._timed_centroid[str(t)] = tree, spot_centroids 
+         
+        
     def _second_channel_update(self, cell_id, track_id):
 
         if self.channel_seg_image is not None:
