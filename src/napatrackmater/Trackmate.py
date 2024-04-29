@@ -949,12 +949,16 @@ class TrackMate:
 
 
         all_source_ids, all_target_ids = self._generate_generations(track)
-        root_root, root_splits, root_leaf = self._create_generations(all_source_ids)
+        root_root, root_leaf = self._create_root_leaf(all_source_ids)
+        spot = all_source_ids[0]
+        master_spot = self.unique_spot_properties[spot]
+        number_dividing = master_spot[self.number_dividing_key]
+        #root_root, root_splits, root_leaf = self._create_generations(all_source_ids)
         #self._iterate_split_down(root_root, root_leaf, root_splits)
-
+ 
         # Determine if a track has divisions or none
-        number_dividing = len(root_splits)
-        if len(root_splits) > 0:
+        #number_dividing = len(root_splits)
+        if number_dividing > 0:
             self.unique_track_mitosis_label[track_id] = [1, number_dividing]
             dividing_trajectory = True
             if int(track_id) not in self.AllTrackIds:
