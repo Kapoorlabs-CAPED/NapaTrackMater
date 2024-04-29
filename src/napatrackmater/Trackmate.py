@@ -950,7 +950,7 @@ class TrackMate:
         all_source_ids, all_target_ids = self._generate_generations(track)
         root_root, root_leaf = self._create_root_leaf(all_source_ids)
 
-        
+        number_dividing = None
         for spot in all_source_ids:
             master_spot = self.unique_spot_properties[spot]
             if number_dividing in master_spot.keys():
