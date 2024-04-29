@@ -947,19 +947,14 @@ class TrackMate:
             track_duration,
         ) = self._get_track_features(track)
 
-        all_source_ids, all_target_ids = self._generate_generations(track)
-        root_root, root_leaf = self._create_root_leaf(all_source_ids)
-        
-        number_dividing = 0
-        dividing_trajectory = False
-        for spot in all_source_ids:
-            master_spot = self.unique_spot_properties[spot]
-            if number_dividing in master_spot.keys():
-                number_dividing = master_spot[self.number_dividing_key]
-                dividing_trajectory = master_spot[self.dividing_key]
-                break
 
-        if number_dividing > 0:
+        all_source_ids, all_target_ids = self._generate_generations(track)
+        root_root, root_splits, root_leaf = self._create_generations(all_source_ids)
+        self._iterate_split_down(root_root, root_leaf, root_splits)
+
+        # Determine if a track has divisions or none
+        number_dividing = len(root_splits)
+        if len(root_splits) > 0:
             self.unique_track_mitosis_label[track_id] = [1, number_dividing]
             dividing_trajectory = True
             if int(track_id) not in self.AllTrackIds:
@@ -974,6 +969,7 @@ class TrackMate:
                 self.AllTrackIds.append(int(track_id))
             if int(track_id) not in self.NormalTrackIds:
                 self.NormalTrackIds.append(int(track_id))
+       
 
         for leaf in root_leaf:
             self._second_channel_update(leaf, track_id)
@@ -1629,6 +1625,7 @@ class TrackMate:
                 if self.progress_bar is not None:
                     self.progress_bar.value = self.count
                 r.result()
+        self._correct_track_status()        
         print(f"Iterating over tracks {len(self.filtered_track_ids)}")
         self.count = 0
         futures = []
