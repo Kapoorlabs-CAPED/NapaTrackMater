@@ -481,7 +481,7 @@ class TrackMate:
         root_leaf = []
         root_root = []
         root_splits = []
-
+        root_pre_leaf = []
         # Get the root id
         for source_id in all_source_ids:
             if source_id in self.edge_source_lookup:
@@ -497,10 +497,11 @@ class TrackMate:
                     root_splits.append(source_id)
             if target_target_id[0] not in self.edge_target_lookup:
                 root_leaf.append(target_target_id[0])
+                root_pre_leaf.appens(source_id)
 
         if len(list(self.oneat_dividing_tracks.keys())) > 1:
             for cell_id in list(self.oneat_dividing_tracks.keys()):
-                if cell_id in all_source_ids and cell_id not in root_splits:
+                if cell_id in all_source_ids and cell_id not in root_splits and cell_id not in root_leaf:
                     root_splits.append(cell_id)
 
         return root_root, root_splits, root_leaf
