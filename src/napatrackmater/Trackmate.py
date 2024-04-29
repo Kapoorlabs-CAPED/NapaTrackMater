@@ -951,8 +951,13 @@ class TrackMate:
         root_root, root_leaf = self._create_root_leaf(all_source_ids)
 
         master_spot = self.unique_spot_properties[all_source_ids[0]]
-        number_dividing = master_spot[self.number_dividing_key]
-        dividing_trajectory = master_spot[self.dividing_key]
+        for spot in all_source_ids:
+            master_spot = self.unique_spot_properties[spot]
+            if number_dividing in master_spot.keys():
+                number_dividing = master_spot[self.number_dividing_key]
+                dividing_trajectory = master_spot[self.dividing_key]
+                break
+        
         if dividing_trajectory:
             
             self.unique_track_mitosis_label[track_id] = [1, number_dividing]
