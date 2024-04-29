@@ -1317,7 +1317,7 @@ class TrackMate:
                         Spotobject.get(self.number_dividing_key)
                     ),
 
-                    self.dividing_key: float(
+                    self.dividing_key: bool(
                         Spotobject.get(self.dividing_key)
                     ),
 
@@ -1534,7 +1534,6 @@ class TrackMate:
                 if self.progress_bar is not None:
                     self.progress_bar.value = self.count
                 r.result()
-        self._correct_track_status()
         print(f"Iterating over tracks {len(self.filtered_track_ids)}")
         self.count = 0
         futures = []
