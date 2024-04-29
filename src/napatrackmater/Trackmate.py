@@ -676,8 +676,7 @@ class TrackMate:
     def _unique_tracklet_count(self, tracklet_count_taken, tracklet_count):
 
         while tracklet_count in tracklet_count_taken:
-            tracklet_count = tracklet_count + 1
-            self._unique_tracklet_count(tracklet_count_taken, tracklet_count)
+            tracklet_count += 1 
         return tracklet_count
 
     def _iterate_split_down(self, root_root, root_leaf, root_splits):
