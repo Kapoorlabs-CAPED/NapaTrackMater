@@ -26,7 +26,10 @@ import matplotlib.pyplot as plt
 from typing import List, Union
 import torch.nn.init as init
 import random
-
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+from statsmodels.tsa.stattools import acf, ccf
+from scipy.stats import norm, anderson
 
 SHAPE_FEATURES = [
     "Radius",
@@ -382,7 +385,7 @@ class TrackVector(TrackMate):
             [r.result() for r in concurrent.futures.as_completed(futures)]
 
         print(f"Iterating over tracks {len(self.filtered_track_ids)}")
-
+        self._correct_track_status()
         futures = []
         with concurrent.futures.ThreadPoolExecutor(
             max_workers=os.cpu_count()
@@ -624,18 +627,7 @@ class TrackVector(TrackMate):
                 columns=ALL_FEATURES,
             )
 
-            cols_to_replace = [
-                "Radius",
-                "Radius_Pixel",
-                "Eccentricity_Comp_First",
-                "Eccentricity_Comp_Second",
-                "Eccentricity_Comp_Third",
-                "Local_Cell_Density",
-                "Surface_Area",
-            ]
-            shape_dynamic_dataframe[cols_to_replace] = shape_dynamic_dataframe[
-                cols_to_replace
-            ].apply(lambda x: np.where(x < 0, np.nan, x))
+            
             if len(latent_shape_features) > 0:
                 new_columns = [
                     f"latent_feature_number_{i}"
@@ -661,6 +653,21 @@ class TrackVector(TrackMate):
         ] = global_shape_dynamic_dataframe["Track ID"].map(
             self.tracklet_id_to_trackmate_id
         )
+
+        global_shape_dynamic_dataframe[
+            "Generation ID"
+        ] = global_shape_dynamic_dataframe["Track ID"].map(
+            self.tracklet_id_to_generation_id
+        )
+
+        global_shape_dynamic_dataframe[
+            "Tracklet Number ID"
+        ] = global_shape_dynamic_dataframe["Track ID"].map(
+            self.tracklet_id_to_tracklet_number_id
+        ) 
+
+
+
         trackmate_ids = global_shape_dynamic_dataframe["TrackMate Track ID"]
         track_duration_dict = {}
         for trackmate_id in trackmate_ids:
@@ -2987,3 +2994,316 @@ def predict_with_model(
             predicted_classes1.append(predicted_class1)
 
     return predicted_classes1
+
+
+
+def get_zero_gen_daughter_generations(unique_trackmate_track_ids,global_shape_dynamic_dataframe, zero_gen_tracklets, daughter_generations ):
+
+    for trackmate_track_id in unique_trackmate_track_ids:
+        subset = global_shape_dynamic_dataframe[
+            (global_shape_dynamic_dataframe['TrackMate Track ID'] == trackmate_track_id)
+        ].sort_values(by="t")
+        sorted_subset = sorted(subset['Track ID'].unique())
+        for count, tracklet_id in enumerate(sorted_subset):
+            
+            dividing_track_track_data = global_shape_dynamic_dataframe[
+                (global_shape_dynamic_dataframe["Track ID"] == tracklet_id)
+            ].sort_values(by="t")
+            generation_id = int(float(dividing_track_track_data['Generation ID'][0]))
+            
+
+            track_start_time = dividing_track_track_data['t'].min()
+            track_end_time = dividing_track_track_data['t'].max()
+            
+
+            if count == 0:
+                zero_gen_tracklets[trackmate_track_id] = tracklet_id, track_start_time, track_end_time
+            elif count > 0:
+                if trackmate_track_id in daughter_generations[generation_id]:
+                    daughter_generations[generation_id][trackmate_track_id].append((tracklet_id, track_start_time, track_end_time))
+                else:
+                    daughter_generations[generation_id][trackmate_track_id] = [(tracklet_id, track_start_time, track_end_time)]
+
+
+def populate_zero_gen_tracklets(zero_gen_tracklets,global_shape_dynamic_dataframe,zero_gen_life,
+                              zero_gen_polynomial_coefficients,zero_gen_polynomials,zero_gen_polynomial_time,
+                              zero_gen_autocorrelation,zero_gen_crosscorrelation,
+                              zero_gen_covariance,zero_gen_raw, good_zero_gen_veto,
+                       shape_analysis = True, cross_analysis = False):
+    
+    good_zero_gens =  0
+    for trackmate_track_id in zero_gen_tracklets.keys():
+
+        zero_gen_tracklet_id, start_time, end_time = zero_gen_tracklets[trackmate_track_id]
+        if end_time-start_time > good_zero_gen_veto:
+            good_zero_gens+=1
+            start_end_times = np.vstack((start_time, end_time))
+        
+            zero_gen_life.append(end_time - start_time)
+            dividing_track_track_data = global_shape_dynamic_dataframe[
+                    (global_shape_dynamic_dataframe["Track ID"] == zero_gen_tracklet_id)
+                ].sort_values(by="t")
+            result = cell_fate_recipe(dividing_track_track_data)
+            if result is not None:
+                (dividing_shape_dynamic_track_array,dividing_shape_track_array,dividing_dynamic_track_array,  dividing_covariance_shape_dynamic, dividing_covariance_shape,dividing_covariance_dynamic,
+                    dividing_shape_dynamic_prediction_input,dividing_shape_prediction_input, dividing_dynamic_prediction_input ) = result
+                
+
+
+                if shape_analysis:
+
+                        track_array = dividing_shape_track_array
+                        feature = shape_features
+
+                elif not shape_analysis and not cross_analysis:
+
+                        track_array = dividing_dynamic_track_array
+                        feature = dynamic_features
+
+                elif cross_analysis and not shape_analysis:
+
+                        track_array = dividing_shape_dynamic_track_array
+                        feature = shape_dynamic_features
+
+                generic_polynomial_fits(track_array, start_time, start_end_times, zero_gen_polynomial_coefficients,
+                zero_gen_polynomials, zero_gen_polynomial_time, 
+                    zero_gen_autocorrelation, zero_gen_crosscorrelation, zero_gen_covariance, zero_gen_raw, feature
+                     
+                )
+                
+
+    print(f'Good zero_gens, {good_zero_gens}') 
+
+
+def generic_polynomial_fits(track_array, start_time, start_end_times, nth_generation_polynomial_coefficients,
+                        nth_generation_polynomials, nth_generation_polynomial_time, 
+                        nth_generation_autocorrelation, nth_generation_crosscorrelation,
+                          nth_generation_covariance,  nth_generation_raw, feature, polynomial_degree = 6, nlags = 50):
+    matrix_t_f = np.transpose(track_array)
+    cov_matrix = np.cov(matrix_t_f)
+    poly_feature = PolynomialFeatures(degree=polynomial_degree,include_bias=True)
+
+    for i in range(matrix_t_f.shape[0]):
+        all_cross_correlations = []
+        track_shape_feature = matrix_t_f[i] 
+        x = np.arange(start_time, matrix_t_f.shape[1] + start_time).reshape(-1, 1)
+        feature_name = feature[i]
+        x_poly = poly_feature.fit_transform(x) 
+        lin_reg=LinearRegression()
+        lin_reg.fit(x_poly,track_shape_feature)
+        coefficients = lin_reg.coef_ 
+        fitted_function = lin_reg.predict(x_poly)
+        autocorrelation_function = acf(track_shape_feature, nlags = nlags)
+        for j in range(matrix_t_f.shape[0]):
+             second_track_shape_feature = matrix_t_f[j] 
+             if j != i:
+                  cross_correlation_function = ccf(track_shape_feature,second_track_shape_feature,nlags = nlags )
+                  
+                  all_cross_correlations.append(cross_correlation_function)
+        avg_cross_correlation_function = np.mean(np.asarray(all_cross_correlations), axis=0)
+
+        if feature_name in nth_generation_polynomial_coefficients:
+            nth_generation_polynomials[feature_name].append(fitted_function)
+            nth_generation_polynomial_coefficients[feature_name].append(coefficients)
+            nth_generation_polynomial_time[feature_name].append(start_end_times)
+            nth_generation_autocorrelation[feature_name].append(autocorrelation_function)
+            nth_generation_crosscorrelation[feature_name].append(avg_cross_correlation_function)
+            nth_generation_covariance[feature_name].append(cov_matrix[i])
+            nth_generation_raw[feature_name].append(track_shape_feature)
+        else:   
+            nth_generation_polynomial_coefficients[feature_name] = [coefficients]
+            nth_generation_polynomial_time[feature_name] = [start_end_times]
+            nth_generation_autocorrelation[feature_name] = [autocorrelation_function]
+            nth_generation_crosscorrelation[feature_name] = [avg_cross_correlation_function]
+            nth_generation_polynomials[feature_name] = [fitted_function]
+            nth_generation_covariance[feature_name] = [cov_matrix[i]]
+            nth_generation_raw[feature_name] = [track_shape_feature]
+
+def populate_daughter_tracklets(daughter_generations,global_shape_dynamic_dataframe,generation_id,
+                       nth_generation_life,nth_generation_polynomial_coefficients,nth_generation_polynomials,
+                       nth_generation_polynomial_time,nth_generation_autocorrelation, 
+                       nth_generation_crosscorrelation, nth_generation_covariance, nth_generation_raw,
+                       shape_analysis = True, cross_analysis = False, nlags = 50):
+    for trackmate_track_id in daughter_generations[generation_id].keys():
+            generation_daughters = daughter_generations[generation_id][trackmate_track_id]
+            for daughters in generation_daughters:
+                daughter_tracklet_id, start_time, end_time = daughters
+                start_end_times = np.vstack((start_time, end_time))
+    
+                nth_generation_life.append(end_time - start_time)
+                dividing_track_track_data = global_shape_dynamic_dataframe[
+                        (global_shape_dynamic_dataframe["Track ID"] == daughter_tracklet_id)
+                    ].sort_values(by="t")
+                result = cell_fate_recipe(dividing_track_track_data)
+                if result is not None: 
+                    (dividing_shape_dynamic_track_array,dividing_shape_track_array,dividing_dynamic_track_array,  dividing_covariance_shape_dynamic, dividing_covariance_shape,dividing_covariance_dynamic,
+                        dividing_shape_dynamic_prediction_input,dividing_shape_prediction_input, dividing_dynamic_prediction_input ) = result
+                    
+
+                    if shape_analysis:
+
+                        track_array = dividing_shape_track_array
+                        feature = SHAPE_FEATURES
+
+                    elif not shape_analysis and not cross_analysis:
+
+                        track_array = dividing_dynamic_track_array
+                        feature = DYNAMIC_FEATURES
+                        
+
+                    elif cross_analysis and not shape_analysis:
+
+                        track_array = dividing_shape_dynamic_track_array
+                        feature = SHAPE_DYNAMIC_FEATURES
+
+                    generic_polynomial_fits(track_array, start_time, start_end_times, nth_generation_polynomial_coefficients,
+                    nth_generation_polynomials, nth_generation_polynomial_time, 
+                    nth_generation_autocorrelation, nth_generation_crosscorrelation,nth_generation_covariance, nth_generation_raw, feature, nlags = nlags)
+
+
+
+def cross_correlation_class(global_shape_dynamic_dataframe, cell_type_label=None):
+    
+    if cell_type_label is not None:
+        global_shape_dynamic_dataframe = global_shape_dynamic_dataframe[(global_shape_dynamic_dataframe['Cell_Type_Label']==cell_type_label)]
+    
+    generation_max = global_shape_dynamic_dataframe['Generation ID'].max()
+    sorted_dividing_dataframe = global_shape_dynamic_dataframe.sort_values(by='Track Duration', ascending=False)
+
+    unique_trackmate_track_ids = sorted_dividing_dataframe['TrackMate Track ID'].unique()
+    zero_gen_tracklets = {}
+    daughter_generations =  {i: {} for i in range(1, generation_max)} 
+    get_zero_gen_daughter_generations(unique_trackmate_track_ids,global_shape_dynamic_dataframe, zero_gen_tracklets, daughter_generations )
+    
+    zero_gen_dynamic_polynomials = {}
+    zero_gen_dynamic_polynomial_coefficients = {}
+    zero_gen_dynamic_raw = {}
+    zero_gen_dynamic_autocorrelation = {}
+    zero_gen_dynamic_crosscorrelation = {}
+    zero_gen_dynamic_covariance = {}
+    zero_gen_dynamic_polynomial_time = {}
+    zero_gen_dynamic_life = []
+
+    populate_zero_gen_tracklets(zero_gen_tracklets,global_shape_dynamic_dataframe,zero_gen_dynamic_life,
+                                zero_gen_dynamic_polynomial_coefficients,zero_gen_dynamic_polynomials,zero_gen_dynamic_polynomial_time,
+                                zero_gen_dynamic_autocorrelation, zero_gen_dynamic_crosscorrelation,zero_gen_dynamic_covariance, zero_gen_dynamic_raw, good_zero_gen_veto, shape_analysis = False)
+
+
+    zero_gen_shape_polynomials = {}
+    zero_gen_shape_polynomial_coefficients = {}
+    zero_gen_shape_raw = {}
+    zero_gen_shape_autocorrelation = {}
+    zero_gen_shape_crosscorrelation = {}
+    zero_gen_shape_covariance = {}
+    zero_gen_shape_polynomial_time = {}
+    zero_gen_shape_life = []
+
+    populate_zero_gen_tracklets(zero_gen_tracklets,global_shape_dynamic_dataframe,zero_gen_shape_life,
+                                zero_gen_shape_polynomial_coefficients,zero_gen_shape_polynomials,zero_gen_shape_polynomial_time,
+                                zero_gen_shape_autocorrelation, zero_gen_shape_crosscorrelation,zero_gen_shape_covariance, zero_gen_shape_raw, good_zero_gen_veto, shape_analysis = True)
+
+
+    
+
+
+
+    N_shape_generation_polynomials = {}
+    N_shape_generation_polynomial_coefficients = {}
+    N_shape_generation_raw = {}
+    N_shape_generation_autocorrelation = {}
+    N_shape_generation_crosscorrelation = {}
+    N_shape_generation_covariance = {}
+    N_shape_generation_polynomial_time = {}
+    N_shape_generation_life = []
+
+
+    for generation_id in daughter_generations.keys():
+        if generation_id >= 1:
+            populate_daughter_tracklets(daughter_generations,global_shape_dynamic_dataframe,generation_id,
+                        N_shape_generation_life,N_shape_generation_polynomial_coefficients,N_shape_generation_polynomials,
+                        N_shape_generation_polynomial_time,N_shape_generation_autocorrelation,
+                        N_shape_generation_crosscorrelation, N_shape_generation_covariance, N_shape_generation_raw, shape_analysis = True)
+            
+
+
+
+
+
+    N_dynamic_generation_polynomials = {}
+    N_dynamic_generation_polynomial_coefficients = {}
+    N_dynamic_generation_raw = {}
+    N_dynamic_generation_autocorrelation = {}
+    N_dynamic_generation_crosscorrelation = {}
+    N_dynamic_generation_covariance = {}
+    N_dynamic_generation_polynomial_time = {}
+    N_dynamic_generation_life = []
+
+
+
+    for generation_id in daughter_generations.keys():
+        if generation_id >= 1:
+            populate_daughter_tracklets(daughter_generations,global_shape_dynamic_dataframe,generation_id,
+                        N_dynamic_generation_life,N_dynamic_generation_polynomial_coefficients,N_dynamic_generation_polynomials,
+                        N_dynamic_generation_polynomial_time,N_dynamic_generation_autocorrelation,
+                        N_dynamic_generation_crosscorrelation, N_dynamic_generation_covariance, N_dynamic_generation_raw, shape_analysis = False)
+    
+
+    zero_gen_dynamic_sigma_dict = {}
+    zero_gen_dynamic_test_dict = {}
+    zero_gen_dynamic_conccross = {}
+    for dynamic_feature, list_dynamic_crosscorrelation_functions  in zero_gen_dynamic_crosscorrelation.items():
+        
+    
+
+        concatenated_crosscorrs = np.concatenate([crosscorr[~np.isnan(crosscorr)] for crosscorr in list_dynamic_crosscorrelation_functions])
+        mean, std_dev = norm.fit(concatenated_crosscorrs)
+        zero_gen_dynamic_test_stat = anderson(concatenated_crosscorrs)
+        zero_gen_dynamic_sigma_dict[dynamic_feature] = std_dev
+        zero_gen_dynamic_test_dict[dynamic_feature] = zero_gen_dynamic_test_stat
+        zero_gen_dynamic_conccross[dynamic_feature] = concatenated_crosscorrs
+
+    zero_gen_shape_sigma_dict = {}
+    zero_gen_shape_test_dict = {}
+    zero_gen_shape_conccross = {}
+    for shape_feature, list_shape_crosscorrelation_functions  in zero_gen_shape_crosscorrelation.items():
+        
+    
+
+        concatenated_crosscorrs = np.concatenate([crosscorr[~np.isnan(crosscorr)] for crosscorr in list_shape_crosscorrelation_functions])
+        mean, std_dev = norm.fit(concatenated_crosscorrs)
+        zero_gen_shape_test_stat = anderson(concatenated_crosscorrs)
+
+        zero_gen_shape_sigma_dict[shape_feature] = std_dev    
+        zero_gen_shape_test_dict[shape_feature] = zero_gen_shape_test_stat
+        zero_gen_shape_conccross[shape_feature] = concatenated_crosscorrs
+
+    N_gen_dynamic_sigma_dict = {}
+    N_gen_dynamic_test_dict = {}
+    N_gen_dynamic_conccross = {}
+    for dynamic_feature, list_dynamic_crosscorrelation_functions  in N_dynamic_generation_crosscorrelation.items():
+        
+    
+
+        concatenated_crosscorrs = np.concatenate([crosscorr[~np.isnan(crosscorr)] for crosscorr in list_dynamic_crosscorrelation_functions])
+        mean, std_dev = norm.fit(concatenated_crosscorrs)
+        N_gen_dynamic_test_stat = anderson(concatenated_crosscorrs)
+        N_gen_dynamic_sigma_dict[dynamic_feature] = std_dev
+        N_gen_dynamic_test_dict[dynamic_feature] = N_gen_dynamic_test_stat
+        N_gen_dynamic_conccross[dynamic_feature] = concatenated_crosscorrs
+
+    N_gen_shape_sigma_dict = {}
+    N_gen_shape_test_dict = {}
+    N_gen_shape_conccross = {}
+    for shape_feature, list_shape_crosscorrelation_functions  in N_shape_generation_crosscorrelation.items():
+        
+    
+
+        concatenated_crosscorrs = np.concatenate([crosscorr[~np.isnan(crosscorr)] for crosscorr in list_shape_crosscorrelation_functions])
+        mean, std_dev = norm.fit(concatenated_crosscorrs)
+        N_gen_shape_test_stat = anderson(concatenated_crosscorrs)
+        N_gen_shape_sigma_dict[shape_feature] = std_dev
+        N_gen_shape_test_dict[shape_feature] = N_gen_shape_test_stat
+        N_gen_shape_conccross[shape_feature] = concatenated_crosscorrs
+
+
+    return zero_gen_dynamic_conccross, zero_gen_shape_conccross, N_gen_dynamic_conccross, N_gen_shape_conccross,  zero_gen_dynamic_sigma_dict, zero_gen_shape_sigma_dict, N_gen_dynamic_sigma_dict, N_gen_shape_sigma_dict, zero_gen_dynamic_test_dict, zero_gen_shape_test_dict, N_gen_dynamic_test_dict, N_gen_shape_test_dict       
