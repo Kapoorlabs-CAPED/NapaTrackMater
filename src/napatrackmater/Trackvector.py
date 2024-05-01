@@ -34,7 +34,6 @@ from scipy.stats import norm, anderson
 
 SHAPE_FEATURES = [
     "Radius",
-    "Radius_Pixel",
     "Eccentricity_Comp_First",
     "Eccentricity_Comp_Second",
     "Eccentricity_Comp_Third",
@@ -312,7 +311,6 @@ class TrackVector(TrackMate):
                     current_y,
                     current_x,
                     radius,
-                    radius_pixel,
                     eccentricity_comp_first,
                     eccentricity_comp_second,
                     eccentricity_comp_third,
@@ -340,7 +338,6 @@ class TrackVector(TrackMate):
                         dividing_array,
                         number_dividing_array,
                         radius,
-                        radius_pixel,
                         eccentricity_comp_first,
                         eccentricity_comp_second,
                         eccentricity_comp_third,
@@ -561,7 +558,6 @@ class TrackVector(TrackMate):
             eccentricity_comp_third = spot_properties[self.eccentricity_comp_thirdkey]
             local_cell_density = spot_properties[self.local_cell_density_key]
             radius = spot_properties[self.radius_key]
-            radius_pixel = spot_properties[self.quality_key]
             speed = spot_properties[self.speed_key]
 
             motion_angle_z = spot_properties[self.motion_angle_z_key]
@@ -587,7 +583,6 @@ class TrackVector(TrackMate):
                 "Eccentricity_Comp_Third": eccentricity_comp_third,
                 "Local_Cell_Density": local_cell_density,
                 "Radius": radius,
-                "Radius_Pixel": radius_pixel,
                 "Speed": speed,
                 "Motion_Angle_Z": motion_angle_z,
                 "Motion_Angle_Y": motion_angle_y,

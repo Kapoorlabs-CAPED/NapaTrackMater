@@ -1176,7 +1176,6 @@ class TrackMate:
         radial_angle_x = float(all_dict_values[self.radial_angle_x_key])
 
         radius = float(all_dict_values[self.radius_key])
-        radius_pixel = int(float(all_dict_values[self.quality_key]))
         total_intensity = float(all_dict_values[self.total_intensity_key])
 
         distance_cell_mask = float(all_dict_values[self.distance_cell_mask_key])
@@ -1250,7 +1249,6 @@ class TrackMate:
                 int(float(unique_id)),
                 gen_id,
                 radius,
-                radius_pixel,
                 eccentricity_comp_first,
                 eccentricity_comp_second,
                 eccentricity_comp_third,
@@ -1309,7 +1307,6 @@ class TrackMate:
                 int(float(unique_id)),
                 gen_id,
                 radius,
-                radius_pixel,
                 eccentricity_comp_first,
                 eccentricity_comp_second,
                 eccentricity_comp_third,
@@ -2214,41 +2211,40 @@ class TrackMate:
             unique_ids_set = set(unique_ids)
             # generation_ids = tracklet_properties[:, 2]
             radius = tracklet_properties[:, 3]
-            radius_pixel = tracklet_properties[:, 4]
-            eccentricity_comp_first = tracklet_properties[:, 5]
-            eccentricity_comp_second = tracklet_properties[:, 6]
-            eccentricity_comp_third = tracklet_properties[:, 7]
-            surface_area = tracklet_properties[:, 8]
+            eccentricity_comp_first = tracklet_properties[:, 4]
+            eccentricity_comp_second = tracklet_properties[:, 5]
+            eccentricity_comp_third = tracklet_properties[:, 6]
+            surface_area = tracklet_properties[:, 7]
 
-            intensity = tracklet_properties[:, 9]
-            speed = tracklet_properties[:, 10]
+            intensity = tracklet_properties[:, 8]
+            speed = tracklet_properties[:, 9]
 
-            motion_angle_z = tracklet_properties[:, 11]
-            motion_angle_y = tracklet_properties[:, 12]
-            motion_angle_x = tracklet_properties[:, 13]
+            motion_angle_z = tracklet_properties[:, 10]
+            motion_angle_y = tracklet_properties[:, 11]
+            motion_angle_x = tracklet_properties[:, 12]
 
-            acceleration = tracklet_properties[:, 14]
-            distance_cell_mask = tracklet_properties[:, 15]
-            local_density = tracklet_properties[:, 16]
+            acceleration = tracklet_properties[:, 13]
+            distance_cell_mask = tracklet_properties[:, 14]
+            local_density = tracklet_properties[:, 15]
 
-            radial_angle_z = tracklet_properties[:, 17]
-            radial_angle_y = tracklet_properties[:, 18]
-            radial_angle_x = tracklet_properties[:, 19]
+            radial_angle_z = tracklet_properties[:, 16]
+            radial_angle_y = tracklet_properties[:, 17]
+            radial_angle_x = tracklet_properties[:, 18]
 
-            cell_axis_z = tracklet_properties[:, 20]
-            cell_axis_y = tracklet_properties[:, 21]
-            cell_axis_x = tracklet_properties[:, 22]
+            cell_axis_z = tracklet_properties[:, 19]
+            cell_axis_y = tracklet_properties[:, 20]
+            cell_axis_x = tracklet_properties[:, 21]
 
-            track_displacement = tracklet_properties[:, 23]
+            track_displacement = tracklet_properties[:, 22]
 
-            total_track_distance = tracklet_properties[:, 24]
+            total_track_distance = tracklet_properties[:, 23]
 
-            max_track_distance = tracklet_properties[:, 25]
+            max_track_distance = tracklet_properties[:, 24]
 
-            track_duration = tracklet_properties[:, 26]
+            track_duration = tracklet_properties[:, 25]
 
-            if tracklet_properties.shape[1] > 26:
-                latent_shape_features = tracklet_properties[:, 27:]
+            if tracklet_properties.shape[1] > 25:
+                latent_shape_features = tracklet_properties[:, 26:]
             else:
                 latent_shape_features = []
 
@@ -2275,7 +2271,6 @@ class TrackMate:
                 current_x = []
                 current_intensity = []
                 current_radius = []
-                current_radius_pixel = []
                 current_speed = []
                 current_motion_angle_z = []
                 current_motion_angle_y = []
@@ -2309,7 +2304,6 @@ class TrackMate:
                         expanded_intensity[int(time[j])] = intensity[j]
                         current_intensity.append(intensity[j])
                         current_radius.append(radius[j])
-                        current_radius_pixel.append(radius_pixel[j])
                         current_speed.append(speed[j])
                         current_motion_angle_z.append(motion_angle_z[j])
                         current_motion_angle_y.append(motion_angle_y[j])
@@ -2350,9 +2344,7 @@ class TrackMate:
                 current_intensity = np.asarray(current_intensity, dtype=np.float32)
 
                 current_radius = np.asarray(current_radius, dtype=np.float32)
-                current_radius_pixel = np.asarray(
-                    current_radius_pixel, dtype=np.float32
-                )
+                
                 current_eccentricity_comp_first = np.asarray(
                     current_eccentricity_comp_first, dtype=np.float32
                 )
@@ -2437,7 +2429,6 @@ class TrackMate:
                     current_y,
                     current_x,
                     current_radius,
-                    current_radius_pixel,
                     current_eccentricity_comp_first,
                     current_eccentricity_comp_second,
                     current_eccentricity_comp_third,
@@ -3209,7 +3200,7 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
             real_indices[j][1] = real_indices[j][1] * xcalibration
 
         tree = spatial.cKDTree(real_indices)
-        # This object contains list of all the points for all the labels in the Mask image with the label id and radius_pixel of each label
+        # This object contains list of all the points for all the labels in the Mask image with the label id and  of each label
         timed_mask[str(0)] = [tree, indices, regioncentroid]
 
     # TYX shaped object
@@ -3495,45 +3486,44 @@ def get_feature_dict(unique_tracks_properties):
         "time": np.asarray(unique_tracks_properties, dtype="float16")[:, 0],
         "generation": np.asarray(unique_tracks_properties, dtype="float16")[:, 2],
         "radius": np.asarray(unique_tracks_properties, dtype="float16")[:, 3],
-        "radius_pixel": np.asarray(unique_tracks_properties, dtype="float16")[:, 4],
         "eccentricity_comp_first": np.asarray(
             unique_tracks_properties, dtype="float16"
-        )[:, 5],
+        )[:, 4],
         "eccentricity_comp_second": np.asarray(
             unique_tracks_properties, dtype="float16"
-        )[:, 6],
+        )[:, 5],
         "eccentricity_comp_third": np.asarray(
             unique_tracks_properties, dtype="float16"
-        )[:, 7],
-        "surface_area": np.asarray(unique_tracks_properties, dtype="float16")[:, 8],
-        "total_intensity": np.asarray(unique_tracks_properties, dtype="float16")[:, 9],
-        "speed": np.asarray(unique_tracks_properties, dtype="float16")[:, 10],
-        "motion_angle_z": np.asarray(unique_tracks_properties, dtype="float16")[:, 11],
-        "motion_angle_y": np.asarray(unique_tracks_properties, dtype="float16")[:, 12],
-        "motion_angle_x": np.asarray(unique_tracks_properties, dtype="float16")[:, 13],
-        "acceleration": np.asarray(unique_tracks_properties, dtype="float16")[:, 14],
+        )[:, 6],
+        "surface_area": np.asarray(unique_tracks_properties, dtype="float16")[:, 7],
+        "total_intensity": np.asarray(unique_tracks_properties, dtype="float16")[:, 8],
+        "speed": np.asarray(unique_tracks_properties, dtype="float16")[:, 9],
+        "motion_angle_z": np.asarray(unique_tracks_properties, dtype="float16")[:, 10],
+        "motion_angle_y": np.asarray(unique_tracks_properties, dtype="float16")[:, 11],
+        "motion_angle_x": np.asarray(unique_tracks_properties, dtype="float16")[:, 12],
+        "acceleration": np.asarray(unique_tracks_properties, dtype="float16")[:, 13],
         "distance_cell_mask": np.asarray(unique_tracks_properties, dtype="float16")[
-            :, 15
+            :, 14
         ],
         "local_cell_density": np.asarray(unique_tracks_properties, dtype="float16")[
-            :, 16
+            :, 15
         ],
-        "radial_angle_z": np.asarray(unique_tracks_properties, dtype="float16")[:, 17],
-        "radial_angle_y": np.asarray(unique_tracks_properties, dtype="float16")[:, 18],
-        "radial_angle_x": np.asarray(unique_tracks_properties, dtype="float16")[:, 19],
-        "cell_axis_z": np.asarray(unique_tracks_properties, dtype="float16")[:, 20],
-        "cell_axis_y": np.asarray(unique_tracks_properties, dtype="float16")[:, 21],
-        "cell_axis_x": np.asarray(unique_tracks_properties, dtype="float16")[:, 22],
+        "radial_angle_z": np.asarray(unique_tracks_properties, dtype="float16")[:, 16],
+        "radial_angle_y": np.asarray(unique_tracks_properties, dtype="float16")[:, 17],
+        "radial_angle_x": np.asarray(unique_tracks_properties, dtype="float16")[:, 18],
+        "cell_axis_z": np.asarray(unique_tracks_properties, dtype="float16")[:, 19],
+        "cell_axis_y": np.asarray(unique_tracks_properties, dtype="float16")[:, 20],
+        "cell_axis_x": np.asarray(unique_tracks_properties, dtype="float16")[:, 21],
         "track_displacement": np.asarray(unique_tracks_properties, dtype="float16")[
-            :, 23
+            :, 22
         ],
         "total_track_distance": np.asarray(unique_tracks_properties, dtype="float16")[
-            :, 24
+            :, 23
         ],
         "max_track_distance": np.asarray(unique_tracks_properties, dtype="float16")[
-            :, 25
+            :, 24
         ],
-        "track_duration": np.asarray(unique_tracks_properties, dtype="float16")[:, 26],
+        "track_duration": np.asarray(unique_tracks_properties, dtype="float16")[:, 25],
     }
 
     return features
