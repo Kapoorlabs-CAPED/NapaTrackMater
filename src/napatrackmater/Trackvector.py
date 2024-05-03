@@ -3001,23 +3001,25 @@ def get_zero_gen_daughter_generations(
             (global_shape_dynamic_dataframe["TrackMate Track ID"] == trackmate_track_id)
         ].sort_values(by="t")
         sorted_subset = sorted(subset["Track ID"].unique())
-        for count, tracklet_id in enumerate(sorted_subset):
+        for tracklet_id in sorted_subset:
 
             dividing_track_track_data = global_shape_dynamic_dataframe[
                 (global_shape_dynamic_dataframe["Track ID"] == tracklet_id)
             ].sort_values(by="t")
-            generation_id = int(float(dividing_track_track_data["Generation ID"][0]))
+            generation_id = int(
+                float(dividing_track_track_data["Generation ID"].iloc[0])
+            )
 
             track_start_time = dividing_track_track_data["t"].min()
             track_end_time = dividing_track_track_data["t"].max()
 
-            if count == 0:
+            if generation_id == 0:
                 zero_gen_tracklets[trackmate_track_id] = (
                     tracklet_id,
                     track_start_time,
                     track_end_time,
                 )
-            elif count > 0:
+            elif generation_id > 0:
                 if trackmate_track_id in daughter_generations[generation_id]:
                     daughter_generations[generation_id][trackmate_track_id].append(
                         (tracklet_id, track_start_time, track_end_time)
@@ -3433,7 +3435,7 @@ def cross_correlation_class(global_shape_dynamic_dataframe, cell_type_label=None
         "TrackMate Track ID"
     ].unique()
     zero_gen_tracklets = {}
-    daughter_generations = {i: {} for i in range(1, generation_max)}
+    daughter_generations = {i: {} for i in range(1, generation_max + 1)}
     get_zero_gen_daughter_generations(
         unique_trackmate_track_ids,
         global_shape_dynamic_dataframe,
