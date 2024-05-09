@@ -1,6 +1,7 @@
 from .pretrained import register_model, register_aliases, clear_models_and_aliases
 from .clustering import Clustering
 from .Trackmate import TrackMate, get_feature_dict
+
 from .Trackvector import (
     TrackVector,
     convert_tracks_to_arrays,
@@ -24,6 +25,8 @@ from .Trackvector import (
     local_track_covaraince,
     cell_fate_recipe,
 )
+
+from .Neighborhood import NeighborAnalyzer
 from .CloudAutoEncoder import CloudAutoEncoder
 import json
 from csbdeep.utils.tf import keras_import
@@ -92,6 +95,7 @@ __all__ = (
     "local_track_covaraince",
     "create_dividing_prediction_tracklets",
     "cell_fate_recipe",
+    "NeighborAnalyzer"
 )
 
 clear_models_and_aliases(CloudAutoEncoder)
