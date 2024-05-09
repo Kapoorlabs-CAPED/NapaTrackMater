@@ -23,10 +23,10 @@ from .Trackvector import (
     create_dividing_prediction_tracklets,
     convert_tracks_to_simple_arrays,
     local_track_covaraince,
-    cell_fate_recipe,
+    cell_fate_recipe
+    
 )
 
-from .Neighborhood import NeighborAnalyzer
 from .CloudAutoEncoder import CloudAutoEncoder
 import json
 from csbdeep.utils.tf import keras_import
@@ -95,7 +95,6 @@ __all__ = (
     "local_track_covaraince",
     "create_dividing_prediction_tracklets",
     "cell_fate_recipe",
-    "NeighborAnalyzer"
 )
 
 clear_models_and_aliases(CloudAutoEncoder)

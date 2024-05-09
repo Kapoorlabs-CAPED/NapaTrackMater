@@ -681,6 +681,42 @@ class TrackVector(TrackMate):
         )
 
         return global_shape_dynamic_dataframe
+    
+    def build_closeness_dict(self, radius):
+        self.closeness_dict = {}
+
+        unique_time_points = set()
+        for track_data in self.unique_tracks.values():
+            for entry in track_data:
+               t, z, y, x = entry[1], entry[2], entry[3], entry[4]
+               unique_time_points.update(t)
+
+        for time_point in unique_time_points:
+            coords = []
+            track_ids = []
+
+            for track_id, track_data in self.unique_tracks.items():
+                for entry in track_data:
+                    t, z, y, x = entry[1], entry[2], entry[3], entry[4]
+                    if t == time_point:
+                        coords.append([z , y , x ])
+                        track_ids.append(track_id)
+
+            coords = np.array(coords)
+            track_ids = np.array(track_ids)
+
+            tree = cKDTree(coords)
+
+            closeness_dict_time_point = {}
+            for track_id, track_data in self.unique_tracks.items():
+                for entry in track_data:
+                    t, z, y, x = entry[1], entry[2], entry[3], entry[4]
+                    if t == time_point:
+                        closest_indices = tree.query_ball_point((z,y,x), r=radius)
+                        closest_track_ids = track_ids[np.concatenate(closest_indices)]
+                        closeness_dict_time_point[track_id] = list(closest_track_ids)
+
+            self.closeness_dict[time_point] = closeness_dict_time_point
 
 
 def _iterate_over_tracklets(
