@@ -23,8 +23,11 @@ from .Trackvector import (
     create_dividing_prediction_tracklets,
     convert_tracks_to_simple_arrays,
     local_track_covaraince,
-    cell_fate_recipe
-    
+    cell_fate_recipe,
+    core_clustering,
+    pseudo_core_clustering,
+    convert_pseudo_tracks_to_simple_arrays,
+    create_analysis_cell_type_tracklets,
 )
 
 from .CloudAutoEncoder import CloudAutoEncoder
@@ -95,6 +98,10 @@ __all__ = (
     "local_track_covaraince",
     "create_dividing_prediction_tracklets",
     "cell_fate_recipe",
+    "core_clustering",
+    "pseudo_core_clustering",
+    "convert_pseudo_tracks_to_simple_arrays",
+    "create_analysis_cell_type_tracklets",
 )
 
 clear_models_and_aliases(CloudAutoEncoder)

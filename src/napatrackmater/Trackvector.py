@@ -681,15 +681,15 @@ class TrackVector(TrackMate):
         )
 
         return global_shape_dynamic_dataframe
-    
+
     def build_closeness_dict(self, radius):
         self.closeness_dict = {}
 
         unique_time_points = set()
         for track_data in self.unique_tracks.values():
             for entry in track_data:
-               t, z, y, x = entry[1], entry[2], entry[3], entry[4]
-               unique_time_points.update(t)
+                t, z, y, x = entry[1], entry[2], entry[3], entry[4]
+                unique_time_points.update(int(float(t)))
 
         for time_point in unique_time_points:
             coords = []
@@ -699,7 +699,7 @@ class TrackVector(TrackMate):
                 for entry in track_data:
                     t, z, y, x = entry[1], entry[2], entry[3], entry[4]
                     if t == time_point:
-                        coords.append([z , y , x ])
+                        coords.append([z, y, x])
                         track_ids.append(track_id)
 
             coords = np.array(coords)
@@ -712,7 +712,7 @@ class TrackVector(TrackMate):
                 for entry in track_data:
                     t, z, y, x = entry[1], entry[2], entry[3], entry[4]
                     if t == time_point:
-                        closest_indices = tree.query_ball_point((z,y,x), r=radius)
+                        closest_indices = tree.query_ball_point((z, y, x), r=radius)
                         closest_track_ids = track_ids[np.concatenate(closest_indices)]
                         closeness_dict_time_point[track_id] = list(closest_track_ids)
 
@@ -770,6 +770,71 @@ def _iterate_over_tracklets(
         shape_dataframe_list,
         dynamic_dataframe_list,
         full_dataframe_list,
+    )
+
+    return training_tracklets
+
+
+def _iterate_over_cell_type_tracklets(
+    track_data,
+    training_tracklets,
+    track_id,
+    prediction=False,
+    ignore_columns=[],
+    cell_type="Cell_Type_Label",
+):
+
+    shape_dynamic_dataframe = track_data[SHAPE_DYNAMIC_FEATURES].copy()
+
+    shape_dataframe = track_data[SHAPE_FEATURES].copy()
+
+    dynamic_dataframe = track_data[DYNAMIC_FEATURES].copy()
+
+    cell_type_track = int(float(track_data[cell_type].iloc[0]))
+
+    if not prediction:
+        full_dataframe = track_data[ALL_FEATURES].copy()
+    else:
+        full_dataframe = track_data[ALL_FEATURES - STATUS_FEATURES].copy()
+
+    if ignore_columns is not None:
+        for column in ignore_columns:
+            if column in full_dataframe.columns:
+                full_dataframe.drop(columns=[column], inplace=True)
+            if column in shape_dynamic_dataframe.columns:
+                shape_dynamic_dataframe.drop(columns=[column], inplace=True)
+            if column in shape_dataframe.columns:
+                shape_dataframe.drop(columns=[column], inplace=True)
+            if column in dynamic_dataframe.columns:
+                dynamic_dataframe.drop(columns=[column], inplace=True)
+
+    latent_columns = [
+        col for col in track_data.columns if col.startswith("latent_feature_number_")
+    ]
+    if latent_columns:
+        latent_features = track_data[latent_columns].copy()
+        full_dataframe = pd.concat([full_dataframe, latent_features], axis=1)
+        shape_dataframe = pd.concat([shape_dataframe, latent_features], axis=1)
+        shape_dynamic_dataframe = pd.concat(
+            [shape_dynamic_dataframe, latent_features], axis=1
+        )
+
+    # Drop rows with NaN values
+    shape_dynamic_dataframe.dropna(inplace=True)
+    shape_dataframe.dropna(inplace=True)
+    dynamic_dataframe.dropna(inplace=True)
+    full_dataframe.dropna(inplace=True)
+
+    shape_dynamic_dataframe_list = shape_dynamic_dataframe.to_dict(orient="records")
+    shape_dataframe_list = shape_dataframe.to_dict(orient="records")
+    dynamic_dataframe_list = dynamic_dataframe.to_dict(orient="records")
+    full_dataframe_list = full_dataframe.to_dict(orient="records")
+    training_tracklets[track_id] = (
+        shape_dynamic_dataframe_list,
+        shape_dataframe_list,
+        dynamic_dataframe_list,
+        full_dataframe_list,
+        cell_type_track,
     )
 
     return training_tracklets
@@ -858,6 +923,84 @@ def create_analysis_tracklets(
         if track_data.shape[0] > 0:
             training_tracklets = _iterate_over_tracklets(
                 track_data, training_tracklets, track_id, ignore_columns=ignore_columns
+            )
+    modified_dataframe = local_shape_dynamic_dataframe.copy()
+    if ignore_columns is not None:
+        for column in ignore_columns:
+            if column in modified_dataframe.columns:
+                modified_dataframe.drop(columns=[column], inplace=True)
+
+    return training_tracklets, modified_dataframe
+
+
+def create_analysis_cell_type_tracklets(
+    global_shape_dynamic_dataframe: pd.DataFrame,
+    t_minus=None,
+    t_plus=None,
+    class_ratio=-1,
+    cell_type="Cell_Type_Labels",
+    ignore_columns=[],
+):
+    training_tracklets = {}
+    if t_minus is not None and t_plus is not None:
+        time_mask = (global_shape_dynamic_dataframe["t"] >= t_minus) & (
+            global_shape_dynamic_dataframe["t"] <= t_plus
+        )
+        local_shape_dynamic_dataframe = global_shape_dynamic_dataframe[time_mask]
+    else:
+        local_shape_dynamic_dataframe = global_shape_dynamic_dataframe
+
+    subset_dividing = local_shape_dynamic_dataframe[
+        local_shape_dynamic_dataframe["Dividing"] == 1
+    ]
+
+    subset_non_dividing = local_shape_dynamic_dataframe[
+        local_shape_dynamic_dataframe["Dividing"] == 0
+    ]
+    non_dividing_track_ids = subset_non_dividing["Track ID"].unique()
+    dividing_track_ids = subset_dividing["Track ID"].unique()
+    dividing_count = len(dividing_track_ids)
+    non_dividing_count = len(non_dividing_track_ids)
+    if non_dividing_count > dividing_count and class_ratio > 0:
+        non_dividing_track_ids = random.sample(
+            list(non_dividing_track_ids),
+            int(min(non_dividing_count, dividing_count * class_ratio)),
+        )
+    else:
+        dividing_track_ids = random.sample(list(dividing_track_ids), dividing_count)
+        non_dividing_track_ids = random.sample(
+            list(non_dividing_track_ids), non_dividing_count
+        )
+
+    for track_id in dividing_track_ids:
+        subset_dividing = subset_dividing.loc[
+            local_shape_dynamic_dataframe.duplicated(
+                subset=["t", "x", "y", "z"], keep=False
+            )
+        ]
+        track_data = local_shape_dynamic_dataframe[
+            (local_shape_dynamic_dataframe["Track ID"] == track_id)
+        ].sort_values(by="t")
+        if track_data.shape[0] > 0:
+            training_tracklets = _iterate_over_cell_type_tracklets(
+                track_data,
+                training_tracklets,
+                track_id,
+                ignore_columns=ignore_columns,
+                cell_type=cell_type,
+            )
+
+    for track_id in non_dividing_track_ids:
+        track_data = local_shape_dynamic_dataframe[
+            (local_shape_dynamic_dataframe["Track ID"] == track_id)
+        ].sort_values(by="t")
+        if track_data.shape[0] > 0:
+            training_tracklets = _iterate_over_cell_type_tracklets(
+                track_data,
+                training_tracklets,
+                track_id,
+                ignore_columns=ignore_columns,
+                cell_type=cell_type,
             )
     modified_dataframe = local_shape_dynamic_dataframe.copy()
     if ignore_columns is not None:
@@ -2268,6 +2411,167 @@ def convert_tracks_to_simple_arrays(
         )
 
 
+def convert_pseudo_tracks_to_simple_arrays(
+    analysis_vectors,
+    t_delta=10,
+    distance_vectors="shape",
+):
+
+    analysis_track_ids = []
+    shape_dynamic_eigenvectors_matrix = []
+    shape_eigenvectors_matrix = []
+    dynamic_eigenvectors_matrix = []
+    position_matrix = []
+    cell_type_ids = []
+    for track_id, (
+        shape_dynamic_dataframe_list,
+        shape_dataframe_list,
+        dynamic_dataframe_list,
+        full_dataframe_list,
+        cell_type_label,
+    ) in analysis_vectors.items():
+        shape_dynamic_track_array = np.array(
+            [
+                [item for item in record.values()]
+                for record in shape_dynamic_dataframe_list
+            ]
+        )
+        shape_track_array = np.array(
+            [[item for item in record.values()] for record in shape_dataframe_list]
+        )
+        dynamic_track_array = np.array(
+            [[item for item in record.values()] for record in dynamic_dataframe_list]
+        )
+        columns_of_interest = ["z", "y", "x"]
+        position_track_array = np.array(
+            [
+                [record[col] for col in columns_of_interest]
+                for record in full_dataframe_list
+            ]
+        )
+
+        if (
+            shape_dynamic_track_array.shape[0] > 1
+            and len(shape_dynamic_track_array.shape) > 1
+        ):
+
+            covariance_shape_dynamic = compute_raw_matrix(
+                shape_dynamic_track_array, t_delta=t_delta
+            )
+            covariance_shape = compute_raw_matrix(shape_track_array, t_delta=t_delta)
+
+            covariance_dynamic = compute_raw_matrix(
+                dynamic_track_array, t_delta=t_delta
+            )
+
+            position_computation = compute_raw_matrix(
+                position_track_array, t_delta=t_delta, take_center=True
+            )
+
+            if (
+                covariance_shape_dynamic is not None
+                and covariance_shape is not None
+                and covariance_dynamic is not None
+            ):
+
+                shape_dynamic_eigenvectors = covariance_shape_dynamic
+                shape_eigenvectors = covariance_shape
+                dynamic_eigenvectors = covariance_dynamic
+                position_vectors = position_computation
+                shape_dynamic_eigenvectors_matrix.extend(shape_dynamic_eigenvectors)
+                shape_eigenvectors_matrix.extend(shape_eigenvectors)
+                dynamic_eigenvectors_matrix.extend(dynamic_eigenvectors)
+                position_matrix.extend(position_vectors)
+                analysis_track_ids.append(track_id)
+                cell_type_ids.append(cell_type_label)
+    if (
+        len(shape_dynamic_eigenvectors_matrix) > 0
+        and len(dynamic_eigenvectors_matrix) > 0
+        and len(shape_eigenvectors_matrix) > 0
+    ):
+
+        (
+            shape_dynamic_eigenvectors_1d,
+            shape_eigenvectors_1d,
+            dynamic_eigenvectors_1d,
+            cluster_distance_map_shape_dynamic,
+            cluster_eucledian_distance_map_shape_dynamic,
+            cluster_distance_map_dynamic,
+            cluster_eucledian_distance_map_dynamic,
+            cluster_distance_map_shape,
+            cluster_eucledian_distance_map_shape,
+            analysis_track_ids,
+            cell_type_ids,
+        ) = pseudo_core_clustering(
+            shape_dynamic_eigenvectors_matrix,
+            shape_eigenvectors_matrix,
+            dynamic_eigenvectors_matrix,
+            position_matrix,
+            analysis_track_ids,
+            cell_type_ids,
+            distance_vectors=distance_vectors,
+        )
+
+        shape_dynamic_cluster_labels_dict = {
+            track_id: cluster_label
+            for track_id, cluster_label in zip(analysis_track_ids, cell_type_ids)
+        }
+        shape_cluster_labels_dict = {
+            track_id: cluster_label
+            for track_id, cluster_label in zip(analysis_track_ids, cell_type_ids)
+        }
+        dynamic_cluster_labels_dict = {
+            track_id: cluster_label
+            for track_id, cluster_label in zip(analysis_track_ids, cell_type_ids)
+        }
+
+        cluster_distance_map_shape_dynamic_dict = {
+            track_id: cluster_distance_map_shape_dynamic[cluster_label]
+            for track_id, cluster_label in zip(analysis_track_ids, cell_type_ids)
+        }
+
+        cluster_distance_map_shape_dict = {
+            track_id: cluster_distance_map_shape[cluster_label]
+            for track_id, cluster_label in zip(analysis_track_ids, cell_type_ids)
+        }
+
+        cluster_distance_map_dynamic_dict = {
+            track_id: cluster_distance_map_dynamic[cluster_label]
+            for track_id, cluster_label in zip(analysis_track_ids, cell_type_ids)
+        }
+
+        cluster_eucledian_distance_map_shape_dynamic_dict = {
+            track_id: cluster_eucledian_distance_map_shape_dynamic[cluster_label]
+            for track_id, cluster_label in zip(analysis_track_ids, cell_type_ids)
+        }
+
+        cluster_eucledian_distance_map_shape_dict = {
+            track_id: cluster_eucledian_distance_map_shape[cluster_label]
+            for track_id, cluster_label in zip(analysis_track_ids, cell_type_ids)
+        }
+
+        cluster_eucledian_distance_map_dynamic_dict = {
+            track_id: cluster_eucledian_distance_map_dynamic[cluster_label]
+            for track_id, cluster_label in zip(analysis_track_ids, cell_type_ids)
+        }
+
+        return (
+            shape_dynamic_eigenvectors_1d,
+            shape_eigenvectors_1d,
+            dynamic_eigenvectors_1d,
+            shape_dynamic_cluster_labels_dict,
+            shape_cluster_labels_dict,
+            dynamic_cluster_labels_dict,
+            cluster_distance_map_shape_dynamic_dict,
+            cluster_distance_map_shape_dict,
+            cluster_distance_map_dynamic_dict,
+            cluster_eucledian_distance_map_shape_dynamic_dict,
+            cluster_eucledian_distance_map_shape_dict,
+            cluster_eucledian_distance_map_dynamic_dict,
+            analysis_track_ids,
+        )
+
+
 def core_clustering(
     shape_dynamic_eigenvectors_matrix,
     shape_eigenvectors_matrix,
@@ -2555,6 +2859,81 @@ def core_clustering(
         best_cluster_eucledian_distance_map_shape,
         best_cluster_eucledian_distance_map_dynamic,
         analysis_track_ids,
+    )
+
+
+def pseudo_core_clustering(
+    shape_dynamic_eigenvectors_matrix,
+    shape_eigenvectors_matrix,
+    dynamic_eigenvectors_matrix,
+    position_matrix,
+    analysis_track_ids,
+    cell_type_ids,
+    distance_vectors="shape",
+):
+
+    shape_dynamic_eigenvectors_3d = np.dstack(shape_dynamic_eigenvectors_matrix)
+    shape_eigenvectors_3d = np.dstack(shape_eigenvectors_matrix)
+    dynamic_eigenvectors_3d = np.dstack(dynamic_eigenvectors_matrix)
+    position_vectors_3d = np.dstack(position_matrix)
+
+    position_vector_2d = position_vectors_3d.reshape(len(analysis_track_ids), -1)
+    shape_dynamic_eigenvectors_2d = shape_dynamic_eigenvectors_3d.reshape(
+        len(analysis_track_ids), -1
+    )
+    shape_eigenvectors_2d = shape_eigenvectors_3d.reshape(len(analysis_track_ids), -1)
+    dynamic_eigenvectors_2d = dynamic_eigenvectors_3d.reshape(
+        len(analysis_track_ids), -1
+    )
+
+    shape_dynamic_eigenvectors_1d = np.array(shape_dynamic_eigenvectors_2d)
+    shape_eigenvectors_1d = np.array(shape_eigenvectors_2d)
+    dynamic_eigenvectors_1d = np.array(dynamic_eigenvectors_2d)
+    position_vector_1d = np.array(position_vector_2d)
+    compute_vectors_shape = shape_eigenvectors_1d
+    compute_vectors_dynamic = dynamic_eigenvectors_1d
+    if distance_vectors == "shape":
+        compute_vectors = shape_eigenvectors_1d
+    if distance_vectors == "dynamic":
+        compute_vectors = dynamic_eigenvectors_1d
+    if distance_vectors == "shape_and_dynamic":
+        compute_vectors = shape_dynamic_eigenvectors_1d
+    else:
+        compute_vectors = shape_eigenvectors_1d
+
+    cluster_distance_map_shape_dynamic = calculate_intercluster_distance(
+        compute_vectors, cell_type_ids
+    )
+    cluster_eucledian_distance_map_shape_dynamic = (
+        calculate_intercluster_eucledian_distance(position_vector_1d, cell_type_ids)
+    )
+
+    cluster_distance_map_dynamic = calculate_intercluster_distance(
+        compute_vectors_shape, cell_type_ids
+    )
+    cluster_eucledian_distance_map_dynamic = calculate_intercluster_eucledian_distance(
+        position_vector_1d, cell_type_ids
+    )
+
+    cluster_distance_map_shape = calculate_intercluster_distance(
+        compute_vectors_dynamic, cell_type_ids
+    )
+    cluster_eucledian_distance_map_shape = calculate_intercluster_eucledian_distance(
+        position_vector_1d, cell_type_ids
+    )
+
+    return (
+        shape_dynamic_eigenvectors_1d,
+        shape_eigenvectors_1d,
+        dynamic_eigenvectors_1d,
+        cluster_distance_map_shape_dynamic,
+        cluster_eucledian_distance_map_shape_dynamic,
+        cluster_distance_map_dynamic,
+        cluster_eucledian_distance_map_dynamic,
+        cluster_distance_map_shape,
+        cluster_eucledian_distance_map_shape,
+        analysis_track_ids,
+        cell_type_ids,
     )
 
 
@@ -3283,6 +3662,11 @@ def create_cluster_plot(
     cluster_type,
     cluster_distance_type,
     cluster_eucledian_distance_type,
+    unique_col_names=[
+        "Cluster_Label_Distances",
+        "Cluster_Label_Eucledian_Distances",
+        "Cluster_Label",
+    ],
     negate_cluster_type=None,
     track_duration=0,
     show_plot=False,
@@ -3367,7 +3751,7 @@ def create_cluster_plot(
             append_name = "Dynamic_"
 
         tinit = time_veto
-    df_time_clusters_melted[append_name + "Cluster_Label"] = data
+    df_time_clusters_melted[append_name + unique_col_names[-1]] = data
 
     data = []
     eucledian_data = []
@@ -3423,10 +3807,8 @@ def create_cluster_plot(
         eucledian_data.extend(filtered_df[cluster_eucledian_distance_column].tolist())
         tinit = time_veto
 
-    df_time_clusters_melted[append_name + "Cluster_Label_Distances"] = data
-    df_time_clusters_melted[
-        append_name + "Cluster_Label_Eucledian_Distances"
-    ] = eucledian_data
+    df_time_clusters_melted[append_name + unique_col_names[0]] = data
+    df_time_clusters_melted[append_name + unique_col_names[1]] = eucledian_data
 
     df_time_clusters_melted = df_time_clusters_melted.drop(columns=cluster_columns)
     df_time_clusters_melted = df_time_clusters_melted.drop(
@@ -3436,13 +3818,13 @@ def create_cluster_plot(
         columns=cluster_eucledian_distance_columns
     )
     df_time_clusters_melted = df_time_clusters_melted.dropna(
-        subset=append_name + "Cluster_Label"
+        subset=append_name + unique_col_names[-1]
     )
     df_time_clusters_melted = df_time_clusters_melted.dropna(
-        subset=append_name + "Cluster_Label_Distances"
+        subset=append_name + unique_col_names[0]
     )
     df_time_clusters_melted = df_time_clusters_melted.dropna(
-        subset=append_name + "Cluster_Label_Eucledian_Distances"
+        subset=append_name + unique_col_names[1]
     )
 
     return df_time_clusters_melted
