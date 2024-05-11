@@ -2981,7 +2981,7 @@ def train_mitosis_neural_net(
 
         with tqdm(total=len(train_loader), desc=f"Epoch {epoch + 1}/{epochs}") as pbar:
             for i, data in enumerate(train_loader):
-                inputs, labels_class1 = data.to(device)
+                inputs, labels_class1 = data
                 optimizer.zero_grad()
                 outputs_class1 = model(inputs.to(device))
 
@@ -3021,7 +3021,7 @@ def train_mitosis_neural_net(
         ) as pbar_val:
             with torch.no_grad():
                 for i, data in enumerate(val_loader):
-                    inputs, labels_class1 = data.to(device)
+                    inputs, labels_class1 = data
                     outputs_class1 = model(inputs.to(device))
 
                     _, predicted_class1 = torch.max(outputs_class1.data, 1)
