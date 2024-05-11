@@ -19,7 +19,7 @@ from sklearn.metrics import silhouette_score
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, Dataset
 import json
 from tqdm import tqdm
 from torch.optim.lr_scheduler import MultiStepLR
@@ -27,6 +27,7 @@ import matplotlib.pyplot as plt
 from typing import List, Union
 import torch.nn.init as init
 import random
+
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from statsmodels.tsa.stattools import acf, ccf
@@ -3141,81 +3142,96 @@ class DenseNet1d(nn.Module):
 
 
 class MitosisNet(nn.Module):
-    def __init__(
-        self,
-        sequence_length,
-        num_init_features,
-        num_classes_class1,
-    ):
+
+    def __init__(self, input_channels, num_classes):
+
         super().__init__()
-
-        self.lstm_layer = nn.LSTM(sequence_length, num_init_features, batch_first=True)
-
-        self.classifier = nn.Sequential(
-            nn.Linear(num_init_features, num_init_features),
-            nn.BatchNorm1d(num_init_features),
-            nn.ReLU(inplace=True),
-            nn.Linear(num_init_features, num_classes_class1),
-        )
-
-        for layer in self.classifier:
-            if isinstance(layer, nn.Linear):
-                nn.init.kaiming_normal_(layer.weight)
+        self.conv1 = nn.Conv1d(in_channels=input_channels, out_channels=32, kernel_size=3)
+        self.pool1 = nn.MaxPool1d(kernel_size=2)
+        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
+        self.pool2 = nn.MaxPool1d(kernel_size=2)
+        
+        self.global_pooling = nn.AdaptiveAvgPool1d(1)
+        self.fc = nn.Linear(64, num_classes)  
 
     def forward(self, x):
-        out, (hn, cn) = self.lstm_layer(x)
-        x = out[:, -1, :]
-        output = self.classifier(x)
-        return output
+        x = self.pool1(nn.functional.relu(self.conv1(x)))
+        x = self.pool2(nn.functional.relu(self.conv2(x)))
+        x = self.global_pooling(x).squeeze()  
+        x = self.fc(x)
+        return x
+
+
+class MitosisDataset(Dataset):
+    def __init__(self, arrays, labels):
+        self.arrays = arrays
+        self.labels = labels
+        self.input_channels = arrays.shape[2]
+        
+    def __len__(self):
+        return len(self.arrays)
+    
+    def __getitem__(self, idx):
+        array = self.arrays[idx]
+        label = self.labels[idx]
+        return array, label
+   
 
 
 def train_mitosis_neural_net(
-    features_array,
-    labels_array_class1,
-    labels_array_class2,
-    sequence_length,
+    npz_file,
     save_path,
+    num_classes = 2,
     batch_size=64,
     learning_rate=0.001,
     weight_decay: float = 1e-5,
     eps: float = 1e-1,
-    num_init_features: int = 32,
     epochs=10,
     use_scheduler=False,
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    training_data = np.load(npz_file)
+    train_dividing_arrays = training_data['dividing_train_arrays']
+    train_dividing_labels = training_data['dividing_train_labels']
+    train_non_dividing_arrays = training_data['non_dividing_train_arrays']
+    train_non_dividing_labels = training_data['non_dividing_train_labels']
+    
+    val_dividing_arrays = training_data['dividing_val_arrays']
+    val_dividing_labels = training_data['dividing_val_labels']
+    val_non_dividing_arrays = training_data['non_dividing_val_arrays']
+    val_non_dividing_labels = training_data['non_dividing_val_labels']
 
-    (X_train, X_val, y_train_class1, y_val_class1, _, _,) = train_test_split(
-        features_array,
-        labels_array_class1.astype(np.uint8),
-        labels_array_class2.astype(np.uint8),
-        test_size=0.1,
-        random_state=42,
-    )
-    print(
-        f"Training data shape: {X_train.shape}, Validation data shape: {X_val.shape}, Training labels shape: {y_train_class1.shape}, Validation labels shape: {y_val_class1.shape}"
-    )
-    X_train_tensor = torch.tensor(X_train).to(device)
-    y_train_class1_tensor = torch.tensor(y_train_class1, dtype=torch.uint8).to(device)
-    X_val_tensor = torch.tensor(X_val).to(device)
-    y_val_class1_tensor = torch.tensor(y_val_class1, dtype=torch.uint8).to(device)
 
-    X_train_tensor = X_train_tensor.float()
-    X_val_tensor = X_val_tensor.float()
-    num_classes1 = int(torch.max(y_train_class1_tensor)) + 1
+
+
+    train_arrays = np.concatenate((train_dividing_arrays, train_non_dividing_arrays))
+    train_labels = np.concatenate((train_dividing_labels, train_non_dividing_labels))
+
+    train_dataset = MitosisDataset(train_arrays, train_labels)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
+    val_arrays = np.concatenate((val_dividing_arrays, val_non_dividing_arrays))
+    val_labels = np.concatenate((val_dividing_labels, val_non_dividing_labels))
+
+    val_dataset = MitosisDataset(val_arrays, val_labels)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+     
+
+    input_channels = train_dataset.input_channels
+   
+
+    model = MitosisNet(
+        input_channels,
+        num_classes_class1=num_classes,
+    )
+
     model_info = {
-        "num_init_features": num_init_features,
-        "sequence_length": sequence_length,
-        "num_classes1": num_classes1,
+        'input_channels': input_channels,
+        'num_classes': num_classes
     }
     with open(save_path + "_model_info.json", "w") as json_file:
         json.dump(model_info, json_file)
 
-    model = MitosisNet(
-        sequence_length,
-        num_init_features=num_init_features,
-        num_classes_class1=num_classes1,
-    )
 
     model.to(device)
 
@@ -3228,11 +3244,7 @@ def train_mitosis_neural_net(
         milestones = [int(epochs * 0.25), int(epochs * 0.5), int(epochs * 0.75)]
         scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.1)
 
-    train_dataset = TensorDataset(X_train_tensor, y_train_class1_tensor)
-    val_dataset = TensorDataset(X_val_tensor, y_val_class1_tensor)
-
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size)
+   
     train_loss_class1_values = []
     val_loss_class1_values = []
     train_acc_class1_values = []
@@ -3362,17 +3374,16 @@ def predict_with_model(
     with open(saved_model_json) as json_file:
         model_info = json.load(json_file)
 
-    num_classes_class1 = model_info["num_classes1"]
-    growth_rate = model_info["growth_rate"]
-    block_config = model_info["block_config"]
-    num_init_features = model_info["num_init_features"]
+    input_channels = model_info["input_channels"]
+    num_classes = model_info["num_classes"]
+  
 
     model = MitosisNet(
-        growth_rate=growth_rate,
-        block_config=block_config,
-        num_init_features=num_init_features,
-        num_classes_class1=num_classes_class1,
+        input_channels,
+        num_classes_class1=num_classes,
     )
+
+  
     model.load_state_dict(
         torch.load(saved_model_path, map_location=torch.device(device))
     )
@@ -3382,10 +3393,9 @@ def predict_with_model(
     for idx in range(features_array.shape[0]):
         feature_type = features_array[idx, :].tolist()
         features_tensor = torch.tensor(feature_type).to(device)
-        new_data_with_channel = features_tensor.unsqueeze(0).unsqueeze(0)
 
         with torch.no_grad():
-            outputs_class1 = model(new_data_with_channel)
+            outputs_class1 = model(features_tensor)
             predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
             if threshold is not None:
                 predicted_probs_class1_numpy = (
