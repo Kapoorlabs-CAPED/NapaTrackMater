@@ -2898,7 +2898,7 @@ class MitosisDataset(Dataset):
     def __getitem__(self, idx):
         array = self.arrays[idx]
         array = torch.tensor(array).permute(1, 0).float().to(self.device)
-        label = self.labels[idx].to(self.device)
+        label = torch.tensor(self.labels[idx]).to(self.device)
         return array, label
    
 
@@ -3071,18 +3071,18 @@ def plot_metrics_from_npz(npz_file):
     train_acc_class= data["train_acc_class1"]
     val_acc_class= data["val_acc_class1"]
 
-    epochs = len(train_loss_class1)
+    epochs = len(train_loss_class)
 
     plt.figure(figsize=(12, 4))
     plt.subplot(1, 2, 1)
-    plt.plot(range(epochs), train_loss_class1, label="Train Loss Class 1")
-    plt.plot(range(epochs), val_loss_class1, label="Validation Loss Class 1")
+    plt.plot(range(epochs), train_loss_class, label="Train Loss Class 1")
+    plt.plot(range(epochs), val_loss_class, label="Validation Loss Class 1")
     plt.legend(loc="upper right")
     plt.title("Loss for Class 1")
 
     plt.subplot(1, 2, 2)
-    plt.plot(range(epochs), train_acc_class1, label="Train Acc Class 1")
-    plt.plot(range(epochs), val_acc_class1, label="Validation Acc Class 1")
+    plt.plot(range(epochs), train_acc_class, label="Train Acc Class 1")
+    plt.plot(range(epochs), val_acc_class, label="Validation Acc Class 1")
     plt.legend(loc="upper right")
     plt.title("Accuracy for Class 1")
 
@@ -3119,20 +3119,20 @@ def predict_with_model(
 
         with torch.no_grad():
             outputs_class= model(features_tensor)
-            predicted_probs_class= torch.softmax(outputs_class1, dim=1)
+            predicted_probs_class= torch.softmax(outputs_class, dim=1)
             if threshold is not None:
                 predicted_probs_class1_numpy = (
-                    predicted_probs_class1.cpu().detach().numpy()
+                    predicted_probs_class.cpu().detach().numpy()
                 )
                 predicted_class= (
                     predicted_probs_class1_numpy[0][1] > threshold
                 ).astype(int)
             else:
                 predicted_class= (
-                    torch.argmax(predicted_probs_class1, dim=1).cpu().numpy()
+                    torch.argmax(predicted_probs_class, dim=1).cpu().numpy()
                 )[0]
 
-            predicted_classes1.append(predicted_class1)
+            predicted_classes1.append(predicted_class)
 
     return predicted_classes1
 
