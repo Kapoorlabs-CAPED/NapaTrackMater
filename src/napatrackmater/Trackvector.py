@@ -2896,7 +2896,7 @@ class MitosisDataset(Dataset):
     
     def __getitem__(self, idx):
         array = self.arrays[idx]
-        array = torch.tensor(array).permute(1, 0)
+        array = torch.tensor(array).permute(1, 0).float()
         label = self.labels[idx]
         return array, label
    
