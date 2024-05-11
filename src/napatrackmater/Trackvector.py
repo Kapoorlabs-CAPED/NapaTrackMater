@@ -2945,7 +2945,7 @@ def train_mitosis_neural_net(
 
     model = MitosisNet(
         input_channels,
-        num_classes_class1=num_classes,
+        num_classes =num_classes,
     )
 
     model_info = {
