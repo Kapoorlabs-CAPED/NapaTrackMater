@@ -2890,14 +2890,15 @@ class MitosisDataset(Dataset):
         self.arrays = arrays
         self.labels = labels
         self.input_channels = arrays.shape[2]
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
     def __len__(self):
         return len(self.arrays)
     
     def __getitem__(self, idx):
         array = self.arrays[idx]
-        array = torch.tensor(array).permute(1, 0).float()
-        label = self.labels[idx]
+        array = torch.tensor(array).permute(1, 0).float().to(self.device)
+        label = self.labels[idx].to(self.device)
         return array, label
    
 
@@ -2959,7 +2960,7 @@ def train_mitosis_neural_net(
 
     model.to(device)
 
-    criterion_class1 = nn.CrossEntropyLoss()
+    criterion_class= nn.CrossEntropyLoss()
     optimizer = optim.Adam(
         model.parameters(), lr=learning_rate, weight_decay=weight_decay, eps=eps
     )
@@ -2975,81 +2976,81 @@ def train_mitosis_neural_net(
     val_acc_class1_values = []
     for epoch in range(epochs):
         model.train()
-        running_loss_class1 = 0.0
-        correct_train_class1 = 0
-        total_train_class1 = 0
+        running_loss_class= 0.0
+        correct_train_class= 0
+        total_train_class= 0
 
         with tqdm(total=len(train_loader), desc=f"Epoch {epoch + 1}/{epochs}") as pbar:
             for i, data in enumerate(train_loader):
-                inputs, labels_class1 = data
+                inputs, labels_class = data
                 optimizer.zero_grad()
-                outputs_class1 = model(inputs.to(device))
+                outputs_class = model(inputs)
 
-                loss_class1 = criterion_class1(outputs_class1, labels_class1)
-                loss_class1.backward()
+                loss_class= criterion_class(outputs_class, labels_class)
+                loss_class.backward()
 
                 optimizer.step()
 
-                _, predicted_class1 = torch.max(outputs_class1.data, 1)
+                _, predicted_class= torch.max(outputs_class.data, 1)
 
-                running_loss_class1 += loss_class1.item()
-                correct_train_class1 += (predicted_class1 == labels_class1).sum().item()
-                total_train_class1 += labels_class1.size(0)
+                running_loss_class += loss_class.item()
+                correct_train_class += (predicted_class== labels_class).sum().item()
+                total_train_class+= labels_class.size(0)
                 pbar.update(1)
                 pbar.set_postfix(
                     {
-                        "Acc Class1": correct_train_class1 / total_train_class1
-                        if total_train_class1 > 0
+                        "Acc Class1": correct_train_class/ total_train_class
+                        if total_train_class> 0
                         else 0,
-                        "Class1 Loss": running_loss_class1 / (i + 1),
+                        "classLoss": running_loss_class/ (i + 1),
                     }
                 )
             if use_scheduler:
                 scheduler.step()
-        train_loss_class1_values.append(running_loss_class1 / len(train_loader))
+        train_loss_class1_values.append(running_loss_class/ len(train_loader))
         train_acc_class1_values.append(
-            correct_train_class1 / total_train_class1 if total_train_class1 > 0 else 0
+            correct_train_class/ total_train_class if total_train_class> 0 else 0
         )
 
         model.eval()
-        running_val_loss_class1 = 0.0
-        correct_val_class1 = 0
-        total_val_class1 = 0
+        running_val_loss_class= 0.0
+        correct_val_class= 0
+        total_val_class= 0
 
         with tqdm(
             total=len(val_loader), desc=f"Validation Epoch {epoch + 1}/{epochs}"
         ) as pbar_val:
             with torch.no_grad():
                 for i, data in enumerate(val_loader):
-                    inputs, labels_class1 = data
-                    outputs_class1 = model(inputs.to(device))
+                    inputs, labels_class= data
+                    outputs_class= model(inputs)
 
-                    _, predicted_class1 = torch.max(outputs_class1.data, 1)
+                    _, predicted_class= torch.max(outputs_class.data, 1)
 
-                    total_val_class1 += labels_class1.size(0)
-                    correct_val_class1 += (
-                        (predicted_class1 == labels_class1).sum().item()
+                    total_val_class+= labels_class.size(0)
+                    correct_val_class+= (
+                        (predicted_class== labels_class).sum().item()
                     )
 
                     pbar_val.update(1)
-                    accuracy_class1 = (
-                        correct_val_class1 / total_val_class1
-                        if total_val_class1 > 0
+                    accuracy_class= (
+                        correct_val_class/ total_val_class
+                        if total_val_class> 0
                         else 0
                     )
-                    loss_class1 = criterion_class1(outputs_class1, labels_class1)
+                    loss_class= criterion_class(outputs_class, labels_class)
 
-                    running_val_loss_class1 += loss_class1.item()
+                    running_val_loss_class+= loss_class.item()
                     pbar_val.set_postfix(
                         {
-                            "Acc Class1": accuracy_class1,
-                            "Class1 Loss": running_val_loss_class1 / (i + 1),
+                            "Acc Class1": accuracy_class,
+                            "classLoss": running_val_loss_class/ (i + 1),
                         }
                     )
 
-        val_loss_class1_values.append(running_val_loss_class1 / len(val_loader))
+        val_loss_class1_values.append(running_val_loss_class/ len(val_loader))
         val_acc_class1_values.append(
-            correct_val_class1 / total_val_class1 if total_val_class1 > 0 else 0
+            correct_val_class/ total_val_class if total_val_class> 0 else 0
         )
 
     np.savez(
@@ -3065,10 +3066,10 @@ def train_mitosis_neural_net(
 def plot_metrics_from_npz(npz_file):
     data = np.load(npz_file)
 
-    train_loss_class1 = data["train_loss_class1"]
-    val_loss_class1 = data["val_loss_class1"]
-    train_acc_class1 = data["train_acc_class1"]
-    val_acc_class1 = data["val_acc_class1"]
+    train_loss_class= data["train_loss_class1"]
+    val_loss_class= data["val_loss_class1"]
+    train_acc_class= data["train_acc_class1"]
+    val_acc_class= data["val_acc_class1"]
 
     epochs = len(train_loss_class1)
 
@@ -3117,17 +3118,17 @@ def predict_with_model(
         features_tensor = torch.tensor(feature_type).to(device)
 
         with torch.no_grad():
-            outputs_class1 = model(features_tensor)
-            predicted_probs_class1 = torch.softmax(outputs_class1, dim=1)
+            outputs_class= model(features_tensor)
+            predicted_probs_class= torch.softmax(outputs_class1, dim=1)
             if threshold is not None:
                 predicted_probs_class1_numpy = (
                     predicted_probs_class1.cpu().detach().numpy()
                 )
-                predicted_class1 = (
+                predicted_class= (
                     predicted_probs_class1_numpy[0][1] > threshold
                 ).astype(int)
             else:
-                predicted_class1 = (
+                predicted_class= (
                     torch.argmax(predicted_probs_class1, dim=1).cpu().numpy()
                 )[0]
 
