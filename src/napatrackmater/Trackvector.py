@@ -2653,7 +2653,6 @@ def train_mitosis_neural_net(
    mitosis_inception.setup_logger()   
    mitosis_inception.setup_checkpoint()
    mitosis_inception.setup_adam()
-   mitosis_inception.setup_learning_rate_scheduler()
    mitosis_inception.setup_lightning_model()
    mitosis_inception.train()
 
