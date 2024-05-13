@@ -1123,97 +1123,6 @@ def create_global_gt_dataframe(
     return full_dataframe
 
 
-def supervised_clustering(
-    csv_file_name, gt_analysis_vectors, n_neighbors=10, n_estimators=50, method="knn"
-):
-    csv_file_name_original = csv_file_name + "_training_data"
-    data_list = []
-    track_ids = []
-    for track_id, (
-        shape_dynamic_dataframe_list,
-        gt_dataframe_list,
-        full_dataframe_list,
-    ) in gt_analysis_vectors.items():
-
-        shape_dynamic_track_array = np.array(
-            [
-                [item for item in record.values()]
-                for record in shape_dynamic_dataframe_list
-            ]
-        )
-
-        gt_track_array = np.array(
-            [[item for item in record.values()] for record in gt_dataframe_list]
-        )
-        if shape_dynamic_track_array.shape[0] > 1:
-            track_ids.append(track_id)
-        if not np.isnan(gt_track_array[0]) and shape_dynamic_track_array.shape[0] > 1:
-            (
-                shape_dynamic_covariance,
-                shape_dynamic_eigenvectors,
-            ) = compute_covariance_matrix(shape_dynamic_track_array)
-            upper_triangle_indices = np.triu_indices_from(shape_dynamic_covariance)
-
-            flattened_covariance = shape_dynamic_covariance[upper_triangle_indices]
-            data_list.append(
-                {
-                    "Flattened_Covariance": flattened_covariance,
-                    "gt_label": gt_track_array[0][0],
-                }
-            )
-    result_dataframe = pd.DataFrame(data_list)
-    if os.path.exists(csv_file_name_original):
-        os.remove(csv_file_name_original)
-    result_dataframe.to_csv(csv_file_name_original + ".csv", index=False)
-    if method == "knn":
-        X = np.vstack(result_dataframe["Flattened_Covariance"].values)
-        y = result_dataframe["gt_label"].values
-
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.1, random_state=42
-        )
-        unique_train_labels, count_train_labels = np.unique(y_train, return_counts=True)
-
-        unique_test_labels, count_test_labels = np.unique(y_test, return_counts=True)
-
-        print(f"Training labels: {unique_train_labels}")
-        print(f"Training label counts: {count_train_labels}")
-        print(f"Testing labels: {unique_test_labels}")
-        print(f"Testing label counts: {count_test_labels}")
-        print(
-            f"Training data shape: {X_train.shape}, Testing data shape: {X_test.shape}"
-        )
-        model = KNeighborsClassifier(n_neighbors=n_neighbors, n_jobs=-1)
-        model.fit(X_train, y_train)
-        accuracy = model.score(X_test, y_test)
-        print(f"Model Accuracy on test: {accuracy:.2f}")
-        accuracy = model.score(X_train, y_train)
-        print(f"Model Accuracy on train: {accuracy:.2f}")
-
-        model_filename = csv_file_name + "_knn_model.joblib"
-        dump(model, model_filename)
-    else:
-        model = RandomForestClassifier(
-            n_estimators=n_estimators, n_jobs=-1, random_state=42
-        )
-
-        model.fit(X_train, y_train)
-
-        # Make predictions on the test data
-        y_pred_test = model.predict(X_test)
-        y_pred_train = model.predict(X_train)
-
-        accuracy_test = accuracy_score(y_test, y_pred_test)
-        accuracy_train = accuracy_score(y_train, y_pred_train)
-
-        print(f"Model Accuracy on test: {accuracy_test:.2f}")
-        print(f"Model Accuracy on train: {accuracy_train:.2f}")
-
-        model_filename = "random_forest_model.joblib"
-        dump(model, model_filename)
-
-    return model
-
 
 def calculate_wcss(data, labels, centroids):
     wcss = 0
@@ -2786,16 +2695,17 @@ class TransitionBlock(nn.Module):
         return x
 
 
-class DenseNet1d(nn.Module):
+class DenseNet(nn.Module):
     def __init__(
         self,
+        in_channels,
+        num_classes,
         growth_rate: int = 32,
         block_config: tuple = (6, 12, 24, 16),
         num_init_features: int = 32,
         bottleneck_size: int = 4,
         kernel_size: int = 3,
-        in_channels: int = 1,
-        num_classes_1: int = 1,
+        
     ):
 
         super().__init__()
@@ -2829,7 +2739,7 @@ class DenseNet1d(nn.Module):
         self.final_bn = nn.GroupNorm(1, num_features)
         self.final_act = nn.ReLU(inplace=True)
         self.final_pool = nn.AdaptiveAvgPool1d(1)
-        self.classifier_1 = nn.Linear(num_features, num_classes_1)
+        self.classifier_1 = nn.Linear(num_features, num_classes)
 
     def _initialize_weights(self):
         for m in self.modules():
