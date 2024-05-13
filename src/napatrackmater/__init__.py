@@ -83,7 +83,7 @@ __all__ = (
     "load_json",
     "train_mitosis_neural_net",
     "DenseNet",
-    "MitosisDataset2,
+    "MitosisDataset",
     "MitosisNet",
     "predict_with_model",
     "plot_metrics_from_npz",

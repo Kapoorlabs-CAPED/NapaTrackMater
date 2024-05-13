@@ -2823,6 +2823,12 @@ def train_mitosis_neural_net(
     eps: float = 1e-1,
     epochs=10,
     use_scheduler=False,
+    model_type = 'simple',
+    growth_rate: int = 32,
+    block_config: tuple = (6, 12, 24, 16),
+    num_init_features: int = 32,
+    bottleneck_size: int = 4,
+    kernel_size: int = 3
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     training_data = np.load(npz_file)
@@ -2854,16 +2860,37 @@ def train_mitosis_neural_net(
 
     input_channels = train_dataset.input_channels
    
+    if model_type == 'simple':
+        model = MitosisNet(
+            input_channels,
+            num_classes =num_classes,
+        )
+        
+        model_info = {
+            'input_channels': input_channels,
+            'num_classes': num_classes
+        }
+    else:
 
-    model = MitosisNet(
-        input_channels,
-        num_classes =num_classes,
-    )
+        model = DenseNet(
+            input_channels = input_channels,
+            num_classes=num_classes,
+            growth_rate = growth_rate,
+            block_config = block_config,
+            num_init_features = num_init_features,
+            bottleneck_size  = bottleneck_size,
+            kernel_size= kernel_size 
+        )  
+        model_info = {
+            'input_channels': input_channels,
+            'num_classes': num_classes,
+            'growth_rate': growth_rate,
+            'block_config': list(block_config),
+            'num_init_features': num_init_features,
+            'bottleneck_size': bottleneck_size,
+            'kernel_size': kernel_size
 
-    model_info = {
-        'input_channels': input_channels,
-        'num_classes': num_classes
-    }
+        }  
     with open(save_path + "_model_info.json", "w") as json_file:
         json.dump(model_info, json_file)
 
