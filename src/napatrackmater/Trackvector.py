@@ -10,12 +10,6 @@ import pandas as pd
 from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import linkage, fcluster
 from scipy.spatial import cKDTree
-from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
-from joblib import dump
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import silhouette_score
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -32,6 +26,8 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from statsmodels.tsa.stattools import acf, ccf
 from scipy.stats import norm, anderson
+from kapoorlabs_lightning.lightning_trainer import MitosisInception
+
 
 SHAPE_FEATURES = [
     "Radius",
@@ -2612,205 +2608,6 @@ def compute_covariance_matrix(track_arrays):
         print(f"Covariance matric computation {e}")
 
 
-class DenseLayer(nn.Module):
-    """ """
-
-    def __init__(self, input_channels, growth_rate, bottleneck_size, kernel_size):
-        super().__init__()
-        self.use_bottleneck = bottleneck_size > 0
-        self.num_bottleneck_output_filters = growth_rate * bottleneck_size
-        if self.use_bottleneck:
-            self.bn2 = nn.GroupNorm(1, input_channels)
-            self.act2 = nn.ReLU(inplace=True)
-            self.conv2 = nn.Conv1d(
-                input_channels, self.num_bottleneck_output_filters, kernel_size=1, stride=1
-            )
-        self.bn1 = nn.GroupNorm(1, self.num_bottleneck_output_filters)
-        self.act1 = nn.ReLU(inplace=True)
-        self.conv1 = nn.Conv1d(
-            self.num_bottleneck_output_filters,
-            growth_rate,
-            kernel_size=kernel_size,
-            stride=1,
-            dilation=1,
-            padding=kernel_size // 2,
-        )
-
-    def forward(self, x):
-        if self.use_bottleneck:
-            x = self.bn2(x)
-            x = self.act2(x)
-            x = self.conv2(x)
-        x = self.bn1(x)
-        x = self.act1(x)
-        x = self.conv1(x)
-        return x
-
-
-class DenseBlock(nn.ModuleDict):
-    """ """
-
-    def __init__(
-        self, num_layers, input_channels, growth_rate, kernel_size, bottleneck_size
-    ):
-        super().__init__()
-        self.num_layers = num_layers
-        for i in range(self.num_layers):
-            self.add_module(
-                f"denselayer{i}",
-                DenseLayer(
-                    input_channels + i * growth_rate,
-                    growth_rate,
-                    bottleneck_size,
-                    kernel_size,
-                ),
-            )
-
-    def forward(self, x):
-        layer_outputs = [x]
-        for _, layer in self.items():
-            x = layer(x)
-            layer_outputs.append(x)
-            x = torch.cat(layer_outputs, dim=1)
-        return x
-
-
-class TransitionBlock(nn.Module):
-    """ """
-
-    def __init__(self, input_channels, out_channels):
-        super().__init__()
-        self.bn = nn.GroupNorm(1, input_channels)
-        self.act = nn.ReLU(inplace=True)
-        self.conv = nn.Conv1d(
-            input_channels, out_channels, kernel_size=1, stride=1, dilation=1
-        )
-        self.pool = nn.AvgPool1d(kernel_size=2, stride=2)
-
-    def forward(self, x):
-        x = self.bn(x)
-        x = self.act(x)
-        x = self.conv(x)
-        x = self.pool(x)
-        return x
-
-
-class DenseNet(nn.Module):
-    def __init__(
-        self,
-        input_channels,
-        num_classes,
-        growth_rate: int = 32,
-        block_config: tuple = (6, 12, 24, 16),
-        num_init_features: int = 32,
-        bottleneck_size: int = 4,
-        kernel_size: int = 3,
-        
-    ):
-
-        super().__init__()
-        self._initialize_weights()
-
-        self.features = nn.Sequential(
-            nn.Conv1d(input_channels, num_init_features, kernel_size=1),
-            nn.GroupNorm(1, num_init_features),
-            nn.ReLU(inplace=True),
-            nn.MaxPool1d(kernel_size=1),
-        )
-
-        num_features = num_init_features
-        for i, num_layers in enumerate(block_config):
-            block = DenseBlock(
-                num_layers=num_layers,
-                input_channels=num_features,
-                growth_rate=growth_rate,
-                kernel_size=kernel_size,
-                bottleneck_size=bottleneck_size,
-            )
-            self.features.add_module(f"denseblock{i}", block)
-            num_features = num_features + num_layers * growth_rate
-            if i != len(block_config) - 1:
-                trans = TransitionBlock(
-                    input_channels=num_features, out_channels=num_features // 2
-                )
-                self.features.add_module(f"transition{i}", trans)
-                num_features = num_features // 2
-
-        self.final_bn = nn.GroupNorm(1, num_features)
-        self.final_act = nn.ReLU(inplace=True)
-        self.final_pool = nn.AdaptiveAvgPool1d(1)
-        self.classifier_1 = nn.Linear(num_features, num_classes)
-
-    def _initialize_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv1d):
-                init.kaiming_normal_(m.weight)
-                if m.bias is not None:
-                    init.constant_(m.bias, 0)
-            elif isinstance(m, nn.BatchNorm1d) or isinstance(m, nn.GroupNorm):
-                init.constant_(m.weight, 1)
-                init.constant_(m.bias, 0)
-            elif isinstance(m, nn.Linear):
-                init.kaiming_normal_(m.weight)
-                init.constant_(m.bias, 0)
-
-    def forward_features(self, x):
-        out = self.features(x)
-        out = self.final_bn(out)
-        out = self.final_act(out)
-        out = self.final_pool(out)
-        return out
-
-    def forward(self, x):
-        features = self.forward_features(x)
-        features = features.squeeze(-1)
-        out_1 = self.classifier_1(features)
-        return out_1
-
-    def reset_classifier(self):
-        self.classifier = nn.Identity()
-
-    def get_classifier(self):
-        return self.classifier
-
-
-class MitosisNet(nn.Module):
-
-    def __init__(self, input_channels, num_classes):
-
-        super().__init__()
-        self.conv1 = nn.Conv1d(input_channels=input_channels, out_channels=32, kernel_size=3)
-        self.pool1 = nn.MaxPool1d(kernel_size=2)
-        self.conv2 = nn.Conv1d(input_channels=32, out_channels=64, kernel_size=3)
-        self.pool2 = nn.MaxPool1d(kernel_size=2)
-        
-        self.global_pooling = nn.AdaptiveAvgPool1d(1)
-        self.fc = nn.Linear(64, num_classes)  
-
-    def forward(self, x):
-        x = self.pool1(nn.functional.relu(self.conv1(x)))
-        x = self.pool2(nn.functional.relu(self.conv2(x)))
-        x = self.global_pooling(x).squeeze()  
-        x = self.fc(x)
-        return x
-
-
-class MitosisDataset(Dataset):
-    def __init__(self, arrays, labels):
-        self.arrays = arrays
-        self.labels = labels
-        self.input_channels = arrays.shape[2]
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        
-    def __len__(self):
-        return len(self.arrays)
-    
-    def __getitem__(self, idx):
-        array = self.arrays[idx]
-        array = torch.tensor(array).permute(1, 0).float().to(self.device)
-        label = torch.tensor(self.labels[idx]).to(self.device)
-        return array, label
-   
 
 
 def train_mitosis_neural_net(
@@ -2818,187 +2615,55 @@ def train_mitosis_neural_net(
     save_path,
     num_classes = 2,
     batch_size=64,
+    num_workers = 1,
     learning_rate=0.001,
-    weight_decay: float = 1e-5,
-    eps: float = 1e-1,
     epochs=10,
-    use_scheduler=False,
+    accelerator = 'cuda',
+    devices = 1,
     model_type = 'simple',
     growth_rate: int = 32,
     block_config: tuple = (6, 12, 24, 16),
     num_init_features: int = 32,
     bottleneck_size: int = 4,
-    kernel_size: int = 3
+    kernel_size: int = 3,
+    experiment_name = 'mitosis'
 ):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    training_data = np.load(npz_file)
-    train_dividing_arrays = training_data['dividing_train_arrays']
-    train_dividing_labels = training_data['dividing_train_labels']
-    train_non_dividing_arrays = training_data['non_dividing_train_arrays']
-    train_non_dividing_labels = training_data['non_dividing_train_labels']
     
-    val_dividing_arrays = training_data['dividing_val_arrays']
-    val_dividing_labels = training_data['dividing_val_labels']
-    val_non_dividing_arrays = training_data['non_dividing_val_arrays']
-    val_non_dividing_labels = training_data['non_dividing_val_labels']
+
+   mitosis_inception = MitosisInception(
+       npz_file = npz_file,
+       num_classes=num_classes,
+       growth_rate=growth_rate,
+       block_config=block_config,
+       num_init_features=num_init_features,
+       bottleneck_size=bottleneck_size,
+       kernel_size=kernel_size,
+       num_workers=num_workers,
+       epochs = epochs,
+       log_path=save_path,
+       batch_size=batch_size,
+       accelerator=accelerator,
+       devices = devices,
+       experiment_name= experiment_name,
+       learning_rate=learning_rate
+   )
+
+   mitosis_inception.setup_datasets()
+   if model_type == 'simple':
+       mitosis_inception.setup_mitosisnet_model()
+   else:     
+       mitosis_inception.setup_densenet_model()
+
+   mitosis_inception.setup_logger()   
+   mitosis_inception.setup_checkpoint()
+   mitosis_inception.setup_adam()
+   mitosis_inception.setup_learning_rate_scheduler()
+   mitosis_inception.setup_lightning_model()
+   mitosis_inception.train()
 
 
 
-
-    train_arrays = np.concatenate((train_dividing_arrays, train_non_dividing_arrays))
-    train_labels = np.concatenate((train_dividing_labels, train_non_dividing_labels))
-
-    train_dataset = MitosisDataset(train_arrays, train_labels)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-
-    val_arrays = np.concatenate((val_dividing_arrays, val_non_dividing_arrays))
-    val_labels = np.concatenate((val_dividing_labels, val_non_dividing_labels))
-
-    val_dataset = MitosisDataset(val_arrays, val_labels)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-     
-
-    input_channels = train_dataset.input_channels
-   
-    if model_type == 'simple':
-        model = MitosisNet(
-            input_channels,
-            num_classes =num_classes,
-        )
-        
-        model_info = {
-            'input_channels': input_channels,
-            'num_classes': num_classes
-        }
-    else:
-
-        model = DenseNet(
-            input_channels = input_channels,
-            num_classes=num_classes,
-            growth_rate = growth_rate,
-            block_config = block_config,
-            num_init_features = num_init_features,
-            bottleneck_size  = bottleneck_size,
-            kernel_size= kernel_size 
-        )  
-        model_info = {
-            'input_channels': input_channels,
-            'num_classes': num_classes,
-            'growth_rate': growth_rate,
-            'block_config': list(block_config),
-            'num_init_features': num_init_features,
-            'bottleneck_size': bottleneck_size,
-            'kernel_size': kernel_size
-
-        }  
-    with open(save_path + "_model_info.json", "w") as json_file:
-        json.dump(model_info, json_file)
-
-
-    model.to(device)
-
-    criterion_class= nn.CrossEntropyLoss()
-    optimizer = optim.Adam(
-        model.parameters(), lr=learning_rate, weight_decay=weight_decay, eps=eps
-    )
-
-    if use_scheduler:
-        milestones = [int(epochs * 0.25), int(epochs * 0.5), int(epochs * 0.75)]
-        scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.1)
-
-   
-    train_loss_class1_values = []
-    val_loss_class1_values = []
-    train_acc_class1_values = []
-    val_acc_class1_values = []
-    for epoch in range(epochs):
-        model.train()
-        running_loss_class= 0.0
-        correct_train_class= 0
-        total_train_class= 0
-
-        with tqdm(total=len(train_loader), desc=f"Epoch {epoch + 1}/{epochs}") as pbar:
-            for i, data in enumerate(train_loader):
-                inputs, labels_class = data
-                optimizer.zero_grad()
-                outputs_class = model(inputs)
-
-                loss_class= criterion_class(outputs_class, labels_class)
-                loss_class.backward()
-
-                optimizer.step()
-
-                _, predicted_class= torch.max(outputs_class.data, 1)
-
-                running_loss_class += loss_class.item()
-                correct_train_class += (predicted_class== labels_class).sum().item()
-                total_train_class+= labels_class.size(0)
-                pbar.update(1)
-                pbar.set_postfix(
-                    {
-                        "Acc Class1": correct_train_class/ total_train_class
-                        if total_train_class> 0
-                        else 0,
-                        "classLoss": running_loss_class/ (i + 1),
-                    }
-                )
-            if use_scheduler:
-                scheduler.step()
-        train_loss_class1_values.append(running_loss_class/ len(train_loader))
-        train_acc_class1_values.append(
-            correct_train_class/ total_train_class if total_train_class> 0 else 0
-        )
-
-        model.eval()
-        running_val_loss_class= 0.0
-        correct_val_class= 0
-        total_val_class= 0
-
-        with tqdm(
-            total=len(val_loader), desc=f"Validation Epoch {epoch + 1}/{epochs}"
-        ) as pbar_val:
-            with torch.no_grad():
-                for i, data in enumerate(val_loader):
-                    inputs, labels_class= data
-                    outputs_class= model(inputs)
-
-                    _, predicted_class= torch.max(outputs_class.data, 1)
-
-                    total_val_class+= labels_class.size(0)
-                    correct_val_class+= (
-                        (predicted_class== labels_class).sum().item()
-                    )
-
-                    pbar_val.update(1)
-                    accuracy_class= (
-                        correct_val_class/ total_val_class
-                        if total_val_class> 0
-                        else 0
-                    )
-                    loss_class= criterion_class(outputs_class, labels_class)
-
-                    running_val_loss_class+= loss_class.item()
-                    pbar_val.set_postfix(
-                        {
-                            "Acc Class1": accuracy_class,
-                            "classLoss": running_val_loss_class/ (i + 1),
-                        }
-                    )
-
-        val_loss_class1_values.append(running_val_loss_class/ len(val_loader))
-        val_acc_class1_values.append(
-            correct_val_class/ total_val_class if total_val_class> 0 else 0
-        )
-
-    np.savez(
-        save_path + "_metrics.npz",
-        train_loss_class1=train_loss_class1_values,
-        val_loss_class1=val_loss_class1_values,
-        train_acc_class1=train_acc_class1_values,
-        val_acc_class1=val_acc_class1_values,
-    )
-    torch.save(model.state_dict(), save_path + "_mitosis_track_model.pth")
-
+    
 
 def plot_metrics_from_npz(npz_file):
     data = np.load(npz_file)
