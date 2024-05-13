@@ -2610,7 +2610,7 @@ def train_mitosis_neural_net(
     save_path,
     num_classes = 2,
     batch_size=64,
-    num_workers = 1,
+    num_workers = 0,
     learning_rate=0.001,
     epochs=10,
     accelerator = 'cuda',
@@ -2624,7 +2624,8 @@ def train_mitosis_neural_net(
     experiment_name = 'mitosis'
 ):
     
-
+   if isinstance(block_config, int):
+       block_config = (block_config,)
    mitosis_inception = MitosisInception(
        npz_file = npz_file,
        num_classes=num_classes,
