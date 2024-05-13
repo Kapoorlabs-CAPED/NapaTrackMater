@@ -2615,15 +2615,15 @@ def compute_covariance_matrix(track_arrays):
 class DenseLayer(nn.Module):
     """ """
 
-    def __init__(self, in_channels, growth_rate, bottleneck_size, kernel_size):
+    def __init__(self, input_channels, growth_rate, bottleneck_size, kernel_size):
         super().__init__()
         self.use_bottleneck = bottleneck_size > 0
         self.num_bottleneck_output_filters = growth_rate * bottleneck_size
         if self.use_bottleneck:
-            self.bn2 = nn.GroupNorm(1, in_channels)
+            self.bn2 = nn.GroupNorm(1, input_channels)
             self.act2 = nn.ReLU(inplace=True)
             self.conv2 = nn.Conv1d(
-                in_channels, self.num_bottleneck_output_filters, kernel_size=1, stride=1
+                input_channels, self.num_bottleneck_output_filters, kernel_size=1, stride=1
             )
         self.bn1 = nn.GroupNorm(1, self.num_bottleneck_output_filters)
         self.act1 = nn.ReLU(inplace=True)
@@ -2651,7 +2651,7 @@ class DenseBlock(nn.ModuleDict):
     """ """
 
     def __init__(
-        self, num_layers, in_channels, growth_rate, kernel_size, bottleneck_size
+        self, num_layers, input_channels, growth_rate, kernel_size, bottleneck_size
     ):
         super().__init__()
         self.num_layers = num_layers
@@ -2659,7 +2659,7 @@ class DenseBlock(nn.ModuleDict):
             self.add_module(
                 f"denselayer{i}",
                 DenseLayer(
-                    in_channels + i * growth_rate,
+                    input_channels + i * growth_rate,
                     growth_rate,
                     bottleneck_size,
                     kernel_size,
@@ -2678,12 +2678,12 @@ class DenseBlock(nn.ModuleDict):
 class TransitionBlock(nn.Module):
     """ """
 
-    def __init__(self, in_channels, out_channels):
+    def __init__(self, input_channels, out_channels):
         super().__init__()
-        self.bn = nn.GroupNorm(1, in_channels)
+        self.bn = nn.GroupNorm(1, input_channels)
         self.act = nn.ReLU(inplace=True)
         self.conv = nn.Conv1d(
-            in_channels, out_channels, kernel_size=1, stride=1, dilation=1
+            input_channels, out_channels, kernel_size=1, stride=1, dilation=1
         )
         self.pool = nn.AvgPool1d(kernel_size=2, stride=2)
 
@@ -2698,7 +2698,7 @@ class TransitionBlock(nn.Module):
 class DenseNet(nn.Module):
     def __init__(
         self,
-        in_channels,
+        input_channels,
         num_classes,
         growth_rate: int = 32,
         block_config: tuple = (6, 12, 24, 16),
@@ -2712,7 +2712,7 @@ class DenseNet(nn.Module):
         self._initialize_weights()
 
         self.features = nn.Sequential(
-            nn.Conv1d(in_channels, num_init_features, kernel_size=1),
+            nn.Conv1d(input_channels, num_init_features, kernel_size=1),
             nn.GroupNorm(1, num_init_features),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=1),
@@ -2722,7 +2722,7 @@ class DenseNet(nn.Module):
         for i, num_layers in enumerate(block_config):
             block = DenseBlock(
                 num_layers=num_layers,
-                in_channels=num_features,
+                input_channels=num_features,
                 growth_rate=growth_rate,
                 kernel_size=kernel_size,
                 bottleneck_size=bottleneck_size,
@@ -2731,7 +2731,7 @@ class DenseNet(nn.Module):
             num_features = num_features + num_layers * growth_rate
             if i != len(block_config) - 1:
                 trans = TransitionBlock(
-                    in_channels=num_features, out_channels=num_features // 2
+                    input_channels=num_features, out_channels=num_features // 2
                 )
                 self.features.add_module(f"transition{i}", trans)
                 num_features = num_features // 2
@@ -2779,9 +2779,9 @@ class MitosisNet(nn.Module):
     def __init__(self, input_channels, num_classes):
 
         super().__init__()
-        self.conv1 = nn.Conv1d(in_channels=input_channels, out_channels=32, kernel_size=3)
+        self.conv1 = nn.Conv1d(input_channels=input_channels, out_channels=32, kernel_size=3)
         self.pool1 = nn.MaxPool1d(kernel_size=2)
-        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3)
+        self.conv2 = nn.Conv1d(input_channels=32, out_channels=64, kernel_size=3)
         self.pool2 = nn.MaxPool1d(kernel_size=2)
         
         self.global_pooling = nn.AdaptiveAvgPool1d(1)
