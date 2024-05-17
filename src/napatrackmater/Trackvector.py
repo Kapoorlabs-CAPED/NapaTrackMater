@@ -2621,7 +2621,8 @@ def train_mitosis_neural_net(
     num_init_features: int = 32,
     bottleneck_size: int = 4,
     kernel_size: int = 3,
-    experiment_name = 'mitosis'
+    experiment_name = 'mitosis',
+    scheduler_choice="plateau"
 ):
     
    if isinstance(block_config, int):
@@ -2641,6 +2642,7 @@ def train_mitosis_neural_net(
        accelerator=accelerator,
        devices = devices,
        experiment_name= experiment_name,
+       scheduler_choice=scheduler_choice,
        learning_rate=learning_rate
    )
 
