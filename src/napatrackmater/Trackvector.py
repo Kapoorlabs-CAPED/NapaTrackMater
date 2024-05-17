@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from typing import List, Union
 import torch.nn.init as init
 import random
-
+from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from statsmodels.tsa.stattools import acf, ccf
@@ -2687,51 +2687,6 @@ def plot_metrics_from_npz(npz_file):
     plt.show()
 
 
-def predict_with_model(
-    saved_model_path, saved_model_json, features_array, threshold=None
-):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    with open(saved_model_json) as json_file:
-        model_info = json.load(json_file)
-
-    input_channels = model_info["input_channels"]
-    num_classes = model_info["num_classes"]
-  
-
-    model = MitosisNet(
-        input_channels,
-        num_classes_class1=num_classes,
-    )
-
-  
-    model.load_state_dict(
-        torch.load(saved_model_path, map_location=torch.device(device))
-    )
-    model.to(device)
-    model.eval()
-    predicted_classes1 = []
-    for idx in range(features_array.shape[0]):
-        feature_type = features_array[idx, :].tolist()
-        features_tensor = torch.tensor(feature_type).to(device)
-
-        with torch.no_grad():
-            outputs_class= model(features_tensor)
-            predicted_probs_class= torch.softmax(outputs_class, dim=1)
-            if threshold is not None:
-                predicted_probs_class1_numpy = (
-                    predicted_probs_class.cpu().detach().numpy()
-                )
-                predicted_class= (
-                    predicted_probs_class1_numpy[0][1] > threshold
-                ).astype(int)
-            else:
-                predicted_class= (
-                    torch.argmax(predicted_probs_class, dim=1).cpu().numpy()
-                )[0]
-
-            predicted_classes1.append(predicted_class)
-
-    return predicted_classes1
 
 
 def get_zero_gen_daughter_generations(
