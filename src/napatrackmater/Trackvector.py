@@ -10,11 +10,8 @@ import pandas as pd
 from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import linkage, fcluster
 from scipy.spatial import cKDTree
-import torch
-import json
 import matplotlib.pyplot as plt
 from typing import List, Union
-import torch.nn.init as init
 import random
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import PolynomialFeatures
@@ -1112,7 +1109,6 @@ def create_global_gt_dataframe(
     full_dataframe["Cluster"] = full_dataframe["Track ID"].map(track_id_to_cluster)
 
     return full_dataframe
-
 
 
 def calculate_wcss(data, labels, centroids):
@@ -2603,72 +2599,67 @@ def compute_covariance_matrix(track_arrays):
         print(f"Covariance matric computation {e}")
 
 
-
-
 def train_mitosis_neural_net(
     npz_file,
     save_path,
-    num_classes = 2,
+    num_classes=2,
     batch_size=64,
-    num_workers = 0,
+    num_workers=0,
     learning_rate=0.001,
-    epochs=10,
-    accelerator = 'cuda',
-    devices = 1,
-    model_type = 'simple',
+    epochs=100,
+    accelerator="cuda",
+    devices=1,
+    model_type="simple",
     growth_rate: int = 32,
     block_config: tuple = (6, 12, 24, 16),
     num_init_features: int = 32,
     bottleneck_size: int = 4,
     kernel_size: int = 3,
-    experiment_name = 'mitosis',
-    scheduler_choice="plateau"
+    experiment_name="mitosis",
+    scheduler_choice="plateau",
 ):
-    
-   if isinstance(block_config, int):
-       block_config = (block_config,)
-   mitosis_inception = MitosisInception(
-       npz_file = npz_file,
-       num_classes=num_classes,
-       growth_rate=growth_rate,
-       block_config=block_config,
-       num_init_features=num_init_features,
-       bottleneck_size=bottleneck_size,
-       kernel_size=kernel_size,
-       num_workers=num_workers,
-       epochs = epochs,
-       log_path=save_path,
-       batch_size=batch_size,
-       accelerator=accelerator,
-       devices = devices,
-       experiment_name= experiment_name,
-       scheduler_choice=scheduler_choice,
-       learning_rate=learning_rate
-   )
 
-   mitosis_inception.setup_datasets()
-   if model_type == 'simple':
-       mitosis_inception.setup_mitosisnet_model()
-   else:     
-       mitosis_inception.setup_densenet_model()
+    if isinstance(block_config, int):
+        block_config = (block_config,)
+    mitosis_inception = MitosisInception(
+        npz_file=npz_file,
+        num_classes=num_classes,
+        growth_rate=growth_rate,
+        block_config=block_config,
+        num_init_features=num_init_features,
+        bottleneck_size=bottleneck_size,
+        kernel_size=kernel_size,
+        num_workers=num_workers,
+        epochs=epochs,
+        log_path=save_path,
+        batch_size=batch_size,
+        accelerator=accelerator,
+        devices=devices,
+        experiment_name=experiment_name,
+        scheduler_choice=scheduler_choice,
+        learning_rate=learning_rate,
+    )
 
-   mitosis_inception.setup_logger()   
-   mitosis_inception.setup_checkpoint()
-   mitosis_inception.setup_adam()
-   mitosis_inception.setup_lightning_model()
-   mitosis_inception.train()
+    mitosis_inception.setup_datasets()
+    if model_type == "simple":
+        mitosis_inception.setup_mitosisnet_model()
+    else:
+        mitosis_inception.setup_densenet_model()
 
+    mitosis_inception.setup_logger()
+    mitosis_inception.setup_checkpoint()
+    mitosis_inception.setup_adam()
+    mitosis_inception.setup_lightning_model()
+    mitosis_inception.train()
 
-
-    
 
 def plot_metrics_from_npz(npz_file):
     data = np.load(npz_file)
 
-    train_loss_class= data["train_loss_class1"]
-    val_loss_class= data["val_loss_class1"]
-    train_acc_class= data["train_acc_class1"]
-    val_acc_class= data["val_acc_class1"]
+    train_loss_class = data["train_loss_class1"]
+    val_loss_class = data["val_loss_class1"]
+    train_acc_class = data["train_acc_class1"]
+    val_acc_class = data["val_acc_class1"]
 
     epochs = len(train_loss_class)
 
@@ -2687,8 +2678,6 @@ def plot_metrics_from_npz(npz_file):
 
     plt.tight_layout()
     plt.show()
-
-
 
 
 def get_zero_gen_daughter_generations(
