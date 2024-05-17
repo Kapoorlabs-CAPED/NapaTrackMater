@@ -10,7 +10,6 @@ from .Trackvector import (
     create_global_gt_dataframe,
     create_gt_analysis_vectors_dict,
     train_mitosis_neural_net,
-    predict_with_model,
     plot_metrics_from_npz,
     create_analysis_tracklets,
     create_dividing_prediction_tracklets,
