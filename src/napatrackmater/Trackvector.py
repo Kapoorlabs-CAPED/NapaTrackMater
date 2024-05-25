@@ -2599,6 +2599,60 @@ def compute_covariance_matrix(track_arrays):
         print(f"Covariance matric computation {e}")
 
 
+
+def train_gbr_neural_net(
+    npz_file,
+    save_path,
+    num_classes=2,
+    batch_size=64,
+    num_workers=0,
+    learning_rate=0.001,
+    epochs=100,
+    accelerator="cuda",
+    devices=1,
+    model_type="simple",
+    growth_rate: int = 32,
+    block_config: tuple = (6, 12, 24, 16),
+    num_init_features: int = 32,
+    bottleneck_size: int = 4,
+    kernel_size: int = 3,
+    experiment_name="mitosis",
+    scheduler_choice="plateau",
+):
+
+    if isinstance(block_config, int):
+        block_config = (block_config,)
+    mitosis_inception = MitosisInception(
+        npz_file=npz_file,
+        num_classes=num_classes,
+        growth_rate=growth_rate,
+        block_config=block_config,
+        num_init_features=num_init_features,
+        bottleneck_size=bottleneck_size,
+        kernel_size=kernel_size,
+        num_workers=num_workers,
+        epochs=epochs,
+        log_path=save_path,
+        batch_size=batch_size,
+        accelerator=accelerator,
+        devices=devices,
+        experiment_name=experiment_name,
+        scheduler_choice=scheduler_choice,
+        learning_rate=learning_rate,
+    )
+
+    mitosis_inception.setup_gbr_datasets()
+    if model_type == "simple":
+        mitosis_inception.setup_mitosisnet_model()
+    else:
+        mitosis_inception.setup_densenet_model()
+
+    mitosis_inception.setup_logger()
+    mitosis_inception.setup_checkpoint()
+    mitosis_inception.setup_adam()
+    mitosis_inception.setup_lightning_model()
+    mitosis_inception.train()
+
 def train_mitosis_neural_net(
     npz_file,
     save_path,
