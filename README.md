@@ -13,7 +13,6 @@ This product is a testament to our expertise at KapoorLabs, where we specialize 
 [![License BSD-3](https://img.shields.io/pypi/l/NapaTrackMater.svg?color=green)](https://github.com/Kapoorlabs-CAPED/NapaTrackMater/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/NapaTrackMater.svg?color=green)](https://pypi.org/project/NapaTrackMater)
 [![Python Version](https://img.shields.io/pypi/pyversions/NapaTrackMater.svg?color=green)](https://python.org)
-[![tests](https://github.com/Kapoorlabs-CAPED/NapaTrackMater/workflows/tests/badge.svg)](https://github.com/Kapoorlabs-CAPED/NapaTrackMater/actions)
 [![codecov](https://codecov.io/gh/Kapoorlabs-CAPED/NapaTrackMater/branch/main/graph/badge.svg)](https://codecov.io/gh/Kapoorlabs-CAPED/NapaTrackMater)
 
 
