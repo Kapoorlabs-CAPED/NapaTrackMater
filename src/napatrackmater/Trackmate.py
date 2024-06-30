@@ -27,7 +27,7 @@ class TrackMate:
         AttributeBoxname="AttributeIDBox",
         TrackAttributeBoxname="TrackAttributeIDBox",
         TrackidBox="All",
-        second_channel_name='membrane',
+        second_channel_name="membrane",
         axes="TZYX",
         scale_z=1.0,
         scale_xy=1.0,
@@ -717,7 +717,10 @@ class TrackMate:
 
     def _get_label_density(self, frame, test_location):
 
-        current_frame_image = self.seg_image[int(float(frame)), :]
+        if self.channel_seg_image is None:
+            current_frame_image = self.seg_image[int(float(frame)), :]
+        if self.channel_seg_image is not None:
+            current_frame_image = self.channel_seg_image[int(float(frame)), :]
         z_test, y_test, x_test = test_location
 
         min_z = max(0, int(z_test - self.cell_veto_box))
@@ -1747,7 +1750,9 @@ class TrackMate:
     def _get_xml_data(self):
 
         if self.channel_seg_image is not None:
-            print(f'Segmentation image in second channel {self.second_channel_name} of shape {self.channel_seg_image.shape}')
+            print(
+                f"Segmentation image in second channel {self.second_channel_name} of shape {self.channel_seg_image.shape}"
+            )
             self.channel_xml_content = self.xml_content
             self.xml_tree = et.parse(self.xml_path)
             self.xml_root = self.xml_tree.getroot()
@@ -1815,7 +1820,7 @@ class TrackMate:
         self.tend = int(float(self.basicsettings.get("tend")))
         self._get_cell_sizes()
         self._get_boundary_points()
-        
+
         print("Iterating over spots in frame")
 
         self.count = 0
@@ -3163,7 +3168,26 @@ def compute_cell_size(seg_image):
     timed_cell_size = {}
 
     if ndim == 2:
-            props = measure.regionprops(seg_image)
+        props = measure.regionprops(seg_image)
+        largest_size = []
+        for prop in props:
+            try:
+                largest_size.append(prop.feret_diameter_max)
+            except Exception:
+                pass
+
+        if largest_size:
+            max_size = max(largest_size)
+            print(f"The maximum Feret diameter is: {max_size}")
+        else:
+            print("No valid Feret diameter values were found.")
+
+        timed_cell_size[str(0)] = float(max_size)
+
+    if ndim in (3, 4):
+        for i in tqdm(range(0, seg_image.shape[0], int(seg_image.shape[0] / 10))):
+            props = measure.regionprops(seg_image[i, :])
+
             largest_size = []
             for prop in props:
                 try:
@@ -3177,28 +3201,7 @@ def compute_cell_size(seg_image):
             else:
                 print("No valid Feret diameter values were found.")
 
-            
-            timed_cell_size[str(0)] = float(max_size)
-        
-
-    if ndim in (3, 4):
-        for i in tqdm(range(0, seg_image.shape[0], int(seg_image.shape[0] / 10))):
-                props = measure.regionprops(seg_image[i, :])
-
-                largest_size = []
-                for prop in props:
-                    try:
-                       largest_size.append(prop.feret_diameter_max)
-                    except Exception:
-                        pass
-
-                if largest_size:
-                    max_size = max(largest_size)
-                    print(f"The maximum Feret diameter is: {max_size}")
-                else:
-                    print("No valid Feret diameter values were found.")
-
-                timed_cell_size[str(i)] = float(max_size)
+            timed_cell_size[str(i)] = float(max_size)
 
     return timed_cell_size
 
