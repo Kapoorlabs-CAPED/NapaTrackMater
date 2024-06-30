@@ -405,6 +405,12 @@ class TrackMate:
         print("Getting largest cell size")
         if self.seg_image is not None:
             self.timed_cell_size = get_largest_size(compute_cell_size(self.seg_image))
+        elif self.channel_seg_image is not None:
+            self.timed_cell_size = get_largest_size(
+                compute_cell_size(self.channel_seg_image)
+            )
+        else:
+            self.timed_cell_size = 100
         self.cell_veto_box = 4 * self.timed_cell_size
 
     def _get_boundary_points(self):
@@ -1351,7 +1357,6 @@ class TrackMate:
                 total_intensity = float(Spotobject.get(self.total_intensity_key))
                 mean_intensity = float(Spotobject.get(self.mean_intensity_key))
 
-
                 self.tracklet_id_to_trackmate_id[
                     float(str(Spotobject.get(self.uniqueid_key)))
                 ] = int(float(str(Spotobject.get(self.trackid_key))))
@@ -1363,8 +1368,6 @@ class TrackMate:
                 self.tracklet_id_to_tracklet_number_id[
                     float(str(Spotobject.get(self.uniqueid_key)))
                 ] = int(float(str(Spotobject.get(self.trackletid_key))))
-   
-
 
                 self.unique_spot_properties[cell_id] = {
                     self.cellid_key: int(float(Spotobject.get(self.spotid_key))),
@@ -1907,14 +1910,13 @@ class TrackMate:
         self._compute_phenotypes()
         self._temporal_plots_trackmate()
 
-    
-
     def _correct_track_status(self):
         if self.oneat_csv_file is not None:
             print("Improving mitosis track classification using Oneat")
             detections = pd.read_csv(self.oneat_csv_file, delimiter=",")
             cutoff_score = self.oneat_threshold_cutoff
             filtered_detections = detections[detections["Score"] > cutoff_score]
+
             def process_row(row):
                 t = int(row["T"])
                 z = round(row["Z"])
@@ -1926,9 +1928,8 @@ class TrackMate:
                 spot_id = find_closest_key(spot, self.unique_oneat_spot_centroid, 0, 5)
                 if spot_id is not None:
                     self.oneat_dividing_tracks[spot_id] = spot
+
             filtered_detections.apply(process_row, axis=1)
-
-
 
     def _create_master_xml(self):
 
@@ -2344,7 +2345,7 @@ class TrackMate:
                 current_intensity = np.asarray(current_intensity, dtype=np.float32)
 
                 current_radius = np.asarray(current_radius, dtype=np.float32)
-                
+
                 current_eccentricity_comp_first = np.asarray(
                     current_eccentricity_comp_first, dtype=np.float32
                 )

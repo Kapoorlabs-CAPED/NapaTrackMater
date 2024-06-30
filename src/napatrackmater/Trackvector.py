@@ -3,6 +3,7 @@ from pathlib import Path
 import lxml.etree as et
 import concurrent
 import os
+import logging
 import numpy as np
 import re
 import napari
@@ -19,6 +20,9 @@ from sklearn.linear_model import LinearRegression
 from statsmodels.tsa.stattools import acf, ccf
 from scipy.stats import norm, anderson
 from kapoorlabs_lightning.lightning_trainer import MitosisInception
+
+
+logger = logging.getLogger(__name__)
 
 
 SHAPE_FEATURES = [
@@ -58,7 +62,7 @@ class TrackVector(TrackMate):
     def __init__(
         self,
         master_xml_path: Path,
-        viewer: napari.Viewer = None,
+        viewer=None,
         image: np.ndarray = None,
         spot_csv_path: Path = None,
         track_csv_path: Path = None,
@@ -593,7 +597,7 @@ class TrackVector(TrackMate):
     def get_shape_dynamic_feature_dataframe(self):
 
         current_shape_dynamic_vectors = self.current_shape_dynamic_vectors
-        global_shape_dynamic_dataframe = []
+        tracks_dataframe = []
 
         for i in range(len(current_shape_dynamic_vectors)):
             vector_list = current_shape_dynamic_vectors[i]
@@ -625,51 +629,39 @@ class TrackVector(TrackMate):
                     [shape_dynamic_dataframe, latent_features_df], axis=1
                 )
 
-            if len(global_shape_dynamic_dataframe) == 0:
-                global_shape_dynamic_dataframe = shape_dynamic_dataframe
+            if len(tracks_dataframe) == 0:
+                tracks_dataframe = shape_dynamic_dataframe
             else:
-                global_shape_dynamic_dataframe = pd.concat(
-                    [global_shape_dynamic_dataframe, shape_dynamic_dataframe],
+                tracks_dataframe = pd.concat(
+                    [tracks_dataframe, shape_dynamic_dataframe],
                     ignore_index=True,
                 )
-        global_shape_dynamic_dataframe[
-            "TrackMate Track ID"
-        ] = global_shape_dynamic_dataframe["Track ID"].map(
+        tracks_dataframe["TrackMate Track ID"] = tracks_dataframe["Track ID"].map(
             self.tracklet_id_to_trackmate_id
         )
 
-        global_shape_dynamic_dataframe[
-            "Generation ID"
-        ] = global_shape_dynamic_dataframe["Track ID"].map(
+        tracks_dataframe["Generation ID"] = tracks_dataframe["Track ID"].map(
             self.tracklet_id_to_generation_id
         )
 
-        global_shape_dynamic_dataframe[
-            "Tracklet Number ID"
-        ] = global_shape_dynamic_dataframe["Track ID"].map(
+        tracks_dataframe["Tracklet Number ID"] = tracks_dataframe["Track ID"].map(
             self.tracklet_id_to_tracklet_number_id
         )
 
-        trackmate_ids = global_shape_dynamic_dataframe["TrackMate Track ID"]
+        trackmate_ids = tracks_dataframe["TrackMate Track ID"]
         track_duration_dict = {}
         for trackmate_id in trackmate_ids:
             track_properties = self.unique_track_properties[trackmate_id]
             total_track_duration = track_properties[:, -1][0]
             track_duration_dict[trackmate_id] = int(total_track_duration)
-        global_shape_dynamic_dataframe[
-            "Track Duration"
-        ] = global_shape_dynamic_dataframe["TrackMate Track ID"].map(
+        tracks_dataframe["Track Duration"] = tracks_dataframe["TrackMate Track ID"].map(
             track_duration_dict
         )
 
-        global_shape_dynamic_dataframe = global_shape_dynamic_dataframe.sort_values(
-            by=["Track ID"]
-        )
-        global_shape_dynamic_dataframe = global_shape_dynamic_dataframe.sort_values(
-            by=["t"]
-        )
+        tracks_dataframe = tracks_dataframe.sort_values(by=["Track ID"])
+        tracks_dataframe = tracks_dataframe.sort_values(by=["t"])
 
-        return global_shape_dynamic_dataframe
+        return tracks_dataframe
 
     def build_closeness_dict(self, radius):
         self.closeness_dict = {}
@@ -830,16 +822,14 @@ def _iterate_over_cell_type_tracklets(
 
 
 def create_dividing_prediction_tracklets(
-    global_shape_dynamic_dataframe: pd.DataFrame, ignore_columns=[]
+    tracks_dataframe: pd.DataFrame, ignore_columns=[]
 ):
     training_tracklets = {}
-    subset_dividing = global_shape_dynamic_dataframe[
-        global_shape_dynamic_dataframe["Dividing"] == 1
-    ]
+    subset_dividing = tracks_dataframe[tracks_dataframe["Dividing"] == 1]
     track_ids = subset_dividing["Track ID"].unique()
     for track_id in track_ids:
-        track_data = global_shape_dynamic_dataframe[
-            (global_shape_dynamic_dataframe["Track ID"] == track_id)
+        track_data = tracks_dataframe[
+            (tracks_dataframe["Track ID"] == track_id)
         ].sort_values(by="t")
         if track_data.shape[0] > 0:
             training_tracklets = _iterate_over_tracklets(
@@ -854,7 +844,7 @@ def create_dividing_prediction_tracklets(
 
 
 def create_analysis_tracklets(
-    global_shape_dynamic_dataframe: pd.DataFrame,
+    tracks_dataframe: pd.DataFrame,
     t_minus=None,
     t_plus=None,
     class_ratio=-1,
@@ -862,12 +852,12 @@ def create_analysis_tracklets(
 ):
     training_tracklets = {}
     if t_minus is not None and t_plus is not None:
-        time_mask = (global_shape_dynamic_dataframe["t"] >= t_minus) & (
-            global_shape_dynamic_dataframe["t"] <= t_plus
+        time_mask = (tracks_dataframe["t"] >= t_minus) & (
+            tracks_dataframe["t"] <= t_plus
         )
-        local_shape_dynamic_dataframe = global_shape_dynamic_dataframe[time_mask]
+        local_shape_dynamic_dataframe = tracks_dataframe[time_mask]
     else:
-        local_shape_dynamic_dataframe = global_shape_dynamic_dataframe
+        local_shape_dynamic_dataframe = tracks_dataframe
 
     subset_dividing = local_shape_dynamic_dataframe[
         local_shape_dynamic_dataframe["Dividing"] == 1
@@ -923,7 +913,7 @@ def create_analysis_tracklets(
 
 
 def create_analysis_cell_type_tracklets(
-    global_shape_dynamic_dataframe: pd.DataFrame,
+    tracks_dataframe: pd.DataFrame,
     t_minus=None,
     t_plus=None,
     class_ratio=-1,
@@ -932,12 +922,12 @@ def create_analysis_cell_type_tracklets(
 ):
     training_tracklets = {}
     if t_minus is not None and t_plus is not None:
-        time_mask = (global_shape_dynamic_dataframe["t"] >= t_minus) & (
-            global_shape_dynamic_dataframe["t"] <= t_plus
+        time_mask = (tracks_dataframe["t"] >= t_minus) & (
+            tracks_dataframe["t"] <= t_plus
         )
-        local_shape_dynamic_dataframe = global_shape_dynamic_dataframe[time_mask]
+        local_shape_dynamic_dataframe = tracks_dataframe[time_mask]
     else:
-        local_shape_dynamic_dataframe = global_shape_dynamic_dataframe
+        local_shape_dynamic_dataframe = tracks_dataframe
 
     subset_dividing = local_shape_dynamic_dataframe[
         local_shape_dynamic_dataframe["Dividing"] == 1
@@ -1000,11 +990,11 @@ def create_analysis_cell_type_tracklets(
     return training_tracklets, modified_dataframe
 
 
-def create_gt_analysis_vectors_dict(global_shape_dynamic_dataframe: pd.DataFrame):
+def create_gt_analysis_vectors_dict(tracks_dataframe: pd.DataFrame):
     gt_analysis_vectors = {}
-    for track_id in global_shape_dynamic_dataframe["Track ID"].unique():
-        track_data = global_shape_dynamic_dataframe[
-            global_shape_dynamic_dataframe["Track ID"] == track_id
+    for track_id in tracks_dataframe["Track ID"].unique():
+        track_data = tracks_dataframe[
+            tracks_dataframe["Track ID"] == track_id
         ].sort_values(by="t")
         shape_dynamic_dataframe = track_data[SHAPE_DYNAMIC_FEATURES]
         gt_dataframe = track_data[
@@ -2599,7 +2589,6 @@ def compute_covariance_matrix(track_arrays):
         print(f"Covariance matric computation {e}")
 
 
-
 def train_gbr_neural_net(
     npz_file,
     save_path,
@@ -2652,6 +2641,7 @@ def train_gbr_neural_net(
     mitosis_inception.setup_adam()
     mitosis_inception.setup_lightning_model()
     mitosis_inception.train()
+
 
 def train_mitosis_neural_net(
     npz_file,
@@ -2736,20 +2726,20 @@ def plot_metrics_from_npz(npz_file):
 
 def get_zero_gen_daughter_generations(
     unique_trackmate_track_ids,
-    global_shape_dynamic_dataframe,
+    tracks_dataframe: pd.DataFrame,
     zero_gen_tracklets,
     daughter_generations,
 ):
 
     for trackmate_track_id in unique_trackmate_track_ids:
-        subset = global_shape_dynamic_dataframe[
-            (global_shape_dynamic_dataframe["TrackMate Track ID"] == trackmate_track_id)
+        subset = tracks_dataframe[
+            (tracks_dataframe["TrackMate Track ID"] == trackmate_track_id)
         ].sort_values(by="t")
         sorted_subset = sorted(subset["Track ID"].unique())
         for tracklet_id in sorted_subset:
 
-            dividing_track_track_data = global_shape_dynamic_dataframe[
-                (global_shape_dynamic_dataframe["Track ID"] == tracklet_id)
+            dividing_track_track_data = tracks_dataframe[
+                (tracks_dataframe["Track ID"] == tracklet_id)
             ].sort_values(by="t")
             generation_id = int(
                 float(dividing_track_track_data["Generation ID"].iloc[0])
@@ -2777,7 +2767,7 @@ def get_zero_gen_daughter_generations(
 
 def populate_zero_gen_tracklets(
     zero_gen_tracklets,
-    global_shape_dynamic_dataframe,
+    tracks_dataframe,
     zero_gen_life,
     zero_gen_polynomial_coefficients,
     zero_gen_polynomials,
@@ -2801,8 +2791,8 @@ def populate_zero_gen_tracklets(
             start_end_times = np.vstack((start_time, end_time))
 
             zero_gen_life.append(end_time - start_time)
-            dividing_track_track_data = global_shape_dynamic_dataframe[
-                (global_shape_dynamic_dataframe["Track ID"] == zero_gen_tracklet_id)
+            dividing_track_track_data = tracks_dataframe[
+                (tracks_dataframe["Track ID"] == zero_gen_tracklet_id)
             ].sort_values(by="t")
             result = cell_fate_recipe(dividing_track_track_data)
             if result is not None:
@@ -2918,7 +2908,7 @@ def generic_polynomial_fits(
 
 def populate_daughter_tracklets(
     daughter_generations,
-    global_shape_dynamic_dataframe,
+    tracks_dataframe,
     generation_id,
     nth_generation_life,
     nth_generation_polynomial_coefficients,
@@ -2939,8 +2929,8 @@ def populate_daughter_tracklets(
             start_end_times = np.vstack((start_time, end_time))
 
             nth_generation_life.append(end_time - start_time)
-            dividing_track_track_data = global_shape_dynamic_dataframe[
-                (global_shape_dynamic_dataframe["Track ID"] == daughter_tracklet_id)
+            dividing_track_track_data = tracks_dataframe[
+                (tracks_dataframe["Track ID"] == daughter_tracklet_id)
             ].sort_values(by="t")
             result = cell_fate_recipe(dividing_track_track_data)
             if result is not None:
@@ -3167,15 +3157,15 @@ def extract_number_from_string(string):
     return numbers
 
 
-def cross_correlation_class(global_shape_dynamic_dataframe, cell_type_label=None):
+def cross_correlation_class(tracks_dataframe, cell_type_label=None):
 
     if cell_type_label is not None:
-        global_shape_dynamic_dataframe = global_shape_dynamic_dataframe[
-            (global_shape_dynamic_dataframe["Cell_Type_Label"] == cell_type_label)
+        tracks_dataframe = tracks_dataframe[
+            (tracks_dataframe["Cell_Type_Label"] == cell_type_label)
         ]
 
-    generation_max = global_shape_dynamic_dataframe["Generation ID"].max()
-    sorted_dividing_dataframe = global_shape_dynamic_dataframe.sort_values(
+    generation_max = tracks_dataframe["Generation ID"].max()
+    sorted_dividing_dataframe = tracks_dataframe.sort_values(
         by="Track Duration", ascending=False
     )
 
@@ -3186,7 +3176,7 @@ def cross_correlation_class(global_shape_dynamic_dataframe, cell_type_label=None
     daughter_generations = {i: {} for i in range(1, generation_max + 1)}
     get_zero_gen_daughter_generations(
         unique_trackmate_track_ids,
-        global_shape_dynamic_dataframe,
+        tracks_dataframe,
         zero_gen_tracklets,
         daughter_generations,
     )
@@ -3202,7 +3192,7 @@ def cross_correlation_class(global_shape_dynamic_dataframe, cell_type_label=None
 
     populate_zero_gen_tracklets(
         zero_gen_tracklets,
-        global_shape_dynamic_dataframe,
+        tracks_dataframe,
         zero_gen_dynamic_life,
         zero_gen_dynamic_polynomial_coefficients,
         zero_gen_dynamic_polynomials,
@@ -3225,7 +3215,7 @@ def cross_correlation_class(global_shape_dynamic_dataframe, cell_type_label=None
 
     populate_zero_gen_tracklets(
         zero_gen_tracklets,
-        global_shape_dynamic_dataframe,
+        tracks_dataframe,
         zero_gen_shape_life,
         zero_gen_shape_polynomial_coefficients,
         zero_gen_shape_polynomials,
@@ -3250,7 +3240,7 @@ def cross_correlation_class(global_shape_dynamic_dataframe, cell_type_label=None
         if generation_id >= 1:
             populate_daughter_tracklets(
                 daughter_generations,
-                global_shape_dynamic_dataframe,
+                tracks_dataframe,
                 generation_id,
                 N_shape_generation_life,
                 N_shape_generation_polynomial_coefficients,
@@ -3276,7 +3266,7 @@ def cross_correlation_class(global_shape_dynamic_dataframe, cell_type_label=None
         if generation_id >= 1:
             populate_daughter_tracklets(
                 daughter_generations,
-                global_shape_dynamic_dataframe,
+                tracks_dataframe,
                 generation_id,
                 N_dynamic_generation_life,
                 N_dynamic_generation_polynomial_coefficients,
