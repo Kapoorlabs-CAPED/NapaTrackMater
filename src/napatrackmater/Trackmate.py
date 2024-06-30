@@ -37,6 +37,7 @@ class TrackMate:
         accelerator: str = "cuda",
         devices: Union[List[int], str, int] = 1,
         master_xml_path: Path = None,
+        channel_xml_path: Path = None,
         master_extra_name="",
         seg_image: np.ndarray = None,
         channel_seg_image: np.ndarray = None,
@@ -55,6 +56,7 @@ class TrackMate:
 
         self.xml_path = xml_path
         self.master_xml_path = master_xml_path
+        self.channel_xml_path = channel_xml_path
         self.spot_csv_path = spot_csv_path
         self.track_csv_path = track_csv_path
         self.edges_csv_path = edges_csv_path
@@ -68,7 +70,8 @@ class TrackMate:
         self.oneat_csv_file = oneat_csv_file
         self.oneat_threshold_cutoff = oneat_threshold_cutoff
         self.latent_features = latent_features
-
+        if channel_xml_path is None:
+            self.channel_xml_path = os.path.dirname(self.xml_path)
         if image is not None:
             self.image = image.astype(np.uint8)
         else:
@@ -412,7 +415,7 @@ class TrackMate:
                 compute_cell_size(self.channel_seg_image)
             )
         else:
-            self.timed_cell_size = 100
+            self.timed_cell_size = 50
         self.cell_veto_box = 4 * self.timed_cell_size
 
     def _get_boundary_points(self):
@@ -1566,7 +1569,6 @@ class TrackMate:
             else:
                 new_name = base_name + f"_{self.second_channel_name}"
             self.channel_xml_name = new_name + ".xml"
-            self.channel_xml_path = os.path.dirname(self.xml_path)
             self._create_channel_tree()
 
         self.unique_objects = {}
@@ -1764,7 +1766,6 @@ class TrackMate:
             else:
                 new_name = base_name + f"_{self.second_channel_name}"
             self.channel_xml_name = new_name + ".xml"
-            self.channel_xml_path = os.path.dirname(self.xml_path)
             self._create_channel_tree()
         if (
             self.autoencoder_model is not None or self.enhance_trackmate_xml
