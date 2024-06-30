@@ -1636,7 +1636,7 @@ class TrackMate:
             self.progress_bar.range = (0, len(self.filtered_track_ids))
             self.progress_bar.show()
 
-        for track in self.tracks.findall("Track"):
+        for track in tqdm(self.tracks.findall("Track")):
             track_id = int(track.get(self.trackid_key))
             if track_id in self.filtered_track_ids:
                 self._master_track_computer(track, track_id)
@@ -1864,7 +1864,7 @@ class TrackMate:
                 if digit_length > max_length:
                     max_length = digit_length
         self.max_track_digit = max_length
-        for track in self.tracks.findall("Track"):
+        for track in tqdm(self.tracks.findall("Track")):
             track_id = int(track.get(self.trackid_key))
             if track_id in self.filtered_track_ids:
                 self._track_computer(track, track_id)
