@@ -27,6 +27,7 @@ class TrackMate:
         AttributeBoxname="AttributeIDBox",
         TrackAttributeBoxname="TrackAttributeIDBox",
         TrackidBox="All",
+        second_channel_name='membrane',
         axes="TZYX",
         scale_z=1.0,
         scale_xy=1.0,
@@ -98,6 +99,7 @@ class TrackMate:
         self.AttributeBoxname = AttributeBoxname
         self.TrackAttributeBoxname = TrackAttributeBoxname
         self.TrackidBox = TrackidBox
+        self.second_channel_name = second_channel_name
         self.master_extra_name = master_extra_name
 
         self.num_points = num_points
@@ -1556,10 +1558,10 @@ class TrackMate:
             self.xml_root = self.xml_tree.getroot()
             base_name = os.path.splitext(os.path.basename(self.xml_path))[0]
             if "nuclei" in base_name:
-                base_name = base_name.replace("nuclei", "membrane")
+                base_name = base_name.replace("nuclei", self.second_channel_name)
                 new_name = base_name
             else:
-                new_name = base_name + "_membrane"
+                new_name = base_name + f"_{self.second_channel_name}"
             self.channel_xml_name = new_name + ".xml"
             self.channel_xml_path = os.path.dirname(self.xml_path)
             self._create_channel_tree()
@@ -1687,7 +1689,7 @@ class TrackMate:
         channel_filtered_tracks = []
         file_name = self.settings.get("filename")
         if "nuclei" in file_name:
-            file_name = file_name.replace("nuclei", "membrane")
+            file_name = file_name.replace("nuclei", self.second_channel_name)
         for Spotobject in self.xml_root.iter("ImageData"):
             Spotobject.set("filename", file_name)
         for Spotobject in self.xml_root.iter("Spot"):
@@ -1745,16 +1747,17 @@ class TrackMate:
     def _get_xml_data(self):
 
         if self.channel_seg_image is not None:
+            print(f'Segmentation image in second channel {self.second_channel_name} of shape {self.channel_seg_image.shape}')
             self.channel_xml_content = self.xml_content
             self.xml_tree = et.parse(self.xml_path)
             self.xml_root = self.xml_tree.getroot()
             base_name = os.path.splitext(os.path.basename(self.xml_path))[0]
 
             if "nuclei" in base_name:
-                base_name = base_name.replace("nuclei", "membrane")
+                base_name = base_name.replace("nuclei", self.second_channel_name)
                 new_name = base_name
             else:
-                new_name = base_name + "_membrane"
+                new_name = base_name + f"_{self.second_channel_name}"
             self.channel_xml_name = new_name + ".xml"
             self.channel_xml_path = os.path.dirname(self.xml_path)
             self._create_channel_tree()
