@@ -1813,8 +1813,9 @@ class TrackMate:
         self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
         self.tstart = int(float(self.basicsettings.get("tstart")))
         self.tend = int(float(self.basicsettings.get("tend")))
-        self._get_boundary_points()
         self._get_cell_sizes()
+        self._get_boundary_points()
+        
         print("Iterating over spots in frame")
 
         self.count = 0
@@ -3162,24 +3163,42 @@ def compute_cell_size(seg_image):
     timed_cell_size = {}
 
     if ndim == 2:
-        try:
             props = measure.regionprops(seg_image)
-            largest_size = max(props, key=lambda prop: prop.feret_diameter_max)
-            timed_cell_size[str(0)] = float(largest_size.feret_diameter_max)
-        except ValueError as e:
-            print("Skipping:", e)
-            timed_cell_size[str(0)] = 1.0
+            largest_size = []
+            for prop in props:
+                try:
+                    largest_size.append(prop.feret_diameter_max)
+                except Exception:
+                    pass
+
+            if largest_size:
+                max_size = max(largest_size)
+                print(f"The maximum Feret diameter is: {max_size}")
+            else:
+                print("No valid Feret diameter values were found.")
+
+            
+            timed_cell_size[str(0)] = float(max_size)
+        
 
     if ndim in (3, 4):
         for i in tqdm(range(0, seg_image.shape[0], int(seg_image.shape[0] / 10))):
-            try:
                 props = measure.regionprops(seg_image[i, :])
-                largest_size = max(props, key=lambda prop: prop.feret_diameter_max)
-                timed_cell_size[str(i)] = float(largest_size.feret_diameter_max)
-            except ValueError as e:
-                print(f"Skipping at index {i}: {e}")
 
-                continue
+                largest_size = []
+                for prop in props:
+                    try:
+                       largest_size.append(prop.feret_diameter_max)
+                    except Exception:
+                        pass
+
+                if largest_size:
+                    max_size = max(largest_size)
+                    print(f"The maximum Feret diameter is: {max_size}")
+                else:
+                    print("No valid Feret diameter values were found.")
+
+                timed_cell_size[str(i)] = float(max_size)
 
     return timed_cell_size
 
