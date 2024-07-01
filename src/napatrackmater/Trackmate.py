@@ -1918,11 +1918,12 @@ class TrackMate:
                 self.count = self.count + 1
                 self.progress_bar.value = self.count
             track = self.filtered_tracks[index]
-            self._final_tracks(track_id)
-
-        print("computing Phenotypes")
-        self._compute_phenotypes()
-        self._temporal_plots_trackmate()
+            if self.channel_seg_image is None:
+                self._final_tracks(track_id)
+        if self.channel_seg_image is None:
+            print("computing Phenotypes")
+            self._compute_phenotypes()
+            self._temporal_plots_trackmate()
 
     def _correct_track_status(self):
         if self.oneat_csv_file is not None:
