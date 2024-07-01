@@ -1682,11 +1682,12 @@ class TrackMate:
                 self.count = self.count + 1
                 self.progress_bar.value = self.count
             track = self.filtered_tracks[index]
-            self._final_tracks(track_id)
-
-        print("computing Phenotypes")
-        self._compute_phenotypes()
-        self._temporal_plots_trackmate()
+            if self.channel_seg_image is None:
+                self._final_tracks(track_id)
+        if self.channel_seg_image is None:
+            print("computing Phenotypes")
+            self._compute_phenotypes()
+            self._temporal_plots_trackmate()
 
     def _create_second_channel_xml(self):
 
@@ -1746,7 +1747,9 @@ class TrackMate:
                     self.trackid_key
                 ]
                 channel_filtered_tracks.append(track_id)
-        print(f'Writing new xml at path {self.channel_xml_path}, {self.channel_xml_name}')
+        print(
+            f"Writing new xml at path {self.channel_xml_path}, {self.channel_xml_name}"
+        )
         self.xml_tree.write(os.path.join(self.channel_xml_path, self.channel_xml_name))
 
     def _get_xml_data(self):
@@ -1820,8 +1823,8 @@ class TrackMate:
         self.tstart = int(float(self.basicsettings.get("tstart")))
         self.tend = int(float(self.basicsettings.get("tend")))
         if self.channel_seg_image is None:
-          self._get_cell_sizes()
-          self._get_boundary_points()
+            self._get_cell_sizes()
+            self._get_boundary_points()
 
         print("Iterating over spots in frame")
 
@@ -1849,7 +1852,7 @@ class TrackMate:
                     self.progress_bar.value = self.count
                 r.result()
         if self.channel_seg_image is None:
-           self._correct_track_status()
+            self._correct_track_status()
         print(f"Iterating over tracks {len(self.filtered_track_ids)}")
         self.count = 0
         if self.progress_bar is not None:
