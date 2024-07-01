@@ -1819,8 +1819,9 @@ class TrackMate:
         self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
         self.tstart = int(float(self.basicsettings.get("tstart")))
         self.tend = int(float(self.basicsettings.get("tend")))
-        self._get_cell_sizes()
-        self._get_boundary_points()
+        if self.channel_seg_image is None:
+          self._get_cell_sizes()
+          self._get_boundary_points()
 
         print("Iterating over spots in frame")
 
@@ -1847,30 +1848,30 @@ class TrackMate:
                 if self.progress_bar is not None:
                     self.progress_bar.value = self.count
                 r.result()
-
-        self._correct_track_status()
+        if self.channel_seg_image is None:
+           self._correct_track_status()
         print(f"Iterating over tracks {len(self.filtered_track_ids)}")
         self.count = 0
         if self.progress_bar is not None:
             self.progress_bar.label = "Collecting Tracks"
             self.progress_bar.range = (0, len(self.filtered_track_ids))
             self.progress_bar.show()
-
-        max_length = 0
-        for track in self.tracks.findall("Track"):
-            track_id = int(track.get(self.trackid_key))
-            if track_id in self.filtered_track_ids:
-                digit_length = len(str(track_id))
-                if digit_length > max_length:
-                    max_length = digit_length
-        self.max_track_digit = max_length
-        for track in tqdm(self.tracks.findall("Track")):
-            track_id = int(track.get(self.trackid_key))
-            if track_id in self.filtered_track_ids:
-                self._track_computer(track, track_id)
-                self.count += 1
-                if self.progress_bar is not None:
-                    self.progress_bar.value = self.count
+        if self.channel_seg_image is None:
+            max_length = 0
+            for track in self.tracks.findall("Track"):
+                track_id = int(track.get(self.trackid_key))
+                if track_id in self.filtered_track_ids:
+                    digit_length = len(str(track_id))
+                    if digit_length > max_length:
+                        max_length = digit_length
+            self.max_track_digit = max_length
+            for track in tqdm(self.tracks.findall("Track")):
+                track_id = int(track.get(self.trackid_key))
+                if track_id in self.filtered_track_ids:
+                    self._track_computer(track, track_id)
+                    self.count += 1
+                    if self.progress_bar is not None:
+                        self.progress_bar.value = self.count
         if self.channel_seg_image is not None:
             self._create_second_channel_xml()
 
