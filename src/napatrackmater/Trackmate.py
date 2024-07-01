@@ -1746,7 +1746,7 @@ class TrackMate:
                     self.trackid_key
                 ]
                 channel_filtered_tracks.append(track_id)
-
+        print(f'Writing new xml at path {self.channel_xml_path}, {self.channel_xml_name}')
         self.xml_tree.write(os.path.join(self.channel_xml_path, self.channel_xml_name))
 
     def _get_xml_data(self):
