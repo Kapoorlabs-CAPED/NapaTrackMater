@@ -45,6 +45,10 @@ To install latest development version :
 Contributions are very welcome. Tests can be run with [tox], please ensure
 the coverage at least stays the same before you submit a pull request.
 
+## Computational Support
+
+Auto Track Correction using TrackMate-Oneat was granted access to the HPC resources of IDRIS under the allocation 2022 - [AD011013724] made by GENCI. We used the resources to create training data and inference on the imaging datasets.
+
 ## License
 
 Distributed under the terms of the [BSD-3] license,
