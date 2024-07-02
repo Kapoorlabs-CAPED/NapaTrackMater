@@ -47,7 +47,7 @@ the coverage at least stays the same before you submit a pull request.
 
 ## Computational Support
 
-Auto Track Correction using TrackMate-Oneat was granted access to the HPC resources of IDRIS under the allocation 2022 - [AD011013724] made by GENCI. We used the resources to create training data and inference on the imaging datasets.
+Auto Track Correction using TrackMate-Oneat was granted access to the HPC resources of IDRIS under the allocation 2022 - [AD011013724], 2023 - [AD011013724R1] made by GENCI. We used the resources to create training data and inference on the imaging datasets.
 
 ## License
 
