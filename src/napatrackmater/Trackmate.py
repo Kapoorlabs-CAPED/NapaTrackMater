@@ -70,8 +70,6 @@ class TrackMate:
         self.oneat_csv_file = oneat_csv_file
         self.oneat_threshold_cutoff = oneat_threshold_cutoff
         self.latent_features = latent_features
-        if channel_xml_path is None:
-            self.channel_xml_path = os.path.dirname(self.xml_path)
         if image is not None:
             self.image = image.astype(np.uint8)
         else:
