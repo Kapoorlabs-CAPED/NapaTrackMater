@@ -23,6 +23,10 @@ from kapoorlabs_lightning.lightning_trainer import MitosisInception
 from natsort import natsorted
 import seaborn as sns
 from tqdm import tqdm
+import imageio
+from matplotlib import cm
+from IPython.display import clear_output
+
 
 logger = logging.getLogger(__name__)
 
@@ -3489,7 +3493,7 @@ def plot_histograms_for_groups(matrix_directory, save_dir, dataset_name, channel
         ]
     )
     groups = set()
-    print(sorted_files)
+
     for file_name in sorted_files:
         group_name = file_name.split("Number_Dividing")[0]
 
@@ -3519,3 +3523,142 @@ def plot_histograms_for_groups(matrix_directory, save_dir, dataset_name, channel
         fig_name = f"{dataset_name}_{channel}_{group_name}_all_distribution.png"
         plt.savefig(os.path.join(save_dir, fig_name), dpi=300, bbox_inches="tight")
         plt.show()
+
+
+def create_movie(df, column, time_plot):
+
+    fig = plt.figure(figsize=(10, 12))
+    ax0 = fig.add_subplot(211)
+    ax1 = fig.add_subplot(212, projection="polar")
+    filtered_dataframe = df[df["t"] == time_plot]
+    x, y, z = filtered_dataframe["x"], filtered_dataframe["y"], filtered_dataframe["z"]
+
+    angles_deg = filtered_dataframe[column].values
+    angle_rad = np.deg2rad(angles_deg)
+
+    arrow_length = 20
+    norm = plt.Normalize(angles_deg.min(), angles_deg.max())
+    cmap = cm.viridis
+
+    if "Y" in column:
+        x_end, y_end = arrow_length * np.sin(angle_rad), arrow_length * np.cos(
+            angle_rad
+        )
+
+        ax0.quiver(x, y, x_end, y_end, linewidth=2, color=cmap(norm(angles_deg)))
+
+        ax0.set_xlabel("X")
+        ax0.set_ylabel("Y")
+        ax0.set_title(f"Orientation Plot {column}")
+        plt.colorbar(ax0.scatter(x, y, c=angles_deg))
+    if "X" in column:
+        x_end, y_end = arrow_length * np.cos(angle_rad), arrow_length * np.sin(
+            angle_rad
+        )
+
+        ax0.quiver(x, y, x_end, y_end, linewidth=2, color=cmap(norm(angles_deg)))
+
+        ax0.set_xlabel("X")
+        ax0.set_ylabel("Y")
+        ax0.set_title(f"Orientation Plot {column}")
+        plt.colorbar(ax0.scatter(x, y, c=angles_deg))
+    if "Z" in column:
+        x_end, z_end = arrow_length * np.sin(angle_rad), arrow_length * np.cos(
+            angle_rad
+        )
+
+        ax0.quiver(x, z, x_end, z_end, linewidth=2, color=cmap(norm(angles_deg)))
+
+        ax0.set_xlabel("X")
+        ax0.set_ylabel("Z")
+        ax0.set_title(f"Orientation Plot {column}")
+        plt.colorbar(ax0.scatter(x, z, c=angles_deg))
+    hist, bins = np.histogram(angle_rad)
+
+    ax1.bar(bins[:-1], hist, width=2 * np.pi / len(bins), color="skyblue")
+    ax1.set_theta_direction(1)
+    ax1.set_theta_zero_location("E")
+    ax1.set_thetamin(0)
+    ax1.set_thetamax(180)
+
+    ax1.set_title(f"Circular Plot of {column}")
+
+    fig.canvas.draw()
+    plot_array = np.array(fig.canvas.renderer.buffer_rgba())
+
+    plt.close()
+
+    return plot_array
+
+
+def create_video(frames, video_filename, fps=1):
+    with imageio.get_writer(video_filename, fps=fps) as writer:
+        for frame_params in frames:
+            frame = create_movie(*frame_params)
+            writer.append_data(frame)
+
+
+def angular_plot(global_shape_dynamic_dataframe, column="Radial_Angle_Z", time_plot=0):
+
+    filtered_dataframe = global_shape_dynamic_dataframe[
+        global_shape_dynamic_dataframe["t"] == time_plot
+    ]
+    x, y, z = filtered_dataframe["x"], filtered_dataframe["y"], filtered_dataframe["z"]
+
+    angles_deg = filtered_dataframe[column].values
+    angle_rad = np.deg2rad(angles_deg)
+
+    arrow_length = 20
+    norm = plt.Normalize(angles_deg.min(), angles_deg.max())
+    cmap = cm.viridis
+    plt.figure(figsize=(16, 16))
+
+    if "Y" in column:
+        x_end, y_end = arrow_length * np.sin(angle_rad), arrow_length * np.cos(
+            angle_rad
+        )
+
+        plt.quiver(x, y, x_end, y_end, linewidth=2, color=cmap(norm(angles_deg)))
+
+        plt.xlabel("Y")
+        plt.ylabel("X")
+        plt.title(f"Orientation Plot {column}")
+        plt.colorbar(plt.scatter(x, y, c=angles_deg))
+        plt.show()
+    if "X" in column:
+        x_end, y_end = arrow_length * np.cos(angle_rad), arrow_length * np.sin(
+            angle_rad
+        )
+
+        plt.quiver(x, y, x_end, y_end, linewidth=2, color=cmap(norm(angles_deg)))
+
+        plt.xlabel("Y")
+        plt.ylabel("X")
+        plt.title(f"Orientation Plot {column}")
+        plt.colorbar(plt.scatter(x, y, c=angles_deg))
+        plt.show()
+    if "Z" in column:
+        x_end, z_end = arrow_length * np.sin(angle_rad), arrow_length * np.cos(
+            angle_rad
+        )
+
+        plt.quiver(x, z, x_end, z_end, linewidth=2, color=cmap(norm(angles_deg)))
+
+        plt.xlabel("Z")
+        plt.ylabel("X")
+        plt.title(f"Orientation Plot {column}")
+        plt.colorbar(plt.scatter(x, z, c=angles_deg))
+        plt.show()
+    hist, bins = np.histogram(angle_rad)
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(111, polar=True)
+    ax.bar(bins[:-1], hist, width=2 * np.pi / len(bins), color="skyblue")
+    ax.set_theta_direction(1)
+    ax.set_theta_zero_location("E")
+    ax.set_thetamin(0)
+    ax.set_thetamax(180)
+
+    ax.set_title(f"Circular Plot of {column}")
+
+    plt.show()
+    clear_output(wait=True)
