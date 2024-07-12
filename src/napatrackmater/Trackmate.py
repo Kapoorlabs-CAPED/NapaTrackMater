@@ -960,7 +960,7 @@ class TrackMate:
 
         all_source_ids, all_target_ids = self._generate_generations(track)
         root_root, root_splits, root_leaf = self._create_generations(all_source_ids)
-
+        self._iterate_split_down(root_root, root_leaf, root_splits)
         # Determine if a track has divisions or none
         number_dividing = len(root_splits)
         if number_dividing > 0:
