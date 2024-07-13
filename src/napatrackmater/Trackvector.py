@@ -522,7 +522,6 @@ class TrackVector(TrackMate):
         ]
 
         dividing_counts = subset.groupby("t").size() / 2
-
         times = dividing_counts.index
         counts = dividing_counts.values
         data = {"Time": times, "Count": counts}
@@ -558,6 +557,7 @@ class TrackVector(TrackMate):
                     )
 
         all_split_data = []
+
         for split_id in tqdm(self.split_cell_ids, desc="Cell split IDs"):
             spot_properties = self.unique_spot_properties[split_id]
             track_id = spot_properties[self.trackid_key]
@@ -1184,7 +1184,6 @@ def simple_unsupervised_clustering(
     distance_vectors="shape",
 ):
 
-    csv_file_name_original = csv_file_name
     analysis_track_ids = []
     shape_dynamic_covariance_matrix = []
     position_matrix = []
@@ -1296,98 +1295,6 @@ def simple_unsupervised_clustering(
             distance_vectors=distance_vectors,
         )
 
-        silhouette_file_name = os.path.join(
-            csv_file_name_original
-            + "shape_dynamic"
-            + f"_silhouette_{metric}_{cluster_threshold_shape_dynamic}.npy"
-        )
-        np.save(silhouette_file_name, shape_dynamic_silhouette)
-
-        wcss_file_name = os.path.join(
-            csv_file_name_original
-            + "shape_dynamic"
-            + f"_wcss_{metric}_{cluster_threshold_shape_dynamic}.npy"
-        )
-        np.save(wcss_file_name, shape_dynamic_wcss_value)
-
-        silhouette_file_name = os.path.join(
-            csv_file_name_original
-            + "dynamic"
-            + f"_silhouette_{metric}_{cluster_threshold_dynamic}.npy"
-        )
-        np.save(silhouette_file_name, dynamic_silhouette)
-
-        wcss_file_name = os.path.join(
-            csv_file_name_original
-            + "dynamic"
-            + f"_wcss_{metric}_{cluster_threshold_dynamic}.npy"
-        )
-        np.save(wcss_file_name, dynamic_wcss_value)
-
-        silhouette_file_name = os.path.join(
-            csv_file_name_original
-            + "shape"
-            + f"_silhouette_{metric}_{cluster_threshold_shape}.npy"
-        )
-        np.save(silhouette_file_name, shape_silhouette)
-
-        wcss_file_name = os.path.join(
-            csv_file_name_original
-            + "shape"
-            + f"_wcss_{metric}_{cluster_threshold_shape}.npy"
-        )
-        np.save(wcss_file_name, shape_wcss_value)
-
-        cluster_distance_map_shape_dynamic_file_name = os.path.join(
-            csv_file_name_original
-            + "shape_dynamic"
-            + "_cluster_distance_map_shape_dynamic.npy"
-        )
-        np.save(
-            cluster_distance_map_shape_dynamic_file_name,
-            cluster_distance_map_shape_dynamic,
-        )
-
-        cluster_distance_map_shape_file_name = os.path.join(
-            csv_file_name_original + "shape" + "_cluster_distance_map_shape.npy"
-        )
-        np.save(cluster_distance_map_shape_file_name, cluster_distance_map_shape)
-
-        cluster_distance_map_dynamic_file_name = os.path.join(
-            csv_file_name_original + "dynamic" + "_cluster_distance_map_dynamic.npy"
-        )
-        np.save(cluster_distance_map_dynamic_file_name, cluster_distance_map_dynamic)
-
-        cluster_eucledian_distance_map_shape_dynamic_file_name = os.path.join(
-            csv_file_name_original
-            + "shape_dynamic"
-            + "_cluster_eucledian_distance_map_shape_dynamic.npy"
-        )
-        np.save(
-            cluster_eucledian_distance_map_shape_dynamic_file_name,
-            cluster_eucledian_distance_map_shape_dynamic,
-        )
-
-        cluster_eucledian_distance_map_shape_file_name = os.path.join(
-            csv_file_name_original
-            + "shape"
-            + "_cluster_eucledian_distance_map_shape.npy"
-        )
-        np.save(
-            cluster_eucledian_distance_map_shape_file_name,
-            cluster_eucledian_distance_map_shape,
-        )
-
-        cluster_eucledian_distance_map_dynamic_file_name = os.path.join(
-            csv_file_name_original
-            + "dynamic"
-            + "_cluster_eucledian_distance_map_dynamic.npy"
-        )
-        np.save(
-            cluster_eucledian_distance_map_dynamic_file_name,
-            cluster_eucledian_distance_map_dynamic,
-        )
-
 
 def unsupervised_clustering(
     full_dataframe,
@@ -1402,7 +1309,6 @@ def unsupervised_clustering(
     distance_vectors="shape",
 ):
 
-    csv_file_name_original = csv_file_name
     analysis_track_ids = []
     shape_dynamic_covariance_matrix = []
     shape_covariance_matrix = []
@@ -1499,98 +1405,6 @@ def unsupervised_clustering(
             cluster_threshold_shape,
             criterion,
             distance_vectors=distance_vectors,
-        )
-
-        silhouette_file_name = os.path.join(
-            csv_file_name_original
-            + "shape_dynamic"
-            + f"_silhouette_{metric}_{cluster_threshold_shape_dynamic}.npy"
-        )
-        np.save(silhouette_file_name, shape_dynamic_silhouette)
-
-        wcss_file_name = os.path.join(
-            csv_file_name_original
-            + "shape_dynamic"
-            + f"_wcss_{metric}_{cluster_threshold_shape_dynamic}.npy"
-        )
-        np.save(wcss_file_name, shape_dynamic_wcss_value)
-
-        silhouette_file_name = os.path.join(
-            csv_file_name_original
-            + "dynamic"
-            + f"_silhouette_{metric}_{cluster_threshold_dynamic}.npy"
-        )
-        np.save(silhouette_file_name, dynamic_silhouette)
-
-        wcss_file_name = os.path.join(
-            csv_file_name_original
-            + "dynamic"
-            + f"_wcss_{metric}_{cluster_threshold_dynamic}.npy"
-        )
-        np.save(wcss_file_name, dynamic_wcss_value)
-
-        silhouette_file_name = os.path.join(
-            csv_file_name_original
-            + "shape"
-            + f"_silhouette_{metric}_{cluster_threshold_shape}.npy"
-        )
-        np.save(silhouette_file_name, shape_silhouette)
-
-        wcss_file_name = os.path.join(
-            csv_file_name_original
-            + "shape"
-            + f"_wcss_{metric}_{cluster_threshold_shape}.npy"
-        )
-        np.save(wcss_file_name, shape_wcss_value)
-
-        cluster_distance_map_shape_dynamic_file_name = os.path.join(
-            csv_file_name_original
-            + "shape_dynamic"
-            + "_cluster_distance_map_shape_dynamic.npy"
-        )
-        np.save(
-            cluster_distance_map_shape_dynamic_file_name,
-            cluster_distance_map_shape_dynamic,
-        )
-
-        cluster_distance_map_shape_file_name = os.path.join(
-            csv_file_name_original + "shape" + "_cluster_distance_map_shape.npy"
-        )
-        np.save(cluster_distance_map_shape_file_name, cluster_distance_map_shape)
-
-        cluster_distance_map_dynamic_file_name = os.path.join(
-            csv_file_name_original + "dynamic" + "_cluster_distance_map_dynamic.npy"
-        )
-        np.save(cluster_distance_map_dynamic_file_name, cluster_distance_map_dynamic)
-
-        cluster_eucledian_distance_map_shape_dynamic_file_name = os.path.join(
-            csv_file_name_original
-            + "shape_dynamic"
-            + "_cluster_eucledian_distance_map_shape_dynamic.npy"
-        )
-        np.save(
-            cluster_eucledian_distance_map_shape_dynamic_file_name,
-            cluster_eucledian_distance_map_shape_dynamic,
-        )
-
-        cluster_eucledian_distance_map_dynamic_file_name = os.path.join(
-            csv_file_name_original
-            + "dynamic"
-            + "_cluster_eucledian_distance_map_dynamic.npy"
-        )
-        np.save(
-            cluster_eucledian_distance_map_dynamic_file_name,
-            cluster_eucledian_distance_map_dynamic,
-        )
-
-        cluster_eucledian_distance_map_shape_file_name = os.path.join(
-            csv_file_name_original
-            + "shape"
-            + "_cluster_eucledian_distance_map_shape.npy"
-        )
-        np.save(
-            cluster_eucledian_distance_map_shape_file_name,
-            cluster_eucledian_distance_map_shape,
         )
 
 
@@ -2856,8 +2670,6 @@ def populate_zero_gen_tracklets(
                     feature,
                 )
 
-    print(f"Good zero_gens, {good_zero_gens}")
-
 
 def generic_polynomial_fits(
     track_array,
@@ -3662,3 +3474,9 @@ def angular_plot(global_shape_dynamic_dataframe, column="Radial_Angle_Z", time_p
 
     plt.show()
     clear_output(wait=True)
+
+
+def normalize_list(lst):
+    mean_val = np.mean(lst)
+    std_val = np.std(lst)
+    return [(x - mean_val) / std_val for x in lst]
