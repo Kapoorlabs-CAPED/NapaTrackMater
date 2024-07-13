@@ -21,6 +21,17 @@ from .Trackvector import (
     pseudo_core_clustering,
     convert_pseudo_tracks_to_simple_arrays,
     create_analysis_cell_type_tracklets,
+    update_cluster_plot,
+    update_distance_cluster_plot,
+    update_eucledian_distance_cluster_plot,
+    plot_at_mitosis_time,
+    plot_histograms_for_groups,
+    create_microdomain_movie,
+    create_cluster_plot,
+    create_microdomain_video,
+    create_movie,
+    create_video,
+    plot_histograms_for_cell_type_groups,
 )
 
 from .CloudAutoEncoder import CloudAutoEncoder
@@ -92,6 +103,17 @@ __all__ = (
     "pseudo_core_clustering",
     "convert_pseudo_tracks_to_simple_arrays",
     "create_analysis_cell_type_tracklets",
+    "update_cluster_plot",
+    "update_distance_cluster_plot",
+    "update_eucledian_distance_cluster_plot",
+    "plot_at_mitosis_time",
+    "plot_histograms_for_groups",
+    "create_microdomain_movie",
+    "create_cluster_plot",
+    "create_microdomain_video",
+    "create_movie",
+    "create_video",
+    "plot_histograms_for_cell_type_groups",
 )
 
 clear_models_and_aliases(CloudAutoEncoder)

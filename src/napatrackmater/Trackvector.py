@@ -613,6 +613,36 @@ class TrackVector(TrackMate):
 
         np.save(f"{save_path}data_at_mitosis_time.npy", all_split_data)
 
+    def plot_cell_type_times(self, correlation_dataframe, save_path=""):
+
+        cell_types = correlation_dataframe["Cell_Type_Label"].unique()
+
+        excluded_keys = [
+            "Track ID",
+            "t",
+            "z",
+            "y",
+            "x",
+            "Unnamed: 0",
+            "Unnamed",
+            "Track Duration",
+            "Generation ID",
+            "TrackMate Track ID",
+            "Tracklet Number ID",
+            "Cell_Type",
+        ]
+
+        for ctype in cell_types:
+            for column in correlation_dataframe.columns:
+                if column not in excluded_keys:
+                    data = correlation_dataframe[column][
+                        correlation_dataframe["Cell_Type_Label"].astype(int) == ctype
+                    ]
+
+                    np.save(
+                        f"{save_path}{column}Cell_Type_{ctype}.npy", data.to_numpy()
+                    )
+
     def get_shape_dynamic_feature_dataframe(self):
 
         current_shape_dynamic_vectors = self.current_shape_dynamic_vectors
@@ -717,6 +747,27 @@ class TrackVector(TrackMate):
                         closeness_dict_time_point[track_id] = list(closest_track_ids)
 
             self.closeness_dict[time_point] = closeness_dict_time_point
+
+    def get_trackmate_trackids(self, dataframe, time_veto=0, space_veto=15):
+        t = int(self.tend)
+        trackmate_track_ids = []
+        for index, row in dataframe.iterrows():
+
+            z = round(row["axis-0"])
+            y = round(row["axis-1"])
+            x = round(row["axis-2"])
+
+            spot = (t, z, y, x)
+
+            spot_id = find_closest_key(
+                spot, self.unique_oneat_spot_centroid, time_veto, space_veto
+            )
+            if spot_id is not None:
+                spot_properties_dict = self.unique_spot_properties[spot_id]
+                if self.trackid_key in spot_properties_dict.keys():
+                    trackmate_track_id = spot_properties_dict[self.trackid_key]
+                    trackmate_track_ids.append(trackmate_track_id)
+        return trackmate_track_ids
 
 
 def _iterate_over_tracklets(
@@ -2996,6 +3047,14 @@ def extract_number_dividing(file_name):
     return number_dividing
 
 
+def extract_celltype(file_name):
+    cell_type = -1
+    match = re.search(r"Cell_Type_(\d+)\.npy", file_name)
+    if match:
+        cell_type = int(match.group(1))
+    return cell_type
+
+
 def cross_correlation_class(tracks_dataframe, cell_type_label=None):
 
     if cell_type_label is not None:
@@ -3312,29 +3371,80 @@ def plot_histograms_for_groups(matrix_directory, save_dir, dataset_name, channel
         groups.add(group_name)
 
     for group_name in groups:
-        plt.figure(figsize=(8, 6))
-        group_files = [file for file in sorted_files if group_name in file]
+        if len(group_name) > 0:
+            plt.figure(figsize=(8, 6))
+            group_files = [file for file in sorted_files if group_name in file]
 
-        for file_name in group_files:
-            file_path = os.path.join(matrix_directory, file_name)
-            number_dividing = extract_number_dividing(file_name)
+            for file_name in group_files:
+                file_path = os.path.join(matrix_directory, file_name)
+                number_dividing = extract_number_dividing(file_name)
 
-            data = np.load(file_path)
-            sns.histplot(
-                data, alpha=0.5, kde=True, label=f"Number_Dividing: {number_dividing}"
+                data = np.load(file_path, allow_pickle=True)
+                sns.histplot(
+                    data,
+                    alpha=0.5,
+                    kde=True,
+                    label=f"Number_Dividing: {number_dividing}",
+                )
+
+            plt.xlabel("Value")
+            plt.ylabel("Counts")
+            simplified_group_name = re.search(r"_(.*?)_Number_Dividing", group_name)
+            simplified_group_name = (
+                simplified_group_name.group(1) if simplified_group_name else group_name
             )
+            plt.title(f"{simplified_group_name}")
+            plt.legend()
+            fig_name = f"{channel}{group_name}_all_distribution.png"
+            plt.savefig(os.path.join(save_dir, fig_name), dpi=300, bbox_inches="tight")
+            plt.show()
 
-        plt.xlabel("Value")
-        plt.ylabel("Counts")
-        simplified_group_name = re.search(r"__(.*?)_Number_Dividing", group_name)
-        simplified_group_name = (
-            simplified_group_name.group(1) if simplified_group_name else group_name
-        )
-        plt.title(f"{simplified_group_name}")
-        plt.legend()
-        fig_name = f"{dataset_name}_{channel}_{group_name}_all_distribution.png"
-        plt.savefig(os.path.join(save_dir, fig_name), dpi=300, bbox_inches="tight")
-        plt.show()
+
+def plot_histograms_for_cell_type_groups(
+    matrix_directory, save_dir, dataset_name, channel
+):
+
+    files = os.listdir(matrix_directory)
+    sorted_files = natsorted(
+        [
+            file
+            for file in files
+            if file.endswith(".npy")
+            and "Cell_Type" in file
+            and "Cell_Type_LabelCell_Type"
+            and "Cell_TypeCell_Type" not in file
+        ]
+    )
+    groups = set()
+
+    for file_name in sorted_files:
+        group_name = file_name.split("Cell_Type")[0]
+
+        groups.add(group_name)
+
+    for group_name in groups:
+        if len(group_name) > 0:
+            plt.figure(figsize=(8, 6))
+            group_files = [file for file in sorted_files if group_name in file]
+
+            for file_name in group_files:
+                file_path = os.path.join(matrix_directory, file_name)
+                cell_type = extract_celltype(file_name)
+
+                data = np.load(file_path, allow_pickle=True)
+                sns.histplot(data, alpha=0.5, kde=True, label=f"Cell_Type: {cell_type}")
+
+            plt.xlabel("Value")
+            plt.ylabel("Counts")
+            simplified_group_name = re.search(r"_(.*?)_Cell_Type", group_name)
+            simplified_group_name = (
+                simplified_group_name.group(1) if simplified_group_name else group_name
+            )
+            plt.title(f"{simplified_group_name}")
+            plt.legend()
+            fig_name = f"{channel}{group_name}_all_distribution.png"
+            plt.savefig(os.path.join(save_dir, fig_name), dpi=300, bbox_inches="tight")
+            plt.show()
 
 
 def create_movie(df, column, time_plot):
@@ -3480,3 +3590,404 @@ def normalize_list(lst):
     mean_val = np.mean(lst)
     std_val = np.std(lst)
     return [(x - mean_val) / std_val for x in lst]
+
+
+def microdomain_plot(
+    time,
+    df,
+    time_delta=10,
+    cluster_type="Shape_Cluster_Label_Distances",
+    cluster_eucledian_type="Shape_Cluster_Label_Eucledian_Distances",
+    cluster_label_type="Shape_Cluster_Label",
+    feature_x="x",
+    feature_y="y",
+    show=True,
+):
+
+    x_list = []
+    y_list = []
+    cluster_label_list = []
+    cluster_label_dist_list = []
+    cluster_label_eucledian_dist_list = []
+    dividing_list = []
+    for t in range(time, min(time + time_delta, int(df["t"].max()))):
+        filtered_df = df[(df["t"] == t)]
+
+        filtered_df = filtered_df[filtered_df[cluster_type].notna()]
+
+        unique_labels = filtered_df[cluster_label_type].dropna().unique()
+        for label in unique_labels:
+            track_ids_with_label = filtered_df[
+                filtered_df[cluster_label_type] == label
+            ]["Track ID"].unique()
+            for plot_idx, track_id in enumerate(track_ids_with_label):
+                track_data = filtered_df[filtered_df["Track ID"] == track_id]
+
+                cluster_label_dist = track_data[cluster_type].tolist()[0]
+
+                cluster_label_eucledian_dist = track_data[
+                    cluster_eucledian_type
+                ].tolist()[0]
+
+                x_list.append(track_data[feature_x].tolist()[0])
+                y_list.append(track_data[feature_y].tolist()[0])
+                cluster_label_list.append(track_data[cluster_label_type].tolist()[0])
+                cluster_label_dist_list.append(cluster_label_dist)
+                cluster_label_eucledian_dist_list.append(cluster_label_eucledian_dist)
+                dividing_list.append(track_data["Dividing"].tolist()[0])
+
+    color_dict = {
+        "x": x_list,
+        "y": y_list,
+        "cluster_label": cluster_label_list,
+        "cluster_label_dist": cluster_label_dist_list,
+        "cluster_label_eucledian_dist": cluster_label_eucledian_dist_list,
+        "dividing": dividing_list,
+    }
+
+    x_scatter = color_dict["x"]
+    y_scatter = color_dict["y"]
+    label_c_scatter = color_dict["cluster_label"]
+    c_scatter = color_dict["cluster_label_dist"]
+    eucledian_c_scatter = color_dict["cluster_label_eucledian_dist"]
+    pure_dividing_c_scatter = color_dict["dividing"]
+
+    plt.figure(figsize=(10, 6))
+    scatter = plt.scatter(x_scatter, y_scatter, c=label_c_scatter, cmap="viridis")
+    plt.xlabel(feature_x)
+    plt.ylabel(feature_y)
+    plt.title(cluster_label_type)
+    plt.colorbar(scatter, label=cluster_label_type)
+    plt.tight_layout()
+    if show:
+        plt.show()
+    else:
+        plt.close()
+
+    plt.figure(figsize=(10, 6))
+    scatter = plt.scatter(x_scatter, y_scatter, c=c_scatter, cmap="viridis")
+    plt.xlabel(feature_x)
+    plt.ylabel(feature_y)
+    plt.title(cluster_type)
+    plt.colorbar(scatter, label=cluster_type)
+    plt.tight_layout()
+    if show:
+        plt.show()
+    else:
+        plt.close()
+
+    plt.figure(figsize=(10, 6))
+    scatter = plt.scatter(x_scatter, y_scatter, c=eucledian_c_scatter, cmap="viridis")
+    plt.xlabel(feature_x)
+    plt.ylabel(feature_y)
+    plt.title(cluster_eucledian_type)
+    plt.colorbar(scatter, label=cluster_eucledian_type)
+    plt.tight_layout()
+    if show:
+        plt.show()
+    else:
+        plt.close()
+
+    plt.figure(figsize=(10, 6))
+    scatter = plt.scatter(
+        x_scatter, y_scatter, c=pure_dividing_c_scatter, cmap="viridis"
+    )
+    plt.xlabel(feature_x)
+    plt.ylabel(feature_y)
+    plt.title("Dividing")
+    plt.colorbar(scatter, label="Dividing")
+    plt.tight_layout()
+    if show:
+        plt.show()
+    else:
+        plt.close()
+
+    return color_dict
+
+
+def create_microdomain_movie(
+    time,
+    df,
+    feature_x,
+    feature_y,
+    cluster_type,
+    cluster_eucledian_type,
+    cluster_label_type,
+    time_delta=10,
+):
+    fig, axes = plt.subplots(2, 2, figsize=(10, 12))
+
+    color_dict = microdomain_plot(
+        time=time,
+        df=df,
+        feature_x=feature_x,
+        feature_y=feature_y,
+        time_delta=time_delta,
+        cluster_type=cluster_type,
+        cluster_eucledian_type=cluster_eucledian_type,
+        cluster_label_type=cluster_label_type,
+        show=False,
+    )
+
+    # Plotting the first scatter plot
+    scatter1 = axes[0, 0].scatter(
+        color_dict["x"], color_dict["y"], c=color_dict["cluster_label"], cmap="viridis"
+    )
+    axes[0, 0].set_xlabel(feature_x)
+    axes[0, 0].set_ylabel(feature_y)
+    axes[0, 0].set_title("cluster_label")
+    plt.colorbar(scatter1, ax=axes[0, 0], label="cluster_label")
+
+    # Plotting the second scatter plot
+    scatter2 = axes[0, 1].scatter(
+        color_dict["x"],
+        color_dict["y"],
+        c=color_dict["cluster_label_dist"],
+        cmap="viridis",
+    )
+    axes[0, 1].set_xlabel(feature_x)
+    axes[0, 1].set_ylabel(feature_y)
+    axes[0, 1].set_title(cluster_type)
+    plt.colorbar(scatter2, ax=axes[0, 1], label=cluster_type)
+
+    scatter3 = axes[1, 0].scatter(
+        color_dict["x"],
+        color_dict["y"],
+        c=color_dict["cluster_label_eucledian_dist"],
+        cmap="viridis",
+    )
+    axes[1, 0].set_xlabel(feature_x)
+    axes[1, 0].set_ylabel(feature_y)
+    axes[1, 0].set_title(cluster_eucledian_type)
+    plt.colorbar(scatter3, ax=axes[1, 0], label=cluster_eucledian_type)
+
+    num_dividing_c_scatter = color_dict["dividing"]
+
+    scatter4 = axes[1, 1].scatter(
+        color_dict["x"], color_dict["y"], c=num_dividing_c_scatter, cmap="viridis"
+    )
+    axes[1, 1].set_xlabel(feature_x)
+    axes[1, 1].set_ylabel(feature_y)
+    axes[1, 1].set_title("dividing")
+    plt.colorbar(scatter4, ax=axes[1, 1], label=cluster_eucledian_type)
+
+    plt.tight_layout()
+
+    fig.canvas.draw()
+    plot_array = np.array(fig.canvas.renderer.buffer_rgba())
+
+    plt.close()
+
+    return plot_array
+
+
+def create_microdomain_video(frames, video_filename, fps=1):
+    with imageio.get_writer(video_filename, fps=fps) as writer:
+        for frame_params in frames:
+            frame = create_microdomain_movie(*frame_params)
+            writer.append_data(frame)
+
+
+def find_closest_key(test_point, unique_dict, time_veto, space_veto):
+    closest_key = None
+    spot_id = None
+    min_distance = float("inf")
+
+    t_test, z_test, y_test, x_test = test_point
+    for key in unique_dict.keys():
+        t_key, z_key, y_key, x_key = key
+
+        time_distance = abs(t_key - t_test)
+        space_distance = np.sqrt(
+            (z_key - z_test) ** 2 + (y_key - y_test) ** 2 + (x_key - x_test) ** 2
+        )
+
+        if time_distance <= time_veto and space_distance <= space_veto:
+            if time_distance + space_distance < min_distance:
+                min_distance = time_distance + space_distance
+                closest_key = key
+    if closest_key is not None:
+        spot_id = unique_dict[closest_key]
+    return spot_id
+
+
+def update_distance_cluster_plot(time, df, feature_x="x", feature_y="y"):
+    filtered_df = df[(df["t"] == time)]
+    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+    cluster_types = [
+        f"Shape Dynamic Intra Cluster Distance_{time}",
+        f"Shape Intra Cluster Distance_{time}",
+        f"Dynamic Intra Cluster Distance_{time}",
+    ]
+    cluster_labels = [
+        f"Shape Dynamic Cluster_{time}",
+        f"Shape Cluster_{time}",
+        f"Dynamic Cluster_{time}",
+    ]
+    for idx, cluster_type in enumerate(cluster_types):
+        filtered_df = filtered_df[filtered_df[cluster_type].notna()]
+        color_dict = {}
+        cluster_label_type = cluster_labels[idx]
+        unique_labels = filtered_df[cluster_label_type].unique()
+        for label in unique_labels:
+            track_ids_with_label = filtered_df[
+                filtered_df[cluster_label_type] == label
+            ]["Track ID"].unique()
+            for plot_idx, track_id in enumerate(track_ids_with_label):
+                track_data = filtered_df[filtered_df["Track ID"] == track_id]
+
+                t_list = track_data["t"].tolist()
+
+                cluster_label_dist = track_data[cluster_type].tolist()[0]
+
+                cluster_label_dist = np.full_like(
+                    np.asarray(track_ids_with_label), cluster_label_dist
+                )
+                x_y_dict = {
+                    "t": t_list,
+                    "x": track_data[feature_x].tolist(),
+                    "y": track_data[feature_y].tolist(),
+                    "cluster_label": track_data[cluster_label_type].tolist(),
+                    "cluster_label_dist": cluster_label_dist,
+                }
+                color_index = x_y_dict["cluster_label_dist"][plot_idx]
+                color = [color_index for _ in range(len(x_y_dict["x"]))]
+                if label in color_dict:
+                    color_dict[label][0].extend(x_y_dict["x"])
+                    color_dict[label][1].extend(x_y_dict["y"])
+                    color_dict[label][2].extend(color)
+                else:
+                    color_dict[label] = [x_y_dict["x"], x_y_dict["y"], color]
+
+        x_scatter = [
+            item
+            for sublist in [color_dict[label][0] for label in unique_labels]
+            for item in sublist
+        ]
+        y_scatter = [
+            item
+            for sublist in [color_dict[label][1] for label in unique_labels]
+            for item in sublist
+        ]
+        c_scatter = [
+            item
+            for sublist in [color_dict[label][2] for label in unique_labels]
+            for item in sublist
+        ]
+        scatter = axs[idx].scatter(x_scatter, y_scatter, c=c_scatter, cmap="viridis")
+
+        plt.colorbar(scatter, ax=axs[idx], label="Cluster Label Distance")
+
+        axs[idx].set_xlabel(feature_x)
+        axs[idx].set_ylabel(feature_y)
+        axs[idx].set_title(cluster_type)
+
+    plt.tight_layout()
+    plt.show()
+
+
+def update_eucledian_distance_cluster_plot(time, df, feature_x="x", feature_y="y"):
+    filtered_df = df[(df["t"] == time)]
+    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+    cluster_types = [
+        f"Shape Dynamic Intra Cluster Eucledian Distance_{time}",
+        f"Shape Intra Cluster Eucledian Distance_{time}",
+        f"Dynamic Intra Cluster Eucledian Distance_{time}",
+    ]
+    cluster_labels = [
+        f"Shape Dynamic Cluster_{time}",
+        f"Shape Cluster_{time}",
+        f"Dynamic Cluster_{time}",
+    ]
+    for idx, cluster_type in enumerate(cluster_types):
+        filtered_df = filtered_df[filtered_df[cluster_type].notna()]
+        color_dict = {}
+        cluster_label_type = cluster_labels[idx]
+        unique_labels = filtered_df[cluster_label_type].unique()
+        for label in unique_labels:
+            track_ids_with_label = filtered_df[
+                filtered_df[cluster_label_type] == label
+            ]["Track ID"].unique()
+            for plot_idx, track_id in enumerate(track_ids_with_label):
+                track_data = filtered_df[filtered_df["Track ID"] == track_id]
+
+                t_list = track_data["t"].tolist()
+
+                cluster_label_dist = track_data[cluster_type].tolist()[0]
+
+                cluster_label_dist = np.full_like(
+                    np.asarray(track_ids_with_label), cluster_label_dist
+                )
+                x_y_dict = {
+                    "t": t_list,
+                    "x": track_data[feature_x].tolist(),
+                    "y": track_data[feature_y].tolist(),
+                    "cluster_label": track_data[cluster_label_type].tolist(),
+                    "cluster_label_eucledian_dist": cluster_label_dist,
+                }
+                color_index = x_y_dict["cluster_label_eucledian_dist"][plot_idx]
+
+                color = [color_index for _ in range(len(x_y_dict["x"]))]
+                if label in color_dict:
+                    color_dict[label][0].extend(x_y_dict["x"])
+                    color_dict[label][1].extend(x_y_dict["y"])
+                    color_dict[label][2].extend(color)
+                else:
+                    color_dict[label] = [x_y_dict["x"], x_y_dict["y"], color]
+
+        x_scatter = [
+            item
+            for sublist in [color_dict[label][0] for label in unique_labels]
+            for item in sublist
+        ]
+        y_scatter = [
+            item
+            for sublist in [color_dict[label][1] for label in unique_labels]
+            for item in sublist
+        ]
+        c_scatter = [
+            item
+            for sublist in [color_dict[label][2] for label in unique_labels]
+            for item in sublist
+        ]
+
+        scatter = axs[idx].scatter(x_scatter, y_scatter, c=c_scatter, cmap="viridis")
+
+        plt.colorbar(scatter, ax=axs[idx], label="Cluster Label Eucledian Distance")
+
+        axs[idx].set_xlabel(feature_x)
+        axs[idx].set_ylabel(feature_y)
+        axs[idx].set_title(cluster_type)
+
+    plt.tight_layout()
+    plt.show()
+
+
+def update_cluster_plot(time, df, time_delta=0):
+
+    filtered_df = df[(df["t"] >= time) & (df["t"] <= time + time_delta)]
+
+    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+    cluster_types = [
+        f"Shape Dynamic Cluster_{time}",
+        f"Shape Cluster_{time}",
+        f"Dynamic Cluster_{time}",
+    ]
+
+    for idx, cluster_type in enumerate(cluster_types):
+
+        scatter = axs[idx].scatter(
+            filtered_df["x"],
+            filtered_df["y"],
+            c=filtered_df[f"{cluster_type}"],
+            cmap="viridis",
+            alpha=0.7,
+        )
+        axs[idx].set_title(f"{cluster_type} Cluster Label")
+        axs[idx].set_xlabel("X")
+        axs[idx].set_ylabel("Y")
+        fig.colorbar(scatter, ax=axs[idx], label="Cluster Label")
+
+    plt.tight_layout()
+    plt.show()
