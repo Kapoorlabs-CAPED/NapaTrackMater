@@ -32,6 +32,8 @@ from .Trackvector import (
     create_movie,
     create_video,
     plot_histograms_for_cell_type_groups,
+    inception_model_prediction,
+    save_cell_type_predictions,
 )
 
 from .CloudAutoEncoder import CloudAutoEncoder
@@ -114,6 +116,8 @@ __all__ = (
     "create_movie",
     "create_video",
     "plot_histograms_for_cell_type_groups",
+    "inception_model_prediction",
+    "save_cell_type_predictions",
 )
 
 clear_models_and_aliases(CloudAutoEncoder)

@@ -26,7 +26,8 @@ from tqdm import tqdm
 import imageio
 from matplotlib import cm
 from IPython.display import clear_output
-
+import torch
+from collections import Counter
 
 logger = logging.getLogger(__name__)
 
@@ -752,12 +753,18 @@ class TrackVector(TrackMate):
         t = int(self.tend)
         trackmate_track_ids = []
         for index, row in dataframe.iterrows():
+            if "axis-0" in row:
+                z = round(row["axis-0"])
+                y = round(row["axis-1"])
+                x = round(row["axis-2"])
+                spot = (t, z, y, x)
 
-            z = round(row["axis-0"])
-            y = round(row["axis-1"])
-            x = round(row["axis-2"])
-
-            spot = (t, z, y, x)
+            if "z" in row:
+                t = int(round(row[t]))
+                z = round(row["z"])
+                y = round(row("y"))
+                x = round(row("x"))
+                spot = (t, z, y, x)
 
             spot_id = find_closest_key(
                 spot, self.unique_oneat_spot_centroid, time_veto, space_veto
@@ -4015,3 +4022,134 @@ def update_cluster_plot(time, df, time_delta=0):
 
     plt.tight_layout()
     plt.show()
+
+
+def inception_model_prediction(
+    dataframe,
+    track_id,
+    tracklet_length,
+    class_map,
+    dynamic_model=None,
+    shape_model=None,
+    num_samples=3,
+):
+    sub_dataframe = dataframe[dataframe["Track ID"] == track_id]
+    sub_dataframe_dynamic = sub_dataframe[DYNAMIC_FEATURES].values
+    sub_dataframe_shape = sub_dataframe[SHAPE_FEATURES].values
+
+    total_duration = sub_dataframe["Track Duration"].max()
+
+    def sample_subarrays(data, num_samples, tracklet_length, total_duration):
+        interval = max(1, (total_duration - tracklet_length) // num_samples)
+        subarrays = []
+        for i in range(num_samples):
+            start_min = i * interval
+            start_max = min((i + 1) * interval, total_duration - tracklet_length)
+            if start_min >= start_max:
+                continue
+            start_index = np.random.randint(start_min, start_max)
+            end_index = start_index + tracklet_length
+            sub_data = data[start_index:end_index, :]
+            if sub_data.shape[0] == tracklet_length:
+                subarrays.append(sub_data)
+
+        if len(subarrays) < num_samples:
+            additional_subarrays = []
+            for i in range(num_samples - len(subarrays)):
+                start_index = np.random.randint(0, total_duration - tracklet_length)
+                end_index = start_index + tracklet_length
+                sub_data = data[start_index:end_index, :]
+                if sub_data.shape[0] == tracklet_length:
+                    additional_subarrays.append(sub_data)
+            subarrays.extend(additional_subarrays[: num_samples - len(subarrays)])
+
+        return subarrays
+
+    sub_arrays_shape = sample_subarrays(
+        sub_dataframe_shape, num_samples, tracklet_length, total_duration
+    )
+    sub_arrays_dynamic = sample_subarrays(
+        sub_dataframe_dynamic, num_samples, tracklet_length, total_duration
+    )
+
+    def make_prediction(input_data, model):
+        with torch.no_grad():
+            input_tensor = (
+                torch.tensor(input_data).unsqueeze(0).permute(0, 2, 1).float()
+            )
+            model_predictions = model(input_tensor)
+            probabilities = torch.softmax(model_predictions[0], dim=0)
+            _, predicted_class = torch.max(probabilities, 0)
+        return predicted_class.item()
+
+    def get_most_frequent_prediction(predictions):
+        if predictions:
+
+            prediction_counts = Counter(predictions)
+            most_common_prediction, count = prediction_counts.most_common(1)[0]
+
+            total_predictions = len(predictions)
+            if count > total_predictions // 2:
+                return most_common_prediction
+
+    shape_predictions = []
+    if shape_model is not None:
+        for sub_array in sub_arrays_shape:
+            predicted_class = make_prediction(sub_array, shape_model)
+            shape_predictions.append(predicted_class)
+
+    dynamic_predictions = []
+    if dynamic_model is not None:
+        for sub_array in sub_arrays_dynamic:
+            predicted_class = make_prediction(sub_array, dynamic_model)
+            dynamic_predictions.append(predicted_class)
+
+    final_predictions = shape_predictions + dynamic_predictions
+
+    if len(final_predictions) > 0:
+        most_frequent_prediction = get_most_frequent_prediction(final_predictions)
+        if most_frequent_prediction is not None:
+            most_predicted_class = class_map[int(most_frequent_prediction)]
+
+            return most_predicted_class
+
+    else:
+
+        return "UnClassified"
+
+
+def save_cell_type_predictions(tracks_dataframe, cell_map, predictions, save_dir):
+
+    cell_type = {}
+    for value in cell_map.values():
+        cell_type[value] = pd.DataFrame(columns=["Track ID", "t", "z", "y", "x"])
+        for k, v in predictions.items():
+            if value == v:
+
+                current_track_dataframe = tracks_dataframe[
+                    tracks_dataframe["Track ID"] == k
+                ]
+                t_min = current_track_dataframe["t"].idxmin()
+                x = current_track_dataframe.loc[t_min, "x"]
+                y = current_track_dataframe.loc[t_min, "y"]
+                z = current_track_dataframe.loc[t_min, "z"]
+                t = current_track_dataframe.loc[t_min, "t"]
+                new_row = pd.DataFrame(
+                    {"Track ID": [k], "t": [t], "z": [z], "y": [y], "x": [x]}
+                )
+                cell_type[value] = pd.concat([cell_type[value], new_row])
+
+    for value, data in cell_type.items():
+        df = pd.DataFrame(data)
+        save_name = f"{value}_inception"
+
+        if "Goblet" in value:
+            save_name = "goblet_cells_annotations_inception"
+        if "Radial" in value:
+            save_name = "radially_intercalating_cells_annotations_inception"
+        if "Basal" in value:
+            save_name = "basal_cells_annotations_inception"
+
+        filename = os.path.join(save_dir, f"{save_name}.csv")
+        df.to_csv(filename, index=True)
+        print(f"Saved data for cell type {value} to {filename}")
