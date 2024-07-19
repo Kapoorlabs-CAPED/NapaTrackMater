@@ -1787,16 +1787,25 @@ class TrackMate:
         self.AllTrackIds = []
         self.DividingTrackIds = []
         self.NormalTrackIds = []
+        self.GobletTrackIds = []
+        self.BasalTrackIds = []
+        self.RadialTrackIds = []
         self.all_track_properties = []
         self.split_points_times = []
 
         self.AllTrackIds.append(None)
         self.DividingTrackIds.append(None)
         self.NormalTrackIds.append(None)
+        self.GobletTrackIds.append(None)
+        self.BasalTrackIds.append(None)
+        self.RadialTrackIds.append(None)
 
         self.AllTrackIds.append(self.TrackidBox)
         self.DividingTrackIds.append(self.TrackidBox)
         self.NormalTrackIds.append(self.TrackidBox)
+        self.GobletTrackIds.append(self.TrackidBox)
+        self.BasalTrackIds.append(self.TrackidBox)
+        self.RadialTrackIds.append(self.TrackidBox)
 
         self.Spotobjects = self.xml_content.find("Model").find("AllSpots")
         # Extract the tracks from xml
@@ -1926,9 +1935,20 @@ class TrackMate:
     def _correct_track_status(self):
         if self.oneat_csv_file is not None:
             print("Improving mitosis track classification using Oneat")
+            self.count = 0
+            
             detections = pd.read_csv(self.oneat_csv_file, delimiter=",")
             cutoff_score = self.oneat_threshold_cutoff
             filtered_detections = detections[detections["Score"] > cutoff_score]
+            if self.progress_bar is not None:
+                self.progress_bar.label = "Oneating tracks"
+                self.progress_bar.range = (
+                    0,
+                    len(filtered_detections) + 1,
+                )
+               
+                self.progress_bar.value = self.count
+                self.progress_bar.show()
 
             def process_row(row):
                 t = int(row["T"])
@@ -1937,7 +1957,7 @@ class TrackMate:
                 x = round(row["X"])
 
                 spot = (t, z, y, x)
-
+                self.count = self.count + 1
                 spot_id = find_closest_key(spot, self.unique_oneat_spot_centroid, 0, 5)
                 if spot_id is not None:
                     self.oneat_dividing_tracks[spot_id] = spot

@@ -4031,7 +4031,7 @@ def inception_model_prediction(
     class_map,
     dynamic_model=None,
     shape_model=None,
-    num_samples=3,
+    num_samples=10,
 ):
     sub_dataframe = dataframe[dataframe["Track ID"] == track_id]
     sub_dataframe_dynamic = sub_dataframe[DYNAMIC_FEATURES].values
