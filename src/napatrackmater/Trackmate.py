@@ -51,7 +51,12 @@ class TrackMate:
         compute_with_autoencoder=False,
         variable_t_calibration: dict = None,
         oneat_csv_file: str = None,
+        goblet_csv_file: str = None,
+        basal_csv_file: str = None,
+        radial_csv_file: str = None,
         oneat_threshold_cutoff: int = 0.5,
+        time_veto: int = 0,
+        space_veto: int = 15,
     ):
 
         self.xml_path = xml_path
@@ -68,8 +73,13 @@ class TrackMate:
         self.compute_with_autoencoder = compute_with_autoencoder
         self.variable_t_calibration = variable_t_calibration
         self.oneat_csv_file = oneat_csv_file
+        self.goblet_csv_file = goblet_csv_file
+        self.basal_csv_file = basal_csv_file
+        self.radial_csv_file = radial_csv_file
         self.oneat_threshold_cutoff = oneat_threshold_cutoff
         self.latent_features = latent_features
+        self.time_veto = time_veto 
+        self.space_veto = space_veto
         if image is not None:
             self.image = image.astype(np.uint8)
         else:
@@ -1625,6 +1635,9 @@ class TrackMate:
                 if self.progress_bar is not None:
                     self.progress_bar.value = self.count
                 r.result()
+
+
+
         self._correct_track_status()
         print(f"Iterating over tracks {len(self.filtered_track_ids)}")
         self.count = 0
@@ -1658,7 +1671,7 @@ class TrackMate:
                 )
             )
             self.graph_tracks[daughter_track_id] = parent_track_id
-
+        self._get_cell_fate_tracks()
         print("getting attributes")
         if (
             self.spot_csv_path is not None
@@ -1898,6 +1911,8 @@ class TrackMate:
                 )
             )
             self.graph_tracks[daughter_track_id] = parent_track_id
+
+        self._get_cell_fate_tracks()    
         if (
             self.spot_csv_path is not None
             and self.track_csv_path is not None
@@ -1965,7 +1980,55 @@ class TrackMate:
 
                     if self.progress_bar is not None:
                         self.progress_bar.value = self.count
+
+    def _get_cell_fate_tracks(self):  
+      
+        if self.goblet_csv_file is not None:
+            print('Reading Goblet location file')
+            self.goblet_dataframe = pd.read_csv(self.goblet_csv_file)
+            self.GobletTrackIds = self._get_trackmate_ids_by_location(self.goblet_dataframe)
+
+        if self.basal_csv_file is not None:
+            print('Reading Basal location file')
+            self.basal_dataframe = pd.read_csv(self.basal_csv_file)
+            self.BasalTrackIds = self._get_trackmate_ids_by_location(self.basal_dataframe)
+            
+        if self.radial_csv_file is not None:
+            print('Reading Radial location file')
+            self.radial_dataframe = pd.read_csv(self.radial_csv_file)
+            self.RadialTrackIds = self._get_trackmate_ids_by_location(self.radial_dataframe)
+            
         
+
+        
+
+    def _get_trackmate_ids_by_location(self, dataframe):
+            trackmate_track_ids = []
+            t = int(self.tend)
+            for index, row in dataframe.iterrows():
+                if "axis-0" in row:
+                    z = round(row["axis-0"])
+                    y = round(row["axis-1"])
+                    x = round(row["axis-2"])
+                    spot = (t, z, y, x)
+
+                if "z" in row:
+                    t = int(round(row[t]))
+                    z = round(row["z"])
+                    y = round(row("y"))
+                    x = round(row("x"))
+                    spot = (t, z, y, x)
+
+                spot_id = find_closest_key(
+                    spot, self.unique_oneat_spot_centroid, self.time_veto, self.space_veto
+                )
+                if spot_id is not None:
+                    spot_properties_dict = self.unique_spot_properties[spot_id]
+                    if self.trackid_key in spot_properties_dict.keys():
+                        trackmate_track_id = spot_properties_dict[self.trackid_key]
+                        trackmate_track_ids.append(trackmate_track_id)
+
+            return trackmate_track_ids            
 
 
     def _create_master_xml(self):

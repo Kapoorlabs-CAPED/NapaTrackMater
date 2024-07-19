@@ -404,7 +404,7 @@ class TrackVector(TrackMate):
                     )
 
             [r.result() for r in concurrent.futures.as_completed(futures)]
-
+        self._get_cell_fate_tracks()
         print("getting attributes")
         if (
             self.spot_csv_path is not None
@@ -749,7 +749,7 @@ class TrackVector(TrackMate):
 
             self.closeness_dict[time_point] = closeness_dict_time_point
 
-    def get_trackmate_trackids(self, dataframe, time_veto=0, space_veto=15):
+    def get_trackmate_trackids(self, dataframe):
         t = int(self.tend)
         trackmate_track_ids = []
         for index, row in dataframe.iterrows():
@@ -767,7 +767,7 @@ class TrackVector(TrackMate):
                 spot = (t, z, y, x)
 
             spot_id = find_closest_key(
-                spot, self.unique_oneat_spot_centroid, time_veto, space_veto
+                spot, self.unique_oneat_spot_centroid, self.time_veto, self.space_veto
             )
             if spot_id is not None:
                 spot_properties_dict = self.unique_spot_properties[spot_id]
