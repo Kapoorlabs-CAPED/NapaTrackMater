@@ -1949,20 +1949,24 @@ class TrackMate:
                
                 self.progress_bar.value = self.count
                 self.progress_bar.show()
+            
+            for index, row in filtered_detections.iterrows():
+                    t = int(row["T"])
+                    z = round(row["Z"])
+                    y = round(row["Y"])
+                    x = round(row["X"])
+                    spot = (t, z, y, x)
+                    
+                    self.count += 1
 
-            def process_row(row):
-                t = int(row["T"])
-                z = round(row["Z"])
-                y = round(row["Y"])
-                x = round(row["X"])
+                    spot_id = find_closest_key(spot, self.unique_oneat_spot_centroid, 0, 5)
+                    if spot_id is not None:
+                        self.oneat_dividing_tracks[spot_id] = spot
 
-                spot = (t, z, y, x)
-                self.count = self.count + 1
-                spot_id = find_closest_key(spot, self.unique_oneat_spot_centroid, 0, 5)
-                if spot_id is not None:
-                    self.oneat_dividing_tracks[spot_id] = spot
+                    if self.progress_bar is not None:
+                        self.progress_bar.value = self.count
+        
 
-            filtered_detections.apply(process_row, axis=1)
 
     def _create_master_xml(self):
 
