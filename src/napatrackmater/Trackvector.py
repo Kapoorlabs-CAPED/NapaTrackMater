@@ -749,32 +749,7 @@ class TrackVector(TrackMate):
 
             self.closeness_dict[time_point] = closeness_dict_time_point
 
-    def get_trackmate_trackids(self, dataframe):
-        t = int(self.tend)
-        trackmate_track_ids = []
-        for index, row in dataframe.iterrows():
-            if "axis-0" in row:
-                z = round(row["axis-0"])
-                y = round(row["axis-1"])
-                x = round(row["axis-2"])
-                spot = (t, z, y, x)
 
-            if "z" in row:
-                t = int(round(row[t]))
-                z = round(row["z"])
-                y = round(row("y"))
-                x = round(row("x"))
-                spot = (t, z, y, x)
-
-            spot_id = find_closest_key(
-                spot, self.unique_oneat_spot_centroid, self.time_veto, self.space_veto
-            )
-            if spot_id is not None:
-                spot_properties_dict = self.unique_spot_properties[spot_id]
-                if self.trackid_key in spot_properties_dict.keys():
-                    trackmate_track_id = spot_properties_dict[self.trackid_key]
-                    trackmate_track_ids.append(trackmate_track_id)
-        return trackmate_track_ids
 
 
 def _iterate_over_tracklets(

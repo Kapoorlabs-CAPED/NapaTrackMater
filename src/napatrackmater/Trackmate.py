@@ -2015,8 +2015,8 @@ class TrackMate:
                 if "z" in row:
                     t = int(round(row['t']))
                     z = round(row["z"])
-                    y = round(row("y"))
-                    x = round(row("x"))
+                    y = round(row["y"])
+                    x = round(row["x"])
                     spot = (t, z, y, x)
 
                 spot_id = find_closest_key(
