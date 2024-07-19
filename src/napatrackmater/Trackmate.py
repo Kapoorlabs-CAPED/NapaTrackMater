@@ -2013,7 +2013,7 @@ class TrackMate:
                     spot = (t, z, y, x)
 
                 if "z" in row:
-                    t = int(round(row[t]))
+                    t = int(round(row['t']))
                     z = round(row["z"])
                     y = round(row("y"))
                     x = round(row("x"))
