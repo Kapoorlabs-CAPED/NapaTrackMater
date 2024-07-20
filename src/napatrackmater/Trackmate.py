@@ -833,6 +833,9 @@ class TrackMate:
                 {self.dividing_key: dividing_trajectory}
             )
             self.unique_spot_properties[leaf].update(
+                {self.fate_key: -1}
+            )
+            self.unique_spot_properties[leaf].update(
                 {self.number_dividing_key: number_dividing}
             )
             self.unique_spot_properties[leaf].update(
@@ -856,6 +859,10 @@ class TrackMate:
                 {self.dividing_key: dividing_trajectory}
             )
             self.unique_spot_properties[source_id].update(
+                {self.fate_key: -1}
+            )
+
+            self.unique_spot_properties[source_id].update(
                 {self.number_dividing_key: number_dividing}
             )
             self.unique_spot_properties[source_id].update(
@@ -878,6 +885,9 @@ class TrackMate:
                     )
                     self.unique_spot_properties[target_id].update(
                         {self.dividing_key: dividing_trajectory}
+                    )
+                    self.unique_spot_properties[target_id].update(
+                        {self.fate_key: -1}
                     )
                     self.unique_spot_properties[target_id].update(
                         {self.number_dividing_key: number_dividing}
@@ -908,6 +918,10 @@ class TrackMate:
                     self.unique_spot_properties[target_id].update(
                         {self.dividing_key: dividing_trajectory}
                     )
+                    self.unique_spot_properties[target_id].update(
+                        {self.fate_key: -1}
+                    )
+
                     self.unique_spot_properties[target_id].update(
                         {self.number_dividing_key: number_dividing}
                     )
@@ -1004,6 +1018,9 @@ class TrackMate:
                 {self.dividing_key: dividing_trajectory}
             )
             self.unique_spot_properties[leaf].update(
+                {self.fate_key: -1}
+            )
+            self.unique_spot_properties[leaf].update(
                 {self.number_dividing_key: number_dividing}
             )
             self.unique_spot_properties[leaf].update(
@@ -1024,6 +1041,10 @@ class TrackMate:
             self.unique_spot_properties[source_id].update(
                 {self.dividing_key: dividing_trajectory}
             )
+            self.unique_spot_properties[source_id].update(
+                {self.fate_key: -1}
+            )
+
             self.unique_spot_properties[source_id].update(
                 {self.number_dividing_key: number_dividing}
             )
@@ -1049,6 +1070,10 @@ class TrackMate:
             self.unique_spot_properties[source_id].update(
                 {self.dividing_key: dividing_trajectory}
             )
+            self.unique_spot_properties[source_id].update(
+                {self.fate_key: -1}
+            )
+
             self.unique_spot_properties[source_id].update(
                 {self.number_dividing_key: number_dividing}
             )
