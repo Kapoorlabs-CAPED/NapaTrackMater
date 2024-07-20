@@ -2035,7 +2035,9 @@ class TrackMate:
 
         for track_id in TrackIds:
             self.unique_track_fate_label[track_id] = fate_label
-            cell_ids = self.all_current_cell_ids[int(track_id)]
+            if track_id is not None:
+                if track_id is not self.TrackidBox:
+                    cell_ids = self.all_current_cell_ids[int(track_id)]
             for cell_id in cell_ids:
                 self.unique_spot_properties[cell_id].update({self.fate_key: fate_label})
 

@@ -230,16 +230,25 @@ class TrackVector(TrackMate):
         self.AllTrackIds = []
         self.DividingTrackIds = []
         self.NormalTrackIds = []
+        self.GobletTrackIds = []
+        self.BasalTrackIds = []
+        self.RadialTrackIds = []
         self.all_track_properties = []
         self.split_points_times = []
 
         self.AllTrackIds.append(None)
         self.DividingTrackIds.append(None)
         self.NormalTrackIds.append(None)
+        self.GobletTrackIds.append(None)
+        self.BasalTrackIds.append(None)
+        self.RadialTrackIds.append(None)
 
         self.AllTrackIds.append(self.TrackidBox)
         self.DividingTrackIds.append(self.TrackidBox)
         self.NormalTrackIds.append(self.TrackidBox)
+        self.GobletTrackIds.append(self.TrackidBox)
+        self.BasalTrackIds.append(self.TrackidBox)
+        self.RadialTrackIds.append(self.TrackidBox)
 
         self.Spotobjects = self.xml_content.find("Model").find("AllSpots")
         # Extract the tracks from xml
@@ -748,8 +757,6 @@ class TrackVector(TrackMate):
                         closeness_dict_time_point[track_id] = list(closest_track_ids)
 
             self.closeness_dict[time_point] = closeness_dict_time_point
-
-
 
 
 def _iterate_over_tracklets(
