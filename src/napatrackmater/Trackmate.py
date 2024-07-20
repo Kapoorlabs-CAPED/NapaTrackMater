@@ -57,6 +57,9 @@ class TrackMate:
         oneat_threshold_cutoff: int = 0.5,
         time_veto: int = 0,
         space_veto: int = 15,
+        basal_label: int = 1,
+        goblet_label:int = 2,
+        radial_label: int = 3,
     ):
 
         self.xml_path = xml_path
@@ -80,6 +83,9 @@ class TrackMate:
         self.latent_features = latent_features
         self.time_veto = time_veto 
         self.space_veto = space_veto
+        self.basal_label = basal_label 
+        self.goblet_label = goblet_label 
+        self.radial_label = radial_label
         if image is not None:
             self.image = image.astype(np.uint8)
         else:
@@ -199,6 +205,7 @@ class TrackMate:
         self.afterid_key = "after_id"
         self.beforeid_key = "before_id"
         self.dividing_key = "dividing_normal"
+        self.fate_key = "fate"
         self.number_dividing_key = "number_dividing"
         self.distance_cell_mask_key = "distance_cell_mask"
         self.maskcentroid_x_key = "maskcentroid_x_key"
@@ -262,6 +269,7 @@ class TrackMate:
         self.tracklet_id_to_generation_id = {}
         self.tracklet_id_to_tracklet_number_id = {}
         self.unique_track_mitosis_label = {}
+        self.unique_track_fate_label = {}
         self.unique_track_properties = {}
         self.unique_fft_properties = {}
         self.unique_cluster_properties = {}
@@ -1584,6 +1592,9 @@ class TrackMate:
         self.AllTrackIds = []
         self.DividingTrackIds = []
         self.NormalTrackIds = []
+        self.GobletTrackIds = []
+        self.BasalTrackIds = []
+        self.RadialTrackIds = []
         self.all_track_properties = []
         self.split_points_times = []
 
@@ -1993,20 +2004,32 @@ class TrackMate:
             print('Reading Goblet location file')
             self.goblet_dataframe = pd.read_csv(self.goblet_csv_file)
             self.GobletTrackIds = self._get_trackmate_ids_by_location(self.goblet_dataframe)
-
+            self._update_spot_fate(self.GobletTrackIds, self.goblet_label)
         if self.basal_csv_file is not None:
             print('Reading Basal location file')
             self.basal_dataframe = pd.read_csv(self.basal_csv_file)
             self.BasalTrackIds = self._get_trackmate_ids_by_location(self.basal_dataframe)
-            
+            self._update_spot_fate(self.BasalTrackIds, self.basal_label)
         if self.radial_csv_file is not None:
             print('Reading Radial location file')
             self.radial_dataframe = pd.read_csv(self.radial_csv_file)
             self.RadialTrackIds = self._get_trackmate_ids_by_location(self.radial_dataframe)
-            
+            self._update_spot_fate(self.RadialTrackIds, self.radial_label)
         
 
         
+    def _update_spot_fate(self, TrackIds, fate_label):
+
+            for track_id in TrackIds:
+              self.unique_track_fate_label[track_id] = fate_label
+              cell_ids =  self.all_current_cell_ids[int(track_id)]
+              for cell_id in cell_ids:
+                self.unique_spot_properties[cell_id].update(
+                    {self.fate_key: fate_label})
+                
+              
+       
+
 
     def _get_trackmate_ids_by_location(self, dataframe):
             trackmate_track_ids = []
@@ -2961,6 +2984,105 @@ class TrackMate:
         self.all_mean_local_cell_density = []
         self.all_var_local_cell_density = []
 
+        self.goblet_mean_disp_z = []
+        self.goblet_var_disp_z = []
+
+        self.goblet_mean_disp_y = []
+        self.goblet_var_disp_y = []
+
+        self.goblet_mean_disp_x = []
+        self.goblet_var_disp_x = []
+
+        self.goblet_mean_radius = []
+        self.goblet_var_radius = []
+
+        self.goblet_mean_speed = []
+        self.goblet_var_speed = []
+
+        self.goblet_mean_acc = []
+        self.goblet_var_acc = []
+
+        self.goblet_mean_directional_change_z = []
+        self.goblet_var_directional_change_z = []
+
+        self.goblet_mean_directional_change_y = []
+        self.goblet_var_directional_change_y = []
+
+        self.goblet_mean_directional_change_x = []
+        self.goblet_var_directional_change_x = []
+
+        self.goblet_mean_distance_cell_mask = []
+        self.goblet_var_distance_cell_mask = []
+
+        self.goblet_mean_local_cell_density = []
+        self.goblet_var_local_cell_density = []
+
+        self.basal_mean_disp_z = []
+        self.basal_var_disp_z = []
+
+        self.basal_mean_disp_y = []
+        self.basal_var_disp_y = []
+
+        self.basal_mean_disp_x = []
+        self.basal_var_disp_x = []
+
+        self.basal_mean_radius = []
+        self.basal_var_radius = []
+
+        self.basal_mean_speed = []
+        self.basal_var_speed = []
+
+        self.basal_mean_acc = []
+        self.basal_var_acc = []
+
+        self.basal_mean_directional_change_z = []
+        self.basal_var_directional_change_z = []
+
+        self.basal_mean_directional_change_y = []
+        self.basal_var_directional_change_y = []
+
+        self.basal_mean_directional_change_x = []
+        self.basal_var_directional_change_x = []
+
+        self.basal_mean_distance_cell_mask = []
+        self.basal_var_distance_cell_mask = []
+
+        self.basal_mean_local_cell_density = []
+        self.basal_var_local_cell_density = []
+
+        self.radial_mean_disp_z = []
+        self.radial_var_disp_z = []
+
+        self.radial_mean_disp_y = []
+        self.radial_var_disp_y = []
+
+        self.radial_mean_disp_x = []
+        self.radial_var_disp_x = []
+
+        self.radial_mean_radius = []
+        self.radial_var_radius = []
+
+        self.radial_mean_speed = []
+        self.radial_var_speed = []
+
+        self.radial_mean_acc = []
+        self.radial_var_acc = []
+
+        self.radial_mean_directional_change_z = []
+        self.radial_var_directional_change_z = []
+
+        self.radial_mean_directional_change_y = []
+        self.radial_var_directional_change_y = []
+
+        self.radial_mean_directional_change_x = []
+        self.radial_var_directional_change_x = []
+
+        self.radial_mean_distance_cell_mask = []
+        self.radial_var_distance_cell_mask = []
+
+        self.radial_mean_local_cell_density = []
+        self.radial_var_local_cell_density = []
+
         all_spots_tracks = {}
         for (k, v) in self.unique_spot_properties.items():
 
@@ -3018,14 +3140,134 @@ class TrackMate:
         all_distance_cell_mask = []
         all_local_cell_density = []
 
+        goblet_disp_z = []
+        goblet_disp_y = []
+        goblet_disp_x = []
+        goblet_radius = []
+        goblet_speed = []
+        goblet_acc = []
+        goblet_directional_change_z = []
+        goblet_directional_change_y = []
+        goblet_directional_change_x = []
+        goblet_distance_cell_mask = []
+        goblet_local_cell_density = []
+
+
+        basal_disp_z = []
+        basal_disp_y = []
+        basal_disp_x = []
+        basal_radius = []
+        basal_speed = []
+        basal_acc = []
+        basal_directional_change_z = []
+        basal_directional_change_y = []
+        basal_directional_change_x = []
+        basal_distance_cell_mask = []
+        basal_local_cell_density = []
+
+        radial_disp_z = []
+        radial_disp_y = []
+        radial_disp_x = []
+        radial_radius = []
+        radial_speed = []
+        radial_acc = []
+        radial_directional_change_z = []
+        radial_directional_change_y = []
+        radial_directional_change_x = []
+        radial_distance_cell_mask = []
+        radial_local_cell_density = []
+
         for (k, v) in all_spots_tracks.items():
 
             current_time = all_spots_tracks[k][self.frameid_key]
             mitotic = all_spots_tracks[k][self.dividing_key]
-
+            cell_fate = all_spots_tracks[k][self.fate_key]
             if i == int(current_time):
 
                 self._get_cal(current_time)
+
+                if cell_fate == self.goblet_label:
+
+                    goblet_disp_z.append(all_spots_tracks[k][self.zposid_key])
+                    goblet_disp_y.append(all_spots_tracks[k][self.yposid_key])
+                    goblet_disp_x.append(all_spots_tracks[k][self.xposid_key])
+                    if all_spots_tracks[k][self.radius_key] > 0:
+                        goblet_radius.append(all_spots_tracks[k][self.radius_key])
+                    else:
+                        goblet_radius.append(None)
+                    goblet_speed.append(all_spots_tracks[k][self.speed_key])
+                    goblet_acc.append(all_spots_tracks[k][self.acceleration_key])
+                    goblet_directional_change_z.append(
+                        all_spots_tracks[k][self.motion_angle_z_key]
+                    )
+                    goblet_directional_change_y.append(
+                        all_spots_tracks[k][self.motion_angle_y_key]
+                    )
+                    goblet_directional_change_x.append(
+                        all_spots_tracks[k][self.motion_angle_x_key]
+                    )
+                    goblet_distance_cell_mask.append(
+                        all_spots_tracks[k][self.distance_cell_mask_key]
+                    )
+                    goblet_local_cell_density.append(
+                        all_spots_tracks[k][self.local_cell_density_key]
+                    )
+
+                if cell_fate == self.basal_label:
+
+                    basal_disp_z.append(all_spots_tracks[k][self.zposid_key])
+                    basal_disp_y.append(all_spots_tracks[k][self.yposid_key])
+                    basal_disp_x.append(all_spots_tracks[k][self.xposid_key])
+                    if all_spots_tracks[k][self.radius_key] > 0:
+                        basal_radius.append(all_spots_tracks[k][self.radius_key])
+                    else:
+                        basal_radius.append(None)
+                    basal_speed.append(all_spots_tracks[k][self.speed_key])
+                    basal_acc.append(all_spots_tracks[k][self.acceleration_key])
+                    basal_directional_change_z.append(
+                        all_spots_tracks[k][self.motion_angle_z_key]
+                    )
+                    basal_directional_change_y.append(
+                        all_spots_tracks[k][self.motion_angle_y_key]
+                    )
+                    basal_directional_change_x.append(
+                        all_spots_tracks[k][self.motion_angle_x_key]
+                    )
+                    basal_distance_cell_mask.append(
+                        all_spots_tracks[k][self.distance_cell_mask_key]
+                    )
+                    basal_local_cell_density.append(
+                        all_spots_tracks[k][self.local_cell_density_key]
+                    )   
+
+                if cell_fate == self.radial_label:
+
+                    radial_disp_z.append(all_spots_tracks[k][self.zposid_key])
+                    radial_disp_y.append(all_spots_tracks[k][self.yposid_key])
+                    radial_disp_x.append(all_spots_tracks[k][self.xposid_key])
+                    if all_spots_tracks[k][self.radius_key] > 0:
+                        radial_radius.append(all_spots_tracks[k][self.radius_key])
+                    else:
+                        radial_radius.append(None)
+                    radial_speed.append(all_spots_tracks[k][self.speed_key])
+                    radial_acc.append(all_spots_tracks[k][self.acceleration_key])
+                    radial_directional_change_z.append(
+                        all_spots_tracks[k][self.motion_angle_z_key]
+                    )
+                    radial_directional_change_y.append(
+                        all_spots_tracks[k][self.motion_angle_y_key]
+                    )
+                    radial_directional_change_x.append(
+                        all_spots_tracks[k][self.motion_angle_x_key]
+                    )
+                    radial_distance_cell_mask.append(
+                        all_spots_tracks[k][self.distance_cell_mask_key]
+                    )
+                    radial_local_cell_density.append(
+                        all_spots_tracks[k][self.local_cell_density_key]
+                    )      
+
+
                 if mitotic:
                     mitotic_disp_z.append(all_spots_tracks[k][self.zposid_key])
                     mitotic_disp_y.append(all_spots_tracks[k][self.yposid_key])
@@ -3107,6 +3349,8 @@ class TrackMate:
         mitotic_disp_y = np.abs(np.diff(mitotic_disp_y))
         mitotic_disp_x = np.abs(np.diff(mitotic_disp_x))
 
+        
+
         non_mitotic_disp_z = np.abs(np.diff(non_mitotic_disp_z))
         non_mitotic_disp_y = np.abs(np.diff(non_mitotic_disp_y))
         non_mitotic_disp_x = np.abs(np.diff(non_mitotic_disp_x))
@@ -3114,6 +3358,19 @@ class TrackMate:
         all_disp_z = np.abs(np.diff(all_disp_z))
         all_disp_y = np.abs(np.diff(all_disp_y))
         all_disp_x = np.abs(np.diff(all_disp_x))
+
+        goblet_disp_z = np.abs(np.diff(goblet_disp_z))
+        goblet_disp_y = np.abs(np.diff(goblet_disp_y))
+        goblet_disp_x = np.abs(np.diff(goblet_disp_x))
+
+        basal_disp_z = np.abs(np.diff(basal_disp_z))
+        basal_disp_y = np.abs(np.diff(basal_disp_y))
+        basal_disp_x = np.abs(np.diff(basal_disp_x))
+
+
+        radial_disp_z = np.abs(np.diff(radial_disp_z))
+        radial_disp_y = np.abs(np.diff(radial_disp_y))
+        radial_disp_x = np.abs(np.diff(radial_disp_x))
 
         self.time.append(i * self.tcalibration)
 
@@ -3218,6 +3475,151 @@ class TrackMate:
         self.non_mitotic_var_local_cell_density.append(
             np.std(non_mitotic_local_cell_density)
         )
+
+        self.goblet_mean_disp_z.append(np.mean(goblet_disp_z))
+        self.goblet_var_disp_z.append(np.std(goblet_disp_z))
+
+        self.goblet_mean_disp_y.append(np.mean(goblet_disp_y))
+        self.goblet_var_disp_y.append(np.std(goblet_disp_y))
+
+        self.goblet_mean_disp_x.append(np.mean(goblet_disp_x))
+        self.goblet_var_disp_x.append(np.std(goblet_disp_x))
+
+        filtered_values = [val for val in goblet_radius if val is not None]
+        self.goblet_mean_radius.append(np.mean(filtered_values))
+
+        self.goblet_var_radius.append(np.std(filtered_values))
+
+        self.goblet_mean_speed.append(np.mean(goblet_speed))
+        self.goblet_var_speed.append(np.std(goblet_speed))
+
+        self.goblet_mean_acc.append(np.mean(goblet_acc))
+        self.goblet_var_acc.append(np.std(goblet_acc))
+
+        self.goblet_mean_directional_change_z.append(
+            np.mean(goblet_directional_change_z)
+        )
+        self.goblet_var_directional_change_z.append(
+            np.std(goblet_directional_change_z)
+        )
+
+        self.goblet_mean_directional_change_y.append(
+            np.mean(goblet_directional_change_y)
+        )
+        self.goblet_var_directional_change_y.append(
+            np.std(goblet_directional_change_y)
+        )
+
+        self.goblet_mean_directional_change_x.append(
+            np.mean(goblet_directional_change_x)
+        )
+        self.goblet_var_directional_change_x.append(
+            np.std(goblet_directional_change_x)
+        )
+
+        self.goblet_mean_distance_cell_mask.append(np.mean(goblet_distance_cell_mask))
+        self.goblet_var_distance_cell_mask.append(np.std(goblet_distance_cell_mask))
+
+        self.goblet_mean_local_cell_density.append(np.mean(goblet_local_cell_density))
+        self.goblet_var_local_cell_density.append(np.std(goblet_local_cell_density))
+
+
+        self.basal_mean_disp_z.append(np.mean(basal_disp_z))
+        self.basal_var_disp_z.append(np.std(basal_disp_z))
+
+        self.basal_mean_disp_y.append(np.mean(basal_disp_y))
+        self.basal_var_disp_y.append(np.std(basal_disp_y))
+
+        self.basal_mean_disp_x.append(np.mean(basal_disp_x))
+        self.basal_var_disp_x.append(np.std(basal_disp_x))
+
+        filtered_values = [val for val in basal_radius if val is not None]
+        self.basal_mean_radius.append(np.mean(filtered_values))
+
+        self.basal_var_radius.append(np.std(filtered_values))
+
+        self.basal_mean_speed.append(np.mean(basal_speed))
+        self.basal_var_speed.append(np.std(basal_speed))
+
+        self.basal_mean_acc.append(np.mean(basal_acc))
+        self.basal_var_acc.append(np.std(basal_acc))
+
+        self.basal_mean_directional_change_z.append(
+            np.mean(basal_directional_change_z)
+        )
+        self.basal_var_directional_change_z.append(
+            np.std(basal_directional_change_z)
+        )
+
+        self.basal_mean_directional_change_y.append(
+            np.mean(basal_directional_change_y)
+        )
+        self.basal_var_directional_change_y.append(
+            np.std(basal_directional_change_y)
+        )
+
+        self.basal_mean_directional_change_x.append(
+            np.mean(basal_directional_change_x)
+        )
+        self.basal_var_directional_change_x.append(
+            np.std(basal_directional_change_x)
+        )
+
+        self.basal_mean_distance_cell_mask.append(np.mean(basal_distance_cell_mask))
+        self.basal_var_distance_cell_mask.append(np.std(basal_distance_cell_mask))
+
+        self.basal_mean_local_cell_density.append(np.mean(basal_local_cell_density))
+        self.basal_var_local_cell_density.append(np.std(basal_local_cell_density))
+
+
+        self.radial_mean_disp_z.append(np.mean(radial_disp_z))
+        self.radial_var_disp_z.append(np.std(radial_disp_z))
+
+        self.radial_mean_disp_y.append(np.mean(radial_disp_y))
+        self.radial_var_disp_y.append(np.std(radial_disp_y))
+
+        self.radial_mean_disp_x.append(np.mean(radial_disp_x))
+        self.radial_var_disp_x.append(np.std(radial_disp_x))
+
+        filtered_values = [val for val in radial_radius if val is not None]
+        self.radial_mean_radius.append(np.mean(filtered_values))
+
+        self.radial_var_radius.append(np.std(filtered_values))
+
+        self.radial_mean_speed.append(np.mean(radial_speed))
+        self.radial_var_speed.append(np.std(radial_speed))
+
+        self.radial_mean_acc.append(np.mean(radial_acc))
+        self.radial_var_acc.append(np.std(radial_acc))
+
+        self.radial_mean_directional_change_z.append(
+            np.mean(radial_directional_change_z)
+        )
+        self.radial_var_directional_change_z.append(
+            np.std(radial_directional_change_z)
+        )
+
+        self.radial_mean_directional_change_y.append(
+            np.mean(radial_directional_change_y)
+        )
+        self.radial_var_directional_change_y.append(
+            np.std(radial_directional_change_y)
+        )
+
+        self.radial_mean_directional_change_x.append(
+            np.mean(radial_directional_change_x)
+        )
+        self.radial_var_directional_change_x.append(
+            np.std(radial_directional_change_x)
+        )
+
+        self.radial_mean_distance_cell_mask.append(np.mean(radial_distance_cell_mask))
+        self.radial_var_distance_cell_mask.append(np.std(radial_distance_cell_mask))
+
+        self.radial_mean_local_cell_density.append(np.mean(radial_local_cell_density))
+        self.radial_var_local_cell_density.append(np.std(radial_local_cell_density))
+
+
 
         self.all_mean_disp_z.append(np.mean(all_disp_z))
         self.all_var_disp_z.append(np.std(all_disp_z))
