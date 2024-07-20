@@ -58,7 +58,7 @@ class TrackMate:
         time_veto: int = 0,
         space_veto: int = 15,
         basal_label: int = 1,
-        goblet_label:int = 2,
+        goblet_label: int = 2,
         radial_label: int = 3,
     ):
 
@@ -81,10 +81,10 @@ class TrackMate:
         self.radial_csv_file = radial_csv_file
         self.oneat_threshold_cutoff = oneat_threshold_cutoff
         self.latent_features = latent_features
-        self.time_veto = time_veto 
+        self.time_veto = time_veto
         self.space_veto = space_veto
-        self.basal_label = basal_label 
-        self.goblet_label = goblet_label 
+        self.basal_label = basal_label
+        self.goblet_label = goblet_label
         self.radial_label = radial_label
         if image is not None:
             self.image = image.astype(np.uint8)
@@ -832,9 +832,7 @@ class TrackMate:
             self.unique_spot_properties[leaf].update(
                 {self.dividing_key: dividing_trajectory}
             )
-            self.unique_spot_properties[leaf].update(
-                {self.fate_key: -1}
-            )
+            self.unique_spot_properties[leaf].update({self.fate_key: -1})
             self.unique_spot_properties[leaf].update(
                 {self.number_dividing_key: number_dividing}
             )
@@ -858,9 +856,7 @@ class TrackMate:
             self.unique_spot_properties[source_id].update(
                 {self.dividing_key: dividing_trajectory}
             )
-            self.unique_spot_properties[source_id].update(
-                {self.fate_key: -1}
-            )
+            self.unique_spot_properties[source_id].update({self.fate_key: -1})
 
             self.unique_spot_properties[source_id].update(
                 {self.number_dividing_key: number_dividing}
@@ -886,9 +882,7 @@ class TrackMate:
                     self.unique_spot_properties[target_id].update(
                         {self.dividing_key: dividing_trajectory}
                     )
-                    self.unique_spot_properties[target_id].update(
-                        {self.fate_key: -1}
-                    )
+                    self.unique_spot_properties[target_id].update({self.fate_key: -1})
                     self.unique_spot_properties[target_id].update(
                         {self.number_dividing_key: number_dividing}
                     )
@@ -918,9 +912,7 @@ class TrackMate:
                     self.unique_spot_properties[target_id].update(
                         {self.dividing_key: dividing_trajectory}
                     )
-                    self.unique_spot_properties[target_id].update(
-                        {self.fate_key: -1}
-                    )
+                    self.unique_spot_properties[target_id].update({self.fate_key: -1})
 
                     self.unique_spot_properties[target_id].update(
                         {self.number_dividing_key: number_dividing}
@@ -1017,9 +1009,7 @@ class TrackMate:
             self.unique_spot_properties[leaf].update(
                 {self.dividing_key: dividing_trajectory}
             )
-            self.unique_spot_properties[leaf].update(
-                {self.fate_key: -1}
-            )
+            self.unique_spot_properties[leaf].update({self.fate_key: -1})
             self.unique_spot_properties[leaf].update(
                 {self.number_dividing_key: number_dividing}
             )
@@ -1041,9 +1031,7 @@ class TrackMate:
             self.unique_spot_properties[source_id].update(
                 {self.dividing_key: dividing_trajectory}
             )
-            self.unique_spot_properties[source_id].update(
-                {self.fate_key: -1}
-            )
+            self.unique_spot_properties[source_id].update({self.fate_key: -1})
 
             self.unique_spot_properties[source_id].update(
                 {self.number_dividing_key: number_dividing}
@@ -1070,9 +1058,7 @@ class TrackMate:
             self.unique_spot_properties[source_id].update(
                 {self.dividing_key: dividing_trajectory}
             )
-            self.unique_spot_properties[source_id].update(
-                {self.fate_key: -1}
-            )
+            self.unique_spot_properties[source_id].update({self.fate_key: -1})
 
             self.unique_spot_properties[source_id].update(
                 {self.number_dividing_key: number_dividing}
@@ -1678,8 +1664,6 @@ class TrackMate:
                     self.progress_bar.value = self.count
                 r.result()
 
-
-
         self._correct_track_status()
         print(f"Iterating over tracks {len(self.filtered_track_ids)}")
         self.count = 0
@@ -1954,7 +1938,7 @@ class TrackMate:
             )
             self.graph_tracks[daughter_track_id] = parent_track_id
 
-        self._get_cell_fate_tracks()    
+        self._get_cell_fate_tracks()
         if (
             self.spot_csv_path is not None
             and self.track_csv_path is not None
@@ -1993,7 +1977,7 @@ class TrackMate:
         if self.oneat_csv_file is not None:
             print("Improving mitosis track classification using Oneat")
             self.count = 0
-            
+
             detections = pd.read_csv(self.oneat_csv_file, delimiter=",")
             cutoff_score = self.oneat_threshold_cutoff
             filtered_detections = detections[detections["Score"] > cutoff_score]
@@ -2003,87 +1987,85 @@ class TrackMate:
                     0,
                     len(filtered_detections) + 1,
                 )
-               
+
                 self.progress_bar.value = self.count
                 self.progress_bar.show()
-            
+
             for index, row in filtered_detections.iterrows():
-                    t = int(row["T"])
-                    z = round(row["Z"])
-                    y = round(row["Y"])
-                    x = round(row["X"])
-                    spot = (t, z, y, x)
-                    
-                    self.count += 1
+                t = int(row["T"])
+                z = round(row["Z"])
+                y = round(row["Y"])
+                x = round(row["X"])
+                spot = (t, z, y, x)
 
-                    spot_id = find_closest_key(spot, self.unique_oneat_spot_centroid, 0, 5)
-                    if spot_id is not None:
-                        self.oneat_dividing_tracks[spot_id] = spot
+                self.count += 1
 
-                    if self.progress_bar is not None:
-                        self.progress_bar.value = self.count
+                spot_id = find_closest_key(spot, self.unique_oneat_spot_centroid, 0, 5)
+                if spot_id is not None:
+                    self.oneat_dividing_tracks[spot_id] = spot
 
-    def _get_cell_fate_tracks(self):  
-      
+                if self.progress_bar is not None:
+                    self.progress_bar.value = self.count
+
+    def _get_cell_fate_tracks(self):
+
         if self.goblet_csv_file is not None:
-            print('Reading Goblet location file')
+            print("Reading Goblet location file")
             self.goblet_dataframe = pd.read_csv(self.goblet_csv_file)
-            self.GobletTrackIds = self._get_trackmate_ids_by_location(self.goblet_dataframe)
+            self.GobletTrackIds.extend(
+                self._get_trackmate_ids_by_location(self.goblet_dataframe)
+            )
             self._update_spot_fate(self.GobletTrackIds, self.goblet_label)
         if self.basal_csv_file is not None:
-            print('Reading Basal location file')
+            print("Reading Basal location file")
             self.basal_dataframe = pd.read_csv(self.basal_csv_file)
-            self.BasalTrackIds = self._get_trackmate_ids_by_location(self.basal_dataframe)
+            self.BasalTrackIds.extend(
+                self._get_trackmate_ids_by_location(self.basal_dataframe)
+            )
             self._update_spot_fate(self.BasalTrackIds, self.basal_label)
         if self.radial_csv_file is not None:
-            print('Reading Radial location file')
+            print("Reading Radial location file")
             self.radial_dataframe = pd.read_csv(self.radial_csv_file)
-            self.RadialTrackIds = self._get_trackmate_ids_by_location(self.radial_dataframe)
+            self.RadialTrackIds.extend(
+                self._get_trackmate_ids_by_location(self.radial_dataframe)
+            )
             self._update_spot_fate(self.RadialTrackIds, self.radial_label)
-        
 
-        
     def _update_spot_fate(self, TrackIds, fate_label):
 
-            for track_id in TrackIds:
-              self.unique_track_fate_label[track_id] = fate_label
-              cell_ids =  self.all_current_cell_ids[int(track_id)]
-              for cell_id in cell_ids:
-                self.unique_spot_properties[cell_id].update(
-                    {self.fate_key: fate_label})
-                
-              
-       
-
+        for track_id in TrackIds:
+            self.unique_track_fate_label[track_id] = fate_label
+            cell_ids = self.all_current_cell_ids[int(track_id)]
+            for cell_id in cell_ids:
+                self.unique_spot_properties[cell_id].update({self.fate_key: fate_label})
 
     def _get_trackmate_ids_by_location(self, dataframe):
-            trackmate_track_ids = []
-            t = int(self.tend)
-            for index, row in dataframe.iterrows():
-                if "axis-0" in row:
-                    z = round(row["axis-0"])
-                    y = round(row["axis-1"])
-                    x = round(row["axis-2"])
-                    spot = (t, z, y, x)
+        trackmate_track_ids = []
+        t = int(self.tend)
+        for index, row in dataframe.iterrows():
+            if "axis-0" in row:
+                z = round(row["axis-0"])
+                y = round(row["axis-1"])
+                x = round(row["axis-2"])
+                spot = (t, z, y, x)
 
-                if "z" in row:
-                    t = int(round(row['t']))
-                    z = round(row["z"])
-                    y = round(row["y"])
-                    x = round(row["x"])
-                    spot = (t, z, y, x)
+            if "z" in row:
+                t = int(round(row["t"]))
+                z = round(row["z"])
+                y = round(row["y"])
+                x = round(row["x"])
+                spot = (t, z, y, x)
 
-                spot_id = find_closest_key(
-                    spot, self.unique_oneat_spot_centroid, self.time_veto, self.space_veto
-                )
-                if spot_id is not None:
-                    spot_properties_dict = self.unique_spot_properties[spot_id]
-                    if self.trackid_key in spot_properties_dict.keys():
-                        trackmate_track_id = spot_properties_dict[self.trackid_key]
-                        trackmate_track_ids.append(trackmate_track_id)
+            spot_id = find_closest_key(
+                spot, self.unique_oneat_spot_centroid, self.time_veto, self.space_veto
+            )
+            if spot_id is not None:
+                spot_properties_dict = self.unique_spot_properties[spot_id]
+                if self.trackid_key in spot_properties_dict.keys():
+                    trackmate_track_id = spot_properties_dict[self.trackid_key]
+                    trackmate_track_ids.append(trackmate_track_id)
 
-            return trackmate_track_ids            
-
+        return trackmate_track_ids
 
     def _create_master_xml(self):
 
@@ -3177,7 +3159,6 @@ class TrackMate:
         goblet_distance_cell_mask = []
         goblet_local_cell_density = []
 
-
         basal_disp_z = []
         basal_disp_y = []
         basal_disp_x = []
@@ -3263,7 +3244,7 @@ class TrackMate:
                     )
                     basal_local_cell_density.append(
                         all_spots_tracks[k][self.local_cell_density_key]
-                    )   
+                    )
 
                 if cell_fate == self.radial_label:
 
@@ -3290,8 +3271,7 @@ class TrackMate:
                     )
                     radial_local_cell_density.append(
                         all_spots_tracks[k][self.local_cell_density_key]
-                    )      
-
+                    )
 
                 if mitotic:
                     mitotic_disp_z.append(all_spots_tracks[k][self.zposid_key])
@@ -3374,8 +3354,6 @@ class TrackMate:
         mitotic_disp_y = np.abs(np.diff(mitotic_disp_y))
         mitotic_disp_x = np.abs(np.diff(mitotic_disp_x))
 
-        
-
         non_mitotic_disp_z = np.abs(np.diff(non_mitotic_disp_z))
         non_mitotic_disp_y = np.abs(np.diff(non_mitotic_disp_y))
         non_mitotic_disp_x = np.abs(np.diff(non_mitotic_disp_x))
@@ -3391,7 +3369,6 @@ class TrackMate:
         basal_disp_z = np.abs(np.diff(basal_disp_z))
         basal_disp_y = np.abs(np.diff(basal_disp_y))
         basal_disp_x = np.abs(np.diff(basal_disp_x))
-
 
         radial_disp_z = np.abs(np.diff(radial_disp_z))
         radial_disp_y = np.abs(np.diff(radial_disp_y))
@@ -3524,30 +3501,23 @@ class TrackMate:
         self.goblet_mean_directional_change_z.append(
             np.mean(goblet_directional_change_z)
         )
-        self.goblet_var_directional_change_z.append(
-            np.std(goblet_directional_change_z)
-        )
+        self.goblet_var_directional_change_z.append(np.std(goblet_directional_change_z))
 
         self.goblet_mean_directional_change_y.append(
             np.mean(goblet_directional_change_y)
         )
-        self.goblet_var_directional_change_y.append(
-            np.std(goblet_directional_change_y)
-        )
+        self.goblet_var_directional_change_y.append(np.std(goblet_directional_change_y))
 
         self.goblet_mean_directional_change_x.append(
             np.mean(goblet_directional_change_x)
         )
-        self.goblet_var_directional_change_x.append(
-            np.std(goblet_directional_change_x)
-        )
+        self.goblet_var_directional_change_x.append(np.std(goblet_directional_change_x))
 
         self.goblet_mean_distance_cell_mask.append(np.mean(goblet_distance_cell_mask))
         self.goblet_var_distance_cell_mask.append(np.std(goblet_distance_cell_mask))
 
         self.goblet_mean_local_cell_density.append(np.mean(goblet_local_cell_density))
         self.goblet_var_local_cell_density.append(np.std(goblet_local_cell_density))
-
 
         self.basal_mean_disp_z.append(np.mean(basal_disp_z))
         self.basal_var_disp_z.append(np.std(basal_disp_z))
@@ -3569,33 +3539,20 @@ class TrackMate:
         self.basal_mean_acc.append(np.mean(basal_acc))
         self.basal_var_acc.append(np.std(basal_acc))
 
-        self.basal_mean_directional_change_z.append(
-            np.mean(basal_directional_change_z)
-        )
-        self.basal_var_directional_change_z.append(
-            np.std(basal_directional_change_z)
-        )
+        self.basal_mean_directional_change_z.append(np.mean(basal_directional_change_z))
+        self.basal_var_directional_change_z.append(np.std(basal_directional_change_z))
 
-        self.basal_mean_directional_change_y.append(
-            np.mean(basal_directional_change_y)
-        )
-        self.basal_var_directional_change_y.append(
-            np.std(basal_directional_change_y)
-        )
+        self.basal_mean_directional_change_y.append(np.mean(basal_directional_change_y))
+        self.basal_var_directional_change_y.append(np.std(basal_directional_change_y))
 
-        self.basal_mean_directional_change_x.append(
-            np.mean(basal_directional_change_x)
-        )
-        self.basal_var_directional_change_x.append(
-            np.std(basal_directional_change_x)
-        )
+        self.basal_mean_directional_change_x.append(np.mean(basal_directional_change_x))
+        self.basal_var_directional_change_x.append(np.std(basal_directional_change_x))
 
         self.basal_mean_distance_cell_mask.append(np.mean(basal_distance_cell_mask))
         self.basal_var_distance_cell_mask.append(np.std(basal_distance_cell_mask))
 
         self.basal_mean_local_cell_density.append(np.mean(basal_local_cell_density))
         self.basal_var_local_cell_density.append(np.std(basal_local_cell_density))
-
 
         self.radial_mean_disp_z.append(np.mean(radial_disp_z))
         self.radial_var_disp_z.append(np.std(radial_disp_z))
@@ -3620,31 +3577,23 @@ class TrackMate:
         self.radial_mean_directional_change_z.append(
             np.mean(radial_directional_change_z)
         )
-        self.radial_var_directional_change_z.append(
-            np.std(radial_directional_change_z)
-        )
+        self.radial_var_directional_change_z.append(np.std(radial_directional_change_z))
 
         self.radial_mean_directional_change_y.append(
             np.mean(radial_directional_change_y)
         )
-        self.radial_var_directional_change_y.append(
-            np.std(radial_directional_change_y)
-        )
+        self.radial_var_directional_change_y.append(np.std(radial_directional_change_y))
 
         self.radial_mean_directional_change_x.append(
             np.mean(radial_directional_change_x)
         )
-        self.radial_var_directional_change_x.append(
-            np.std(radial_directional_change_x)
-        )
+        self.radial_var_directional_change_x.append(np.std(radial_directional_change_x))
 
         self.radial_mean_distance_cell_mask.append(np.mean(radial_distance_cell_mask))
         self.radial_var_distance_cell_mask.append(np.std(radial_distance_cell_mask))
 
         self.radial_mean_local_cell_density.append(np.mean(radial_local_cell_density))
         self.radial_var_local_cell_density.append(np.std(radial_local_cell_density))
-
-
 
         self.all_mean_disp_z.append(np.mean(all_disp_z))
         self.all_var_disp_z.append(np.std(all_disp_z))
