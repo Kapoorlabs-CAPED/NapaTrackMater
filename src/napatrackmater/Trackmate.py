@@ -58,8 +58,8 @@ class TrackMate:
         time_veto: int = 0,
         space_veto: int = 15,
         basal_label: int = 1,
-        goblet_label: int = 2,
-        radial_label: int = 3,
+        goblet_label: int = 3,
+        radial_label: int = 2,
     ):
 
         self.xml_path = xml_path
