@@ -2034,12 +2034,16 @@ class TrackMate:
     def _update_spot_fate(self, TrackIds, fate_label):
 
         for track_id in TrackIds:
+            cell_ids = None
             self.unique_track_fate_label[track_id] = fate_label
             if track_id is not None:
                 if track_id is not self.TrackidBox:
                     cell_ids = self.all_current_cell_ids[int(track_id)]
-            for cell_id in cell_ids:
-                self.unique_spot_properties[cell_id].update({self.fate_key: fate_label})
+            if cell_ids is not None:
+                for cell_id in cell_ids:
+                    self.unique_spot_properties[cell_id].update(
+                        {self.fate_key: fate_label}
+                    )
 
     def _get_trackmate_ids_by_location(self, dataframe):
         trackmate_track_ids = []
