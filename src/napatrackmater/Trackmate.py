@@ -1590,10 +1590,16 @@ class TrackMate:
         self.AllTrackIds.append(None)
         self.DividingTrackIds.append(None)
         self.NormalTrackIds.append(None)
+        self.GobletTrackIds.append(None)
+        self.BasalTrackIds.append(None)
+        self.RadialTrackIds.append(None)
 
         self.AllTrackIds.append(self.TrackidBox)
         self.DividingTrackIds.append(self.TrackidBox)
         self.NormalTrackIds.append(self.TrackidBox)
+        self.GobletTrackIds.append(self.TrackidBox)
+        self.BasalTrackIds.append(self.TrackidBox)
+        self.RadialTrackIds.append(self.TrackidBox)
 
         self.Spotobjects = self.xml_content.find("Model").find("AllSpots")
         # Extract the tracks from xml
