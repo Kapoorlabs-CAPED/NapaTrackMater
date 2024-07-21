@@ -4076,6 +4076,7 @@ def transfer_fate_location(membranesegimage,csv_file, save_file):
                 membrane_coordinates = dict_membrane[t]
                 if len(membrane_coordinates) > 0:
                     tree = spatial.cKDTree(membrane_coordinates)  
+                    index = (z,y,x)
                     distance, nearest_location = tree.query(index)          
                                 
                     z = int(membrane_coordinates[nearest_location][0])         
