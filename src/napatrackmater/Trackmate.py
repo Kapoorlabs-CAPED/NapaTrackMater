@@ -1,7 +1,8 @@
 from tqdm import tqdm
 import numpy as np
 import lxml.etree as et
-
+import csv
+from tifffile import imread
 
 import pandas as pd
 import math
@@ -4039,3 +4040,47 @@ def set_scale(dimensions, x_calibration, y_calibration, z_calibration):
     scale = [x_calibration, y_calibration, z_calibration]
     arranged_scale = [scale[dim] for dim in dimensions]
     return tuple(arranged_scale)
+
+
+def transfer_fate_location(membranesegimage,csv_file, save_file):
+        
+
+        dataframe = pd.read_csv(csv_file)
+        writer = csv.writer(open(save_file, "w", newline=""))
+        writer.writerow(
+                            [
+                                "t",
+                                "z",
+                                "y",
+                                "x"
+                            ]
+        )
+        nrows = len(dataframe.columns)
+        dict_membrane = {}
+        if isinstance(membranesegimage, str):
+            membranesegimage = imread(membranesegimage)
+
+        for i in tqdm(range(membranesegimage.shape[0])):
+            currentimage = membranesegimage[i,:,:,:]
+            properties = measure.regionprops(currentimage) 
+            membrane_coordinates = [prop.centroid for prop in properties]
+            dict_membrane[i] =  membrane_coordinates
+       
+        for index, row in dataframe.iterrows():
+            
+                t = int(round(row["t"]))
+                z = round(row["z"])
+                y = round(row["y"])
+                x = round(row["x"])
+
+                membrane_coordinates = dict_membrane[t]
+                if len(membrane_coordinates) > 0:
+                    tree = spatial.cKDTree(membrane_coordinates)  
+                    distance, nearest_location = tree.query(index)          
+                                
+                    z = int(membrane_coordinates[nearest_location][0])         
+                    y = membrane_coordinates[nearest_location][1]
+                    x = membrane_coordinates[nearest_location][2]
+                    writer.writerow([t, z, y, x])
+
+           

@@ -34,6 +34,7 @@ from .Trackvector import (
     plot_histograms_for_cell_type_groups,
     inception_model_prediction,
     save_cell_type_predictions,
+    transfer_fate_location
 )
 
 from .CloudAutoEncoder import CloudAutoEncoder
@@ -118,6 +119,7 @@ __all__ = (
     "plot_histograms_for_cell_type_groups",
     "inception_model_prediction",
     "save_cell_type_predictions",
+    "transfer_fate_location"
 )
 
 clear_models_and_aliases(CloudAutoEncoder)
