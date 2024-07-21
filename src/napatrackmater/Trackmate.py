@@ -4042,7 +4042,7 @@ def set_scale(dimensions, x_calibration, y_calibration, z_calibration):
     return tuple(arranged_scale)
 
 
-def transfer_fate_location(membranesegimage,csv_file, save_file):
+def transfer_fate_location(membranesegimage,csv_file, save_file, space_veto = 15):
         
 
         dataframe = pd.read_csv(csv_file)
@@ -4078,10 +4078,10 @@ def transfer_fate_location(membranesegimage,csv_file, save_file):
                     tree = spatial.cKDTree(membrane_coordinates)  
                     index = (z,y,x)
                     distance, nearest_location = tree.query(index)          
-                                
-                    z = int(membrane_coordinates[nearest_location][0])         
-                    y = membrane_coordinates[nearest_location][1]
-                    x = membrane_coordinates[nearest_location][2]
-                    writer.writerow([t, z, y, x])
+                    if distance <= space_veto:            
+                        z = int(membrane_coordinates[nearest_location][0])         
+                        y = membrane_coordinates[nearest_location][1]
+                        x = membrane_coordinates[nearest_location][2]
+                        writer.writerow([t, z, y, x])
 
            
