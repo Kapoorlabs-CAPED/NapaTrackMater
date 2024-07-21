@@ -1,6 +1,6 @@
 from .pretrained import register_model, register_aliases, clear_models_and_aliases
 from .clustering import Clustering
-from .Trackmate import TrackMate, get_feature_dict
+from .Trackmate import TrackMate, get_feature_dict, transfer_fate_location
 
 from .Trackvector import (
     TrackVector,
@@ -33,8 +33,8 @@ from .Trackvector import (
     create_video,
     plot_histograms_for_cell_type_groups,
     inception_model_prediction,
-    save_cell_type_predictions,
-    transfer_fate_location
+    save_cell_type_predictions
+    
 )
 
 from .CloudAutoEncoder import CloudAutoEncoder
