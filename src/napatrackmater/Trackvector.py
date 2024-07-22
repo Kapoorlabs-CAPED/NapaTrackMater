@@ -4022,6 +4022,7 @@ def inception_model_prediction(
     total_duration = sub_dataframe["Track Duration"].max()
 
     def sample_subarrays(data, num_samples, tracklet_length, total_duration):
+        
         interval = max(1, (total_duration - tracklet_length) // num_samples)
         subarrays = []
         for i in range(num_samples):
@@ -4070,9 +4071,7 @@ def inception_model_prediction(
             prediction_counts = Counter(predictions)
             most_common_prediction, count = prediction_counts.most_common(1)[0]
 
-            total_predictions = len(predictions)
-            if count > total_predictions // 2:
-                return most_common_prediction
+            return most_common_prediction
 
     shape_predictions = []
     if shape_model is not None:
