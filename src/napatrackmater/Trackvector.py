@@ -4103,7 +4103,7 @@ def inception_model_prediction(
         return "UnClassified"
 
 
-def save_cell_type_predictions(tracks_dataframe, cell_map, predictions, save_dir):
+def save_cell_type_predictions(tracks_dataframe, cell_map, predictions, save_dir, channel):
 
     cell_type = {}
     for value in cell_map.values():
@@ -4129,11 +4129,11 @@ def save_cell_type_predictions(tracks_dataframe, cell_map, predictions, save_dir
         save_name = f"{value}_inception"
 
         if "Goblet" in value:
-            save_name = "goblet_cells_annotations_inception"
+            save_name = f"goblet_cells_{channel}annotations_inception"
         if "Radial" in value:
-            save_name = "radially_intercalating_cells_annotations_inception"
+            save_name = f"radially_intercalating_cells_{channel}annotations_inception"
         if "Basal" in value:
-            save_name = "basal_cells_annotations_inception"
+            save_name = f"basal_cells_{channel}annotations_inception"
 
         filename = os.path.join(save_dir, f"{save_name}.csv")
         df.to_csv(filename, index=True)
