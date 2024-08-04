@@ -4040,13 +4040,14 @@ def inception_model_prediction(
     dynamic_model=None,
     shape_model=None,
     num_samples=10,
+    device='cpu'
 ):
     sub_dataframe = dataframe[dataframe["Track ID"] == track_id]
     sub_dataframe_dynamic = sub_dataframe[DYNAMIC_FEATURES].values
     sub_dataframe_shape = sub_dataframe[SHAPE_FEATURES].values
 
     total_duration = sub_dataframe["Track Duration"].max()
-
+    
     def sample_subarrays(data, num_samples, tracklet_length, total_duration):
         
         interval = max(1, (total_duration - tracklet_length) // num_samples)
@@ -4086,6 +4087,9 @@ def inception_model_prediction(
     )
 
     def make_prediction(input_data, model):
+
+        model = model.to(device)
+        input_data = input_data.to(device)
         with torch.no_grad():
             input_tensor = (
                 torch.tensor(input_data).unsqueeze(0).permute(0, 2, 1).float()
@@ -4116,7 +4120,6 @@ def inception_model_prediction(
             dynamic_predictions.append(predicted_class)
 
     final_predictions = shape_predictions + dynamic_predictions
-
     if len(final_predictions) > 0:
         most_frequent_prediction = get_most_frequent_prediction(final_predictions)
         if most_frequent_prediction is not None:
