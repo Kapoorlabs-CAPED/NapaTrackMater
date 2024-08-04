@@ -9,7 +9,6 @@ from collections import OrderedDict
 from warnings import warn
 import torch
 from pathlib import Path
-import tensorflow as tf
 import os
 import json
 from kapoorlabs_lightning.lightning_trainer import AutoLightningModel
@@ -132,8 +131,10 @@ def get_model_details(cls, key_or_alias, verbose=False):
 
 
 def get_model_folder(cls, key_or_alias):
+    import tensorflow as tf
     key, alias, m = get_model_details(cls, key_or_alias)
     target = str(Path("models") / cls.__name__ / key)
+
     path = Path(
         tf.keras.utils.get_file(
             fname=key + ".zip",

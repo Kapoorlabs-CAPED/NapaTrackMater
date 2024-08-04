@@ -2046,9 +2046,10 @@ class TrackMate:
                         {self.fate_key: fate_label}
                     )
 
-    def _get_trackmate_ids_by_location(self, dataframe, tracklet_length = None):
+    def _get_trackmate_ids_by_location(self, dataframe: pd.DataFrame, tracklet_length: int = None):
         trackmate_track_ids = []
         t = int(self.tend)
+        dataframe.columns = map(str.lower, dataframe.columns)
         for index, row in dataframe.iterrows():
             if "axis-0" in row:
                 z = round(row["axis-0"])
