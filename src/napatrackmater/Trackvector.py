@@ -4089,11 +4089,10 @@ def inception_model_prediction(
     def make_prediction(input_data, model):
 
         model = model.to(device)
-        input_data = input_data.to(device)
         with torch.no_grad():
             input_tensor = (
                 torch.tensor(input_data).unsqueeze(0).permute(0, 2, 1).float()
-            )
+            ).to(device)
             model_predictions = model(input_tensor)
             probabilities = torch.softmax(model_predictions[0], dim=0)
             _, predicted_class = torch.max(probabilities, 0)
