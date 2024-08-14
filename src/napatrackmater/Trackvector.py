@@ -4051,8 +4051,11 @@ def inception_model_prediction(
     def sample_subarrays(data, num_samples, tracklet_length, total_duration):
 
         max_start_index = total_duration - tracklet_length
+        if max_start_index > num_samples:
+            start_indices = random.sample(range(max_start_index), num_samples)
+        else:
+            start_indices = [0] * num_samples
 
-        start_indices = random.sample(range(max_start_index + 1), num_samples)
         subarrays = []
         for start_index in start_indices:
             end_index = start_index + tracklet_length
