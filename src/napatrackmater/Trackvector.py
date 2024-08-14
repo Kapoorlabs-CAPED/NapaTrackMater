@@ -4052,7 +4052,7 @@ def inception_model_prediction(
 
         max_start_index = total_duration - tracklet_length
 
-        start_indices = random.sample(range(max_start_index), num_samples)
+        start_indices = random.sample(range(max_start_index + 1), num_samples)
         subarrays = []
         for start_index in start_indices:
             end_index = start_index + tracklet_length
