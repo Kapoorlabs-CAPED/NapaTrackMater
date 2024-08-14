@@ -4050,32 +4050,18 @@ def inception_model_prediction(
     
     def sample_subarrays(data, num_samples, tracklet_length, total_duration):
         
-        interval = max(1, (total_duration - tracklet_length) // num_samples)
+      
+        max_start_index = total_duration - tracklet_length
+    
+        start_indices = random.sample(range(max_start_index + 1), num_samples)
         subarrays = []
-        for i in range(num_samples):
-            start_min = i * interval
-            start_max = min((i + 1) * interval, total_duration - tracklet_length)
-            
-            if start_max <= start_min:
-               start_max = start_min + 1
-
-            start_index = np.random.randint(start_min, start_max)
+        for start_index in start_indices:
             end_index = start_index + tracklet_length
             if end_index <= total_duration:
                sub_data = data[start_index:end_index, :]
                if sub_data.shape[0] == tracklet_length:
                   subarrays.append(sub_data)
             
-
-        if len(subarrays) < num_samples:
-            additional_subarrays = []
-            for i in range(num_samples - len(subarrays)):
-                start_index = np.random.randint(0, total_duration - tracklet_length)
-                end_index = start_index + tracklet_length
-                sub_data = data[start_index:end_index, :]
-                if sub_data.shape[0] == tracklet_length:
-                    additional_subarrays.append(sub_data)
-            subarrays.extend(additional_subarrays[: num_samples - len(subarrays)])
 
         return subarrays
 

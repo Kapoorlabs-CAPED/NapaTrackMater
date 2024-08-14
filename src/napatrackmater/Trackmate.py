@@ -2046,7 +2046,7 @@ class TrackMate:
                         {self.fate_key: fate_label}
                     )
 
-    def _get_trackmate_ids_by_location(self, dataframe: pd.DataFrame, tracklet_length: int = None):
+    def _get_trackmate_ids_by_location(self, dataframe: pd.DataFrame, tracklet_length= None):
         trackmate_track_ids = []
         t = int(self.tend)
         dataframe.columns = map(str.lower, dataframe.columns)
@@ -2072,7 +2072,7 @@ class TrackMate:
                 if self.trackid_key in spot_properties_dict.keys():
                     trackmate_track_id = spot_properties_dict[self.trackid_key]
                     if tracklet_length is None:
-                       trackmate_track_ids.append(trackmate_track_id)
+                        trackmate_track_ids.append(trackmate_track_id)
                     else:
                            track_duration = spot_properties_dict[self.track_duration_key]
                            if track_duration > tracklet_length:
