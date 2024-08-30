@@ -3389,7 +3389,7 @@ def plot_at_mitosis_time(matrix_directory, save_dir, dataset_name, channel):
             plt.show()
 
 
-def plot_histograms_for_groups(matrix_directory, save_dir, dataset_name, channel):
+def plot_histograms_for_groups(matrix_directory, save_dir, dataset_name, channel, name = 'all'):
 
     files = os.listdir(matrix_directory)
     sorted_files = natsorted(
@@ -3434,13 +3434,13 @@ def plot_histograms_for_groups(matrix_directory, save_dir, dataset_name, channel
             )
             plt.title(f"{simplified_group_name}")
             plt.legend()
-            fig_name = f"{channel}{group_name}_all_distribution.png"
+            fig_name = f"{channel}{group_name}_{name}_distribution.png"
             plt.savefig(os.path.join(save_dir, fig_name), dpi=300, bbox_inches="tight")
             plt.show()
 
 
 def plot_histograms_for_cell_type_groups(
-    matrix_directory, save_dir, dataset_name, channel
+    matrix_directory, save_dir, dataset_name, channel, label_dict = None, name = 'all'
 ):
 
     files = os.listdir(matrix_directory)
@@ -3469,9 +3469,12 @@ def plot_histograms_for_cell_type_groups(
             for file_name in group_files:
                 file_path = os.path.join(matrix_directory, file_name)
                 cell_type = extract_celltype(file_name)
-
+                if label_dict is not None:
+                    cell_type_name = label_dict[cell_type]  
+                else:
+                    cell_type_name = cell_type     
                 data = np.load(file_path, allow_pickle=True)
-                sns.histplot(data, alpha=0.5, kde=True, label=f"Cell_Type: {cell_type}")
+                sns.histplot(data, alpha=0.5, kde=True, label=f"Cell_Type: {cell_type_name}")
 
             plt.xlabel("Value")
             plt.ylabel("Counts")
@@ -3481,7 +3484,7 @@ def plot_histograms_for_cell_type_groups(
             )
             plt.title(f"{simplified_group_name}")
             plt.legend()
-            fig_name = f"{channel}{group_name}_all_distribution.png"
+            fig_name = f"{channel}{group_name}_{name}_distribution.png"
             plt.savefig(os.path.join(save_dir, fig_name), dpi=300, bbox_inches="tight")
             plt.show()
 
