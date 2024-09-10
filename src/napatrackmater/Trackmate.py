@@ -590,8 +590,7 @@ class TrackMate:
         self.generation_dict[target_cell] = gen_count
         self.tracklet_dict[target_cell] = tracklet_count
 
-        if target_cell == root_leaf:
-            return
+        
 
         next_target_cell = None
 
