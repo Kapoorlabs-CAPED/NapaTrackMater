@@ -205,6 +205,8 @@ class TrackMate:
         self.uniqueid_key = "unique_id"
         self.afterid_key = "after_id"
         self.beforeid_key = "before_id"
+        self.rootid_key = "root_id"
+        self.msd_key = "msd"
         self.dividing_key = "dividing_normal"
         self.fate_key = "fate"
         self.number_dividing_key = "number_dividing"
@@ -796,7 +798,7 @@ class TrackMate:
     def _track_computer(self, track, track_id):
 
         current_cell_ids = []
-        unique_tracklet_ids = []
+        
         (
             track_displacement,
             total_track_distance,
@@ -829,7 +831,7 @@ class TrackMate:
         for leaf in root_leaf:
             source_leaf = self.edge_source_lookup[leaf]
             current_cell_ids.append(leaf)
-            self._dict_update(unique_tracklet_ids, leaf, track_id, source_leaf, None)
+            self._dict_update(self.unique_tracklet_ids, leaf, track_id, source_leaf, None)
             self.unique_spot_properties[leaf].update(
                 {self.dividing_key: dividing_trajectory}
             )
@@ -878,7 +880,7 @@ class TrackMate:
 
                 for target_id in target_ids:
                     self._dict_update(
-                        unique_tracklet_ids, source_id, track_id, None, target_id
+                        self.unique_tracklet_ids, source_id, track_id, None, target_id
                     )
                     self.unique_spot_properties[target_id].update(
                         {self.dividing_key: dividing_trajectory}
@@ -904,7 +906,7 @@ class TrackMate:
                 source_source_id = self.edge_source_lookup[source_id]
                 for target_id in target_ids:
                     self._dict_update(
-                        unique_tracklet_ids,
+                        self.unique_tracklet_ids,
                         source_id,
                         track_id,
                         source_source_id,
@@ -1007,6 +1009,7 @@ class TrackMate:
         for leaf in root_leaf:
             self._second_channel_update(leaf, track_id)
             current_cell_ids.append(leaf)
+            self._msd_update(root_root[0],leaf)
             self.unique_spot_properties[leaf].update(
                 {self.dividing_key: dividing_trajectory}
             )
@@ -1050,6 +1053,7 @@ class TrackMate:
                 {self.track_duration_key: track_duration}
             )
             current_cell_ids.append(source_id)
+            self._msd_update(root_root[0], source_id)
 
         for current_root in root_root:
             self._second_channel_update(current_root, track_id)
@@ -1609,7 +1613,7 @@ class TrackMate:
         self.RadialTrackIds = []
         self.all_track_properties = []
         self.split_points_times = []
-
+        self.unique_tracklet_ids = []
         self.AllTrackIds.append(None)
         self.DividingTrackIds.append(None)
         self.NormalTrackIds.append(None)
@@ -1915,6 +1919,7 @@ class TrackMate:
                     if digit_length > max_length:
                         max_length = digit_length
             self.max_track_digit = max_length
+            
             for track in tqdm(self.tracks.findall("Track")):
                 track_id = int(track.get(self.trackid_key))
                 if track_id in self.filtered_track_ids:
@@ -2712,6 +2717,16 @@ class TrackMate:
                     self.tcalibration = float(self.variable_t_calibration[key_time])
                     return
 
+    def _unique_track_id_check(
+            self,
+            unique_tracklet_ids: List,
+            unique_id
+    ):
+
+        while unique_id in unique_tracklet_ids:
+           unique_id += 1     
+        return unique_id
+
     def _dict_update(
         self,
         unique_tracklet_ids: List,
@@ -2724,7 +2739,7 @@ class TrackMate:
         tracklet_id = self.tracklet_dict[cell_id]
 
         unique_id = str(track_id) + str(generation_id) + str(tracklet_id)
-
+        unique_id = self._unique_track_id_check()
         vec_cell = [
             float(self.unique_spot_properties[int(cell_id)][self.xposid_key]),
             float(self.unique_spot_properties[int(cell_id)][self.yposid_key]),
@@ -2891,6 +2906,29 @@ class TrackMate:
             self.unique_spot_properties[int(cell_id)].update({self.afterid_key: None})
 
         self._second_channel_update(cell_id, track_id)
+
+
+    def _msd_update(
+        self,
+        root_id: int,
+        cell_id: int,
+    ):
+
+        vec_root = [
+            float(self.unique_spot_properties[int(cell_id)][self.xposid_key]) -
+            float(self.unique_spot_properties[int(root_id)][self.xposid_key]),
+            
+            float(self.unique_spot_properties[int(cell_id)][self.yposid_key]) -
+            float(self.unique_spot_properties[int(root_id)][self.yposid_key]),
+            
+            float(self.unique_spot_properties[int(cell_id)][self.zposid_key]) -
+            float(self.unique_spot_properties[int(root_id)][self.zposid_key]),
+        ]
+
+        
+        msd = np.dot(vec_root, vec_root)  
+        self.unique_spot_properties[int(cell_id)].update({self.msd_key: msd})
+
 
     def _temporal_plots_trackmate(self):
 
