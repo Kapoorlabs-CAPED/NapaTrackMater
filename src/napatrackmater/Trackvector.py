@@ -56,7 +56,9 @@ DYNAMIC_FEATURES = [
     "Cell_Axis_X",
 ]
 
-IDENTITY_FEATURES = ["Track ID", "t", "z", "y", "x", "Dividing", "Number_Dividing"]
+
+
+IDENTITY_FEATURES = ["Track ID", "t", "z", "y", "x", "Dividing", "Number_Dividing", "MSD"]
 
 STATUS_FEATURES = ["Dividing", "Number_Dividing"]
 

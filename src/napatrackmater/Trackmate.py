@@ -1212,6 +1212,9 @@ class TrackMate:
 
         gen_id = int(float(all_dict_values[self.generationid_key]))
         speed = float(all_dict_values[self.speed_key])
+        msd = 0
+        if self.msd_key in all_dict_values.keys():
+            msd = float(all_dict_values[self.msd_key])
         acceleration = float(all_dict_values[self.acceleration_key])
         motion_angle_z = float(all_dict_values[self.motion_angle_z_key])
         motion_angle_y = float(all_dict_values[self.motion_angle_y_key])
@@ -1317,6 +1320,7 @@ class TrackMate:
                 total_track_distance,
                 max_track_distance,
                 track_duration,
+                msd
             ]
 
             if compute_with_latent_features:
@@ -1375,6 +1379,7 @@ class TrackMate:
                 total_track_distance,
                 max_track_distance,
                 track_duration,
+                msd
             ]
             if compute_with_latent_features:
                 current_value_list.extend(latent_shape_features)
@@ -2398,8 +2403,10 @@ class TrackMate:
 
             track_duration = tracklet_properties[:, 25]
 
-            if tracklet_properties.shape[1] > 25:
-                latent_shape_features = tracklet_properties[:, 26:]
+            msd = tracklet_properties[:, 26]
+
+            if tracklet_properties.shape[1] > 26:
+                latent_shape_features = tracklet_properties[:, 27:]
             else:
                 latent_shape_features = []
 
@@ -2449,6 +2456,7 @@ class TrackMate:
                 current_total_track_distance = []
                 current_max_track_distance = []
                 current_track_duration = []
+                current_msd = []
 
                 for j in range(time.shape[0]):
                     if current_unique_id == unique_ids[j]:
@@ -2494,6 +2502,7 @@ class TrackMate:
                         current_total_track_distance.append(total_track_distance[j])
                         current_max_track_distance.append(max_track_distance[j])
                         current_track_duration.append(track_duration[j])
+                        current_msd.append(msd[j])
 
                 current_time = np.asarray(current_time, dtype=np.float32)
                 current_intensity = np.asarray(current_intensity, dtype=np.float32)
@@ -2563,6 +2572,9 @@ class TrackMate:
                 current_track_duration = np.asarray(
                     current_track_duration, dtype=np.float32
                 )
+                current_msd = np.asarray(
+                    current_msd, dtype = np.float32
+                )
 
                 if point_sample > 0:
                     xf_sample = fftfreq(point_sample, self.tcalibration)
@@ -2609,6 +2621,7 @@ class TrackMate:
                     current_total_track_distance,
                     current_max_track_distance,
                     current_track_duration,
+                    current_msd
                 )
                 self.unique_fft_properties[track_id].update(
                     {
@@ -4074,6 +4087,7 @@ def get_feature_dict(unique_tracks_properties):
             :, 24
         ],
         "track_duration": np.asarray(unique_tracks_properties, dtype="float16")[:, 25],
+        "msd": np.asarray(unique_tracks_properties, dtype="float16")[:, 26],
     }
 
     return features
