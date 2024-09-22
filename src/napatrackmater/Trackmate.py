@@ -831,7 +831,7 @@ class TrackMate:
         for leaf in root_leaf:
             source_leaf = self.edge_source_lookup[leaf]
             current_cell_ids.append(leaf)
-            self._dict_update(self.unique_tracklet_ids, leaf, track_id, source_leaf, None)
+            self._dict_update( leaf, track_id, source_leaf, None)
             self.unique_spot_properties[leaf].update(
                 {self.dividing_key: dividing_trajectory}
             )
@@ -880,7 +880,7 @@ class TrackMate:
 
                 for target_id in target_ids:
                     self._dict_update(
-                        self.unique_tracklet_ids, source_id, track_id, None, target_id
+                        source_id, track_id, None, target_id
                     )
                     self.unique_spot_properties[target_id].update(
                         {self.dividing_key: dividing_trajectory}
@@ -906,7 +906,6 @@ class TrackMate:
                 source_source_id = self.edge_source_lookup[source_id]
                 for target_id in target_ids:
                     self._dict_update(
-                        self.unique_tracklet_ids,
                         source_id,
                         track_id,
                         source_source_id,
@@ -2733,17 +2732,16 @@ class TrackMate:
 
     def _unique_track_id_check(
             self,
-            unique_tracklet_ids: List,
             unique_id
     ):
 
-        while unique_id in unique_tracklet_ids:
+        while unique_id in self.unique_tracklet_ids:
            unique_id += 1     
         return unique_id
 
     def _dict_update(
         self,
-        unique_tracklet_ids: List,
+       
         cell_id: int,
         track_id: int,
         source_id: int,
@@ -2753,7 +2751,7 @@ class TrackMate:
         tracklet_id = self.tracklet_dict[cell_id]
 
         unique_id = str(track_id) + str(generation_id) + str(tracklet_id)
-        unique_id = self._unique_track_id_check(self.unique_tracklet_ids, unique_id)
+        unique_id = self._unique_track_id_check( unique_id)
         vec_cell = [
             float(self.unique_spot_properties[int(cell_id)][self.xposid_key]),
             float(self.unique_spot_properties[int(cell_id)][self.yposid_key]),
@@ -2773,7 +2771,7 @@ class TrackMate:
         self.unique_spot_properties[int(cell_id)].update(
             {self.radial_angle_z_key: angle_z}
         )
-        unique_tracklet_ids.append(str(unique_id))
+        self.unique_tracklet_ids.append(str(unique_id))
         self.unique_spot_properties[int(cell_id)].update(
             {self.uniqueid_key: str(unique_id)}
         )
