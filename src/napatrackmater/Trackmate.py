@@ -1841,6 +1841,7 @@ class TrackMate:
         self.RadialTrackIds = []
         self.all_track_properties = []
         self.split_points_times = []
+        self.unique_tracklet_ids = []
 
         self.AllTrackIds.append(None)
         self.DividingTrackIds.append(None)
