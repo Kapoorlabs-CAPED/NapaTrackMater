@@ -2753,7 +2753,7 @@ class TrackMate:
         tracklet_id = self.tracklet_dict[cell_id]
 
         unique_id = str(track_id) + str(generation_id) + str(tracklet_id)
-        unique_id = self._unique_track_id_check()
+        unique_id = self._unique_track_id_check(self.unique_tracklet_ids, unique_id)
         vec_cell = [
             float(self.unique_spot_properties[int(cell_id)][self.xposid_key]),
             float(self.unique_spot_properties[int(cell_id)][self.yposid_key]),
