@@ -2736,7 +2736,7 @@ class TrackMate:
     ):
 
         while unique_id in self.unique_tracklet_ids:
-           unique_id += 1     
+           unique_id += str(1)     
         return unique_id
 
     def _dict_update(
