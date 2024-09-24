@@ -312,6 +312,7 @@ class TrackVector(TrackMate):
                     _,
                     _,
                     _,
+                    msd,
                 ) = unique_dynamic_properties_tracklet
                 unique_shape_properties_tracklet = nested_unique_shape_properties[
                     current_unique_id
@@ -366,6 +367,7 @@ class TrackVector(TrackMate):
                         cell_axis_z,
                         cell_axis_y,
                         cell_axis_x,
+                        msd
                     ]
                     + (
                         [latent_features[i] for i in range(len(latent_features))]
