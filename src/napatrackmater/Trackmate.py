@@ -2730,14 +2730,7 @@ class TrackMate:
                     self.tcalibration = float(self.variable_t_calibration[key_time])
                     return
 
-    def _unique_track_id_check(
-            self,
-            unique_id
-    ):
 
-        while unique_id in self.unique_tracklet_ids:
-           unique_id += str(1)     
-        return unique_id
 
     def _dict_update(
         self,
@@ -2751,7 +2744,6 @@ class TrackMate:
         tracklet_id = self.tracklet_dict[cell_id]
 
         unique_id = str(track_id) + str(generation_id) + str(tracklet_id)
-        unique_id = self._unique_track_id_check( unique_id)
         vec_cell = [
             float(self.unique_spot_properties[int(cell_id)][self.xposid_key]),
             float(self.unique_spot_properties[int(cell_id)][self.yposid_key]),
