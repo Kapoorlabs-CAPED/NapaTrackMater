@@ -798,7 +798,7 @@ class TrackMate:
     def _track_computer(self, track, track_id):
 
         current_cell_ids = []
-        
+
         (
             track_displacement,
             total_track_distance,
@@ -831,7 +831,7 @@ class TrackMate:
         for leaf in root_leaf:
             source_leaf = self.edge_source_lookup[leaf]
             current_cell_ids.append(leaf)
-            self._dict_update( leaf, track_id, source_leaf, None)
+            self._dict_update(leaf, track_id, source_leaf, None)
             self.unique_spot_properties[leaf].update(
                 {self.dividing_key: dividing_trajectory}
             )
@@ -879,9 +879,7 @@ class TrackMate:
             if source_id not in all_target_ids:
 
                 for target_id in target_ids:
-                    self._dict_update(
-                        source_id, track_id, None, target_id
-                    )
+                    self._dict_update(source_id, track_id, None, target_id)
                     self.unique_spot_properties[target_id].update(
                         {self.dividing_key: dividing_trajectory}
                     )
@@ -1008,7 +1006,7 @@ class TrackMate:
         for leaf in root_leaf:
             self._second_channel_update(leaf, track_id)
             current_cell_ids.append(leaf)
-            self._msd_update(root_root[0],leaf)
+            self._msd_update(root_root[0], leaf)
             self.unique_spot_properties[leaf].update(
                 {self.dividing_key: dividing_trajectory}
             )
@@ -1319,7 +1317,7 @@ class TrackMate:
                 total_track_distance,
                 max_track_distance,
                 track_duration,
-                msd
+                msd,
             ]
 
             if compute_with_latent_features:
@@ -1378,7 +1376,7 @@ class TrackMate:
                 total_track_distance,
                 max_track_distance,
                 track_duration,
-                msd
+                msd,
             ]
             if compute_with_latent_features:
                 current_value_list.extend(latent_shape_features)
@@ -1924,7 +1922,7 @@ class TrackMate:
                     if digit_length > max_length:
                         max_length = digit_length
             self.max_track_digit = max_length
-            
+
             for track in tqdm(self.tracks.findall("Track")):
                 track_id = int(track.get(self.trackid_key))
                 if track_id in self.filtered_track_ids:
@@ -2056,7 +2054,9 @@ class TrackMate:
                         {self.fate_key: fate_label}
                     )
 
-    def _get_trackmate_ids_by_location(self, dataframe: pd.DataFrame, tracklet_length= None):
+    def _get_trackmate_ids_by_location(
+        self, dataframe: pd.DataFrame, tracklet_length=None
+    ):
         trackmate_track_ids = []
         t = int(self.tend)
         dataframe.columns = map(str.lower, dataframe.columns)
@@ -2084,9 +2084,9 @@ class TrackMate:
                     if tracklet_length is None:
                         trackmate_track_ids.append(trackmate_track_id)
                     else:
-                           track_duration = spot_properties_dict[self.track_duration_key]
-                           if track_duration > tracklet_length:
-                               trackmate_track_ids.append(trackmate_track_id)
+                        track_duration = spot_properties_dict[self.track_duration_key]
+                        if track_duration > tracklet_length:
+                            trackmate_track_ids.append(trackmate_track_id)
 
         return trackmate_track_ids
 
@@ -2572,9 +2572,7 @@ class TrackMate:
                 current_track_duration = np.asarray(
                     current_track_duration, dtype=np.float32
                 )
-                current_msd = np.asarray(
-                    current_msd, dtype = np.float32
-                )
+                current_msd = np.asarray(current_msd, dtype=np.float32)
 
                 if point_sample > 0:
                     xf_sample = fftfreq(point_sample, self.tcalibration)
@@ -2621,7 +2619,7 @@ class TrackMate:
                     current_total_track_distance,
                     current_max_track_distance,
                     current_track_duration,
-                    current_msd
+                    current_msd,
                 )
                 self.unique_fft_properties[track_id].update(
                     {
@@ -2730,11 +2728,8 @@ class TrackMate:
                     self.tcalibration = float(self.variable_t_calibration[key_time])
                     return
 
-
-
     def _dict_update(
         self,
-       
         cell_id: int,
         track_id: int,
         source_id: int,
@@ -2743,7 +2738,9 @@ class TrackMate:
         generation_id = self.generation_dict[cell_id]
         tracklet_id = self.tracklet_dict[cell_id]
 
-        unique_id = str(track_id) + str(generation_id) + str(tracklet_id)
+        unique_id = (
+            str(track_id) + str(track_id) + str(generation_id) + str(tracklet_id)
+        )
         vec_cell = [
             float(self.unique_spot_properties[int(cell_id)][self.xposid_key]),
             float(self.unique_spot_properties[int(cell_id)][self.yposid_key]),
@@ -2911,7 +2908,6 @@ class TrackMate:
 
         self._second_channel_update(cell_id, track_id)
 
-
     def _msd_update(
         self,
         root_id: int,
@@ -2919,20 +2915,16 @@ class TrackMate:
     ):
 
         vec_root = [
-            float(self.unique_spot_properties[int(cell_id)][self.xposid_key]) -
-            float(self.unique_spot_properties[int(root_id)][self.xposid_key]),
-            
-            float(self.unique_spot_properties[int(cell_id)][self.yposid_key]) -
-            float(self.unique_spot_properties[int(root_id)][self.yposid_key]),
-            
-            float(self.unique_spot_properties[int(cell_id)][self.zposid_key]) -
-            float(self.unique_spot_properties[int(root_id)][self.zposid_key]),
+            float(self.unique_spot_properties[int(cell_id)][self.xposid_key])
+            - float(self.unique_spot_properties[int(root_id)][self.xposid_key]),
+            float(self.unique_spot_properties[int(cell_id)][self.yposid_key])
+            - float(self.unique_spot_properties[int(root_id)][self.yposid_key]),
+            float(self.unique_spot_properties[int(cell_id)][self.zposid_key])
+            - float(self.unique_spot_properties[int(root_id)][self.zposid_key]),
         ]
 
-        
-        msd = np.dot(vec_root, vec_root)  
+        msd = np.dot(vec_root, vec_root)
         self.unique_spot_properties[int(cell_id)].update({self.msd_key: msd})
-
 
     def _temporal_plots_trackmate(self):
 
@@ -4091,46 +4083,35 @@ def set_scale(dimensions, x_calibration, y_calibration, z_calibration):
     return tuple(arranged_scale)
 
 
-def transfer_fate_location(membranesegimage,csv_file, save_file, space_veto = 15):
-        
+def transfer_fate_location(membranesegimage, csv_file, save_file, space_veto=10):
 
-        dataframe = pd.read_csv(csv_file)
-        writer = csv.writer(open(save_file, "w", newline=""))
-        writer.writerow(
-                            [
-                                "t",
-                                "z",
-                                "y",
-                                "x"
-                            ]
-        )
-        nrows = len(dataframe.columns)
-        dict_membrane = {}
-        if isinstance(membranesegimage, str):
-            membranesegimage = imread(membranesegimage)
+    dataframe = pd.read_csv(csv_file)
+    writer = csv.writer(open(save_file, "w", newline=""))
+    writer.writerow(["t", "z", "y", "x"])
+    dict_membrane = {}
+    if isinstance(membranesegimage, str):
+        membranesegimage = imread(membranesegimage)
 
-        for i in tqdm(range(membranesegimage.shape[0])):
-            currentimage = membranesegimage[i,:,:,:]
-            properties = measure.regionprops(currentimage) 
-            membrane_coordinates = [prop.centroid for prop in properties]
-            dict_membrane[i] =  membrane_coordinates
-       
-        for index, row in dataframe.iterrows():
-            
-                t = int(round(row["t"]))
-                z = round(row["z"])
-                y = round(row["y"])
-                x = round(row["x"])
+    for i in tqdm(range(membranesegimage.shape[0])):
+        currentimage = membranesegimage[i, :, :, :]
+        properties = measure.regionprops(currentimage)
+        membrane_coordinates = [prop.centroid for prop in properties]
+        dict_membrane[i] = membrane_coordinates
 
-                membrane_coordinates = dict_membrane[t]
-                if len(membrane_coordinates) > 0:
-                    tree = spatial.cKDTree(membrane_coordinates)  
-                    index = (z,y,x)
-                    distance, nearest_location = tree.query(index)          
-                    if distance <= space_veto:            
-                        z = int(membrane_coordinates[nearest_location][0])         
-                        y = membrane_coordinates[nearest_location][1]
-                        x = membrane_coordinates[nearest_location][2]
-                        writer.writerow([t, z, y, x])
+    for index, row in dataframe.iterrows():
 
-           
+        t = int(round(row["t"]))
+        z = round(row["z"])
+        y = round(row["y"])
+        x = round(row["x"])
+
+        membrane_coordinates = dict_membrane[t]
+        if len(membrane_coordinates) > 0:
+            tree = spatial.cKDTree(membrane_coordinates)
+            index = (z, y, x)
+            distance, nearest_location = tree.query(index)
+            if distance <= space_veto:
+                z = int(membrane_coordinates[nearest_location][0])
+                y = membrane_coordinates[nearest_location][1]
+                x = membrane_coordinates[nearest_location][2]
+                writer.writerow([t, z, y, x])
