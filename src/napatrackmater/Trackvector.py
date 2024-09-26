@@ -4098,9 +4098,12 @@ def inception_model_prediction(
     def get_most_frequent_prediction(predictions):
 
         prediction_counts = Counter(predictions)
-        most_common_prediction, count = prediction_counts.most_common(1)[0]
+        try:
+            most_common_prediction, count = prediction_counts.most_common(1)[0]
 
-        return most_common_prediction
+            return most_common_prediction
+        except IndexError:
+            return None
 
     shape_predictions = []
     if shape_model is not None:
@@ -4116,10 +4119,12 @@ def inception_model_prediction(
 
     final_predictions = shape_predictions + dynamic_predictions
     most_frequent_prediction = get_most_frequent_prediction(final_predictions)
+    if most_frequent_prediction is not None:
+       most_predicted_class = class_map[int(most_frequent_prediction)]
 
-    most_predicted_class = class_map[int(most_frequent_prediction)]
-
-    return most_predicted_class
+       return most_predicted_class
+    else:
+        return "UnClassified"
 
 
 def save_cell_type_predictions(
