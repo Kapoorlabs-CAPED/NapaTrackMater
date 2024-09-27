@@ -1876,7 +1876,10 @@ class TrackMate:
             "DetectorSettings"
         )
         self.basicsettings = self.xml_content.find("Settings").find("BasicSettings")
-        self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
+        try:
+           self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
+        except TypeError:
+            self.detectionchannel = 1
         self.tstart = int(float(self.basicsettings.get("tstart")))
         self.tend = int(float(self.basicsettings.get("tend")))
         if self.channel_seg_image is None:
