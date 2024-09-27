@@ -1645,7 +1645,7 @@ class TrackMate:
         try:
            self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
         except TypeError:
-            self.detectionchannel = 1
+            self.detectorchannel = 1
         self.tstart = int(float(self.basicsettings.get("tstart")))
         self.tend = int(float(self.basicsettings.get("tend")))
 
@@ -1879,7 +1879,7 @@ class TrackMate:
         try:
            self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
         except TypeError:
-            self.detectionchannel = 1
+            self.detectorchannel = 1
         self.tstart = int(float(self.basicsettings.get("tstart")))
         self.tend = int(float(self.basicsettings.get("tend")))
         if self.channel_seg_image is None:
