@@ -2965,6 +2965,7 @@ def create_cluster_plot(
             "Cell_Type",
             "Number_Dividing",
             "Track Duration",
+            "MSD"
         ]
         + cluster_columns
         + cluster_distance_columns
