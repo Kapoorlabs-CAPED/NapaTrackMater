@@ -1652,45 +1652,37 @@ class TrackMate:
 
         print("Iterating over spots in frame")
         self.count = 0
-        futures = []
 
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=os.cpu_count()
-        ) as executor:
-
-            for frame in self.Spotobjects.findall("SpotsInFrame"):
-                futures.append(executor.submit(self._master_spot_computer, frame))
+        for frame in self.Spotobjects.findall("SpotsInFrame"):
+            self._master_spot_computer(frame)  # Direct function call
+            self.count += 1
             if self.progress_bar is not None:
-
                 self.progress_bar.label = "Collecting Spots"
-                self.progress_bar.range = (
-                    0,
-                    len(futures),
-                )
-                self.progress_bar.show()
-
-            for r in concurrent.futures.as_completed(futures):
-                self.count = self.count + 1
-                if self.progress_bar is not None:
-                    self.progress_bar.value = self.count
-                r.result()
+                self.progress_bar.range = (0, self.count)  # Update progress bar range
+                self.progress_bar.value = self.count
 
         self._correct_track_status()
+
         print(f"Iterating over tracks {len(self.filtered_track_ids)}")
         self.count = 0
-        futures = []
         if self.progress_bar is not None:
             self.progress_bar.label = "Collecting Tracks"
             self.progress_bar.range = (0, len(self.filtered_track_ids))
             self.progress_bar.show()
 
+        # Sequentially iterate over tracks
         for track in tqdm(self.tracks.findall("Track")):
             track_id = int(track.get(self.trackid_key))
             if track_id in self.filtered_track_ids:
-                self._master_track_computer(track, track_id)
+                self._master_track_computer(track, track_id)  # Direct function call
                 self.count += 1
                 if self.progress_bar is not None:
                     self.progress_bar.value = self.count
+
+                import pdb 
+                pdb.set_trace()        
+
+        
         if self.channel_seg_image is not None:
 
             self._create_second_channel_xml()
@@ -2510,6 +2502,7 @@ class TrackMate:
                         current_max_track_distance.append(max_track_distance[j])
                         current_track_duration.append(track_duration[j])
                         current_msd.append(msd[j])
+                        print(msd[j])
 
                 current_time = np.asarray(current_time, dtype=np.float32)
                 current_intensity = np.asarray(current_intensity, dtype=np.float32)
@@ -4080,7 +4073,7 @@ def get_feature_dict(unique_tracks_properties):
             :, 24
         ],
         "track_duration": np.asarray(unique_tracks_properties, dtype="float16")[:, 25],
-        "msd": np.asarray(unique_tracks_properties, dtype="float16")[:, 26],
+        "msd": np.asarray(unique_tracks_properties, dtype="float32")[:, 26],
     }
 
     return features
