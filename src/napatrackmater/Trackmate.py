@@ -2931,8 +2931,8 @@ class TrackMate:
         ]
 
         msd = np.dot(vec_root, vec_root)
-        print(self.unique_spot_properties[int(root_id)]['t'], root_id)
-        print(self.unique_spot_properties[int(cell_id)]['t'], cell_id)
+        print(self.unique_spot_properties[int(root_id)][self.frameid_key], root_id)
+        print(self.unique_spot_properties[int(cell_id)][self.frameid_key], cell_id)
         print('MSD', msd)
         self.unique_spot_properties[int(cell_id)].update({self.msd_key: msd})
 
