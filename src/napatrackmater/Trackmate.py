@@ -1077,6 +1077,7 @@ class TrackMate:
             self.unique_spot_properties[source_id].update(
                 {self.track_duration_key: track_duration}
             )
+            self._msd_update(root_root[0], current_root)
 
         self.all_current_cell_ids[int(track_id)] = current_cell_ids
 
