@@ -57,17 +57,8 @@ DYNAMIC_FEATURES = [
 ]
 
 
-IDENTITY_FEATURES = [
-    "Track ID",
-    "t",
-    "z",
-    "y",
-    "x",
-    "Dividing",
-    "Number_Dividing",
-]
-
-TRACK_TYPE_FEATURES = ["MSD"]
+TRACK_TYPE_FEATURE = ["MSD"]
+IDENTITY_FEATURES = ["Track ID", "t", "z", "y", "x", "Dividing", "Number_Dividing"]
 
 STATUS_FEATURES = ["Dividing", "Number_Dividing"]
 
@@ -274,9 +265,7 @@ class TrackVector(TrackMate):
         )
         self.basicsettings = self.xml_content.find("Settings").find("BasicSettings")
         try:
-            self.detectorchannel = int(
-                float(self.detectorsettings.get("TARGET_CHANNEL"))
-            )
+           self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
         except TypeError:
             self.detectorchannel = 1
         self.tstart = int(float(self.basicsettings.get("tstart")))
@@ -381,7 +370,7 @@ class TrackVector(TrackMate):
                         cell_axis_z,
                         cell_axis_y,
                         cell_axis_x,
-                        msd,
+                        msd
                     ]
                     + (
                         [latent_features[i] for i in range(len(latent_features))]
@@ -398,20 +387,39 @@ class TrackVector(TrackMate):
 
         print("Iterating over spots in frame")
         self.count = 0
+        futures = []
 
-        for frame in self.Spotobjects.findall("SpotsInFrame"):
-                self._master_spot_computer(frame)
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=os.cpu_count()
+        ) as executor:
 
+            for frame in self.Spotobjects.findall("SpotsInFrame"):
+                futures.append(executor.submit(self._master_spot_computer, frame))
+
+            [r.result() for r in concurrent.futures.as_completed(futures)]
 
         print(f"Iterating over tracks {len(self.filtered_track_ids)}")
         self._correct_track_status()
-        
-        for track in self.tracks.findall("Track"):
-            track_id = int(track.get(self.trackid_key))
-            if track_id in self.filtered_track_ids:
-                self._master_track_computer(track, track_id, self.t_minus, self.t_plus)    
+        futures = []
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=os.cpu_count()
+        ) as executor:
 
+            for track in self.tracks.findall("Track"):
 
+                track_id = int(track.get(self.trackid_key))
+                if track_id in self.filtered_track_ids:
+                    futures.append(
+                        executor.submit(
+                            self._master_track_computer,
+                            track,
+                            track_id,
+                            self.t_minus,
+                            self.t_plus,
+                        )
+                    )
+
+            [r.result() for r in concurrent.futures.as_completed(futures)]
         self._get_cell_fate_tracks()
         print("getting attributes")
         if (
@@ -2957,7 +2965,6 @@ def create_cluster_plot(
             "Cell_Type",
             "Number_Dividing",
             "Track Duration",
-            "MSD",
         ]
         + cluster_columns
         + cluster_distance_columns
@@ -3442,13 +3449,7 @@ def plot_histograms_for_groups(
 
 
 def plot_histograms_for_cell_type_groups(
-    matrix_directory,
-    save_dir,
-    dataset_name,
-    channel,
-    label_dict=None,
-    name="all",
-    plot_show=True,
+    matrix_directory, save_dir, dataset_name, channel, label_dict=None, name="all"
 ):
 
     files = os.listdir(matrix_directory)
@@ -3496,8 +3497,7 @@ def plot_histograms_for_cell_type_groups(
             plt.legend()
             fig_name = f"{channel}{group_name}_{name}_distribution.png"
             plt.savefig(os.path.join(save_dir, fig_name), dpi=300, bbox_inches="tight")
-            if plot_show:
-                plt.show()
+            plt.show()
 
 
 def create_movie(df, column, time_plot):
@@ -4123,9 +4123,9 @@ def inception_model_prediction(
     final_predictions = shape_predictions + dynamic_predictions
     most_frequent_prediction = get_most_frequent_prediction(final_predictions)
     if most_frequent_prediction is not None:
-        most_predicted_class = class_map[int(most_frequent_prediction)]
+       most_predicted_class = class_map[int(most_frequent_prediction)]
 
-        return most_predicted_class
+       return most_predicted_class
     else:
         return "UnClassified"
 
