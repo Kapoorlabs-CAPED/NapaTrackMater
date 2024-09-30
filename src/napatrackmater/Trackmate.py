@@ -974,7 +974,6 @@ class TrackMate:
 
     def _master_track_computer(self, track, track_id, t_start=None, t_end=None):
         current_cell_ids = []
-        print('track_id', track_id)
         (
             track_displacement,
             total_track_distance,
@@ -1643,7 +1642,9 @@ class TrackMate:
         )
         self.basicsettings = self.xml_content.find("Settings").find("BasicSettings")
         try:
-           self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
+            self.detectorchannel = int(
+                float(self.detectorsettings.get("TARGET_CHANNEL"))
+            )
         except TypeError:
             self.detectorchannel = 1
         self.tstart = int(float(self.basicsettings.get("tstart")))
@@ -1678,9 +1679,6 @@ class TrackMate:
                 if self.progress_bar is not None:
                     self.progress_bar.value = self.count
 
-                       
-
-        
         if self.channel_seg_image is not None:
 
             self._create_second_channel_xml()
@@ -1868,7 +1866,9 @@ class TrackMate:
         )
         self.basicsettings = self.xml_content.find("Settings").find("BasicSettings")
         try:
-           self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
+            self.detectorchannel = int(
+                float(self.detectorsettings.get("TARGET_CHANNEL"))
+            )
         except TypeError:
             self.detectorchannel = 1
         self.tstart = int(float(self.basicsettings.get("tstart")))
@@ -1881,7 +1881,6 @@ class TrackMate:
 
         self.count = 0
 
-
         for frame in self.Spotobjects.findall("SpotsInFrame"):
             self._spot_computer(frame)
 
@@ -1891,7 +1890,9 @@ class TrackMate:
             self.progress_bar.show()
 
             # Update progress bar for each iteration
-            for count, frame in enumerate(self.Spotobjects.findall("SpotsInFrame"), start=1):
+            for count, frame in enumerate(
+                self.Spotobjects.findall("SpotsInFrame"), start=1
+            ):
                 self._spot_computer(frame)
                 self.progress_bar.value = count
 
@@ -1926,9 +1927,6 @@ class TrackMate:
                 self.count += 1
                 if self.progress_bar is not None:
                     self.progress_bar.value = self.count
-
-
-
 
         if self.channel_seg_image is not None:
             self._create_second_channel_xml()
@@ -2503,7 +2501,6 @@ class TrackMate:
                         current_max_track_distance.append(max_track_distance[j])
                         current_track_duration.append(track_duration[j])
                         current_msd.append(msd[j])
-                        print('just before', msd[j])
 
                 current_time = np.asarray(current_time, dtype=np.float32)
                 current_intensity = np.asarray(current_intensity, dtype=np.float32)
@@ -2925,9 +2922,6 @@ class TrackMate:
         ]
 
         msd = np.dot(vec_root, vec_root)
-        print(self.unique_spot_properties[int(root_id)][self.frameid_key], root_id)
-        print(self.unique_spot_properties[int(cell_id)][self.frameid_key], cell_id)
-        print('MSD', msd)
         self.unique_spot_properties[int(cell_id)].update({self.msd_key: msd})
 
     def _temporal_plots_trackmate(self):
