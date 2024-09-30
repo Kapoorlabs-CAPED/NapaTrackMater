@@ -57,8 +57,16 @@ DYNAMIC_FEATURES = [
 ]
 
 
-
-IDENTITY_FEATURES = ["Track ID", "t", "z", "y", "x", "Dividing", "Number_Dividing", "MSD"]
+IDENTITY_FEATURES = [
+    "Track ID",
+    "t",
+    "z",
+    "y",
+    "x",
+    "Dividing",
+    "Number_Dividing",
+    "MSD",
+]
 
 STATUS_FEATURES = ["Dividing", "Number_Dividing"]
 
@@ -265,7 +273,9 @@ class TrackVector(TrackMate):
         )
         self.basicsettings = self.xml_content.find("Settings").find("BasicSettings")
         try:
-           self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
+            self.detectorchannel = int(
+                float(self.detectorsettings.get("TARGET_CHANNEL"))
+            )
         except TypeError:
             self.detectorchannel = 1
         self.tstart = int(float(self.basicsettings.get("tstart")))
@@ -370,7 +380,7 @@ class TrackVector(TrackMate):
                         cell_axis_z,
                         cell_axis_y,
                         cell_axis_x,
-                        msd
+                        msd,
                     ]
                     + (
                         [latent_features[i] for i in range(len(latent_features))]
@@ -2965,7 +2975,7 @@ def create_cluster_plot(
             "Cell_Type",
             "Number_Dividing",
             "Track Duration",
-            "MSD"
+            "MSD",
         ]
         + cluster_columns
         + cluster_distance_columns
@@ -3450,7 +3460,13 @@ def plot_histograms_for_groups(
 
 
 def plot_histograms_for_cell_type_groups(
-    matrix_directory, save_dir, dataset_name, channel, label_dict=None, name="all"
+    matrix_directory,
+    save_dir,
+    dataset_name,
+    channel,
+    label_dict=None,
+    name="all",
+    plot_show=True,
 ):
 
     files = os.listdir(matrix_directory)
@@ -3498,7 +3514,8 @@ def plot_histograms_for_cell_type_groups(
             plt.legend()
             fig_name = f"{channel}{group_name}_{name}_distribution.png"
             plt.savefig(os.path.join(save_dir, fig_name), dpi=300, bbox_inches="tight")
-            plt.show()
+            if plot_show:
+                plt.show()
 
 
 def create_movie(df, column, time_plot):
@@ -4124,9 +4141,9 @@ def inception_model_prediction(
     final_predictions = shape_predictions + dynamic_predictions
     most_frequent_prediction = get_most_frequent_prediction(final_predictions)
     if most_frequent_prediction is not None:
-       most_predicted_class = class_map[int(most_frequent_prediction)]
+        most_predicted_class = class_map[int(most_frequent_prediction)]
 
-       return most_predicted_class
+        return most_predicted_class
     else:
         return "UnClassified"
 
