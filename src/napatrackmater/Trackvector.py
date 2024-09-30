@@ -397,39 +397,20 @@ class TrackVector(TrackMate):
 
         print("Iterating over spots in frame")
         self.count = 0
-        futures = []
 
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=os.cpu_count()
-        ) as executor:
+        for frame in self.Spotobjects.findall("SpotsInFrame"):
+                self._master_spot_computer(frame)
 
-            for frame in self.Spotobjects.findall("SpotsInFrame"):
-                futures.append(executor.submit(self._master_spot_computer, frame))
-
-            [r.result() for r in concurrent.futures.as_completed(futures)]
 
         print(f"Iterating over tracks {len(self.filtered_track_ids)}")
         self._correct_track_status()
-        futures = []
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=os.cpu_count()
-        ) as executor:
+        
+        for track in self.tracks.findall("Track"):
+            track_id = int(track.get(self.trackid_key))
+            if track_id in self.filtered_track_ids:
+                self._master_track_computer(track, track_id, self.t_minus, self.t_plus)    
 
-            for track in self.tracks.findall("Track"):
 
-                track_id = int(track.get(self.trackid_key))
-                if track_id in self.filtered_track_ids:
-                    futures.append(
-                        executor.submit(
-                            self._master_track_computer,
-                            track,
-                            track_id,
-                            self.t_minus,
-                            self.t_plus,
-                        )
-                    )
-
-            [r.result() for r in concurrent.futures.as_completed(futures)]
         self._get_cell_fate_tracks()
         print("getting attributes")
         if (
