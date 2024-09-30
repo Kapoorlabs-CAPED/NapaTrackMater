@@ -974,7 +974,7 @@ class TrackMate:
 
     def _master_track_computer(self, track, track_id, t_start=None, t_end=None):
         current_cell_ids = []
-
+        print('track_id', track_id)
         (
             track_displacement,
             total_track_distance,
