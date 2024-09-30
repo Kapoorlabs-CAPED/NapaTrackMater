@@ -975,6 +975,8 @@ class TrackMate:
     def _master_track_computer(self, track, track_id, t_start=None, t_end=None):
         current_cell_ids = []
         print('track_id', track_id)
+        import pdb
+        pdb.set_trace()
         (
             track_displacement,
             total_track_distance,
@@ -2503,7 +2505,7 @@ class TrackMate:
                         current_max_track_distance.append(max_track_distance[j])
                         current_track_duration.append(track_duration[j])
                         current_msd.append(msd[j])
-                        print(msd[j])
+                        print('just before', msd[j])
 
                 current_time = np.asarray(current_time, dtype=np.float32)
                 current_intensity = np.asarray(current_intensity, dtype=np.float32)
