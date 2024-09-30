@@ -974,6 +974,7 @@ class TrackMate:
 
     def _master_track_computer(self, track, track_id, t_start=None, t_end=None):
         current_cell_ids = []
+        print('track_id', track_id)
         (
             track_displacement,
             total_track_distance,
@@ -2929,6 +2930,9 @@ class TrackMate:
         ]
 
         msd = np.dot(vec_root, vec_root)
+        print(self.unique_spot_properties[int(root_id)])
+        print(self.unique_spot_properties[int(cell_id)])
+        print(msd)
         self.unique_spot_properties[int(cell_id)].update({self.msd_key: msd})
 
     def _temporal_plots_trackmate(self):
