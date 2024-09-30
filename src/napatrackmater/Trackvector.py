@@ -57,7 +57,7 @@ DYNAMIC_FEATURES = [
 ]
 
 
-TRACK_TYPE_FEATURE = ["MSD"]
+TRACK_TYPE_FEATURES = ["MSD"]
 IDENTITY_FEATURES = ["Track ID", "t", "z", "y", "x", "Dividing", "Number_Dividing"]
 
 STATUS_FEATURES = ["Dividing", "Number_Dividing"]
@@ -265,7 +265,9 @@ class TrackVector(TrackMate):
         )
         self.basicsettings = self.xml_content.find("Settings").find("BasicSettings")
         try:
-           self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
+            self.detectorchannel = int(
+                float(self.detectorsettings.get("TARGET_CHANNEL"))
+            )
         except TypeError:
             self.detectorchannel = 1
         self.tstart = int(float(self.basicsettings.get("tstart")))
@@ -370,7 +372,7 @@ class TrackVector(TrackMate):
                         cell_axis_z,
                         cell_axis_y,
                         cell_axis_x,
-                        msd
+                        msd,
                     ]
                     + (
                         [latent_features[i] for i in range(len(latent_features))]
@@ -4123,9 +4125,9 @@ def inception_model_prediction(
     final_predictions = shape_predictions + dynamic_predictions
     most_frequent_prediction = get_most_frequent_prediction(final_predictions)
     if most_frequent_prediction is not None:
-       most_predicted_class = class_map[int(most_frequent_prediction)]
+        most_predicted_class = class_map[int(most_frequent_prediction)]
 
-       return most_predicted_class
+        return most_predicted_class
     else:
         return "UnClassified"
 
