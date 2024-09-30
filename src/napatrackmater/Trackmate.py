@@ -1679,8 +1679,7 @@ class TrackMate:
                 if self.progress_bar is not None:
                     self.progress_bar.value = self.count
 
-                import pdb 
-                pdb.set_trace()        
+                  
 
         
         if self.channel_seg_image is not None:
