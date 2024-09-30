@@ -1672,6 +1672,8 @@ class TrackMate:
 
         # Sequentially iterate over tracks
         for track in tqdm(self.tracks.findall("Track")):
+            import pdb 
+            pdb.set_trace() 
             track_id = int(track.get(self.trackid_key))
             if track_id in self.filtered_track_ids:
                 self._master_track_computer(track, track_id)  # Direct function call
@@ -1679,7 +1681,7 @@ class TrackMate:
                 if self.progress_bar is not None:
                     self.progress_bar.value = self.count
 
-                  
+                       
 
         
         if self.channel_seg_image is not None:
