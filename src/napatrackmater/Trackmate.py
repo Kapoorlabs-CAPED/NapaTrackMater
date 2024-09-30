@@ -975,8 +975,6 @@ class TrackMate:
     def _master_track_computer(self, track, track_id, t_start=None, t_end=None):
         current_cell_ids = []
         print('track_id', track_id)
-        import pdb
-        pdb.set_trace()
         (
             track_displacement,
             total_track_distance,
@@ -1674,8 +1672,6 @@ class TrackMate:
 
         # Sequentially iterate over tracks
         for track in tqdm(self.tracks.findall("Track")):
-            import pdb 
-            pdb.set_trace() 
             track_id = int(track.get(self.trackid_key))
             if track_id in self.filtered_track_ids:
                 self._master_track_computer(track, track_id)  # Direct function call
