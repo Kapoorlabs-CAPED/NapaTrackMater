@@ -3452,7 +3452,13 @@ def plot_histograms_for_groups(
 
 
 def plot_histograms_for_cell_type_groups(
-    matrix_directory, save_dir, dataset_name, channel, label_dict=None, name="all"
+    matrix_directory,
+    save_dir,
+    dataset_name,
+    channel,
+    label_dict=None,
+    name="all",
+    plot_show=True,
 ):
 
     files = os.listdir(matrix_directory)
@@ -3500,7 +3506,8 @@ def plot_histograms_for_cell_type_groups(
             plt.legend()
             fig_name = f"{channel}{group_name}_{name}_distribution.png"
             plt.savefig(os.path.join(save_dir, fig_name), dpi=300, bbox_inches="tight")
-            plt.show()
+            if plot_show:
+                plt.show()
 
 
 def create_movie(df, column, time_plot):
