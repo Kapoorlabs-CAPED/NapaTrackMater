@@ -4056,25 +4056,8 @@ def update_cluster_plot(time, df, time_delta=0):
     plt.show()
 
 
-def inception_model_prediction(
-    dataframe,
-    track_id,
-    tracklet_length,
-    class_map,
-    dynamic_model=None,
-    shape_model=None,
-    device="cpu",
-):
-    sub_dataframe = dataframe[dataframe["Track ID"] == track_id]
-    sub_dataframe_dynamic = sub_dataframe[DYNAMIC_FEATURES].values
-    sub_dataframe_shape = sub_dataframe[SHAPE_FEATURES].values
 
-    total_duration = sub_dataframe["Track Duration"].max()
-
-    if sub_dataframe.shape[0] < tracklet_length:
-        return "UnClassified"
-
-    def sample_subarrays(data, tracklet_length, total_duration):
+def sample_subarrays(data, tracklet_length, total_duration):
 
         max_start_index = total_duration - tracklet_length
         start_indices = random.sample(range(max_start_index), max_start_index)
@@ -4089,14 +4072,7 @@ def inception_model_prediction(
 
         return subarrays
 
-    sub_arrays_shape = sample_subarrays(
-        sub_dataframe_shape, tracklet_length, total_duration
-    )
-    sub_arrays_dynamic = sample_subarrays(
-        sub_dataframe_dynamic, tracklet_length, total_duration
-    )
-
-    def make_prediction(input_data, model):
+def make_prediction(input_data, model, device):
 
         model = model.to(device)
         with torch.no_grad():
@@ -4108,7 +4084,9 @@ def inception_model_prediction(
             _, predicted_class = torch.max(probabilities, 0)
         return predicted_class.item()
 
-    def get_most_frequent_prediction(predictions):
+
+
+def get_most_frequent_prediction(predictions):
 
         prediction_counts = Counter(predictions)
         try:
@@ -4118,26 +4096,73 @@ def inception_model_prediction(
         except IndexError:
             return None
 
-    shape_predictions = []
-    if shape_model is not None:
-        for sub_array in sub_arrays_shape:
-            predicted_class = make_prediction(sub_array, shape_model)
-            shape_predictions.append(predicted_class)
+def weighted_prediction(predictions, weights):
+    """
+    Calculate the most frequent prediction with weighting by tracklet length.
+    """
+    weighted_counts = Counter()
+    for prediction, weight in zip(predictions, weights):
+        weighted_counts[prediction] += weight
 
-    dynamic_predictions = []
-    if dynamic_model is not None:
-        for sub_array in sub_arrays_dynamic:
-            predicted_class = make_prediction(sub_array, dynamic_model)
-            dynamic_predictions.append(predicted_class)
+    most_common_prediction, _ = weighted_counts.most_common(1)[0]
+    return most_common_prediction
 
-    final_predictions = shape_predictions + dynamic_predictions
-    most_frequent_prediction = get_most_frequent_prediction(final_predictions)
-    if most_frequent_prediction is not None:
-        most_predicted_class = class_map[int(most_frequent_prediction)]
 
-        return most_predicted_class
+def inception_model_prediction(
+    dataframe,
+    trackmate_id,
+    tracklet_length,
+    class_map,
+    dynamic_model=None,
+    shape_model=None,
+    device="cpu",
+):
+
+  
+    sub_trackmate_dataframe = dataframe[dataframe["TrackMate Track ID"] == trackmate_id]
+    tracklet_predictions = []
+    tracklet_weights = []
+
+    for tracklet_id in sub_trackmate_dataframe["Track ID"].unique():
+            tracklet_sub_dataframe = sub_trackmate_dataframe[sub_trackmate_dataframe["Track ID"] == tracklet_id]
+            
+            sub_dataframe_dynamic = tracklet_sub_dataframe[DYNAMIC_FEATURES].values
+            sub_dataframe_shape = tracklet_sub_dataframe[SHAPE_FEATURES].values
+
+            total_duration = tracklet_sub_dataframe["Track Duration"].max()
+
+            sub_arrays_shape = sample_subarrays(
+                sub_dataframe_shape, tracklet_length, total_duration
+            )
+            sub_arrays_dynamic = sample_subarrays(
+                sub_dataframe_dynamic, tracklet_length, total_duration
+            )
+
+            shape_predictions = []
+            if shape_model is not None:
+                for sub_array in sub_arrays_shape:
+                    predicted_class = make_prediction(sub_array, shape_model, device)
+                    shape_predictions.append(predicted_class)
+
+            dynamic_predictions = []
+            if dynamic_model is not None:
+                for sub_array in sub_arrays_dynamic:
+                    predicted_class = make_prediction(sub_array, dynamic_model, device)
+                    dynamic_predictions.append(predicted_class)
+
+            final_predictions = shape_predictions + dynamic_predictions
+            most_frequent_prediction = get_most_frequent_prediction(final_predictions)
+            if most_frequent_prediction is not None:
+                most_predicted_class = class_map[int(most_frequent_prediction)]
+                tracklet_predictions.append(most_predicted_class)
+                tracklet_weights.append(total_duration)
+
+            
+    if tracklet_predictions:
+        final_weighted_prediction = weighted_prediction(tracklet_predictions, tracklet_weights)
+        return final_weighted_prediction
     else:
-        return "UnClassified"
+        return "UnClassified"        
 
 
 def save_cell_type_predictions(
@@ -4146,12 +4171,12 @@ def save_cell_type_predictions(
 
     cell_type = {}
     for value in cell_map.values():
-        cell_type[value] = pd.DataFrame(columns=["Track ID", "t", "z", "y", "x"])
+        cell_type[value] = pd.DataFrame(columns=["TrackMate Track ID", "t", "z", "y", "x"])
         for k, v in predictions.items():
             if value == v:
 
                 current_track_dataframe = tracks_dataframe[
-                    tracks_dataframe["Track ID"] == k
+                    tracks_dataframe["TrackMate Track ID"] == k
                 ]
                 t_min = current_track_dataframe["t"].idxmin()
                 x = current_track_dataframe.loc[t_min, "x"]
@@ -4159,7 +4184,7 @@ def save_cell_type_predictions(
                 z = current_track_dataframe.loc[t_min, "z"]
                 t = current_track_dataframe.loc[t_min, "t"]
                 new_row = pd.DataFrame(
-                    {"Track ID": [k], "t": [t], "z": [z], "y": [y], "x": [x]}
+                    {"TrackMate Track ID": [k], "t": [t], "z": [z], "y": [y], "x": [x]}
                 )
                 cell_type[value] = pd.concat([cell_type[value], new_row])
 
