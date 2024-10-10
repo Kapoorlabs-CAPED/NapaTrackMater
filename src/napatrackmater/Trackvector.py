@@ -2489,6 +2489,9 @@ def train_gbr_neural_net(
     kernel_size: int = 3,
     experiment_name="mitosis",
     scheduler_choice="plateau",
+    attention_dim:int = 64,
+    cutoffs: list= (25,),
+    n_pos:list =(8,)
 ):
 
     if isinstance(block_config, int):
@@ -2511,6 +2514,9 @@ def train_gbr_neural_net(
             experiment_name=experiment_name,
             scheduler_choice=scheduler_choice,
             learning_rate=learning_rate,
+            cutoffs = cutoffs,
+            n_pos = n_pos,
+            attention_dim = attention_dim
         )
 
         mitosis_inception.setup_gbr_datasets()
@@ -2534,6 +2540,9 @@ def train_gbr_neural_net(
             experiment_name=experiment_name,
             scheduler_choice=scheduler_choice,
             learning_rate=learning_rate,
+            cutoffs = cutoffs,
+            n_pos = n_pos,
+            attention_dim = attention_dim
         )
 
         mitosis_inception.setup_gbr_h5_datasets()
