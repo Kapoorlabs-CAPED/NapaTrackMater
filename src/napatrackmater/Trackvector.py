@@ -2490,8 +2490,8 @@ def train_gbr_neural_net(
     experiment_name="mitosis",
     scheduler_choice="plateau",
     attention_dim:int = 64,
-    cutoffs: list= (25,),
-    n_pos:list =(8,)
+    n_pos:list =(8,),
+    sequence_length=25
 ):
 
     if isinstance(block_config, int):
@@ -2514,7 +2514,7 @@ def train_gbr_neural_net(
             experiment_name=experiment_name,
             scheduler_choice=scheduler_choice,
             learning_rate=learning_rate,
-            cutoffs = cutoffs,
+            sequence_length = sequence_length,
             n_pos = n_pos,
             attention_dim = attention_dim
         )
@@ -2540,7 +2540,7 @@ def train_gbr_neural_net(
             experiment_name=experiment_name,
             scheduler_choice=scheduler_choice,
             learning_rate=learning_rate,
-            cutoffs = cutoffs,
+            sequence_length = sequence_length,
             n_pos = n_pos,
             attention_dim = attention_dim
         )
