@@ -4123,6 +4123,7 @@ def inception_model_prediction(
     class_map,
     dynamic_model=None,
     shape_model=None,
+    morphodynamic_model = None,
     device="cpu",
 ):
 
@@ -4136,6 +4137,7 @@ def inception_model_prediction(
             
             sub_dataframe_dynamic = tracklet_sub_dataframe[DYNAMIC_FEATURES].values
             sub_dataframe_shape = tracklet_sub_dataframe[SHAPE_FEATURES].values
+            sub_dataframe_morpho = tracklet_sub_dataframe[SHAPE_DYNAMIC_FEATURES].values
 
             total_duration = tracklet_sub_dataframe["Track Duration"].max()
 
@@ -4144,6 +4146,10 @@ def inception_model_prediction(
             )
             sub_arrays_dynamic = sample_subarrays(
                 sub_dataframe_dynamic, tracklet_length, total_duration
+            )
+
+            sub_arrays_morpho = sample_subarrays(
+                sub_dataframe_morpho, tracklet_length, total_duration
             )
 
             shape_predictions = []
@@ -4158,7 +4164,16 @@ def inception_model_prediction(
                     predicted_class = make_prediction(sub_array, dynamic_model, device)
                     dynamic_predictions.append(predicted_class)
 
-            final_predictions = shape_predictions + dynamic_predictions
+            morpho_predictions = []
+            if morphodynamic_model is not None:
+                for sub_array in sub_arrays_morpho:
+                    predicted_class = make_prediction(sub_array, morphodynamic_model, device)
+                    morpho_predictions.append(predicted_class)    
+
+            if morphodynamic_model is  None:
+               final_predictions = shape_predictions + dynamic_predictions
+            else:
+                final_predictions = morpho_predictions   
             most_frequent_prediction = get_most_frequent_prediction(final_predictions)
             if most_frequent_prediction is not None:
                 most_predicted_class = class_map[int(most_frequent_prediction)]
