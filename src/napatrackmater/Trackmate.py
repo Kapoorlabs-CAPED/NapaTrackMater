@@ -775,25 +775,7 @@ class TrackMate:
 
         return distance_cell_mask, maskcentroid
 
-    def _global_track_id(self, track_id):
 
-        num_digits = len(str(self.max_track_digit))
-
-        track_id_str = str(track_id)
-        if len(track_id_str) < num_digits:
-            track_id_str = track_id_str.zfill(num_digits)
-        track_id = int(track_id_str)
-        return track_id
-
-    def _global_generation_id(self, generation_id):
-
-        num_digits = len(str(self.max_track_digit))
-        generation_id_str = str(generation_id)
-        if len(generation_id_str) < num_digits:
-            generation_id_str = generation_id_str.zfill(num_digits)
-        generation_id = int(generation_id_str)
-
-        return generation_id
 
     def _track_computer(self, track, track_id):
 
@@ -1920,14 +1902,9 @@ class TrackMate:
             self.progress_bar.range = (0, len(self.filtered_track_ids))
             self.progress_bar.show()
         if self.channel_seg_image is None:
-            max_length = 0
             for track in self.tracks.findall("Track"):
                 track_id = int(track.get(self.trackid_key))
-                if track_id in self.filtered_track_ids:
-                    digit_length = len(str(track_id))
-                    if digit_length > max_length:
-                        max_length = digit_length
-            self.max_track_digit = max_length
+                
 
             for track in tqdm(self.tracks.findall("Track")):
                 track_id = int(track.get(self.trackid_key))
@@ -2087,12 +2064,8 @@ class TrackMate:
                 spot_properties_dict = self.unique_spot_properties[spot_id]
                 if self.trackid_key in spot_properties_dict.keys():
                     trackmate_track_id = spot_properties_dict[self.trackid_key]
-                    if tracklet_length is None:
-                        trackmate_track_ids.append(trackmate_track_id)
-                    else:
-                        track_duration = spot_properties_dict[self.track_duration_key]
-                        if track_duration > tracklet_length:
-                            trackmate_track_ids.append(trackmate_track_id)
+                    trackmate_track_ids.append(trackmate_track_id)
+                    
 
         return trackmate_track_ids
 
