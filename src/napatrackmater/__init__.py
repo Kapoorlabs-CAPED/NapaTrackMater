@@ -33,8 +33,9 @@ from .Trackvector import (
     create_video,
     plot_histograms_for_cell_type_groups,
     inception_model_prediction,
-    save_cell_type_predictions
-    
+    save_cell_type_predictions,
+    filter_and_get_tracklets,
+    createNPZ,
 )
 
 from .CloudAutoEncoder import CloudAutoEncoder
@@ -119,7 +120,9 @@ __all__ = (
     "plot_histograms_for_cell_type_groups",
     "inception_model_prediction",
     "save_cell_type_predictions",
-    "transfer_fate_location"
+    "transfer_fate_location",
+    "filter_and_get_tracklets",
+    "createNPZ",
 )
 
 clear_models_and_aliases(CloudAutoEncoder)

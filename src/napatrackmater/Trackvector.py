@@ -14,7 +14,8 @@ from scipy.spatial import cKDTree
 import matplotlib.pyplot as plt
 from typing import List, Union
 import random
-from tifffile import imwrite
+from tifffile import imwrite, imread
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
@@ -914,53 +915,101 @@ def create_dividing_prediction_tracklets(
     return training_tracklets
 
 
-def filter_and_get_tracklets(df, cell_type, N, raw_image, crop_size, segmentation_image, dataset_name, save_dir, normalize_image = True, dtype = np.float32,
-                              class_map_gbr = {
-        0: "Basal",
-        1: "Radial",
-        2: "Goblet"
-    }):
+def filter_and_get_tracklets(
+    df,
+    cell_type,
+    N,
+    raw_image,
+    crop_size,
+    segmentation_image,
+    dataset_name,
+    save_dir,
+    train_label,
+    normalize_image=True,
+    dtype=np.float32,
+    class_map_gbr={0: "Basal", 1: "Radial", 2: "Goblet"},
+):
 
     """
-    Filters the DataFrame by cell type, generates tracklet blocks of length N, 
-    and assigns the train label based on the provided cell type.
+    Filters tracklets from a DataFrame based on a specified cell type, extracts blocks of a specified length (N) from each tracklet,
+    and generates a volume around each tracklet block based on the segmentation image.
 
     Parameters:
-        df (pd.DataFrame): Input DataFrame with track data.
-        cell_type (str): Cell type to filter by (e.g., "Basal", "Radial", "Goblet").
-        N (int): Number of timepoints in each tracklet block.
-        class_map_gbr (dict): Mapping from integer labels to cell types.
-    
+    ----------
+    df : pandas.DataFrame
+        DataFrame containing tracking information with columns `TrackMate Track ID`, `Track ID`, `t`, `z`, `y`, `x`, and `Cell_Type`.
+
+    cell_type : str
+        The cell type to filter by (e.g., "Basal", "Radial", "Goblet").
+
+    N : int
+        The number of timepoints to include in each tracklet block.
+
+    raw_image : ndarray
+        The raw image volume for the dataset (assumed format: TZYX).
+
+    crop_size : tuple
+        The dimensions (sizex, sizey, sizez) for each cropped patch.
+
+    segmentation_image : ndarray
+        Segmentation image used for calculating the bounding box around each tracklet point (assumed format: TZYX).
+
+    dataset_name : str
+        Name of the dataset, used for labeling output files.
+
+    save_dir : str
+        Directory to save cropped patches and related data.
+
+    train_label : int
+        Label for the training category, based on `cell_type`.
+
+    normalize_image : bool, optional, default=True
+        Whether to normalize the raw image data before generating volumes.
+
+    dtype : dtype, optional, default=np.float32
+        Data type for the processed image.
+
+    class_map_gbr : dict, optional, default={0: "Basal", 1: "Radial", 2: "Goblet"}
+        Mapping from numerical labels to cell types.
+
     Returns:
-        list of tuples: Each tuple contains a tracklet block and its train label.
+    -------
+    tracklets : dict
+        Nested dictionary with `TrackMate Track ID` as keys, each containing dictionaries
+        with `Track ID` keys and lists of `N`-sized tracklet blocks as values.
+
+    Notes:
+    ------
+    - The function saves cropped patches centered around each tracklet block's (t, z, y, x) coordinates.
+    - Each block is extracted for exactly `N` timepoints, sorted in ascending order by time.
     """
 
     total_categories = len(class_map_gbr)
-    cell_type_df = df[df['Cell_Type'] == cell_type]
-    tracklets = {}  
+    cell_type_df = df[df["Cell_Type"] == cell_type]
+    tracklets = {}
     cell_map_gbr = {v: k for k, v in class_map_gbr.items()}
     train_label = cell_map_gbr.get(cell_type, None)
-    
-    for trackmate_id in cell_type_df['TrackMate Track ID'].unique():
-        trackmate_df = cell_type_df[cell_type_df['TrackMate Track ID'] == trackmate_id]
-        
-        for track_id in trackmate_df['Track ID'].unique():
-            track_df = trackmate_df[trackmate_df['Track ID'] == track_id]
-            
-            track_df = track_df.sort_values(by='t')
-            
+
+    for trackmate_id in cell_type_df["TrackMate Track ID"].unique():
+        trackmate_df = cell_type_df[cell_type_df["TrackMate Track ID"] == trackmate_id]
+
+        for track_id in trackmate_df["Track ID"].unique():
+            track_df = trackmate_df[trackmate_df["Track ID"] == track_id]
+
+            track_df = track_df.sort_values(by="t")
+
             tracklet_blocks = []
             for i in range(0, len(track_df), N):
-                tracklet_block = track_df.iloc[i:i + N][['t', 'z', 'y', 'x']].values
-                if len(tracklet_block) == N:  
+                tracklet_block = track_df.iloc[i : i + N][["t", "z", "y", "x"]].values
+                if len(tracklet_block) == N:
                     tracklet_blocks.append(tracklet_block)
-            
+
             if trackmate_id not in tracklets:
                 tracklets[trackmate_id] = {}
             tracklets[trackmate_id][track_id] = tracklet_blocks
-    
+
     for idx, tracklet_block, train_label in enumerate(tracklets):
-        
+
         name = dataset_name + str(idx)
         TrackVolumeMaker(
             tracklet_block,
@@ -972,10 +1021,11 @@ def filter_and_get_tracklets(df, cell_type, N, raw_image, crop_size, segmentatio
             name,
             save_dir,
             normalize_image=normalize_image,
-            dtype=dtype
+            dtype=dtype,
         )
 
     return tracklets
+
 
 def getHWD(
     defaultX,
@@ -991,31 +1041,33 @@ def getHWD(
     centroids = [prop.centroid for prop in properties]
     labels = [prop.label for prop in properties]
     tree = spatial.cKDTree(centroids)
-    
+
     DLocation = (defaultZ, defaultY, defaultX)
     distance_cell_mask, nearest_location = tree.query(DLocation)
     if distance_cell_mask < 0.5 * imagesizex:
-        z = int(centroids[nearest_location][0])         
+        z = int(centroids[nearest_location][0])
         y = int(centroids[nearest_location][1])
         x = int(centroids[nearest_location][2])
         SegLabel = labels[nearest_location]
         DLocation = (z, y, x)
     else:
         if (
-        int(DLocation[0]) < currentsegimage.shape[0] 
-        and int(DLocation[1]) < currentsegimage.shape[1]
-        and int(DLocation[2]) < currentsegimage.shape[2]
-        and all(i >= 0 for i in DLocation)
+            int(DLocation[0]) < currentsegimage.shape[0]
+            and int(DLocation[1]) < currentsegimage.shape[1]
+            and int(DLocation[2]) < currentsegimage.shape[2]
+            and all(i >= 0 for i in DLocation)
         ):
-           SegLabel = currentsegimage[int(DLocation[0]), int(DLocation[1]), int(DLocation[2])]
+            SegLabel = currentsegimage[
+                int(DLocation[0]), int(DLocation[1]), int(DLocation[2])
+            ]
         else:
-            SegLabel = -1   
+            SegLabel = -1
     if (
         int(DLocation[0]) < currentsegimage.shape[0]
         and int(DLocation[1]) < currentsegimage.shape[1]
         and int(DLocation[2]) < currentsegimage.shape[2]
     ):
-       
+
         for prop in properties:
             if SegLabel > 0 and prop.label == SegLabel:
                 minr, minc, mind, maxr, maxc, maxd = prop.bbox
@@ -1025,17 +1077,16 @@ def getHWD(
                 depth = abs(maxd - mind)
                 return height, width, depth, center, SegLabel
 
-            if SegLabel == 0 :
+            if SegLabel == 0:
 
                 center = (defaultZ, defaultY, defaultX)
                 height = 0.5 * imagesizex
                 width = 0.5 * imagesizey
                 depth = 0.5 * imagesizez
                 return height, width, depth, center, SegLabel
-            
-def normalizeFloatZeroOne(
-    x, pmin=1, pmax=99.8, axis=None, eps=1e-20, dtype=np.uint8
-):
+
+
+def normalizeFloatZeroOne(x, pmin=1, pmax=99.8, axis=None, eps=1e-20, dtype=np.uint8):
     """Percentile based Normalization
 
     Normalize patches of image before feeding into the network
@@ -1075,12 +1126,12 @@ def TrackVolumeMaker(
     name,
     save_dir,
     normalize_image=True,
-    dtype=np.float32
+    dtype=np.float32,
 ):
     sizex, sizey, sizez = crop_size
-    imagesizex = sizex 
-    imagesizey = sizey 
-    imagesizez = sizez 
+    imagesizex = sizex
+    imagesizey = sizey
+    imagesizez = sizez
 
     if normalize_image:
         raw_image = normalizeFloatZeroOne(raw_image.astype(dtype), 1, 99.8, dtype=dtype)
@@ -1089,13 +1140,14 @@ def TrackVolumeMaker(
     for (t, z, y, x) in tracklet_block:
         # Get the bounding box properties based on segmentation image
         current_seg_image = segmentation_image[int(t)].astype("uint16")
-        image_props = getHWD(x, y, z, current_seg_image, imagesizex, imagesizey, imagesizez)
+        image_props = getHWD(
+            x, y, z, current_seg_image, imagesizex, imagesizey, imagesizez
+        )
 
         if image_props is not None:
             height, width, depth, center, seg_label = image_props
             small_image = raw_image[int(t)]
-            
-            # Set up the crop boundaries, centering on (x, y, z) as specified
+
             if height >= imagesizey:
                 height = 0.5 * imagesizey
             if width >= imagesizex:
@@ -1109,21 +1161,20 @@ def TrackVolumeMaker(
             crop_zmin = max(z - imagesizez // 2, 0)
             crop_zmax = min(z + imagesizez // 2, raw_image.shape[1])
 
-            # Crop the small image centered at (x, y, z)
             cropped_patch = small_image[
                 crop_zmin:crop_zmax, crop_ymin:crop_ymax, crop_xmin:crop_xmax
             ]
-            
+
             stitched_volume.append(cropped_patch)
 
-    stitched_volume = np.stack(stitched_volume, axis=0)  
+    stitched_volume = np.stack(stitched_volume, axis=0)
 
     label_vector = np.zeros(total_categories + 8)
     label_vector[train_label] = 1
-    label_vector[total_categories + 7] = 1  
+    label_vector[total_categories + 7] = 1
 
     # Define center of segmentation location in the patch for each axis
-    label_vector[total_categories] = height/ imagesizey
+    label_vector[total_categories] = height / imagesizey
     label_vector[total_categories + 1] = width / imagesizex
     label_vector[total_categories + 2] = depth / imagesizez
 
@@ -1131,15 +1182,74 @@ def TrackVolumeMaker(
     volume_name = f"track_{name}_stitched_volume.tif"
     volume_path = os.path.join(save_dir, volume_name)
     imwrite(volume_path, stitched_volume.astype("float32"))
-    
+
     # Save the label data as CSV
     label_name = f"track_{name}_label.csv"
     label_path = os.path.join(save_dir, label_name)
     with open(label_path, "w") as f:
         writer = csv.writer(f)
         writer.writerow(label_vector)
-    
+
     print(f"Saved stitched volume to {volume_path} and label to {label_path}")
+
+
+def createNPZ(
+    save_dir,
+    axes,
+    save_name="oneatinception",
+    save_name_val="oneatinceptionVal",
+    expand=True,
+    train_size=0.95,
+):
+
+    data = []
+    label = []
+
+    all_files = os.listdir(save_dir)
+
+    tif_files = sorted([f for f in all_files if f.endswith(".tif")])
+
+    normalize_images = [imread(os.path.join(save_dir, fname)) for fname in tif_files]
+    image_names = [os.path.splitext(fname)[0] for fname in tif_files]
+
+    for idx, image in enumerate(normalize_images):
+
+        csvfname = save_dir + "/" + image_names[idx] + ".csv"
+        arr = []
+        with open(csvfname) as csvfile:
+            reader = csv.reader(csvfile, delimiter=",")
+            arr = list(reader)[0]
+            arr = np.array(arr)
+
+        label = arr
+        label = np.expand_dims(label, -1)
+        if expand:
+
+            image = np.expand_dims(image, -1)
+
+        data.append(image)
+        label.append(label)
+
+    dataarr = np.asarray(data)
+    labelarr = np.asarray(label)
+
+    print(dataarr.shape, labelarr.shape)
+    traindata, validdata, trainlabel, validlabel = train_test_split(
+        dataarr,
+        labelarr,
+        train_size=train_size,
+        shuffle=False,
+    )
+    save_full_training_data(save_dir, save_name, traindata, trainlabel, axes)
+    save_full_training_data(save_dir, save_name_val, validdata, validlabel, axes)
+
+
+def save_full_training_data(directory, filename, data, label, axes):
+    """Save training data in ``.npz`` format."""
+
+    len(axes) == data.ndim
+    np.savez(directory + filename, data=data, label=label, axes=axes)
+
 
 def create_analysis_tracklets(
     tracks_dataframe: pd.DataFrame,
@@ -2720,8 +2830,8 @@ def train_gbr_neural_net(
     kernel_size: int = 3,
     experiment_name="mitosis",
     scheduler_choice="plateau",
-    attention_dim:int = 64,
-    n_pos:list =(8,),
+    attention_dim: int = 64,
+    n_pos: list = (8,),
 ):
 
     if isinstance(block_config, int):
@@ -2744,8 +2854,8 @@ def train_gbr_neural_net(
             experiment_name=experiment_name,
             scheduler_choice=scheduler_choice,
             learning_rate=learning_rate,
-            n_pos = n_pos,
-            attention_dim = attention_dim
+            n_pos=n_pos,
+            attention_dim=attention_dim,
         )
 
         mitosis_inception.setup_gbr_datasets()
@@ -2769,8 +2879,8 @@ def train_gbr_neural_net(
             experiment_name=experiment_name,
             scheduler_choice=scheduler_choice,
             learning_rate=learning_rate,
-            n_pos = n_pos,
-            attention_dim = attention_dim
+            n_pos=n_pos,
+            attention_dim=attention_dim,
         )
 
         mitosis_inception.setup_gbr_h5_datasets()
@@ -2780,7 +2890,7 @@ def train_gbr_neural_net(
     if model_type == "densenet":
         mitosis_inception.setup_densenet_model()
     if model_type == "attention":
-        mitosis_inception.setup_hybrid_attention_model()    
+        mitosis_inception.setup_hybrid_attention_model()
 
     mitosis_inception.setup_logger()
     mitosis_inception.setup_checkpoint()
@@ -4295,45 +4405,45 @@ def update_cluster_plot(time, df, time_delta=0):
     plt.show()
 
 
-
 def sample_subarrays(data, tracklet_length, total_duration):
 
-        max_start_index = total_duration - tracklet_length
-        start_indices = random.sample(range(max_start_index), max_start_index)
+    max_start_index = total_duration - tracklet_length
+    start_indices = random.sample(range(max_start_index), max_start_index)
 
-        subarrays = []
-        for start_index in start_indices:
-            end_index = start_index + tracklet_length
-            if end_index <= total_duration:
-                sub_data = data[start_index:end_index, :]
-                if sub_data.shape[0] == tracklet_length:
-                    subarrays.append(sub_data)
+    subarrays = []
+    for start_index in start_indices:
+        end_index = start_index + tracklet_length
+        if end_index <= total_duration:
+            sub_data = data[start_index:end_index, :]
+            if sub_data.shape[0] == tracklet_length:
+                subarrays.append(sub_data)
 
-        return subarrays
+    return subarrays
+
 
 def make_prediction(input_data, model, device):
 
-        model = model.to(device)
-        with torch.no_grad():
-            input_tensor = (
-                torch.tensor(input_data).unsqueeze(0).permute(0, 2, 1).float()
-            ).to(device)
-            model_predictions = model(input_tensor)
-            probabilities = torch.softmax(model_predictions[0], dim=0)
-            _, predicted_class = torch.max(probabilities, 0)
-        return predicted_class.item()
-
+    model = model.to(device)
+    with torch.no_grad():
+        input_tensor = (
+            torch.tensor(input_data).unsqueeze(0).permute(0, 2, 1).float()
+        ).to(device)
+        model_predictions = model(input_tensor)
+        probabilities = torch.softmax(model_predictions[0], dim=0)
+        _, predicted_class = torch.max(probabilities, 0)
+    return predicted_class.item()
 
 
 def get_most_frequent_prediction(predictions):
 
-        prediction_counts = Counter(predictions)
-        try:
-            most_common_prediction, count = prediction_counts.most_common(1)[0]
+    prediction_counts = Counter(predictions)
+    try:
+        most_common_prediction, count = prediction_counts.most_common(1)[0]
 
-            return most_common_prediction
-        except IndexError:
-            return None
+        return most_common_prediction
+    except IndexError:
+        return None
+
 
 def weighted_prediction(predictions, weights):
     """
@@ -4347,6 +4457,68 @@ def weighted_prediction(predictions, weights):
     return most_common_prediction
 
 
+def vision_inception_model_prediction(
+    dataframe,
+    trackmate_id,
+    tracklet_length,
+    raw_image,
+    class_map,
+    model=None,
+    device="cpu",
+    crop_size=(64, 64, 64),
+):
+    """
+    Generate predictions for an inception-style vision model based on patches around each point in a tracklet.
+
+    Parameters:
+        dataframe (pd.DataFrame): The dataframe containing track information.
+        trackmate_id (int): The TrackMate track ID for which to generate predictions.
+        tracklet_length (int): The number of time points in each tracklet.
+        raw_image (np.array): The raw image from which patches are extracted.
+        class_map (dict): Mapping of class indices to labels.
+        model (torch.nn.Module): The model to use for predictions.
+        device (str): Device for running predictions, 'cpu' or 'cuda'.
+        crop_size (tuple): Size of the crop around each point (imagesizex, imagesizey, imagesizez).
+
+    Returns:
+        predictions (list): Predicted class labels for each tracklet.
+        weights (list): Prediction confidence or logits for each tracklet.
+    """
+    # Filter dataframe for specific trackmate_id and initialize variables
+    sub_trackmate_dataframe = dataframe[dataframe["TrackMate Track ID"] == trackmate_id]
+
+    # Extract the dimensions of the crop
+    imagesizex, imagesizey, imagesizez = crop_size
+
+    for tracklet_id in sub_trackmate_dataframe["Track ID"].unique():
+        tracklet_sub_dataframe = sub_trackmate_dataframe[
+            sub_trackmate_dataframe["Track ID"] == tracklet_id
+        ]
+        tracklet_block = tracklet_sub_dataframe[["t", "z", "y", "x"]].values
+
+        # Generate patches from each point in the tracklet
+        stitched_volume = []
+        for (t, z, y, x) in tracklet_block:
+            small_image = raw_image[int(t)]
+
+            # Define bounding box for crop with center at (z, y, x)
+            crop_xmin = max(x - imagesizex // 2, 0)
+            crop_xmax = min(x + imagesizex // 2, raw_image.shape[3])
+            crop_ymin = max(y - imagesizey // 2, 0)
+            crop_ymax = min(y + imagesizey // 2, raw_image.shape[2])
+            crop_zmin = max(z - imagesizez // 2, 0)
+            crop_zmax = min(z + imagesizez // 2, raw_image.shape[1])
+
+            # Extract and store the cropped patch
+            cropped_patch = small_image[
+                crop_zmin:crop_zmax, crop_ymin:crop_ymax, crop_xmin:crop_xmax
+            ]
+            stitched_volume.append(cropped_patch)
+
+        # Stack all patches along the time dimension
+        stitched_volume = np.stack(stitched_volume, axis=0)
+
+
 def inception_model_prediction(
     dataframe,
     trackmate_id,
@@ -4354,69 +4526,73 @@ def inception_model_prediction(
     class_map,
     dynamic_model=None,
     shape_model=None,
-    morphodynamic_model = None,
+    morphodynamic_model=None,
     device="cpu",
 ):
 
-  
     sub_trackmate_dataframe = dataframe[dataframe["TrackMate Track ID"] == trackmate_id]
     tracklet_predictions = []
     tracklet_weights = []
 
     for tracklet_id in sub_trackmate_dataframe["Track ID"].unique():
-            tracklet_sub_dataframe = sub_trackmate_dataframe[sub_trackmate_dataframe["Track ID"] == tracklet_id]
-            
-            sub_dataframe_dynamic = tracklet_sub_dataframe[DYNAMIC_FEATURES].values
-            sub_dataframe_shape = tracklet_sub_dataframe[SHAPE_FEATURES].values
-            sub_dataframe_morpho = tracklet_sub_dataframe[SHAPE_DYNAMIC_FEATURES].values
+        tracklet_sub_dataframe = sub_trackmate_dataframe[
+            sub_trackmate_dataframe["Track ID"] == tracklet_id
+        ]
 
-            total_duration = tracklet_sub_dataframe["Track Duration"].max()
+        sub_dataframe_dynamic = tracklet_sub_dataframe[DYNAMIC_FEATURES].values
+        sub_dataframe_shape = tracklet_sub_dataframe[SHAPE_FEATURES].values
+        sub_dataframe_morpho = tracklet_sub_dataframe[SHAPE_DYNAMIC_FEATURES].values
 
-            sub_arrays_shape = sample_subarrays(
-                sub_dataframe_shape, tracklet_length, total_duration
-            )
-            sub_arrays_dynamic = sample_subarrays(
-                sub_dataframe_dynamic, tracklet_length, total_duration
-            )
+        total_duration = tracklet_sub_dataframe["Track Duration"].max()
 
-            sub_arrays_morpho = sample_subarrays(
-                sub_dataframe_morpho, tracklet_length, total_duration
-            )
+        sub_arrays_shape = sample_subarrays(
+            sub_dataframe_shape, tracklet_length, total_duration
+        )
+        sub_arrays_dynamic = sample_subarrays(
+            sub_dataframe_dynamic, tracklet_length, total_duration
+        )
 
-            shape_predictions = []
-            if shape_model is not None:
-                for sub_array in sub_arrays_shape:
-                    predicted_class = make_prediction(sub_array, shape_model, device)
-                    shape_predictions.append(predicted_class)
+        sub_arrays_morpho = sample_subarrays(
+            sub_dataframe_morpho, tracklet_length, total_duration
+        )
 
-            dynamic_predictions = []
-            if dynamic_model is not None:
-                for sub_array in sub_arrays_dynamic:
-                    predicted_class = make_prediction(sub_array, dynamic_model, device)
-                    dynamic_predictions.append(predicted_class)
+        shape_predictions = []
+        if shape_model is not None:
+            for sub_array in sub_arrays_shape:
+                predicted_class = make_prediction(sub_array, shape_model, device)
+                shape_predictions.append(predicted_class)
 
-            morpho_predictions = []
-            if morphodynamic_model is not None:
-                for sub_array in sub_arrays_morpho:
-                    predicted_class = make_prediction(sub_array, morphodynamic_model, device)
-                    morpho_predictions.append(predicted_class)    
+        dynamic_predictions = []
+        if dynamic_model is not None:
+            for sub_array in sub_arrays_dynamic:
+                predicted_class = make_prediction(sub_array, dynamic_model, device)
+                dynamic_predictions.append(predicted_class)
 
-            if morphodynamic_model is  None:
-               final_predictions = shape_predictions + dynamic_predictions
-            else:
-                final_predictions = morpho_predictions   
-            most_frequent_prediction = get_most_frequent_prediction(final_predictions)
-            if most_frequent_prediction is not None:
-                most_predicted_class = class_map[int(most_frequent_prediction)]
-                tracklet_predictions.append(most_predicted_class)
-                tracklet_weights.append(total_duration)
+        morpho_predictions = []
+        if morphodynamic_model is not None:
+            for sub_array in sub_arrays_morpho:
+                predicted_class = make_prediction(
+                    sub_array, morphodynamic_model, device
+                )
+                morpho_predictions.append(predicted_class)
 
-            
+        if morphodynamic_model is None:
+            final_predictions = shape_predictions + dynamic_predictions
+        else:
+            final_predictions = morpho_predictions
+        most_frequent_prediction = get_most_frequent_prediction(final_predictions)
+        if most_frequent_prediction is not None:
+            most_predicted_class = class_map[int(most_frequent_prediction)]
+            tracklet_predictions.append(most_predicted_class)
+            tracklet_weights.append(total_duration)
+
     if tracklet_predictions:
-        final_weighted_prediction = weighted_prediction(tracklet_predictions, tracklet_weights)
+        final_weighted_prediction = weighted_prediction(
+            tracklet_predictions, tracklet_weights
+        )
         return final_weighted_prediction
     else:
-        return "UnClassified"        
+        return "UnClassified"
 
 
 def save_cell_type_predictions(
@@ -4425,7 +4601,9 @@ def save_cell_type_predictions(
 
     cell_type = {}
     for value in cell_map.values():
-        cell_type[value] = pd.DataFrame(columns=["TrackMate Track ID", "t", "z", "y", "x"])
+        cell_type[value] = pd.DataFrame(
+            columns=["TrackMate Track ID", "t", "z", "y", "x"]
+        )
         for k, v in predictions.items():
             if value == v:
 
