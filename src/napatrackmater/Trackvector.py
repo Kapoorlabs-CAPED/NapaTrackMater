@@ -4460,12 +4460,11 @@ def weighted_prediction(predictions, weights):
 def vision_inception_model_prediction(
     dataframe,
     trackmate_id,
-    tracklet_length,
     raw_image,
     class_map,
-    model=None,
+    model,
     device="cpu",
-    crop_size=(64, 64, 64),
+    crop_size=(256, 256, 8),
 ):
     """
     Generate predictions for an inception-style vision model based on patches around each point in a tracklet.
@@ -4517,6 +4516,8 @@ def vision_inception_model_prediction(
 
         # Stack all patches along the time dimension
         stitched_volume = np.stack(stitched_volume, axis=0)
+        prediction_vector = model.predict(stitched_volume)
+        class_prediction = prediction_vector[0]
 
 
 def inception_model_prediction(
