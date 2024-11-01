@@ -33,6 +33,7 @@ from IPython.display import clear_output
 import torch
 from collections import Counter
 import csv
+import h5py
 
 logger = logging.getLogger(__name__)
 
@@ -1192,63 +1193,59 @@ def TrackVolumeMaker(
 
     print(f"Saved stitched volume to {volume_path} and label to {label_path}")
 
-
-def createNPZ(
+def create_h5(
     save_dir,
-    axes,
-    save_name="oneatinception",
-    save_name_val="oneatinceptionVal",
-    expand=True,
     train_size=0.95,
+    save_name="cellfate_vision_training_data_gbr",
 ):
+    """
+    Create HDF5 file with training and validation data for morphodynamic model in TZYX format.
 
+    Args:
+        save_dir (str): Directory containing image and label files.
+        train_size (float): Proportion of data to use for training.
+        save_name (str): Name of the output HDF5 file (without extension).
+    """
     data = []
-    label = []
+    labels = []
 
+    # Gather all TIFF files and their corresponding labels
     all_files = os.listdir(save_dir)
-
     tif_files = sorted([f for f in all_files if f.endswith(".tif")])
 
-    normalize_images = [imread(os.path.join(save_dir, fname)) for fname in tif_files]
-    image_names = [os.path.splitext(fname)[0] for fname in tif_files]
-
-    for idx, image in enumerate(normalize_images):
-
-        csvfname = save_dir + "/" + image_names[idx] + ".csv"
-        arr = []
-        with open(csvfname) as csvfile:
-            reader = csv.reader(csvfile, delimiter=",")
-            arr = list(reader)[0]
-            arr = np.array(arr)
-
-        label = arr
-        label = np.expand_dims(label, -1)
-        if expand:
-
-            image = np.expand_dims(image, -1)
+    # Load images and labels in T, Z, Y, X format
+    for tif_file in tif_files:
+        image_path = os.path.join(save_dir, tif_file)
+        image = imread(image_path)
+        
+        # Ensure the image has T, Z, Y, X format, where T is the leading dimension
+        if image.ndim != 4:
+            raise ValueError(f"Image {tif_file} does not have four dimensions, expected T, Z, Y, X.")
 
         data.append(image)
-        label.append(label)
 
-    dataarr = np.asarray(data)
-    labelarr = np.asarray(label)
+        # Load corresponding label CSV
+        csv_path = os.path.join(save_dir, os.path.splitext(tif_file)[0] + ".csv")
+        with open(csv_path) as csvfile:
+            reader = csv.reader(csvfile, delimiter=",")
+            label = np.array(list(reader)[0]).astype(np.float32)
+        labels.append(label)
 
-    print(dataarr.shape, labelarr.shape)
-    traindata, validdata, trainlabel, validlabel = train_test_split(
-        dataarr,
-        labelarr,
-        train_size=train_size,
-        shuffle=False,
+    data = np.array(data)  # Shape: (N, T, Z, Y, X)
+    labels = np.array(labels)  # Shape: (N, label_dim)
+
+    train_data, val_data, train_labels, val_labels = train_test_split(
+        data, labels, train_size=train_size, shuffle=True, random_state=42
     )
-    save_full_training_data(save_dir, save_name, traindata, trainlabel, axes)
-    save_full_training_data(save_dir, save_name_val, validdata, validlabel, axes)
 
+    h5_save_path = os.path.join(save_dir, f"{save_name}.h5")
+    with h5py.File(h5_save_path, "w") as hf:
+        hf.create_dataset("train_arrays", data=train_data)
+        hf.create_dataset("train_labels", data=train_labels)
+        hf.create_dataset("val_arrays", data=val_data)
+        hf.create_dataset("val_labels", data=val_labels)
 
-def save_full_training_data(directory, filename, data, label, axes):
-    """Save training data in ``.npz`` format."""
-
-    len(axes) == data.ndim
-    np.savez(directory + filename, data=data, label=label, axes=axes)
+    print(f"HDF5 training data saved to {h5_save_path} in T, Z, Y, X format.")
 
 
 def create_analysis_tracklets(

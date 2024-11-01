@@ -35,7 +35,7 @@ from .Trackvector import (
     inception_model_prediction,
     save_cell_type_predictions,
     filter_and_get_tracklets,
-    createNPZ,
+    create_h5,
 )
 
 from .CloudAutoEncoder import CloudAutoEncoder
@@ -122,7 +122,7 @@ __all__ = (
     "save_cell_type_predictions",
     "transfer_fate_location",
     "filter_and_get_tracklets",
-    "createNPZ",
+    "create_h5",
 )
 
 clear_models_and_aliases(CloudAutoEncoder)
