@@ -655,7 +655,7 @@ def get_eccentricity(point_cloud):
 def get_surface_area(point_cloud):
     # Compute the convex hull of the point cloud
     hull = ConvexHull(point_cloud)
-
+    
     # Compute the areas of the triangles in the convex hull
     areas = np.zeros(hull.simplices.shape[0])
     for i, simplex in enumerate(hull.simplices):

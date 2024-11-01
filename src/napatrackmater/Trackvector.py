@@ -14,6 +14,7 @@ from scipy.spatial import cKDTree
 import matplotlib.pyplot as plt
 from typing import List, Union
 import random
+from tifffile import imwrite
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
@@ -24,10 +25,13 @@ from natsort import natsorted
 import seaborn as sns
 from tqdm import tqdm
 import imageio
+from skimage import measure
+from scipy import spatial
 from matplotlib import cm
 from IPython.display import clear_output
 import torch
 from collections import Counter
+import csv
 
 logger = logging.getLogger(__name__)
 
@@ -909,6 +913,233 @@ def create_dividing_prediction_tracklets(
 
     return training_tracklets
 
+
+def filter_and_get_tracklets(df, cell_type, N, raw_image, crop_size, segmentation_image, dataset_name, save_dir, normalize_image = True, dtype = np.float32,
+                              class_map_gbr = {
+        0: "Basal",
+        1: "Radial",
+        2: "Goblet"
+    }):
+
+    """
+    Filters the DataFrame by cell type, generates tracklet blocks of length N, 
+    and assigns the train label based on the provided cell type.
+
+    Parameters:
+        df (pd.DataFrame): Input DataFrame with track data.
+        cell_type (str): Cell type to filter by (e.g., "Basal", "Radial", "Goblet").
+        N (int): Number of timepoints in each tracklet block.
+        class_map_gbr (dict): Mapping from integer labels to cell types.
+    
+    Returns:
+        list of tuples: Each tuple contains a tracklet block and its train label.
+    """
+
+    total_categories = len(class_map_gbr)
+    cell_type_df = df[df['Cell_Type'] == cell_type]
+    tracklets = {}  
+    cell_map_gbr = {v: k for k, v in class_map_gbr.items()}
+    train_label = cell_map_gbr.get(cell_type, None)
+    
+    for trackmate_id in cell_type_df['TrackMate Track ID'].unique():
+        trackmate_df = cell_type_df[cell_type_df['TrackMate Track ID'] == trackmate_id]
+        
+        for track_id in trackmate_df['Track ID'].unique():
+            track_df = trackmate_df[trackmate_df['Track ID'] == track_id]
+            
+            track_df = track_df.sort_values(by='t')
+            
+            tracklet_blocks = []
+            for i in range(0, len(track_df), N):
+                tracklet_block = track_df.iloc[i:i + N][['t', 'z', 'y', 'x']].values
+                if len(tracklet_block) == N:  
+                    tracklet_blocks.append(tracklet_block)
+            
+            if trackmate_id not in tracklets:
+                tracklets[trackmate_id] = {}
+            tracklets[trackmate_id][track_id] = tracklet_blocks
+    
+    for idx, tracklet_block, train_label in enumerate(tracklets):
+        
+        name = dataset_name + str(idx)
+        TrackVolumeMaker(
+            tracklet_block,
+            raw_image,
+            segmentation_image,
+            crop_size,
+            total_categories,
+            train_label,
+            name,
+            save_dir,
+            normalize_image=normalize_image,
+            dtype=dtype
+        )
+
+    return tracklets
+
+def getHWD(
+    defaultX,
+    defaultY,
+    defaultZ,
+    currentsegimage,
+    imagesizex,
+    imagesizey,
+    imagesizez,
+):
+
+    properties = measure.regionprops(currentsegimage)
+    centroids = [prop.centroid for prop in properties]
+    labels = [prop.label for prop in properties]
+    tree = spatial.cKDTree(centroids)
+    
+    DLocation = (defaultZ, defaultY, defaultX)
+    distance_cell_mask, nearest_location = tree.query(DLocation)
+    if distance_cell_mask < 0.5 * imagesizex:
+        z = int(centroids[nearest_location][0])         
+        y = int(centroids[nearest_location][1])
+        x = int(centroids[nearest_location][2])
+        SegLabel = labels[nearest_location]
+        DLocation = (z, y, x)
+    else:
+        if (
+        int(DLocation[0]) < currentsegimage.shape[0] 
+        and int(DLocation[1]) < currentsegimage.shape[1]
+        and int(DLocation[2]) < currentsegimage.shape[2]
+        and all(i >= 0 for i in DLocation)
+        ):
+           SegLabel = currentsegimage[int(DLocation[0]), int(DLocation[1]), int(DLocation[2])]
+        else:
+            SegLabel = -1   
+    if (
+        int(DLocation[0]) < currentsegimage.shape[0]
+        and int(DLocation[1]) < currentsegimage.shape[1]
+        and int(DLocation[2]) < currentsegimage.shape[2]
+    ):
+       
+        for prop in properties:
+            if SegLabel > 0 and prop.label == SegLabel:
+                minr, minc, mind, maxr, maxc, maxd = prop.bbox
+                center = (defaultZ, defaultY, defaultX)
+                height = abs(maxc - minc)
+                width = abs(maxr - minr)
+                depth = abs(maxd - mind)
+                return height, width, depth, center, SegLabel
+
+            if SegLabel == 0 :
+
+                center = (defaultZ, defaultY, defaultX)
+                height = 0.5 * imagesizex
+                width = 0.5 * imagesizey
+                depth = 0.5 * imagesizez
+                return height, width, depth, center, SegLabel
+            
+def normalizeFloatZeroOne(
+    x, pmin=1, pmax=99.8, axis=None, eps=1e-20, dtype=np.uint8
+):
+    """Percentile based Normalization
+
+    Normalize patches of image before feeding into the network
+
+    Parameters
+    ----------
+    x : np array Image patch
+    pmin : minimum percentile value for normalization
+    pmax : maximum percentile value for normalization
+    axis : axis along which the normalization has to be carried out
+    eps : avoid dividing by zero
+    """
+    mi = np.percentile(x, pmin, axis=axis, keepdims=True)
+    ma = np.percentile(x, pmax, axis=axis, keepdims=True)
+    return normalize_mi_ma(x, mi, ma, eps=eps, dtype=dtype)
+
+
+def normalize_mi_ma(x, mi, ma, eps=1e-20, dtype=np.uint8):
+
+    x = x.astype(dtype)
+    mi = dtype(mi) if np.isscalar(mi) else mi.astype(dtype, copy=False)
+    ma = dtype(ma) if np.isscalar(ma) else ma.astype(dtype, copy=False)
+    eps = dtype(eps) if np.isscalar(eps) else eps.astype(dtype, copy=False)
+
+    x = (x - mi) / (ma - mi + eps)
+
+    return x
+
+
+def TrackVolumeMaker(
+    tracklet_block,
+    raw_image,
+    segmentation_image,
+    crop_size,
+    total_categories,
+    train_label,
+    name,
+    save_dir,
+    normalize_image=True,
+    dtype=np.float32
+):
+    sizex, sizey, sizez = crop_size
+    imagesizex = sizex 
+    imagesizey = sizey 
+    imagesizez = sizez 
+
+    if normalize_image:
+        raw_image = normalizeFloatZeroOne(raw_image.astype(dtype), 1, 99.8, dtype=dtype)
+
+    stitched_volume = []
+    for (t, z, y, x) in tracklet_block:
+        # Get the bounding box properties based on segmentation image
+        current_seg_image = segmentation_image[int(t)].astype("uint16")
+        image_props = getHWD(x, y, z, current_seg_image, imagesizex, imagesizey, imagesizez)
+
+        if image_props is not None:
+            height, width, depth, center, seg_label = image_props
+            small_image = raw_image[int(t)]
+            
+            # Set up the crop boundaries, centering on (x, y, z) as specified
+            if height >= imagesizey:
+                height = 0.5 * imagesizey
+            if width >= imagesizex:
+                width = 0.5 * imagesizex
+            if depth >= imagesizez:
+                depth = 0.5 * imagesizez
+            crop_xmin = max(x - imagesizex // 2, 0)
+            crop_xmax = min(x + imagesizex // 2, raw_image.shape[3])
+            crop_ymin = max(y - imagesizey // 2, 0)
+            crop_ymax = min(y + imagesizey // 2, raw_image.shape[2])
+            crop_zmin = max(z - imagesizez // 2, 0)
+            crop_zmax = min(z + imagesizez // 2, raw_image.shape[1])
+
+            # Crop the small image centered at (x, y, z)
+            cropped_patch = small_image[
+                crop_zmin:crop_zmax, crop_ymin:crop_ymax, crop_xmin:crop_xmax
+            ]
+            
+            stitched_volume.append(cropped_patch)
+
+    stitched_volume = np.stack(stitched_volume, axis=0)  
+
+    label_vector = np.zeros(total_categories + 8)
+    label_vector[train_label] = 1
+    label_vector[total_categories + 7] = 1  
+
+    # Define center of segmentation location in the patch for each axis
+    label_vector[total_categories] = height/ imagesizey
+    label_vector[total_categories + 1] = width / imagesizex
+    label_vector[total_categories + 2] = depth / imagesizez
+
+    # Write the stitched volume to disk
+    volume_name = f"track_{name}_stitched_volume.tif"
+    volume_path = os.path.join(save_dir, volume_name)
+    imwrite(volume_path, stitched_volume.astype("float32"))
+    
+    # Save the label data as CSV
+    label_name = f"track_{name}_label.csv"
+    label_path = os.path.join(save_dir, label_name)
+    with open(label_path, "w") as f:
+        writer = csv.writer(f)
+        writer.writerow(label_vector)
+    
+    print(f"Saved stitched volume to {volume_path} and label to {label_path}")
 
 def create_analysis_tracklets(
     tracks_dataframe: pd.DataFrame,
