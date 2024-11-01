@@ -988,7 +988,6 @@ def filter_and_get_tracklets(
     cell_type_df = df[df["Cell_Type"] == cell_type]
     tracklets = {}
     cell_map_gbr = {v: k for k, v in class_map_gbr.items()}
-    train_label = cell_map_gbr.get(cell_type, None)
 
     for trackmate_id in cell_type_df["TrackMate Track ID"].unique():
         trackmate_df = cell_type_df[cell_type_df["TrackMate Track ID"] == trackmate_id]
@@ -1008,7 +1007,7 @@ def filter_and_get_tracklets(
                 tracklets[trackmate_id] = {}
             tracklets[trackmate_id][track_id] = tracklet_blocks
 
-    for idx, tracklet_block, train_label in enumerate(tracklets):
+    for idx, tracklet_block in enumerate(tracklets):
 
         name = dataset_name + str(idx)
         TrackVolumeMaker(
