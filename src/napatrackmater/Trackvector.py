@@ -987,7 +987,6 @@ def filter_and_get_tracklets(
     total_categories = len(class_map_gbr)
     cell_type_df = df[df["Cell_Type"] == cell_type]
     tracklets = {}
-    cell_map_gbr = {v: k for k, v in class_map_gbr.items()}
 
     for trackmate_id in cell_type_df["TrackMate Track ID"].unique():
         trackmate_df = cell_type_df[cell_type_df["TrackMate Track ID"] == trackmate_id]
@@ -1131,7 +1130,9 @@ def TrackVolumeMaker(
     imagesizex = sizex
     imagesizey = sizey
     imagesizez = sizez
-
+    
+    if isinstance(raw_image, str):
+        raw_image = imread(raw_image)
     if normalize_image:
         raw_image = normalizeFloatZeroOne(raw_image.astype(dtype), 1, 99.8, dtype=dtype)
 
