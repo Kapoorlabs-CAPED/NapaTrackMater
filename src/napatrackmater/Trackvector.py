@@ -1170,16 +1170,16 @@ def TrackVolumeMaker(
 
     stitched_volume = np.stack(stitched_volume, axis=0)
 
-    label_vector = np.zeros(total_categories + 8)
+    label_vector = np.zeros(total_categories + 7)
     label_vector[train_label] = 1
-    label_vector[total_categories + 7] = 1
+    label_vector[total_categories + 6] = 1
+    label_vector[total_categories] = x / sizex
+    label_vector[total_categories + 1] = y / sizey
+    label_vector[total_categories + 2] = z / sizez
+    label_vector[total_categories + 3] = height / imagesizey
+    label_vector[total_categories + 4] = width / imagesizex
+    label_vector[total_categories + 5] = depth / imagesizez
 
-    # Define center of segmentation location in the patch for each axis
-    label_vector[total_categories] = height / imagesizey
-    label_vector[total_categories + 1] = width / imagesizex
-    label_vector[total_categories + 2] = depth / imagesizez
-
-    # Write the stitched volume to disk
     volume_name = f"track_{name}_stitched_volume.tif"
     volume_path = os.path.join(save_dir, volume_name)
     imwrite(volume_path, stitched_volume.astype("float32"))
@@ -2966,6 +2966,57 @@ def train_mitosis_neural_net(
         mitosis_inception.setup_mitosisnet_model()
     else:
         mitosis_inception.setup_densenet_model()
+
+    mitosis_inception.setup_logger()
+    mitosis_inception.setup_checkpoint()
+    mitosis_inception.setup_adam()
+    mitosis_inception.setup_lightning_model()
+    mitosis_inception.train()
+
+
+
+def train_gbr_vision_neural_net(
+    save_path,
+    h5_file,
+    input_shape,
+    box_vector = 7,
+    start_kernel=7,
+    mid_kernel=3,
+    startfilter=64,
+    stage_number=3,
+    depth={'depth_0': 12, 'depth_1': 24, 'depth_2': 16},
+    reduction=0.5,
+    num_classes=3,
+    batch_size=64,
+    num_workers=0,
+    learning_rate=0.001,
+    epochs=100,
+    accelerator="cuda",
+    devices=1,
+    loss_function = 'oneat',
+    experiment_name="mitosis",
+    scheduler_choice="plateau",
+):
+
+   
+    mitosis_inception = MitosisInception(
+            h5_file=h5_file,
+            num_classes=num_classes,
+            num_workers=num_workers,
+            epochs=epochs,
+            log_path=save_path,
+            batch_size=batch_size,
+            accelerator=accelerator,
+            devices=devices,
+            experiment_name=experiment_name,
+            scheduler_choice=scheduler_choice,
+            loss_function=loss_function,
+            learning_rate=learning_rate,
+        )
+
+    mitosis_inception.setup_gbr_h5_datasets()
+
+    mitosis_inception.setup_densenet_vision_model(input_shape, num_classes,box_vector,start_kernel,mid_kernel,startfilter,stage_number,depth,reduction)
 
     mitosis_inception.setup_logger()
     mitosis_inception.setup_checkpoint()
