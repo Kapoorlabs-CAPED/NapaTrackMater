@@ -1011,7 +1011,7 @@ def filter_and_get_tracklets(
       for track_id in tracklets[trackmate_id]:
         for tracklet_block in tracklets[trackmate_id][track_id]:
 
-            name = dataset_name + str(trackmate_id)
+            name = dataset_name + str(trackmate_id) + str(cell_type)
             TrackVolumeMaker(
                 tracklet_block,
                 raw_image,
@@ -1019,6 +1019,7 @@ def filter_and_get_tracklets(
                 crop_size,
                 total_categories,
                 train_label,
+            
                 name,
                 save_dir,
                 normalize_image=normalize_image,
@@ -1171,7 +1172,7 @@ def TrackVolumeMaker(
             crop_ymax = int(min(y + imagesizey // 2, raw_image.shape[2]))
             crop_zmin = int(max(z - imagesizez // 2, 0))
             crop_zmax = int(min(z + imagesizez // 2, raw_image.shape[1]))
-
+     
             cropped_patch = small_image[
                 crop_zmin:crop_zmax, crop_ymin:crop_ymax, crop_xmin:crop_xmax
             ]
@@ -1190,7 +1191,7 @@ def TrackVolumeMaker(
     label_vector[total_categories + 4] = width / imagesizex
     label_vector[total_categories + 5] = depth / imagesizez
 
-    volume_name = f"track_{name}_stitched_volume.tif"
+    volume_name = f"track_{name}__stitched_volume.tif"
     volume_path = os.path.join(save_dir, volume_name)
     imwrite(volume_path, stitched_volume.astype("float32"))
 
