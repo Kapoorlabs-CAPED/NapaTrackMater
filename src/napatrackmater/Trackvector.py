@@ -1165,12 +1165,12 @@ def TrackVolumeMaker(
                 width = 0.5 * imagesizex
             if depth >= imagesizez:
                 depth = 0.5 * imagesizez
-            crop_xmin = max(x - imagesizex // 2, 0)
-            crop_xmax = min(x + imagesizex // 2, raw_image.shape[3])
-            crop_ymin = max(y - imagesizey // 2, 0)
-            crop_ymax = min(y + imagesizey // 2, raw_image.shape[2])
-            crop_zmin = max(z - imagesizez // 2, 0)
-            crop_zmax = min(z + imagesizez // 2, raw_image.shape[1])
+            crop_xmin = int(max(x - imagesizex // 2, 0))
+            crop_xmax = int(min(x + imagesizex // 2, raw_image.shape[3]))
+            crop_ymin = int(max(y - imagesizey // 2, 0))
+            crop_ymax = int(min(y + imagesizey // 2, raw_image.shape[2]))
+            crop_zmin = int(max(z - imagesizez // 2, 0))
+            crop_zmax = int(min(z + imagesizez // 2, raw_image.shape[1]))
 
             cropped_patch = small_image[
                 crop_zmin:crop_zmax, crop_ymin:crop_ymax, crop_xmin:crop_xmax
