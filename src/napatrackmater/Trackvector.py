@@ -1146,7 +1146,7 @@ def TrackVolumeMaker(
         segmentation_image = imread(segmentation_image)    
     if normalize_image:
         raw_image = normalize_image_in_chunks(raw_image.astype(dtype))
-
+    print(f'Input raw image {raw_image.shape}')
     stitched_volume = []
     for (t, z, y, x) in tracklet_block:
         # Get the bounding box properties based on segmentation image
