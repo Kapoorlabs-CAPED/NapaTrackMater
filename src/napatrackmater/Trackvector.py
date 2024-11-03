@@ -1033,43 +1033,14 @@ def getHWD(
     defaultY,
     defaultZ,
     currentsegimage,
-    imagesizex,
-    imagesizey,
-    imagesizez,
+    
 ):
 
     properties = measure.regionprops(currentsegimage)
-    centroids = [prop.centroid for prop in properties]
-    labels = [prop.label for prop in properties]
-    tree = spatial.cKDTree(centroids)
+    SegLabel = currentsegimage[
+                int(defaultZ), int(defaultY), int(defaultX)]
 
-    DLocation = (defaultZ, defaultY, defaultX)
-    distance_cell_mask, nearest_location = tree.query(DLocation)
-    if distance_cell_mask < 0.5 * imagesizex:
-        z = int(centroids[nearest_location][0])
-        y = int(centroids[nearest_location][1])
-        x = int(centroids[nearest_location][2])
-        SegLabel = labels[nearest_location]
-        DLocation = (z, y, x)
-    else:
-        if (
-            int(DLocation[0]) < currentsegimage.shape[0]
-            and int(DLocation[1]) < currentsegimage.shape[1]
-            and int(DLocation[2]) < currentsegimage.shape[2]
-            and all(i >= 0 for i in DLocation)
-        ):
-            SegLabel = currentsegimage[
-                int(DLocation[0]), int(DLocation[1]), int(DLocation[2])
-            ]
-        else:
-            SegLabel = -1
-    if (
-        int(DLocation[0]) < currentsegimage.shape[0]
-        and int(DLocation[1]) < currentsegimage.shape[1]
-        and int(DLocation[2]) < currentsegimage.shape[2]
-    ):
-
-        for prop in properties:
+    for prop in properties:
             if SegLabel > 0 and prop.label == SegLabel:
                 minr, minc, mind, maxr, maxc, maxd = prop.bbox
                 center = (defaultZ, defaultY, defaultX)
@@ -1078,14 +1049,7 @@ def getHWD(
                 depth = abs(maxd - mind)
                 return height, width, depth, center, SegLabel
 
-            if SegLabel == 0:
-
-                center = (defaultZ, defaultY, defaultX)
-                height = 0.5 * imagesizex
-                width = 0.5 * imagesizey
-                depth = 0.5 * imagesizez
-                return height, width, depth, center, SegLabel
-
+            
 
 def normalizeFloatZeroOne(x, pmin=1, pmax=99.8, axis=None, eps=1e-20, dtype=np.uint8):
     """Percentile based Normalization
@@ -1144,7 +1108,7 @@ def TrackVolumeMaker(
         # Get the bounding box properties based on segmentation image
         current_seg_image = segmentation_image[int(t)].astype("uint16")
         image_props = getHWD(
-            x, y, z, current_seg_image, imagesizex, imagesizey, imagesizez
+            x, y, z, current_seg_image
         )
 
         if image_props is not None:
