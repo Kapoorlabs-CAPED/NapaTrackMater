@@ -988,6 +988,12 @@ def filter_and_get_tracklets(
     total_categories = len(class_map_gbr)
     cell_type_df = df[df["Cell_Type"] == cell_type]
     tracklets = {}
+    if isinstance(raw_image, str):
+        raw_image = imread(raw_image)
+    if isinstance(segmentation_image, str):
+        segmentation_image = imread(segmentation_image)    
+    if normalize_image:
+        raw_image = normalize_image_in_chunks(raw_image.astype(dtype))
 
     for trackmate_id in cell_type_df["TrackMate Track ID"].unique():
         trackmate_df = cell_type_df[cell_type_df["TrackMate Track ID"] == trackmate_id]
@@ -1019,11 +1025,9 @@ def filter_and_get_tracklets(
                 crop_size,
                 total_categories,
                 train_label,
-            
                 name,
                 save_dir,
-                normalize_image=normalize_image,
-                dtype=dtype,
+                
         )
 
     return tracklets
@@ -1133,20 +1137,14 @@ def TrackVolumeMaker(
     train_label,
     name,
     save_dir,
-    normalize_image=True,
-    dtype=np.float32,
+    
 ):
     sizex, sizey, sizez = crop_size
     imagesizex = sizex
     imagesizey = sizey
     imagesizez = sizez
     
-    if isinstance(raw_image, str):
-        raw_image = imread(raw_image)
-    if isinstance(segmentation_image, str):
-        segmentation_image = imread(segmentation_image)    
-    if normalize_image:
-        raw_image = normalize_image_in_chunks(raw_image.astype(dtype))
+    
     print(f'Input raw image {raw_image.shape}')
     stitched_volume = []
     for (t, z, y, x) in tracklet_block:
