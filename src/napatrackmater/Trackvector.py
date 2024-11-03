@@ -1186,7 +1186,7 @@ def TrackVolumeMaker(
                         slice(int(crop_xminus), int(crop_xplus)),
                     )
 
-                    # Define the movie region volume that was cut
+                   
                     crop_image = small_image[region]
                     if idx == len(tracklet_block) //2:
                         seglocationx = center[2] - crop_xminus
@@ -1194,32 +1194,32 @@ def TrackVolumeMaker(
                         seglocationz = center[0] - crop_zminus
 
                     stitched_volume.append(crop_image)
+    if len(stitched_volume) > 0:
+        stitched_volume = np.stack(stitched_volume, axis=0)
+        print(stitched_volume.shape, len(tracklet_block))
+        if stitched_volume.shape[0] == len(tracklet_block):
+            label_vector = np.zeros(total_categories + 7)
+            label_vector[train_label] = 1
+            label_vector[total_categories + 6] = 1
+            label_vector[total_categories] =  seglocationx / sizex
+            label_vector[total_categories + 1] =  seglocationy / sizey
+            label_vector[total_categories + 2] =  seglocationz / sizez
+            label_vector[total_categories + 3] = height / sizey
+            label_vector[total_categories + 4] = width / sizex
+            label_vector[total_categories + 5] = depth / sizez
 
-    stitched_volume = np.stack(stitched_volume, axis=0)
-    print(stitched_volume.shape, len(tracklet_block))
-    if stitched_volume.shape[0] == len(tracklet_block):
-        label_vector = np.zeros(total_categories + 7)
-        label_vector[train_label] = 1
-        label_vector[total_categories + 6] = 1
-        label_vector[total_categories] =  seglocationx / sizex
-        label_vector[total_categories + 1] =  seglocationy / sizey
-        label_vector[total_categories + 2] =  seglocationz / sizez
-        label_vector[total_categories + 3] = height / sizey
-        label_vector[total_categories + 4] = width / sizex
-        label_vector[total_categories + 5] = depth / sizez
+            volume_name = f"track_{name}_stitched_volume.tif"
+            volume_path = os.path.join(save_dir, volume_name)
+            imwrite(volume_path, stitched_volume.astype("float32"))
 
-        volume_name = f"track_{name}__stitched_volume.tif"
-        volume_path = os.path.join(save_dir, volume_name)
-        imwrite(volume_path, stitched_volume.astype("float32"))
+            # Save the label data as CSV
+            label_name = f"track_{name}_label.csv"
+            label_path = os.path.join(save_dir, label_name)
+            with open(label_path, "w") as f:
+                writer = csv.writer(f)
+                writer.writerow(label_vector)
 
-        # Save the label data as CSV
-        label_name = f"track_{name}_label.csv"
-        label_path = os.path.join(save_dir, label_name)
-        with open(label_path, "w") as f:
-            writer = csv.writer(f)
-            writer.writerow(label_vector)
-
-        print(f"Saved stitched volume to {volume_path} and label to {label_path}")
+            print(f"Saved stitched volume to {volume_path} and label to {label_path}")
 
 def create_h5(
     save_dir,
