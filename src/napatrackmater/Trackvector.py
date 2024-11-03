@@ -1140,13 +1140,11 @@ def TrackVolumeMaker(
     
 ):
     sizex, sizey, sizez = crop_size
-    imagesizex = sizex
-    imagesizey = sizey
-    imagesizez = sizez
+    
     
     
     stitched_volume = []
-    for (t, z, y, x) in tracklet_block:
+    for idx, (t, z, y, x) in enumerate(tracklet_block):
         # Get the bounding box properties based on segmentation image
         current_seg_image = segmentation_image[int(t)].astype("uint16")
         image_props = getHWD(
@@ -1156,50 +1154,73 @@ def TrackVolumeMaker(
         if image_props is not None:
             height, width, depth, center, seg_label = image_props
             small_image = raw_image[int(t)]
+            x = center[2]
+            y = center[1]
+            z = center[0]
+            if height >= sizey:
+                height = 0.5 * sizey
+            if width >= sizex:
+                width = 0.5 * sizex
+            if depth >= sizez:
+                depth = 0.5 * sizez
 
-            if height >= imagesizey:
-                height = 0.5 * imagesizey
-            if width >= imagesizex:
-                width = 0.5 * imagesizex
-            if depth >= imagesizez:
-                depth = 0.5 * imagesizez
-            crop_xmin = int(max(x - imagesizex // 2, 0))
-            crop_xmax = int(min(x + imagesizex // 2, raw_image.shape[3]))
-            crop_ymin = int(max(y - imagesizey // 2, 0))
-            crop_ymax = int(min(y + imagesizey // 2, raw_image.shape[2]))
-            crop_zmin = int(max(z - imagesizez // 2, 0))
-            crop_zmax = int(min(z + imagesizez // 2, raw_image.shape[1]))
-            
-            cropped_patch = small_image[
-                crop_zmin:crop_zmax, crop_ymin:crop_ymax, crop_xmin:crop_xmax
-            ]
+            if (
+                    x > sizex / 2
+                    and z > sizez / 2
+                    and y > sizey / 2
+                    and z + int(sizez / 2) < raw_image.shape[1]
+                    and y + int(sizey / 2) < raw_image.shape[2]
+                    and x + int(sizex / 2) < raw_image.shape[3]
+                    and t < raw_image.shape[0]
+                    
+                ):
+                    crop_xminus = x - int(sizex / 2)
+                    crop_xplus = x + int(sizex / 2)
+                    crop_yminus = y - int(sizey / 2)
+                    crop_yplus = y + int(sizey / 2)
+                    crop_zminus = z - int(sizez / 2)
+                    crop_zplus = z + int(sizez / 2)
+                    region = (
+                        slice(0, small_image.shape[0]),
+                        slice(int(crop_zminus), int(crop_zplus)),
+                        slice(int(crop_yminus), int(crop_yplus)),
+                        slice(int(crop_xminus), int(crop_xplus)),
+                    )
 
-            stitched_volume.append(cropped_patch)
+                    # Define the movie region volume that was cut
+                    crop_image = small_image[region]
+                    if idx == len(tracklet_block) //2:
+                        seglocationx = center[2] - crop_xminus
+                        seglocationy = center[1] - crop_yminus
+                        seglocationz = center[0] - crop_zminus
+
+                    stitched_volume.append(crop_image)
 
     stitched_volume = np.stack(stitched_volume, axis=0)
+    print(stitched_volume.shape, len(tracklet_block))
+    if stitched_volume.shape[0] == len(tracklet_block):
+        label_vector = np.zeros(total_categories + 7)
+        label_vector[train_label] = 1
+        label_vector[total_categories + 6] = 1
+        label_vector[total_categories] =  seglocationx / sizex
+        label_vector[total_categories + 1] =  seglocationy / sizey
+        label_vector[total_categories + 2] =  seglocationz / sizez
+        label_vector[total_categories + 3] = height / sizey
+        label_vector[total_categories + 4] = width / sizex
+        label_vector[total_categories + 5] = depth / sizez
 
-    label_vector = np.zeros(total_categories + 7)
-    label_vector[train_label] = 1
-    label_vector[total_categories + 6] = 1
-    label_vector[total_categories] = (raw_image.shape[3] - x )/ sizex
-    label_vector[total_categories + 1] = (raw_image.shape[2] - y) / sizey
-    label_vector[total_categories + 2] = (raw_image.shape[1] - z) / sizez
-    label_vector[total_categories + 3] = height / imagesizey
-    label_vector[total_categories + 4] = width / imagesizex
-    label_vector[total_categories + 5] = depth / imagesizez
+        volume_name = f"track_{name}__stitched_volume.tif"
+        volume_path = os.path.join(save_dir, volume_name)
+        imwrite(volume_path, stitched_volume.astype("float32"))
 
-    volume_name = f"track_{name}__stitched_volume.tif"
-    volume_path = os.path.join(save_dir, volume_name)
-    imwrite(volume_path, stitched_volume.astype("float32"))
+        # Save the label data as CSV
+        label_name = f"track_{name}_label.csv"
+        label_path = os.path.join(save_dir, label_name)
+        with open(label_path, "w") as f:
+            writer = csv.writer(f)
+            writer.writerow(label_vector)
 
-    # Save the label data as CSV
-    label_name = f"track_{name}_label.csv"
-    label_path = os.path.join(save_dir, label_name)
-    with open(label_path, "w") as f:
-        writer = csv.writer(f)
-        writer.writerow(label_vector)
-
-    print(f"Saved stitched volume to {volume_path} and label to {label_path}")
+        print(f"Saved stitched volume to {volume_path} and label to {label_path}")
 
 def create_h5(
     save_dir,
