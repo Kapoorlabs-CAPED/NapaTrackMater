@@ -1007,20 +1007,22 @@ def filter_and_get_tracklets(
                 tracklets[trackmate_id] = {}
             tracklets[trackmate_id][track_id] = tracklet_blocks
 
-    for idx, tracklet_block in enumerate(tracklets):
+    for trackmate_id in tracklets:
+      for track_id in tracklets[trackmate_id]:
+        for tracklet_block in tracklets[trackmate_id][track_id]:
 
-        name = dataset_name + str(idx)
-        TrackVolumeMaker(
-            tracklet_block,
-            raw_image,
-            segmentation_image,
-            crop_size,
-            total_categories,
-            train_label,
-            name,
-            save_dir,
-            normalize_image=normalize_image,
-            dtype=dtype,
+            name = dataset_name + str(trackmate_id)
+            TrackVolumeMaker(
+                tracklet_block,
+                raw_image,
+                segmentation_image,
+                crop_size,
+                total_categories,
+                train_label,
+                name,
+                save_dir,
+                normalize_image=normalize_image,
+                dtype=dtype,
         )
 
     return tracklets
