@@ -1181,9 +1181,9 @@ def TrackVolumeMaker(
     label_vector = np.zeros(total_categories + 7)
     label_vector[train_label] = 1
     label_vector[total_categories + 6] = 1
-    label_vector[total_categories] = (raw_image.shape[2] - x )/ sizex
-    label_vector[total_categories + 1] = (raw_image.shape[1] - y) / sizey
-    label_vector[total_categories + 2] = (raw_image.shape[0] - z) / sizez
+    label_vector[total_categories] = (raw_image.shape[3] - x )/ sizex
+    label_vector[total_categories + 1] = (raw_image.shape[2] - y) / sizey
+    label_vector[total_categories + 2] = (raw_image.shape[1] - z) / sizez
     label_vector[total_categories + 3] = height / imagesizey
     label_vector[total_categories + 4] = width / imagesizex
     label_vector[total_categories + 5] = depth / imagesizez
