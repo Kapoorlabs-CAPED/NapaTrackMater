@@ -1169,7 +1169,7 @@ def TrackVolumeMaker(
             crop_ymax = int(min(y + imagesizey // 2, raw_image.shape[2]))
             crop_zmin = int(max(z - imagesizez // 2, 0))
             crop_zmax = int(min(z + imagesizez // 2, raw_image.shape[1]))
-     
+            
             cropped_patch = small_image[
                 crop_zmin:crop_zmax, crop_ymin:crop_ymax, crop_xmin:crop_xmax
             ]
@@ -1181,9 +1181,9 @@ def TrackVolumeMaker(
     label_vector = np.zeros(total_categories + 7)
     label_vector[train_label] = 1
     label_vector[total_categories + 6] = 1
-    label_vector[total_categories] = x / sizex
-    label_vector[total_categories + 1] = y / sizey
-    label_vector[total_categories + 2] = z / sizez
+    label_vector[total_categories] = (raw_image.shape[2] - x )/ sizex
+    label_vector[total_categories + 1] = (raw_image.shape[1] - y) / sizey
+    label_vector[total_categories + 2] = (raw_image.shape[0] - z) / sizez
     label_vector[total_categories + 3] = height / imagesizey
     label_vector[total_categories + 4] = width / imagesizex
     label_vector[total_categories + 5] = depth / imagesizez
