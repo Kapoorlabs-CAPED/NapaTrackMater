@@ -1207,7 +1207,7 @@ def TrackVolumeMaker(
             imwrite(volume_path, stitched_volume.astype("float32"))
 
             # Save the label data as CSV
-            label_name = f"track_{name}_label.csv"
+            label_name = f"track_{name}_stitched_volume.csv"
             label_path = os.path.join(save_dir, label_name)
             with open(label_path, "w") as f:
                 writer = csv.writer(f)
