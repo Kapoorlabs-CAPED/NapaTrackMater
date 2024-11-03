@@ -1017,7 +1017,7 @@ def filter_and_get_tracklets(
       for track_id in tracklets[trackmate_id]:
         for idx, tracklet_block in enumerate(tracklets[trackmate_id][track_id]):
 
-            name = dataset_name + str(idx) + '_' + str(cell_type)
+            name = dataset_name + str(trackmate_id) + str(track_id) + str(idx) + '_' + str(cell_type)
             TrackVolumeMaker(
                 tracklet_block,
                 raw_image,
