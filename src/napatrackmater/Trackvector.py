@@ -1081,6 +1081,48 @@ def normalize_mi_ma(x, mi, ma, eps=1e-20, dtype=np.uint8):
     return x
 
 
+
+def normalize_image_in_chunks(
+         originalimage, chunk_steps = 50, percentile_min=1, percentile_max=99.8, dtype=np.float32
+    ):
+        """
+        Normalize a TZYX image in chunks along the T (time) dimension.
+
+        Args:
+            image (np.ndarray): The original TZYX image.
+            chunk_size (int): The number of timesteps to process at a time.
+            percentile_min (float): The lower percentile for normalization.
+            percentile_max (float): The upper percentile for normalization.
+            dtype (np.dtype): The data type to cast the normalized image.
+
+        Returns:
+            np.ndarray: The normalized image with the same shape as the input.
+        """
+
+        # Get the shape of the original image (T, Z, Y, X)
+        T, Z, Y, X = originalimage.shape
+
+        # Create an empty array to hold the normalized image
+        normalized_image = np.empty((T, Z, Y, X), dtype=dtype)
+
+        # Process the image in chunks of `chunk_size` along the T (time) axis
+        for t in range(0, T, chunk_steps):
+            # Determine the chunk slice, ensuring we don't go out of bounds
+            t_end = min(t + chunk_steps, T)
+
+            # Extract the chunk of timesteps to normalize
+            chunk = originalimage[t:t_end]
+
+            # Normalize this chunk
+            chunk_normalized = normalizeFloatZeroOne(
+                chunk, percentile_min, percentile_max, dtype=dtype
+            )
+
+            # Replace the corresponding portion of the original image with the normalized chunk
+            normalized_image[t:t_end] = chunk_normalized
+
+        return normalized_image
+
 def TrackVolumeMaker(
     tracklet_block,
     raw_image,
@@ -1101,7 +1143,7 @@ def TrackVolumeMaker(
     if isinstance(raw_image, str):
         raw_image = imread(raw_image)
     if normalize_image:
-        raw_image = normalizeFloatZeroOne(raw_image.astype(dtype), 1, 99.8, dtype=dtype)
+        raw_image = normalize_image_in_chunks(raw_image.astype(dtype))
 
     stitched_volume = []
     for (t, z, y, x) in tracklet_block:
