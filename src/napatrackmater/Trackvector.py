@@ -1015,9 +1015,9 @@ def filter_and_get_tracklets(
 
     for trackmate_id in tracklets:
       for track_id in tracklets[trackmate_id]:
-        for tracklet_block in tracklets[trackmate_id][track_id]:
+        for idx, tracklet_block in enumerate(tracklets[trackmate_id][track_id]):
 
-            name = dataset_name + str(trackmate_id) + str(cell_type)
+            name = dataset_name + str(idx) + '_' + str(cell_type)
             TrackVolumeMaker(
                 tracklet_block,
                 raw_image,
@@ -1145,7 +1145,6 @@ def TrackVolumeMaker(
     imagesizez = sizez
     
     
-    print(f'Input raw image {raw_image.shape}')
     stitched_volume = []
     for (t, z, y, x) in tracklet_block:
         # Get the bounding box properties based on segmentation image
