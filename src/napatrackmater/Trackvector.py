@@ -1142,6 +1142,8 @@ def TrackVolumeMaker(
     
     if isinstance(raw_image, str):
         raw_image = imread(raw_image)
+    if isinstance(segmentation_image, str):
+        segmentation_image = imread(segmentation_image)    
     if normalize_image:
         raw_image = normalize_image_in_chunks(raw_image.astype(dtype))
 
