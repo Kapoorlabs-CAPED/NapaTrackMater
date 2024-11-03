@@ -36,6 +36,7 @@ from .Trackvector import (
     save_cell_type_predictions,
     filter_and_get_tracklets,
     create_h5,
+    normalize_image_in_chunks
 )
 
 from .CloudAutoEncoder import CloudAutoEncoder
@@ -123,6 +124,7 @@ __all__ = (
     "transfer_fate_location",
     "filter_and_get_tracklets",
     "create_h5",
+    "normalize_image_in_chunks"
 )
 
 clear_models_and_aliases(CloudAutoEncoder)

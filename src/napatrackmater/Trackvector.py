@@ -926,8 +926,7 @@ def filter_and_get_tracklets(
     dataset_name,
     save_dir,
     train_label,
-    normalize_image=True,
-    dtype=np.float32,
+    
     class_map_gbr={0: "Basal", 1: "Radial", 2: "Goblet"},
 ):
 
@@ -988,12 +987,7 @@ def filter_and_get_tracklets(
     total_categories = len(class_map_gbr)
     cell_type_df = df[df["Cell_Type"] == cell_type]
     tracklets = {}
-    if isinstance(raw_image, str):
-        raw_image = imread(raw_image)
-    if isinstance(segmentation_image, str):
-        segmentation_image = imread(segmentation_image)    
-    if normalize_image:
-        raw_image = normalize_image_in_chunks(raw_image.astype(dtype))
+   
 
     for trackmate_id in cell_type_df["TrackMate Track ID"].unique():
         trackmate_df = cell_type_df[cell_type_df["TrackMate Track ID"] == trackmate_id]
