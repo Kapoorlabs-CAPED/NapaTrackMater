@@ -1181,7 +1181,6 @@ def TrackVolumeMaker(
                     crop_zminus = z - int(sizez / 2)
                     crop_zplus = z + int(sizez / 2)
                     region = (
-                        slice(0, small_image.shape[0]),
                         slice(int(crop_zminus), int(crop_zplus)),
                         slice(int(crop_yminus), int(crop_yplus)),
                         slice(int(crop_xminus), int(crop_xplus)),
