@@ -1204,16 +1204,18 @@ def TrackVolumeMaker(
 
             volume_name = f"track_{name}_stitched_volume.tif"
             volume_path = os.path.join(save_dir, volume_name)
-            imwrite(volume_path, stitched_volume.astype("float32"))
 
-            # Save the label data as CSV
-            label_name = f"track_{name}_stitched_volume.csv"
-            label_path = os.path.join(save_dir, label_name)
-            with open(label_path, "w") as f:
-                writer = csv.writer(f)
-                writer.writerow(label_vector)
+            if not os.path.exists(volume_path) and not os.path.exists(label_path):
 
-            print(f"Saved stitched volume to {volume_path} and label to {label_path}")
+                imwrite(volume_path, stitched_volume.astype("float32"))
+                # Save the label data as CSV
+                label_name = f"track_{name}_stitched_volume.csv"
+                label_path = os.path.join(save_dir, label_name)
+                with open(label_path, "w") as f:
+                    writer = csv.writer(f)
+                    writer.writerow(label_vector)
+
+                print(f"Saved stitched volume to {volume_path} and label to {label_path}")
 
 def create_h5(
     save_dir,
