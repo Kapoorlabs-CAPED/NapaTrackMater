@@ -1204,13 +1204,14 @@ def TrackVolumeMaker(
 
             volume_name = f"track_{name}_stitched_volume.tif"
             volume_path = os.path.join(save_dir, volume_name)
+            label_name = f"track_{name}_stitched_volume.csv"
+            label_path = os.path.join(save_dir, label_name)
 
             if not os.path.exists(volume_path) and not os.path.exists(label_path):
 
                 imwrite(volume_path, stitched_volume.astype("float32"))
-                # Save the label data as CSV
-                label_name = f"track_{name}_stitched_volume.csv"
-                label_path = os.path.join(save_dir, label_name)
+                
+               
                 with open(label_path, "w") as f:
                     writer = csv.writer(f)
                     writer.writerow(label_vector)
