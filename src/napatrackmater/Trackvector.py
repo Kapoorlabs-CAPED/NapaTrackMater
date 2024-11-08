@@ -3042,7 +3042,7 @@ def train_gbr_vision_neural_net(
     mitosis_inception.setup_gbr_h5_datasets()
 
     mitosis_inception.setup_densenet_vision_model(input_shape, num_classes,box_vector,start_kernel,mid_kernel,startfilter,stage_number,depth,reduction)
-
+    
     mitosis_inception.setup_logger()
     mitosis_inception.setup_checkpoint()
     mitosis_inception.setup_adam()
