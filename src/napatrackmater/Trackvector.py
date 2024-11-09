@@ -4558,8 +4558,7 @@ def vision_inception_model_prediction(
     model = model.to(device)  
     model.eval()
     sub_trackmate_dataframe = dataframe[dataframe["TrackMate Track ID"] == trackmate_id]
-    if isinstance(raw_image, str):
-        raw_image = imread(raw_image)
+    
     # Extract the dimensions of the crop
     imagesizet, sizez, sizex, sizey = crop_size
     tracklet_predictions = []
