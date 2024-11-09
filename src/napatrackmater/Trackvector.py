@@ -4610,7 +4610,7 @@ def vision_inception_model_prediction(
             stitched_volume = np.stack(stitched_volume, axis=0)
             if stitched_volume.shape[0] == imagesizet:
                 with torch.no_grad():
-                    prediction_vector = model(torch.tensor(stitched_volume, dtype=torch.float32))
+                    prediction_vector = model(torch.unsqueeze(torch.tensor(stitched_volume, dtype=torch.float32), dim=0))
                 
                 class_logits = prediction_vector[0, :len(class_map)]
                 
