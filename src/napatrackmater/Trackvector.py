@@ -4536,7 +4536,7 @@ def vision_inception_model_prediction(
     class_map,
     model,
     device="cpu",
-    crop_size=(256, 256, 8),
+    crop_size=(25, 8, 128, 128),
 ):
     """
     Generate predictions for an inception-style vision model based on patches around each point in a tracklet.
@@ -4555,41 +4555,80 @@ def vision_inception_model_prediction(
         predictions (list): Predicted class labels for each tracklet.
         weights (list): Prediction confidence or logits for each tracklet.
     """
-    # Filter dataframe for specific trackmate_id and initialize variables
+    model = model.to(device)  
+    model.eval()
     sub_trackmate_dataframe = dataframe[dataframe["TrackMate Track ID"] == trackmate_id]
 
     # Extract the dimensions of the crop
-    imagesizex, imagesizey, imagesizez = crop_size
-
+    imagesizet, sizez, sizex, sizey = crop_size
+    tracklet_predictions = []
+    tracklet_weights = []
+    
     for tracklet_id in sub_trackmate_dataframe["Track ID"].unique():
         tracklet_sub_dataframe = sub_trackmate_dataframe[
             sub_trackmate_dataframe["Track ID"] == tracklet_id
         ]
-        tracklet_block = tracklet_sub_dataframe[["t", "z", "y", "x"]].values
+        
+        sub_trackmate_dataframe = tracklet_sub_dataframe.sort_values(by="t")
+        total_duration = sub_trackmate_dataframe["Track Duration"].max()
+        tracklet_blocks = []
+        for i in range(0, len(sub_trackmate_dataframe), imagesizet):
+            tracklet_block = sub_trackmate_dataframe.iloc[i : i + imagesizet][["t", "z", "y", "x"]].values
+            if len(tracklet_block) == imagesizet:
+                tracklet_blocks.append(tracklet_block)         
 
-        # Generate patches from each point in the tracklet
-        stitched_volume = []
-        for (t, z, y, x) in tracklet_block:
-            small_image = raw_image[int(t)]
+        for tracklet_block in tracklet_blocks:
+            stitched_volume = []
+            for (t, z, y, x) in tracklet_block:
+                small_image = raw_image[int(t)]
 
-            # Define bounding box for crop with center at (z, y, x)
-            crop_xmin = max(x - imagesizex // 2, 0)
-            crop_xmax = min(x + imagesizex // 2, raw_image.shape[3])
-            crop_ymin = max(y - imagesizey // 2, 0)
-            crop_ymax = min(y + imagesizey // 2, raw_image.shape[2])
-            crop_zmin = max(z - imagesizez // 2, 0)
-            crop_zmax = min(z + imagesizez // 2, raw_image.shape[1])
+                if (
+                            x > sizex / 2
+                            and z > sizez / 2
+                            and y > sizey / 2
+                            and z + int(sizez / 2) < raw_image.shape[1]
+                            and y + int(sizey / 2) < raw_image.shape[2]
+                            and x + int(sizex / 2) < raw_image.shape[3]
+                            and t < raw_image.shape[0]
+                            
+                        ):
+                            crop_xminus = x - int(sizex / 2)
+                            crop_xplus = x + int(sizex / 2)
+                            crop_yminus = y - int(sizey / 2)
+                            crop_yplus = y + int(sizey / 2)
+                            crop_zminus = z - int(sizez / 2)
+                            crop_zplus = z + int(sizez / 2)
+                            region = (
+                                slice(int(crop_zminus), int(crop_zplus)),
+                                slice(int(crop_yminus), int(crop_yplus)),
+                                slice(int(crop_xminus), int(crop_xplus)),
+                            )
 
-            # Extract and store the cropped patch
-            cropped_patch = small_image[
-                crop_zmin:crop_zmax, crop_ymin:crop_ymax, crop_xmin:crop_xmax
-            ]
-            stitched_volume.append(cropped_patch)
-
-        # Stack all patches along the time dimension
-        stitched_volume = np.stack(stitched_volume, axis=0)
-        prediction_vector = model.predict(stitched_volume)
-        class_prediction = prediction_vector[0]
+                    
+                            crop_image = small_image[region]
+                            stitched_volume.append(crop_image)
+            stitched_volume = np.stack(stitched_volume, axis=0)
+            if stitched_volume.shape[0] == imagesizet:
+                with torch.no_grad():
+                    prediction_vector = model(stitched_volume)
+                
+                class_logits = prediction_vector[0, :len(class_map)]
+                
+                class_index = torch.argmax(class_logits).item()
+                most_frequent_prediction = get_most_frequent_prediction(class_index)
+                if most_frequent_prediction is not None:
+                    most_predicted_class = class_map[int(most_frequent_prediction)]
+                    tracklet_predictions.append(most_predicted_class)
+                    tracklet_weights.append(total_duration)
+              
+    if tracklet_predictions:
+        final_weighted_prediction = weighted_prediction(
+            tracklet_predictions, tracklet_weights
+        )
+        return final_weighted_prediction            
+                
+    else:
+        return "UnClassified"            
 
 
 def inception_model_prediction(
