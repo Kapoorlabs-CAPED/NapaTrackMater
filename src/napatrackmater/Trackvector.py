@@ -4614,8 +4614,7 @@ def vision_inception_model_prediction(
                 
                 class_logits = prediction_vector[0, :len(class_map)]
                 
-                class_index = torch.argmax(class_logits).item()
-                most_frequent_prediction = get_most_frequent_prediction(class_index)
+                most_frequent_prediction = get_most_frequent_prediction(class_logits)
                 if most_frequent_prediction is not None:
                     most_predicted_class = class_map[int(most_frequent_prediction)]
                     tracklet_predictions.append(most_predicted_class)
