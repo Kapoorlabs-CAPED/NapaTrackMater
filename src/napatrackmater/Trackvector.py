@@ -3019,6 +3019,7 @@ def train_gbr_vision_neural_net(
     loss_function = 'oneat',
     experiment_name="mitosis",
     scheduler_choice="plateau",
+    oneat_accuracy = True
 ):
 
    
@@ -3044,7 +3045,7 @@ def train_gbr_vision_neural_net(
     mitosis_inception.setup_logger()
     mitosis_inception.setup_checkpoint()
     mitosis_inception.setup_adam()
-    mitosis_inception.setup_lightning_model()
+    mitosis_inception.setup_lightning_model(oneat_accuracy=oneat_accuracy)
     mitosis_inception.train()
 
 
