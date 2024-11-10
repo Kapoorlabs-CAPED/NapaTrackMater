@@ -3008,6 +3008,7 @@ def train_gbr_vision_neural_net(
     start_kernel=7,
     mid_kernel=3,
     startfilter=64,
+    growth_rate = 32, 
     depth={'depth_0': 12, 'depth_1': 24, 'depth_2': 16},
     num_classes=3,
     batch_size=64,
@@ -3041,7 +3042,7 @@ def train_gbr_vision_neural_net(
 
     mitosis_inception.setup_gbr_vision_h5_datasets(crop_size = crop_size)
 
-    mitosis_inception.setup_densenet_vision_model(input_shape, num_classes,box_vector,start_kernel,mid_kernel,startfilter,depth)
+    mitosis_inception.setup_densenet_vision_model(input_shape, num_classes,box_vector,start_kernel,mid_kernel,startfilter,depth, growth_rate)
     
     mitosis_inception.setup_logger()
     mitosis_inception.setup_checkpoint()
