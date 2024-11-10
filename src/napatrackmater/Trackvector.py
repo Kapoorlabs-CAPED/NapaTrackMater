@@ -3021,7 +3021,8 @@ def train_gbr_vision_neural_net(
     experiment_name="mitosis",
     scheduler_choice="plateau",
     oneat_accuracy = True,
-    crop_size = None
+    crop_size = None,
+    pool_first = True
 ):
 
    
@@ -3042,7 +3043,7 @@ def train_gbr_vision_neural_net(
 
     mitosis_inception.setup_gbr_vision_h5_datasets(crop_size = crop_size)
 
-    mitosis_inception.setup_densenet_vision_model(input_shape, num_classes,box_vector,start_kernel,mid_kernel,startfilter,depth, growth_rate)
+    mitosis_inception.setup_densenet_vision_model(input_shape, num_classes,box_vector,start_kernel,mid_kernel,startfilter,depth, growth_rate, pool_first = pool_first)
     
     mitosis_inception.setup_logger()
     mitosis_inception.setup_checkpoint()
