@@ -2835,7 +2835,6 @@ def compute_covariance_matrix(track_arrays):
 
 def train_gbr_neural_net(
     save_path,
-    npz_file=None,
     h5_file=None,
     num_classes=2,
     batch_size=64,
@@ -2858,33 +2857,7 @@ def train_gbr_neural_net(
 
     if isinstance(block_config, int):
         block_config = (block_config,)
-    if npz_file is not None:
-        mitosis_inception = MitosisInception(
-            npz_file=npz_file,
-            num_classes=num_classes,
-            growth_rate=growth_rate,
-            block_config=block_config,
-            num_init_features=num_init_features,
-            bottleneck_size=bottleneck_size,
-            kernel_size=kernel_size,
-            num_workers=num_workers,
-            epochs=epochs,
-            log_path=save_path,
-            batch_size=batch_size,
-            accelerator=accelerator,
-            devices=devices,
-            experiment_name=experiment_name,
-            scheduler_choice=scheduler_choice,
-            learning_rate=learning_rate,
-            n_pos=n_pos,
-            attention_dim=attention_dim,
-        )
-
-        mitosis_inception.setup_gbr_datasets()
-
-    if h5_file is not None:
-
-        mitosis_inception = MitosisInception(
+    mitosis_inception = MitosisInception(
             h5_file=h5_file,
             num_classes=num_classes,
             growth_rate=growth_rate,
@@ -2905,7 +2878,7 @@ def train_gbr_neural_net(
             attention_dim=attention_dim,
         )
 
-        mitosis_inception.setup_gbr_h5_datasets()
+    mitosis_inception.setup_gbr_h5_datasets()
 
     if model_type == "simple":
         mitosis_inception.setup_mitosisnet_model()
@@ -2923,7 +2896,6 @@ def train_gbr_neural_net(
 
 def train_mitosis_neural_net(
     save_path,
-    npz_file=None,
     h5_file=None,
     num_classes=2,
     batch_size=64,
@@ -2940,52 +2912,35 @@ def train_mitosis_neural_net(
     kernel_size: int = 3,
     experiment_name="mitosis",
     scheduler_choice="plateau",
+    attention_dim: int = 64,
+    n_pos: list = (8,),
 ):
 
     if isinstance(block_config, int):
         block_config = (block_config,)
-    if npz_file is not None:
-        mitosis_inception = MitosisInception(
-            npz_file=npz_file,
-            num_classes=num_classes,
-            growth_rate=growth_rate,
-            block_config=block_config,
-            num_init_features=num_init_features,
-            bottleneck_size=bottleneck_size,
-            kernel_size=kernel_size,
-            num_workers=num_workers,
-            epochs=epochs,
-            log_path=save_path,
-            batch_size=batch_size,
-            accelerator=accelerator,
-            devices=devices,
-            experiment_name=experiment_name,
-            scheduler_choice=scheduler_choice,
-            learning_rate=learning_rate,
-        )
+   
+    mitosis_inception = MitosisInception(
+        h5_file=h5_file,
+        num_classes=num_classes,
+        growth_rate=growth_rate,
+        block_config=block_config,
+        num_init_features=num_init_features,
+        bottleneck_size=bottleneck_size,
+        kernel_size=kernel_size,
+        num_workers=num_workers,
+        epochs=epochs,
+        log_path=save_path,
+        batch_size=batch_size,
+        accelerator=accelerator,
+        devices=devices,
+        experiment_name=experiment_name,
+        scheduler_choice=scheduler_choice,
+        learning_rate=learning_rate,
+        n_pos=n_pos,
+        attention_dim=attention_dim,
+    )
 
-        mitosis_inception.setup_datasets()
-    if h5_file is not None:
-        mitosis_inception = MitosisInception(
-            h5_file=h5_file,
-            num_classes=num_classes,
-            growth_rate=growth_rate,
-            block_config=block_config,
-            num_init_features=num_init_features,
-            bottleneck_size=bottleneck_size,
-            kernel_size=kernel_size,
-            num_workers=num_workers,
-            epochs=epochs,
-            log_path=save_path,
-            batch_size=batch_size,
-            accelerator=accelerator,
-            devices=devices,
-            experiment_name=experiment_name,
-            scheduler_choice=scheduler_choice,
-            learning_rate=learning_rate,
-        )
-
-        mitosis_inception.setup_h5_datasets()
+    mitosis_inception.setup_h5_datasets()
 
     if model_type == "simple":
         mitosis_inception.setup_mitosisnet_model()
