@@ -4595,7 +4595,7 @@ def inception_dual_model_prediction(
         tracklet_length,
         class_map,
         dual_morphodynamic_model=None,
-        single_morpho_dynamic_model = None,
+        single_morphodynamic_model = None,
         device="cpu",
         
 ):
@@ -4646,7 +4646,7 @@ def inception_dual_model_prediction(
                 morpho_predictions = []
                 for sub_array in sub_arrays_morpho:
                         predicted_class = make_prediction(
-                            sub_array, single_morpho_dynamic_model, device
+                            sub_array, single_morphodynamic_model, device
                         )
                         morpho_predictions.append(predicted_class) 
 
