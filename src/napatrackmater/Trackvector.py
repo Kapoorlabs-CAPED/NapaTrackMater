@@ -4458,7 +4458,6 @@ def make_prediction(input_data, model, device):
         input_tensor = (
             torch.tensor(input_data).unsqueeze(0).permute(0, 2, 1).float()
         ).to(device)
-        print(input_tensor.shape)
         model_predictions = model(input_tensor)
         probabilities = torch.softmax(model_predictions[0], dim=0)
         _, predicted_class = torch.max(probabilities, 0)
@@ -4631,7 +4630,6 @@ def inception_dual_model_prediction(
                 )
                 dual_morpho_predictions = []
                 for sub_array in sub_combined_arrays_morpho:
-                        print(sub_array.shape)
                         predicted_class = make_prediction(
                             sub_array, dual_morphodynamic_model, device
                         )
