@@ -4625,6 +4625,7 @@ def inception_dual_model_prediction(
                 
                  
                 combined_morpho = np.concatenate((sub_dataframe_morpho, sub_second_dataframe_shape), axis=-1)
+                print(sub_dataframe_morpho.shape, sub_second_dataframe_shape.shape, combined_morpho.shape)
                 sub_combined_arrays_morpho = sample_subarrays(
                 combined_morpho, tracklet_length, total_duration
                 )
