@@ -2945,7 +2945,7 @@ def train_mitosis_neural_net(
     if model_type == "simple":
         mitosis_inception.setup_mitosisnet_model()
     else:
-        mitosis_inception.setup_densenet_model()
+        mitosis_inception.setup_hybrid_attention_model()
 
     mitosis_inception.setup_logger()
     mitosis_inception.setup_checkpoint()
