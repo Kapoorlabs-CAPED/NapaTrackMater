@@ -2941,12 +2941,14 @@ def train_mitosis_neural_net(
     )
 
     mitosis_inception.setup_h5_datasets()
-
     if model_type == "simple":
         mitosis_inception.setup_mitosisnet_model()
-    else:
+    if model_type == "densenet":
+        mitosis_inception.setup_densenet_model()
+    if model_type == "attention":
         mitosis_inception.setup_hybrid_attention_model()
 
+    
     mitosis_inception.setup_logger()
     mitosis_inception.setup_checkpoint()
     mitosis_inception.setup_adam()
