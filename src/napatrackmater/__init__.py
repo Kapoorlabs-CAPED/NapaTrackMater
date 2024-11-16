@@ -37,7 +37,8 @@ from .Trackvector import (
     filter_and_get_tracklets,
     create_h5,
     normalize_image_in_chunks,
-    vision_inception_model_prediction
+    vision_inception_model_prediction,
+    inception_dual_model_prediction
 )
 
 from .CloudAutoEncoder import CloudAutoEncoder
@@ -126,7 +127,8 @@ __all__ = (
     "filter_and_get_tracklets",
     "create_h5",
     "normalize_image_in_chunks",
-    "vision_inception_model_prediction"
+    "vision_inception_model_prediction",
+    "inception_dual_model_prediction"
 )
 
 clear_models_and_aliases(CloudAutoEncoder)

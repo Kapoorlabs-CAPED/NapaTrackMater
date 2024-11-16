@@ -4588,6 +4588,88 @@ def vision_inception_model_prediction(
         return "UnClassified"            
 
 
+def inception_dual_model_prediction( 
+        dataframe,
+        second_dataframe,
+        trackmate_id,
+        tracklet_length,
+        class_map,
+        dual_morphodynamic_model=None,
+        single_morpho_dynamic_model = None,
+        device="cpu",
+        
+):
+    sub_trackmate_dataframe = dataframe[dataframe["TrackMate Track ID"] == trackmate_id]
+    sub_secondtrackmate_dataframe = second_dataframe[second_dataframe["TrackMate Track ID"] == trackmate_id]
+    
+    tracklet_predictions = []
+    tracklet_weights = []
+
+    
+    for tracklet_id in sub_trackmate_dataframe["Track ID"].unique():
+        tracklet_sub_dataframe = sub_trackmate_dataframe[
+            sub_trackmate_dataframe["Track ID"] == tracklet_id
+        ]
+        second_tracklet_sub_dataframe = sub_secondtrackmate_dataframe[
+            sub_secondtrackmate_dataframe["Track ID"] == tracklet_id
+        ]
+
+
+        sub_dataframe_dynamic = tracklet_sub_dataframe[DYNAMIC_FEATURES].values
+        sub_dataframe_shape = tracklet_sub_dataframe[SHAPE_FEATURES].values
+        sub_dataframe_morpho = tracklet_sub_dataframe[SHAPE_DYNAMIC_FEATURES].values
+
+        sub_second_dataframe_shape = second_tracklet_sub_dataframe[SHAPE_FEATURES].values
+        total_duration = tracklet_sub_dataframe["Track Duration"].max() 
+        if sub_dataframe_shape.shape[0] == sub_second_dataframe_shape.shape[0] and dual_morphodynamic_model is not None:
+                
+                 
+                combined_morpho = np.concatenate((sub_dataframe_morpho, sub_second_dataframe_shape), axis=-1)
+                sub_combined_arrays_morpho = sample_subarrays(
+                combined_morpho, tracklet_length, total_duration
+                )
+                dual_morpho_predictions = []
+                for sub_array in sub_combined_arrays_morpho:
+                        predicted_class = make_prediction(
+                            sub_array, dual_morphodynamic_model, device
+                        )
+                        dual_morpho_predictions.append(predicted_class) 
+
+                most_frequent_prediction = get_most_frequent_prediction(dual_morpho_predictions)
+
+
+        else:
+
+                sub_arrays_morpho = sample_subarrays(
+                sub_dataframe_morpho, tracklet_length, total_duration
+                )
+                morpho_predictions = []
+                for sub_array in sub_arrays_morpho:
+                        predicted_class = make_prediction(
+                            sub_array, single_morpho_dynamic_model, device
+                        )
+                        morpho_predictions.append(predicted_class) 
+
+                most_frequent_prediction = get_most_frequent_prediction(morpho_predictions)
+
+
+        if most_frequent_prediction is not None:
+            most_predicted_class = class_map[int(most_frequent_prediction)]
+            tracklet_predictions.append(most_predicted_class)
+            tracklet_weights.append(total_duration)
+
+
+
+    if tracklet_predictions:
+        final_weighted_prediction = weighted_prediction(
+            tracklet_predictions, tracklet_weights
+        )
+        return final_weighted_prediction
+    else:
+        return "UnClassified"
+
+
+
 def inception_model_prediction(
     dataframe,
     trackmate_id,
