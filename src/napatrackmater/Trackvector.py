@@ -2878,6 +2878,7 @@ def train_gbr_neural_net(
             attention_dim=attention_dim,
         )
 
+    mitosis_inception.setup_timeseries_transforms()
     mitosis_inception.setup_gbr_h5_datasets()
 
     if model_type == "simple":
@@ -2939,7 +2940,8 @@ def train_mitosis_neural_net(
         n_pos=n_pos,
         attention_dim=attention_dim,
     )
-
+    
+    mitosis_inception.setup_timeseries_transforms()
     mitosis_inception.setup_h5_datasets()
     if model_type == "simple":
         mitosis_inception.setup_mitosisnet_model()
