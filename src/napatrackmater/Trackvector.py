@@ -2853,6 +2853,7 @@ def train_gbr_neural_net(
     scheduler_choice="plateau",
     attention_dim: int = 64,
     n_pos: list = (8,),
+    mean = 0.0, std=0.02, min_scale= 0.95,max_shift=1.05,  max_scale=1.05, max_mask_ratio=0.1
 ):
 
     if isinstance(block_config, int):
@@ -2878,7 +2879,7 @@ def train_gbr_neural_net(
             attention_dim=attention_dim,
         )
 
-    mitosis_inception.setup_timeseries_transforms()
+    mitosis_inception.setup_timeseries_transforms(mean = mean, std=std, min_scale= min_scale,max_shift=max_shift,  max_scale=max_scale, max_mask_ratio=max_mask_ratio)
     mitosis_inception.setup_gbr_h5_datasets()
 
     if model_type == "simple":
