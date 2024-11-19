@@ -27,7 +27,6 @@ import seaborn as sns
 from tqdm import tqdm
 import imageio
 from skimage import measure
-from scipy import spatial
 from matplotlib import cm
 from IPython.display import clear_output
 import torch
@@ -926,7 +925,6 @@ def filter_and_get_tracklets(
     dataset_name,
     save_dir,
     train_label,
-    
     class_map_gbr={0: "Basal", 1: "Radial", 2: "Goblet"},
 ):
 
@@ -987,7 +985,6 @@ def filter_and_get_tracklets(
     total_categories = len(class_map_gbr)
     cell_type_df = df[df["Cell_Type"] == cell_type]
     tracklets = {}
-   
 
     for trackmate_id in cell_type_df["TrackMate Track ID"].unique():
         trackmate_df = cell_type_df[cell_type_df["TrackMate Track ID"] == trackmate_id]
@@ -1008,21 +1005,27 @@ def filter_and_get_tracklets(
             tracklets[trackmate_id][track_id] = tracklet_blocks
 
     for trackmate_id in tracklets:
-      for track_id in tracklets[trackmate_id]:
-        for idx, tracklet_block in enumerate(tracklets[trackmate_id][track_id]):
+        for track_id in tracklets[trackmate_id]:
+            for idx, tracklet_block in enumerate(tracklets[trackmate_id][track_id]):
 
-            name = dataset_name + str(trackmate_id) + str(int(track_id)) + str(idx) + '_' + str(cell_type)
-            TrackVolumeMaker(
-                tracklet_block,
-                raw_image,
-                segmentation_image,
-                crop_size,
-                total_categories,
-                train_label,
-                name,
-                save_dir,
-                
-        )
+                name = (
+                    dataset_name
+                    + str(trackmate_id)
+                    + str(int(track_id))
+                    + str(idx)
+                    + "_"
+                    + str(cell_type)
+                )
+                TrackVolumeMaker(
+                    tracklet_block,
+                    raw_image,
+                    segmentation_image,
+                    crop_size,
+                    total_categories,
+                    train_label,
+                    name,
+                    save_dir,
+                )
 
     return tracklets
 
@@ -1032,23 +1035,20 @@ def getHWD(
     defaultY,
     defaultZ,
     currentsegimage,
-    
 ):
 
     properties = measure.regionprops(currentsegimage)
-    SegLabel = currentsegimage[
-                int(defaultZ), int(defaultY), int(defaultX)]
+    SegLabel = currentsegimage[int(defaultZ), int(defaultY), int(defaultX)]
 
     for prop in properties:
-            if SegLabel > 0 and prop.label == SegLabel:
-                minr, minc, mind, maxr, maxc, maxd = prop.bbox
-                center = (defaultZ, defaultY, defaultX)
-                height = abs(maxc - minc)
-                width = abs(maxr - minr)
-                depth = abs(maxd - mind)
-                return height, width, depth, center, SegLabel
+        if SegLabel > 0 and prop.label == SegLabel:
+            minr, minc, mind, maxr, maxc, maxd = prop.bbox
+            center = (defaultZ, defaultY, defaultX)
+            height = abs(maxc - minc)
+            width = abs(maxr - minr)
+            depth = abs(maxd - mind)
+            return height, width, depth, center, SegLabel
 
-            
 
 def normalizeFloatZeroOne(x, pmin=1, pmax=99.8, axis=None, eps=1e-20, dtype=np.uint8):
     """Percentile based Normalization
@@ -1080,47 +1080,51 @@ def normalize_mi_ma(x, mi, ma, eps=1e-20, dtype=np.uint8):
     return x
 
 
-
 def normalize_image_in_chunks(
-         originalimage, chunk_steps = 50, percentile_min=1, percentile_max=99.8, dtype=np.float32
-    ):
-        """
-        Normalize a TZYX image in chunks along the T (time) dimension.
+    originalimage,
+    chunk_steps=50,
+    percentile_min=1,
+    percentile_max=99.8,
+    dtype=np.float32,
+):
+    """
+    Normalize a TZYX image in chunks along the T (time) dimension.
 
-        Args:
-            image (np.ndarray): The original TZYX image.
-            chunk_size (int): The number of timesteps to process at a time.
-            percentile_min (float): The lower percentile for normalization.
-            percentile_max (float): The upper percentile for normalization.
-            dtype (np.dtype): The data type to cast the normalized image.
+    Args:
+        image (np.ndarray): The original TZYX image.
+        chunk_size (int): The number of timesteps to process at a time.
+        percentile_min (float): The lower percentile for normalization.
+        percentile_max (float): The upper percentile for normalization.
+        dtype (np.dtype): The data type to cast the normalized image.
 
-        Returns:
-            np.ndarray: The normalized image with the same shape as the input.
-        """
+    Returns:
+        np.ndarray: The normalized image with the same shape as the input.
+    """
 
-        # Get the shape of the original image (T, Z, Y, X)
-        T, Z, Y, X = originalimage.shape
+    # Get the shape of the original image (T, Z, Y, X)
+    T, Z, Y, X = originalimage.shape
 
-        # Create an empty array to hold the normalized image
-        normalized_image = np.empty((T, Z, Y, X), dtype=dtype)
+    # Create an empty array to hold the normalized image
+    normalized_image = np.empty((T, Z, Y, X), dtype=dtype)
 
-        # Process the image in chunks of `chunk_size` along the T (time) axis
-        for t in range(0, T, chunk_steps):
-            # Determine the chunk slice, ensuring we don't go out of bounds
-            t_end = min(t + chunk_steps, T)
+    # Process the image in chunks of `chunk_size` along the T (time) axis
+    for t in range(0, T, chunk_steps):
+        # Determine the chunk slice, ensuring we don't go out of bounds
+        t_end = min(t + chunk_steps, T)
 
-            # Extract the chunk of timesteps to normalize
-            chunk = originalimage[t:t_end]
+        # Extract the chunk of timesteps to normalize
+        chunk = originalimage[t:t_end]
 
-            # Normalize this chunk
-            chunk_normalized = normalizeFloatZeroOne(
-                chunk, percentile_min, percentile_max, dtype=dtype
-            )
+        # Normalize this chunk
+        chunk_normalized = normalizeFloatZeroOne(
+            chunk, percentile_min, percentile_max, dtype=dtype
+        )
 
-            # Replace the corresponding portion of the original image with the normalized chunk
-            normalized_image[t:t_end] = chunk_normalized
+        # Replace the corresponding portion of the original image with the normalized chunk
+        normalized_image[t:t_end] = chunk_normalized
 
-        return normalized_image
+    return normalized_image
+
 
 def TrackVolumeMaker(
     tracklet_block,
@@ -1131,19 +1135,14 @@ def TrackVolumeMaker(
     train_label,
     name,
     save_dir,
-    
 ):
     sizex, sizey, sizez = crop_size
-    
-    
-    
+
     stitched_volume = []
     for idx, (t, z, y, x) in enumerate(tracklet_block):
         # Get the bounding box properties based on segmentation image
         current_seg_image = segmentation_image[int(t)].astype("uint16")
-        image_props = getHWD(
-            x, y, z, current_seg_image
-        )
+        image_props = getHWD(x, y, z, current_seg_image)
 
         if image_props is not None:
             height, width, depth, center, seg_label = image_props
@@ -1159,35 +1158,33 @@ def TrackVolumeMaker(
                 depth = 0.5 * sizez
 
             if (
-                    x > sizex / 2
-                    and z > sizez / 2
-                    and y > sizey / 2
-                    and z + int(sizez / 2) < raw_image.shape[1]
-                    and y + int(sizey / 2) < raw_image.shape[2]
-                    and x + int(sizex / 2) < raw_image.shape[3]
-                    and t < raw_image.shape[0]
-                    
-                ):
-                    crop_xminus = x - int(sizex / 2)
-                    crop_xplus = x + int(sizex / 2)
-                    crop_yminus = y - int(sizey / 2)
-                    crop_yplus = y + int(sizey / 2)
-                    crop_zminus = z - int(sizez / 2)
-                    crop_zplus = z + int(sizez / 2)
-                    region = (
-                        slice(int(crop_zminus), int(crop_zplus)),
-                        slice(int(crop_yminus), int(crop_yplus)),
-                        slice(int(crop_xminus), int(crop_xplus)),
-                    )
+                x > sizex / 2
+                and z > sizez / 2
+                and y > sizey / 2
+                and z + int(sizez / 2) < raw_image.shape[1]
+                and y + int(sizey / 2) < raw_image.shape[2]
+                and x + int(sizex / 2) < raw_image.shape[3]
+                and t < raw_image.shape[0]
+            ):
+                crop_xminus = x - int(sizex / 2)
+                crop_xplus = x + int(sizex / 2)
+                crop_yminus = y - int(sizey / 2)
+                crop_yplus = y + int(sizey / 2)
+                crop_zminus = z - int(sizez / 2)
+                crop_zplus = z + int(sizez / 2)
+                region = (
+                    slice(int(crop_zminus), int(crop_zplus)),
+                    slice(int(crop_yminus), int(crop_yplus)),
+                    slice(int(crop_xminus), int(crop_xplus)),
+                )
 
-                   
-                    crop_image = small_image[region]
-                    if idx == len(tracklet_block) //2:
-                        seglocationx = center[2] - crop_xminus
-                        seglocationy = center[1] - crop_yminus
-                        seglocationz = center[0] - crop_zminus
+                crop_image = small_image[region]
+                if idx == len(tracklet_block) // 2:
+                    seglocationx = center[2] - crop_xminus
+                    seglocationy = center[1] - crop_yminus
+                    seglocationz = center[0] - crop_zminus
 
-                    stitched_volume.append(crop_image)
+                stitched_volume.append(crop_image)
     if len(stitched_volume) > 0:
         stitched_volume = np.stack(stitched_volume, axis=0)
         print(stitched_volume.shape, len(tracklet_block))
@@ -1195,9 +1192,9 @@ def TrackVolumeMaker(
             label_vector = np.zeros(total_categories + 7)
             label_vector[train_label] = 1
             label_vector[total_categories + 6] = 1
-            label_vector[total_categories] =  seglocationx / sizex
-            label_vector[total_categories + 1] =  seglocationy / sizey
-            label_vector[total_categories + 2] =  seglocationz / sizez
+            label_vector[total_categories] = seglocationx / sizex
+            label_vector[total_categories + 1] = seglocationy / sizey
+            label_vector[total_categories + 2] = seglocationz / sizez
             label_vector[total_categories + 3] = height / sizey
             label_vector[total_categories + 4] = width / sizex
             label_vector[total_categories + 5] = depth / sizez
@@ -1210,13 +1207,15 @@ def TrackVolumeMaker(
             if not os.path.exists(volume_path) and not os.path.exists(label_path):
 
                 imwrite(volume_path, stitched_volume.astype("float32"))
-                
-               
+
                 with open(label_path, "w") as f:
                     writer = csv.writer(f)
                     writer.writerow(label_vector)
 
-                print(f"Saved stitched volume to {volume_path} and label to {label_path}")
+                print(
+                    f"Saved stitched volume to {volume_path} and label to {label_path}"
+                )
+
 
 def create_h5(
     save_dir,
@@ -1242,10 +1241,12 @@ def create_h5(
     for tif_file in tif_files:
         image_path = os.path.join(save_dir, tif_file)
         image = imread(image_path)
-        
+
         # Ensure the image has T, Z, Y, X format, where T is the leading dimension
         if image.ndim != 4:
-            raise ValueError(f"Image {tif_file} does not have four dimensions, expected T, Z, Y, X.")
+            raise ValueError(
+                f"Image {tif_file} does not have four dimensions, expected T, Z, Y, X."
+            )
 
         data.append(image)
 
@@ -2853,33 +2854,45 @@ def train_gbr_neural_net(
     scheduler_choice="plateau",
     attention_dim: int = 64,
     n_pos: list = (8,),
-    mean = 0.0, std=0.02, min_scale= 0.95,max_shift=1.05,  max_scale=1.05, max_mask_ratio=0.1
+    mean=0.0,
+    std=0.02,
+    min_scale=0.95,
+    max_shift=1.05,
+    max_scale=1.05,
+    max_mask_ratio=0.1,
 ):
 
     if isinstance(block_config, int):
         block_config = (block_config,)
     mitosis_inception = MitosisInception(
-            h5_file=h5_file,
-            num_classes=num_classes,
-            growth_rate=growth_rate,
-            block_config=block_config,
-            num_init_features=num_init_features,
-            bottleneck_size=bottleneck_size,
-            kernel_size=kernel_size,
-            num_workers=num_workers,
-            epochs=epochs,
-            log_path=save_path,
-            batch_size=batch_size,
-            accelerator=accelerator,
-            devices=devices,
-            experiment_name=experiment_name,
-            scheduler_choice=scheduler_choice,
-            learning_rate=learning_rate,
-            n_pos=n_pos,
-            attention_dim=attention_dim,
-        )
+        h5_file=h5_file,
+        num_classes=num_classes,
+        growth_rate=growth_rate,
+        block_config=block_config,
+        num_init_features=num_init_features,
+        bottleneck_size=bottleneck_size,
+        kernel_size=kernel_size,
+        num_workers=num_workers,
+        epochs=epochs,
+        log_path=save_path,
+        batch_size=batch_size,
+        accelerator=accelerator,
+        devices=devices,
+        experiment_name=experiment_name,
+        scheduler_choice=scheduler_choice,
+        learning_rate=learning_rate,
+        n_pos=n_pos,
+        attention_dim=attention_dim,
+    )
 
-    mitosis_inception.setup_timeseries_transforms(mean = mean, std=std, min_scale= min_scale,max_shift=max_shift,  max_scale=max_scale, max_mask_ratio=max_mask_ratio)
+    mitosis_inception.setup_timeseries_transforms(
+        mean=mean,
+        std=std,
+        min_scale=min_scale,
+        max_shift=max_shift,
+        max_scale=max_scale,
+        max_mask_ratio=max_mask_ratio,
+    )
     mitosis_inception.setup_gbr_h5_datasets()
 
     if model_type == "simple":
@@ -2920,7 +2933,7 @@ def train_mitosis_neural_net(
 
     if isinstance(block_config, int):
         block_config = (block_config,)
-   
+
     mitosis_inception = MitosisInception(
         h5_file=h5_file,
         num_classes=num_classes,
@@ -2941,7 +2954,7 @@ def train_mitosis_neural_net(
         n_pos=n_pos,
         attention_dim=attention_dim,
     )
-    
+
     mitosis_inception.setup_timeseries_transforms()
     mitosis_inception.setup_h5_datasets()
     if model_type == "simple":
@@ -2951,7 +2964,6 @@ def train_mitosis_neural_net(
     if model_type == "attention":
         mitosis_inception.setup_hybrid_attention_model()
 
-    
     mitosis_inception.setup_logger()
     mitosis_inception.setup_checkpoint()
     mitosis_inception.setup_adam()
@@ -2959,17 +2971,16 @@ def train_mitosis_neural_net(
     mitosis_inception.train()
 
 
-
 def train_gbr_vision_neural_net(
     save_path,
     h5_file,
     input_shape,
-    box_vector = 7,
+    box_vector=7,
     start_kernel=7,
     mid_kernel=3,
     startfilter=64,
-    growth_rate = 32, 
-    depth={'depth_0': 12, 'depth_1': 24, 'depth_2': 16},
+    growth_rate=32,
+    depth={"depth_0": 12, "depth_1": 24, "depth_2": 16},
     num_classes=3,
     batch_size=64,
     num_workers=0,
@@ -2977,34 +2988,43 @@ def train_gbr_vision_neural_net(
     epochs=100,
     accelerator="cuda",
     devices=1,
-    loss_function = 'oneat',
+    loss_function="oneat",
     experiment_name="mitosis",
     scheduler_choice="plateau",
-    oneat_accuracy = True,
-    crop_size = None,
-    pool_first = True
+    oneat_accuracy=True,
+    crop_size=None,
+    pool_first=True,
 ):
 
-   
     mitosis_inception = MitosisInception(
-            h5_file=h5_file,
-            num_classes=num_classes,
-            num_workers=num_workers,
-            epochs=epochs,
-            log_path=save_path,
-            batch_size=batch_size,
-            accelerator=accelerator,
-            devices=devices,
-            experiment_name=experiment_name,
-            scheduler_choice=scheduler_choice,
-            loss_function=loss_function,
-            learning_rate=learning_rate,
-        )
+        h5_file=h5_file,
+        num_classes=num_classes,
+        num_workers=num_workers,
+        epochs=epochs,
+        log_path=save_path,
+        batch_size=batch_size,
+        accelerator=accelerator,
+        devices=devices,
+        experiment_name=experiment_name,
+        scheduler_choice=scheduler_choice,
+        loss_function=loss_function,
+        learning_rate=learning_rate,
+    )
 
-    mitosis_inception.setup_gbr_vision_h5_datasets(crop_size = crop_size)
+    mitosis_inception.setup_gbr_vision_h5_datasets(crop_size=crop_size)
 
-    mitosis_inception.setup_densenet_vision_model(input_shape, num_classes,box_vector,start_kernel,mid_kernel,startfilter,depth, growth_rate, pool_first = pool_first)
-    
+    mitosis_inception.setup_densenet_vision_model(
+        input_shape,
+        num_classes,
+        box_vector,
+        start_kernel,
+        mid_kernel,
+        startfilter,
+        depth,
+        growth_rate,
+        pool_first=pool_first,
+    )
+
     mitosis_inception.setup_logger()
     mitosis_inception.setup_checkpoint()
     mitosis_inception.setup_adam()
@@ -4518,27 +4538,29 @@ def vision_inception_model_prediction(
         predictions (list): Predicted class labels for each tracklet.
         weights (list): Prediction confidence or logits for each tracklet.
     """
-    model = model.to(device)  
+    model = model.to(device)
     model.eval()
     sub_trackmate_dataframe = dataframe[dataframe["TrackMate Track ID"] == trackmate_id]
-    
+
     # Extract the dimensions of the crop
     imagesizet, sizez, sizex, sizey = crop_size
     tracklet_predictions = []
     tracklet_weights = []
-    
+
     for tracklet_id in sub_trackmate_dataframe["Track ID"].unique():
         tracklet_sub_dataframe = sub_trackmate_dataframe[
             sub_trackmate_dataframe["Track ID"] == tracklet_id
         ]
-        
+
         sub_trackmate_dataframe = tracklet_sub_dataframe.sort_values(by="t")
         total_duration = sub_trackmate_dataframe["Track Duration"].max()
         tracklet_blocks = []
         for i in range(0, len(sub_trackmate_dataframe), imagesizet):
-            tracklet_block = sub_trackmate_dataframe.iloc[i : i + imagesizet][["t", "z", "y", "x"]].values
+            tracklet_block = sub_trackmate_dataframe.iloc[i : i + imagesizet][
+                ["t", "z", "y", "x"]
+            ].values
             if len(tracklet_block) == imagesizet:
-                tracklet_blocks.append(tracklet_block)         
+                tracklet_blocks.append(tracklet_block)
 
         for tracklet_block in tracklet_blocks:
             stitched_volume = []
@@ -4546,71 +4568,73 @@ def vision_inception_model_prediction(
                 small_image = raw_image[int(t)]
 
                 if (
-                            x > sizex / 2
-                            and z > sizez / 2
-                            and y > sizey / 2
-                            and z + int(sizez / 2) < raw_image.shape[1]
-                            and y + int(sizey / 2) < raw_image.shape[2]
-                            and x + int(sizex / 2) < raw_image.shape[3]
-                            and t < raw_image.shape[0]
-                            
-                        ):
-                            crop_xminus = x - int(sizex / 2)
-                            crop_xplus = x + int(sizex / 2)
-                            crop_yminus = y - int(sizey / 2)
-                            crop_yplus = y + int(sizey / 2)
-                            crop_zminus = z - int(sizez / 2)
-                            crop_zplus = z + int(sizez / 2)
-                            region = (
-                                slice(int(crop_zminus), int(crop_zplus)),
-                                slice(int(crop_yminus), int(crop_yplus)),
-                                slice(int(crop_xminus), int(crop_xplus)),
-                            )
+                    x > sizex / 2
+                    and z > sizez / 2
+                    and y > sizey / 2
+                    and z + int(sizez / 2) < raw_image.shape[1]
+                    and y + int(sizey / 2) < raw_image.shape[2]
+                    and x + int(sizex / 2) < raw_image.shape[3]
+                    and t < raw_image.shape[0]
+                ):
+                    crop_xminus = x - int(sizex / 2)
+                    crop_xplus = x + int(sizex / 2)
+                    crop_yminus = y - int(sizey / 2)
+                    crop_yplus = y + int(sizey / 2)
+                    crop_zminus = z - int(sizez / 2)
+                    crop_zplus = z + int(sizez / 2)
+                    region = (
+                        slice(int(crop_zminus), int(crop_zplus)),
+                        slice(int(crop_yminus), int(crop_yplus)),
+                        slice(int(crop_xminus), int(crop_xplus)),
+                    )
 
-                    
-                            crop_image = small_image[region]
-                            stitched_volume.append(crop_image)
+                    crop_image = small_image[region]
+                    stitched_volume.append(crop_image)
             stitched_volume = np.stack(stitched_volume, axis=0)
             if stitched_volume.shape[0] == imagesizet:
                 with torch.no_grad():
-                    prediction_vector = model(torch.unsqueeze(torch.tensor(stitched_volume, dtype=torch.float32), dim=0))
-                
-                class_logits = prediction_vector[0, :len(class_map)]
-                
+                    prediction_vector = model(
+                        torch.unsqueeze(
+                            torch.tensor(stitched_volume, dtype=torch.float32), dim=0
+                        )
+                    )
+
+                class_logits = prediction_vector[0, : len(class_map)]
+
                 most_frequent_prediction = get_most_frequent_prediction(class_logits)
                 if most_frequent_prediction is not None:
                     most_predicted_class = class_map[int(most_frequent_prediction)]
                     tracklet_predictions.append(most_predicted_class)
                     tracklet_weights.append(total_duration)
-              
+
     if tracklet_predictions:
         final_weighted_prediction = weighted_prediction(
             tracklet_predictions, tracklet_weights
         )
-        return final_weighted_prediction            
-                
+        return final_weighted_prediction
+
     else:
-        return "UnClassified"            
+        return "UnClassified"
 
 
-def inception_dual_model_prediction( 
-        dataframe,
-        second_dataframe,
-        trackmate_id,
-        tracklet_length,
-        class_map,
-        dual_morphodynamic_model=None,
-        single_morphodynamic_model = None,
-        device="cpu",
-        
+def inception_dual_model_prediction(
+    dataframe,
+    second_dataframe,
+    trackmate_id,
+    tracklet_length,
+    class_map,
+    dual_morphodynamic_model=None,
+    single_morphodynamic_model=None,
+    device="cpu",
 ):
     sub_trackmate_dataframe = dataframe[dataframe["TrackMate Track ID"] == trackmate_id]
-    sub_secondtrackmate_dataframe = second_dataframe[second_dataframe["TrackMate Track ID"] == trackmate_id]
-    
+    sub_secondtrackmate_dataframe = second_dataframe[
+        second_dataframe["TrackMate Track ID"] == trackmate_id
+    ]
+
     tracklet_predictions = []
     tracklet_weights = []
 
-    
     for tracklet_id in sub_trackmate_dataframe["Track ID"].unique():
         tracklet_sub_dataframe = sub_trackmate_dataframe[
             sub_trackmate_dataframe["Track ID"] == tracklet_id
@@ -4619,51 +4643,54 @@ def inception_dual_model_prediction(
             sub_secondtrackmate_dataframe["Track ID"] == tracklet_id
         ]
 
-
-        sub_dataframe_dynamic = tracklet_sub_dataframe[DYNAMIC_FEATURES].values
+        # sub_dataframe_dynamic = tracklet_sub_dataframe[DYNAMIC_FEATURES].values
         sub_dataframe_shape = tracklet_sub_dataframe[SHAPE_FEATURES].values
         sub_dataframe_morpho = tracklet_sub_dataframe[SHAPE_DYNAMIC_FEATURES].values
 
-        sub_second_dataframe_shape = second_tracklet_sub_dataframe[SHAPE_FEATURES].values
-        total_duration = tracklet_sub_dataframe["Track Duration"].max() 
-        if sub_dataframe_shape.shape[0] == sub_second_dataframe_shape.shape[0] and dual_morphodynamic_model is not None:
-                
-                 
-                combined_morpho = np.concatenate((sub_dataframe_morpho, sub_second_dataframe_shape), axis=-1)
-                sub_combined_arrays_morpho = sample_subarrays(
+        sub_second_dataframe_shape = second_tracklet_sub_dataframe[
+            SHAPE_FEATURES
+        ].values
+        total_duration = tracklet_sub_dataframe["Track Duration"].max()
+        if (
+            sub_dataframe_shape.shape[0] == sub_second_dataframe_shape.shape[0]
+            and dual_morphodynamic_model is not None
+        ):
+
+            combined_morpho = np.concatenate(
+                (sub_dataframe_morpho, sub_second_dataframe_shape), axis=-1
+            )
+            sub_combined_arrays_morpho = sample_subarrays(
                 combined_morpho, tracklet_length, total_duration
+            )
+            dual_morpho_predictions = []
+            for sub_array in sub_combined_arrays_morpho:
+                predicted_class = make_prediction(
+                    sub_array, dual_morphodynamic_model, device
                 )
-                dual_morpho_predictions = []
-                for sub_array in sub_combined_arrays_morpho:
-                        predicted_class = make_prediction(
-                            sub_array, dual_morphodynamic_model, device
-                        )
-                        dual_morpho_predictions.append(predicted_class) 
+                dual_morpho_predictions.append(predicted_class)
 
-                most_frequent_prediction = get_most_frequent_prediction(dual_morpho_predictions)
-
+            most_frequent_prediction = get_most_frequent_prediction(
+                dual_morpho_predictions
+            )
 
         else:
 
-                sub_arrays_morpho = sample_subarrays(
+            sub_arrays_morpho = sample_subarrays(
                 sub_dataframe_morpho, tracklet_length, total_duration
+            )
+            morpho_predictions = []
+            for sub_array in sub_arrays_morpho:
+                predicted_class = make_prediction(
+                    sub_array, single_morphodynamic_model, device
                 )
-                morpho_predictions = []
-                for sub_array in sub_arrays_morpho:
-                        predicted_class = make_prediction(
-                            sub_array, single_morphodynamic_model, device
-                        )
-                        morpho_predictions.append(predicted_class) 
+                morpho_predictions.append(predicted_class)
 
-                most_frequent_prediction = get_most_frequent_prediction(morpho_predictions)
-
+            most_frequent_prediction = get_most_frequent_prediction(morpho_predictions)
 
         if most_frequent_prediction is not None:
             most_predicted_class = class_map[int(most_frequent_prediction)]
             tracklet_predictions.append(most_predicted_class)
             tracklet_weights.append(total_duration)
-
-
 
     if tracklet_predictions:
         final_weighted_prediction = weighted_prediction(
@@ -4672,7 +4699,6 @@ def inception_dual_model_prediction(
         return final_weighted_prediction
     else:
         return "UnClassified"
-
 
 
 def inception_model_prediction(
