@@ -282,7 +282,7 @@ class TrackMate:
         self.unique_spot_centroid = {}
         self.unique_oneat_spot_centroid = {}
         self.unique_track_centroid = {}
-
+        self.matched_second_channel_tracks = []
         self.root_spots = {}
         self.all_current_cell_ids = {}
         self.channel_unique_spot_properties = {}
@@ -2665,35 +2665,40 @@ class TrackMate:
         distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, location)
         local_density = self._get_label_density(frame, location)
         if dist <= 2 * veto_radius:
-            self.channel_unique_spot_properties[cell_id] = {
-                self.cellid_key: int(cell_id),
-                self.frameid_key: int(frame),
-                self.zposid_key: float(centroids[index][0] * self.zcalibration),
-                self.yposid_key: float(centroids[index][1] * self.ycalibration),
-                self.xposid_key: float(centroids[index][2] * self.xcalibration),
-                self.trackid_key: int(track_id),
-                self.total_intensity_key: (float(intensity_total[index])),
-                self.mean_intensity_key: (float(intensity_mean[index])),
-                self.radius_key: (float(RADIUS)),
-                self.quality_key: (float(QUALITY)),
-                self.distance_cell_mask_key: float(distance_cell_mask),
-                self.local_cell_density_key: float(local_density),
-                self.maskcentroid_z_key: float(maskcentroid[0]),
-                self.maskcentroid_y_key: float(maskcentroid[1]),
-                self.maskcentroid_x_key: float(maskcentroid[2]),
-            }
-        else:
-            self.channel_unique_spot_properties[cell_id] = self.unique_spot_properties[
-                cell_id
-            ]
-            self.channel_unique_spot_properties[cell_id].update(
-                {self.total_intensity_key: -1}
-            )
-            self.channel_unique_spot_properties[cell_id].update(
-                {self.mean_intensity_key: -1}
-            )
-            self.channel_unique_spot_properties[cell_id].update({self.radius_key: -1})
-            self.channel_unique_spot_properties[cell_id].update({self.quality_key: -1})
+
+            if track_id not in self.matched_second_channel_tracks:
+                
+                self.matched_second_channel_tracks.append(track_id)
+
+                self.channel_unique_spot_properties[cell_id] = {
+                    self.cellid_key: int(cell_id),
+                    self.frameid_key: int(frame),
+                    self.zposid_key: float(centroids[index][0] * self.zcalibration),
+                    self.yposid_key: float(centroids[index][1] * self.ycalibration),
+                    self.xposid_key: float(centroids[index][2] * self.xcalibration),
+                    self.trackid_key: int(track_id),
+                    self.total_intensity_key: (float(intensity_total[index])),
+                    self.mean_intensity_key: (float(intensity_mean[index])),
+                    self.radius_key: (float(RADIUS)),
+                    self.quality_key: (float(QUALITY)),
+                    self.distance_cell_mask_key: float(distance_cell_mask),
+                    self.local_cell_density_key: float(local_density),
+                    self.maskcentroid_z_key: float(maskcentroid[0]),
+                    self.maskcentroid_y_key: float(maskcentroid[1]),
+                    self.maskcentroid_x_key: float(maskcentroid[2]),
+                }
+            else:
+                self.channel_unique_spot_properties[cell_id] = self.unique_spot_properties[
+                    cell_id
+                ]
+                self.channel_unique_spot_properties[cell_id].update(
+                    {self.total_intensity_key: -1}
+                )
+                self.channel_unique_spot_properties[cell_id].update(
+                    {self.mean_intensity_key: -1}
+                )
+                self.channel_unique_spot_properties[cell_id].update({self.radius_key: -1})
+                self.channel_unique_spot_properties[cell_id].update({self.quality_key: -1})
 
     def _get_cal(self, frame):
 
