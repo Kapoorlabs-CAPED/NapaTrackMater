@@ -61,6 +61,19 @@ DYNAMIC_FEATURES = [
     "Cell_Axis_X",
 ]
 
+BROWNIAN_FEATURES = [
+    "Radius",
+    "Eccentricity_Comp_First",
+    "Eccentricity_Comp_Second",
+    "Eccentricity_Comp_Third",
+    "Surface_Area",
+    "Speed",
+    "Acceleration",
+    "Radial_Angle_Z",
+    "Radial_Angle_Y",
+    "Radial_Angle_X",
+]
+
 TRACK_TYPE_FEATURES = ["MSD"]
 IDENTITY_FEATURES = ["Track ID", "t", "z", "y", "x", "Dividing", "Number_Dividing"]
 
