@@ -775,8 +775,6 @@ class TrackMate:
 
         return distance_cell_mask, maskcentroid
 
-
-
     def _track_computer(self, track, track_id):
 
         current_cell_ids = []
@@ -1625,7 +1623,9 @@ class TrackMate:
         )
         self.basicsettings = self.xml_content.find("Settings").find("BasicSettings")
         try:
-           self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
+            self.detectorchannel = int(
+                float(self.detectorsettings.get("TARGET_CHANNEL"))
+            )
         except TypeError:
             self.detectorchannel = 1
         self.tstart = int(float(self.basicsettings.get("tstart")))
@@ -1859,7 +1859,9 @@ class TrackMate:
         )
         self.basicsettings = self.xml_content.find("Settings").find("BasicSettings")
         try:
-           self.detectorchannel = int(float(self.detectorsettings.get("TARGET_CHANNEL")))
+            self.detectorchannel = int(
+                float(self.detectorsettings.get("TARGET_CHANNEL"))
+            )
         except TypeError:
             self.detectorchannel = 1
         self.tstart = int(float(self.basicsettings.get("tstart")))
@@ -1904,7 +1906,6 @@ class TrackMate:
         if self.channel_seg_image is None:
             for track in self.tracks.findall("Track"):
                 track_id = int(track.get(self.trackid_key))
-                
 
             for track in tqdm(self.tracks.findall("Track")):
                 track_id = int(track.get(self.trackid_key))
@@ -2065,7 +2066,6 @@ class TrackMate:
                 if self.trackid_key in spot_properties_dict.keys():
                     trackmate_track_id = spot_properties_dict[self.trackid_key]
                     trackmate_track_ids.append(trackmate_track_id)
-                    
 
         return trackmate_track_ids
 
@@ -2650,7 +2650,6 @@ class TrackMate:
         sizex = abs(bbox[2] - bbox[5])
         veto_volume = sizex * sizey * sizez
         veto_radius = math.pow(3 * veto_volume / (4 * math.pi), 1.0 / 3.0)
-
         location = (
             centroids[index][0] * self.zcalibration,
             centroids[index][1] * self.ycalibration,
@@ -2667,7 +2666,7 @@ class TrackMate:
         if dist <= 2 * veto_radius:
 
             if track_id not in self.matched_second_channel_tracks:
-                
+
                 self.matched_second_channel_tracks.append(track_id)
 
                 self.channel_unique_spot_properties[cell_id] = {
@@ -2688,17 +2687,21 @@ class TrackMate:
                     self.maskcentroid_x_key: float(maskcentroid[2]),
                 }
             else:
-                self.channel_unique_spot_properties[cell_id] = self.unique_spot_properties[
+                self.channel_unique_spot_properties[
                     cell_id
-                ]
+                ] = self.unique_spot_properties[cell_id]
                 self.channel_unique_spot_properties[cell_id].update(
                     {self.total_intensity_key: -1}
                 )
                 self.channel_unique_spot_properties[cell_id].update(
                     {self.mean_intensity_key: -1}
                 )
-                self.channel_unique_spot_properties[cell_id].update({self.radius_key: -1})
-                self.channel_unique_spot_properties[cell_id].update({self.quality_key: -1})
+                self.channel_unique_spot_properties[cell_id].update(
+                    {self.radius_key: -1}
+                )
+                self.channel_unique_spot_properties[cell_id].update(
+                    {self.quality_key: -1}
+                )
 
     def _get_cal(self, frame):
 
@@ -2723,7 +2726,7 @@ class TrackMate:
         tracklet_id = self.tracklet_dict[cell_id]
 
         unique_id = str(track_id) + str(generation_id) + str(tracklet_id)
-        
+
         vec_cell = [
             float(self.unique_spot_properties[int(cell_id)][self.xposid_key]),
             float(self.unique_spot_properties[int(cell_id)][self.yposid_key]),
@@ -2907,7 +2910,7 @@ class TrackMate:
         ]
 
         msd = np.dot(vec_root, vec_root)
-       
+
         self.unique_spot_properties[int(cell_id)].update({self.msd_key: msd})
 
     def _temporal_plots_trackmate(self):
