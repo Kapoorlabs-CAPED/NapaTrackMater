@@ -69,9 +69,6 @@ BROWNIAN_FEATURES = [
     "Surface_Area",
     "Speed",
     "Acceleration",
-    "Radial_Angle_Z",
-    "Radial_Angle_Y",
-    "Radial_Angle_X",
 ]
 
 TRACK_TYPE_FEATURES = ["MSD"]
