@@ -3697,16 +3697,25 @@ def compute_cell_size(seg_image, top_n = 10):
 
             props = measure.regionprops(labeled_image)
 
-            sorted_props = sorted(props, key=lambda x: x.feret_diameter_max, reverse=True)[:top_n]
+            sorted_props = sorted(props, key=lambda x: x.area, reverse=True)[:top_n]
+            
 
-            for prop in sorted_props:
+            top_labels = [prop.label for prop in sorted_props]
+            for prop in props:
+                if prop.label not in top_labels:
+                    labeled_image[labeled_image == prop.label] = 0
+
+            props_filtered = measure.regionprops(labeled_image)
+
+            largest_size = []
+            for prop in props_filtered:
                 try:
                     largest_size.append(prop.feret_diameter_max)
                 except Exception:
                     pass
 
             if largest_size:
-                max_size = np.mean(largest_size)
+                max_size = max(largest_size)
                 print(f"The maximum Feret diameter is: {max_size}")
             else:
                 print("No valid Feret diameter values were found.")
