@@ -3670,7 +3670,7 @@ def get_largest_size(timed_cell_size):
     return largest_size
 
 
-def compute_cell_size(seg_image):
+def compute_cell_size(seg_image, volume_threshold = 100):
     ndim = len(seg_image.shape)
     timed_cell_size = {}
 
@@ -3693,10 +3693,19 @@ def compute_cell_size(seg_image):
 
     if ndim in (3, 4):
         for i in tqdm(range(0, seg_image.shape[0], int(seg_image.shape[0] / 10))):
-            props = measure.regionprops(seg_image[i, :])
+            labeled_image = measure.label(seg_image[i, :])
+
+            props = measure.regionprops(labeled_image)
+
+            for prop in props:
+                if prop.area < volume_threshold:
+                    labeled_image[labeled_image == prop.label] = 0
+
+            # Step 4: Measure the properties of the remaining large regions
+            props_filtered = measure.regionprops(labeled_image)
 
             largest_size = []
-            for prop in props:
+            for prop in props_filtered:
                 try:
                     largest_size.append(prop.feret_diameter_max)
                 except Exception:
