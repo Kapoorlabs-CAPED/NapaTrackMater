@@ -51,7 +51,7 @@ class Clustering:
         num_points: int,
         model: AutoLightningModel,
         key=0,
-        min_size: tuple = (1, 3, 3),
+        min_size: tuple = (2, 2, 2),
         progress_bar=None,
         batch_size=1,
         scale_z=1.0,
