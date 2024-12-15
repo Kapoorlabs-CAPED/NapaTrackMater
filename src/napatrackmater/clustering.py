@@ -51,7 +51,7 @@ class Clustering:
         num_points: int,
         model: AutoLightningModel,
         key=0,
-        min_size: tuple = (2, 2, 2),
+        min_size: tuple = (1, 3, 3),
         progress_bar=None,
         batch_size=1,
         scale_z=1.0,
@@ -552,7 +552,6 @@ def get_label_centroid_cloud(
     centroid,
     min_size,
     compute_with_autoencoder,
-    padding_size=3,
 ):
 
     valid = []
@@ -570,16 +569,8 @@ def get_label_centroid_cloud(
     if False not in valid:
 
         try:
-
-            binary_image_padded = np.pad(
-                binary_image, padding_size, mode="constant", constant_values=0
-            )
-            vertices, faces, normals, values = marching_cubes(binary_image_padded)
-        except Exception as e:
-            print(f"Zero padding not possible {e}")
-            try:
                 vertices, faces, normals, values = marching_cubes(binary_image)
-            except RuntimeError:
+        except RuntimeError:
                 vertices = None
 
         if vertices is not None:
@@ -648,26 +639,13 @@ def get_eccentricity(point_cloud):
     eigenvectors = eigenvectors[:, ::-1]
     eccentricities = np.sqrt(eigenvalues)
     dimensions = np.arange(len(eigenvalues))
-    # Z Y X
     return eccentricities, eigenvectors, eigenvalues, dimensions
 
 
 def get_surface_area(point_cloud):
     # Compute the convex hull of the point cloud
     hull = ConvexHull(point_cloud)
-    
-    # Compute the areas of the triangles in the convex hull
-    areas = np.zeros(hull.simplices.shape[0])
-    for i, simplex in enumerate(hull.simplices):
-        a = point_cloud[simplex[0]]
-        b = point_cloud[simplex[1]]
-        c = point_cloud[simplex[2]]
-        ab = b - a
-        ac = c - a
-        areas[i] = 0.5 * np.linalg.norm(np.cross(ab, ac))
-
-    # Compute the total surface area
-    surface_area = areas.sum()
+    surface_area = hull.area
 
     return surface_area
 
