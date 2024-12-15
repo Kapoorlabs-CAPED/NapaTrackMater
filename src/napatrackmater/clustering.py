@@ -58,9 +58,8 @@ class Clustering:
         scale_xy=1.0,
         center=True,
         compute_with_autoencoder=True,
-
     ):
-
+        #
         self.pretrainer = pretrainer
         self.accelerator = accelerator
         self.devices = devices
@@ -441,7 +440,6 @@ def _model_output(
     output_cloud_surface_area = []
     output_eigenvectors = []
     output_eigenvalues = []
-    output_density = []
     output_dimensions = []
     dataset = PointCloudDataset(clouds, scale_z=scale_z, scale_xy=scale_xy)
     dataloader = DataLoader(dataset, batch_size=batch_size)
@@ -569,9 +567,9 @@ def get_label_centroid_cloud(
     if False not in valid:
 
         try:
-                vertices, faces, normals, values = marching_cubes(binary_image)
+            vertices, faces, normals, values = marching_cubes(binary_image)
         except RuntimeError:
-                vertices = None
+            vertices = None
 
         if vertices is not None:
             mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
