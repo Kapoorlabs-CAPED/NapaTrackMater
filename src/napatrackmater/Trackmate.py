@@ -3670,7 +3670,7 @@ def get_largest_size(timed_cell_size):
     return largest_size
 
 
-def compute_cell_size(seg_image, volume_threshold = 100):
+def compute_cell_size(seg_image, volume_threshold = 1000):
     ndim = len(seg_image.shape)
     timed_cell_size = {}
 
@@ -3701,7 +3701,6 @@ def compute_cell_size(seg_image, volume_threshold = 100):
                 if prop.area < volume_threshold:
                     labeled_image[labeled_image == prop.label] = 0
 
-            # Step 4: Measure the properties of the remaining large regions
             props_filtered = measure.regionprops(labeled_image)
 
             largest_size = []
