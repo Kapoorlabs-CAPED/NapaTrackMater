@@ -3692,7 +3692,7 @@ def compute_cell_size(seg_image, top_n = 10):
         timed_cell_size[str(0)] = float(max_size)
 
     if ndim in (3, 4):
-        for i in tqdm(range(0, seg_image.shape[0], int(seg_image.shape[0] / 20))):
+        for i in tqdm(range(0, seg_image.shape[0], int(seg_image.shape[0] / 2))):
             labeled_image = measure.label(seg_image[i, :])
 
             props = measure.regionprops(labeled_image)
