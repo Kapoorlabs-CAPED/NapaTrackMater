@@ -2216,119 +2216,128 @@ class TrackMate:
             scale_3 = 1
             for i in range(len(output_cluster_centroid)):
                 centroid = output_cluster_centroid[i]
-                quality = math.pow(
-                    output_eigenvalues[i][2]
-                    * output_eigenvalues[i][1]
-                    * output_eigenvalues[i][0],
-                    1.0 / 3.0,
-                )
-                eccentricity_comp_firstyz = output_cloud_eccentricity[i]
-                eccentricity_dimension = output_dimensions[i]
-                if not isinstance(eccentricity_dimension, int):
-
-                    scale_1 = self.xcalibration
-                    scale_2 = self.ycalibration
-                    scale_3 = self.zcalibration
-
-                    cell_axis_x = output_eigenvectors[i][2]
-                    cell_axis_y = output_eigenvectors[i][1]
-                    cell_axis_z = output_eigenvectors[i][0]
-
-                    surface_area = (
-                        output_cloud_surface_area[i]
-                        * self.zcalibration
-                        * self.ycalibration
-                        * self.xcalibration
-                    )
-                    dist, index = tree.query(centroid)
-                    radius = quality * math.pow(
-                        self.zcalibration * self.xcalibration * self.ycalibration,
+                if not isinstance(output_eigenvalues[i], int):
+                    quality = math.pow(
+                        output_eigenvalues[i][2]
+                        * output_eigenvalues[i][1]
+                        * output_eigenvalues[i][0],
                         1.0 / 3.0,
                     )
-                    if dist < quality:
-                        closest_centroid = spot_centroids[index]
-                        frame_spot_centroid = (
-                            int(time_key),
-                            closest_centroid[0],
-                            closest_centroid[1],
-                            closest_centroid[2],
-                        )
-                        closest_cell_id = self.unique_spot_centroid[frame_spot_centroid]
+                    eccentricity_comp_firstyz = output_cloud_eccentricity[i]
+                    eccentricity_dimension = output_dimensions[i]
+                    if not isinstance(eccentricity_dimension, int):
 
-                        angle_cell_axis_x = cell_angular_change_x(cell_axis_x)
-                        angle_cell_axis_y = cell_angular_change_y(cell_axis_y)
-                        angle_cell_axis_z = cell_angular_change_z(cell_axis_z)
+                        scale_1 = self.xcalibration
+                        scale_2 = self.ycalibration
+                        scale_3 = self.zcalibration
 
-                        self.unique_spot_properties[int(closest_cell_id)].update(
-                            {self.cell_axis_x_key: angle_cell_axis_x}
+                        cell_axis_x = output_eigenvectors[i][2]
+                        cell_axis_y = output_eigenvectors[i][1]
+                        cell_axis_z = output_eigenvectors[i][0]
+
+                        surface_area = (
+                            output_cloud_surface_area[i]
+                            * self.zcalibration
+                            * self.ycalibration
+                            * self.xcalibration
                         )
-                        self.unique_spot_properties[int(closest_cell_id)].update(
-                            {self.cell_axis_y_key: angle_cell_axis_y}
+                        dist, index = tree.query(centroid)
+                        radius = quality * math.pow(
+                            self.zcalibration * self.xcalibration * self.ycalibration,
+                            1.0 / 3.0,
                         )
-                        self.unique_spot_properties[int(closest_cell_id)].update(
-                            {self.cell_axis_z_key: angle_cell_axis_z}
-                        )
-                        if (
-                            self.unique_spot_properties[int(closest_cell_id)][
-                                self.radius_key
+                        if dist < quality:
+                            closest_centroid = spot_centroids[index]
+                            frame_spot_centroid = (
+                                int(time_key),
+                                closest_centroid[0],
+                                closest_centroid[1],
+                                closest_centroid[2],
+                            )
+                            closest_cell_id = self.unique_spot_centroid[
+                                frame_spot_centroid
                             ]
-                            > 0
-                        ):
-                            self.unique_spot_properties[int(closest_cell_id)].update(
-                                {
-                                    self.eccentricity_comp_firstkey: eccentricity_comp_firstyz[
-                                        2
-                                    ]
-                                    * scale_1
-                                }
-                            )
-                            self.unique_spot_properties[int(closest_cell_id)].update(
-                                {
-                                    self.eccentricity_comp_secondkey: eccentricity_comp_firstyz[
-                                        1
-                                    ]
-                                    * scale_2
-                                }
-                            )
+
+                            angle_cell_axis_x = cell_angular_change_x(cell_axis_x)
+                            angle_cell_axis_y = cell_angular_change_y(cell_axis_y)
+                            angle_cell_axis_z = cell_angular_change_z(cell_axis_z)
 
                             self.unique_spot_properties[int(closest_cell_id)].update(
-                                {
-                                    self.eccentricity_comp_thirdkey: eccentricity_comp_firstyz[
-                                        0
-                                    ]
-                                    * scale_3
-                                }
+                                {self.cell_axis_x_key: angle_cell_axis_x}
                             )
+                            self.unique_spot_properties[int(closest_cell_id)].update(
+                                {self.cell_axis_y_key: angle_cell_axis_y}
+                            )
+                            self.unique_spot_properties[int(closest_cell_id)].update(
+                                {self.cell_axis_z_key: angle_cell_axis_z}
+                            )
+                            if (
+                                self.unique_spot_properties[int(closest_cell_id)][
+                                    self.radius_key
+                                ]
+                                > 0
+                            ):
+                                self.unique_spot_properties[
+                                    int(closest_cell_id)
+                                ].update(
+                                    {
+                                        self.eccentricity_comp_firstkey: eccentricity_comp_firstyz[
+                                            2
+                                        ]
+                                        * scale_1
+                                    }
+                                )
+                                self.unique_spot_properties[
+                                    int(closest_cell_id)
+                                ].update(
+                                    {
+                                        self.eccentricity_comp_secondkey: eccentricity_comp_firstyz[
+                                            1
+                                        ]
+                                        * scale_2
+                                    }
+                                )
 
-                            self.unique_spot_properties[int(closest_cell_id)].update(
-                                {self.surface_area_key: surface_area}
-                            )
-                            self.unique_spot_properties[int(closest_cell_id)].update(
-                                {self.quality_key: quality}
-                            )
-                            self.unique_spot_properties[int(closest_cell_id)].update(
-                                {self.radius_key: radius}
-                            )
-                        else:
+                                self.unique_spot_properties[
+                                    int(closest_cell_id)
+                                ].update(
+                                    {
+                                        self.eccentricity_comp_thirdkey: eccentricity_comp_firstyz[
+                                            0
+                                        ]
+                                        * scale_3
+                                    }
+                                )
 
-                            self.unique_spot_properties[int(closest_cell_id)].update(
-                                {self.eccentricity_comp_firstkey: -1}
-                            )
-                            self.unique_spot_properties[int(closest_cell_id)].update(
-                                {self.eccentricity_comp_secondkey: -1}
-                            )
-                            self.unique_spot_properties[int(closest_cell_id)].update(
-                                {self.eccentricity_comp_thirdkey: -1}
-                            )
-                            self.unique_spot_properties[int(closest_cell_id)].update(
-                                {self.surface_area_key: -1}
-                            )
-                            self.unique_spot_properties[int(closest_cell_id)].update(
-                                {self.quality_key: -1}
-                            )
-                            self.unique_spot_properties[int(closest_cell_id)].update(
-                                {self.radius_key: -1}
-                            )
+                                self.unique_spot_properties[
+                                    int(closest_cell_id)
+                                ].update({self.surface_area_key: surface_area})
+                                self.unique_spot_properties[
+                                    int(closest_cell_id)
+                                ].update({self.quality_key: quality})
+                                self.unique_spot_properties[
+                                    int(closest_cell_id)
+                                ].update({self.radius_key: radius})
+                            else:
+
+                                self.unique_spot_properties[
+                                    int(closest_cell_id)
+                                ].update({self.eccentricity_comp_firstkey: -1})
+                                self.unique_spot_properties[
+                                    int(closest_cell_id)
+                                ].update({self.eccentricity_comp_secondkey: -1})
+                                self.unique_spot_properties[
+                                    int(closest_cell_id)
+                                ].update({self.eccentricity_comp_thirdkey: -1})
+                                self.unique_spot_properties[
+                                    int(closest_cell_id)
+                                ].update({self.surface_area_key: -1})
+                                self.unique_spot_properties[
+                                    int(closest_cell_id)
+                                ].update({self.quality_key: -1})
+                                self.unique_spot_properties[
+                                    int(closest_cell_id)
+                                ].update({self.radius_key: -1})
 
             for (k, v) in self.root_spots.items():
                 self.root_spots[k] = self.unique_spot_properties[k]
@@ -3670,7 +3679,7 @@ def get_largest_size(timed_cell_size):
     return largest_size
 
 
-def compute_cell_size(seg_image, top_n = 10):
+def compute_cell_size(seg_image, top_n=10):
     ndim = len(seg_image.shape)
     timed_cell_size = {}
 
@@ -3698,7 +3707,6 @@ def compute_cell_size(seg_image, top_n = 10):
             props = measure.regionprops(labeled_image)
 
             sorted_props = sorted(props, key=lambda x: x.area, reverse=True)[:top_n]
-            
 
             top_labels = [prop.label for prop in sorted_props]
             for prop in props:
