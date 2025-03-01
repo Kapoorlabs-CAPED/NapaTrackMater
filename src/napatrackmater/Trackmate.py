@@ -1152,6 +1152,48 @@ class TrackMate:
             )
             self._second_channel_spots(frame, z, y, x, cell_id, track_id)
 
+    def get_track_dataframe(self):
+        """
+        Computes a DataFrame for all track_ids containing T, Z, Y, X, and all properties
+        using self.unique_tracks and self.unique_track_properties.
+
+        Returns:
+            pd.DataFrame: DataFrame containing all track properties for all track_ids.
+        """
+        data_list = []  
+
+        column_names = [
+            "unique_id", "t", "z", "y", "x", 
+            "gen_id", "radius", "eccentricity_comp_first", "eccentricity_comp_second", 
+            "eccentricity_comp_third", "surface_area", "total_intensity", "speed", 
+            "motion_angle_z", "motion_angle_y", "motion_angle_x", "acceleration", 
+            "distance_cell_mask", "local_cell_density", "radial_angle_z", "radial_angle_y", 
+            "radial_angle_x", "cell_axis_z", "cell_axis_y", "cell_axis_x", "track_displacement", 
+            "total_track_distance", "max_track_distance", "track_duration", "msd"
+        ]
+        
+        for track_id in self.unique_tracks:
+            current_tracklets = self.unique_tracks[track_id]
+            current_tracklets_properties = self.unique_track_properties[track_id]
+            
+            for idx in range(len(current_tracklets)):
+                tracklet_info = current_tracklets[idx]
+                properties_info = current_tracklets_properties[idx]
+                
+                properties_info_skipped = properties_info[2:]
+                
+                combined_info = list(tracklet_info) + list(properties_info_skipped)
+                
+                data_list.append(combined_info)
+
+        track_df = pd.DataFrame(data_list, columns=column_names)
+
+        return track_df
+
+
+
+
+
     def _final_tracks(self, track_id):
 
         current_cell_ids = self.all_current_cell_ids[int(track_id)]
