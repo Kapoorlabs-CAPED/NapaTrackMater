@@ -2,7 +2,7 @@ from kapoorlabs_lightning.lightning_trainer import AutoLightningModel
 import numpy as np
 import concurrent
 import os
-from skimage.measure import regionprops, marching_cubes
+from skimage.measure import regionprops, marching_cubes, find_contours
 from pyntcloud import PyntCloud
 import pandas as pd
 import trimesh
@@ -78,6 +78,8 @@ class Clustering:
         self.timed_cluster_label = {}
         self.timed_latent_features = {}
         self.count = 0
+        if len(label_image.shape) == 2:
+            self.min_size = (self.min_size[-2], self.min_size[-1])
 
     def _compute_latent_features(self):
 
@@ -542,75 +544,90 @@ def _label_cluster(label_image, num_points, min_size, ndim, compute_with_autoenc
     return labels, centroids, clouds, marching_cube_points
 
 
+
 def get_label_centroid_cloud(
     binary_image,
     num_points,
     ndim,
     label,
     centroid,
-    min_size,
-    compute_with_autoencoder,
+    min_size=None,
+    compute_with_autoencoder=False,
 ):
+    """
+    Extracts a point cloud representation of a labeled region from a binary image.
 
-    valid = []
+    Args:
+        binary_image (ndarray): 2D or 3D binary segmentation image.
+        num_points (int): Number of points to sample in the cloud.
+        ndim (int): Dimensionality of the image (2D or 3D).
+        label (int): Label of the object being processed.
+        centroid (tuple): Coordinates of the object's centroid.
+        min_size (tuple, optional): Minimum required size in each dimension.
+        compute_with_autoencoder (bool, optional): Whether to process with an autoencoder.
 
+    Returns:
+        tuple: (label, centroid, cloud, simple_clouds) or None if invalid.
+    """
+
+    # Validate size constraints
     if min_size is not None:
-        for j in range(len(min_size)):
-            if binary_image.shape[j] >= min_size[j]:
-                valid.append(True)
-            else:
-                valid.append(False)
-    else:
-        for j in range(len(binary_image.shape)):
-            valid.append(True)
+        if any(binary_image.shape[j] < min_size[j] for j in range(len(binary_image.shape))):
+            return None  # Skip processing if below min_size
 
-    if False not in valid:
+    simple_clouds = None
 
+    if binary_image.ndim == 3:
+        # ---- Process 3D Image ----
         try:
-            vertices, faces, normals, values = marching_cubes(binary_image)
+            vertices, faces, _, _ = marching_cubes(binary_image)
         except RuntimeError:
-            vertices = None
+            return None  # Skip if marching cubes fails
 
-        if vertices is not None:
-            mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
-            simple_clouds = np.asarray(mesh_obj.sample(num_points).data)
+        mesh_obj = trimesh.Trimesh(vertices=vertices, faces=faces)
+        simple_clouds = np.asarray(mesh_obj.sample(num_points).data)
 
-            if compute_with_autoencoder:
-                mesh_obj = trimesh.Trimesh(
-                    vertices=vertices, faces=faces, process=False
-                )
+    elif binary_image.ndim == 2:
+        # ---- Process 2D Image ----
+        contours = find_contours(binary_image, level=0.5)  # Extract object boundary
+        if not contours:
+            return None  # Skip if no valid contour found
 
-                mesh_file = str(label)
+        simple_clouds = np.vstack(contours)  # Stack contour points
+        if simple_clouds.shape[0] > num_points:
+            indices = np.random.choice(simple_clouds.shape[0], num_points, replace=False)
+            simple_clouds = simple_clouds[indices]
 
-                with tempfile.TemporaryDirectory() as mesh_dir:
-                    save_mesh_file = os.path.join(mesh_dir, mesh_file) + ".off"
-                    mesh_obj.export(save_mesh_file)
-                    data = read_off(save_mesh_file)
+        # Add fake Z dimension (set z = 0) to match PyntCloud requirements
+        simple_clouds = np.hstack((simple_clouds, np.zeros((simple_clouds.shape[0], 1))))
+
+    else:
+        return None  # Unsupported dimensionality
+
+    # Compute point cloud
+    if compute_with_autoencoder:
+        with tempfile.TemporaryDirectory() as mesh_dir:
+            mesh_file = os.path.join(mesh_dir, f"{label}.off")
+
+            if binary_image.ndim == 3:
+                mesh_obj.export(mesh_file)
+                data = read_off(mesh_file)
                 pos, face = data["pos"], data["face"]
-                if pos.size(1) == 3 and face.size(0) == 3:
+
+                if pos.shape[1] == 3 and face.shape[0] == 3:
                     points = sample_points(data=data, num=num_points).numpy()
-                    if ndim == 2:
-                        cloud = get_panda_cloud_xy(points)
-                    if ndim == 3:
-                        cloud = get_panda_cloud_xyz(points)
-                    else:
-                        cloud = get_panda_cloud_xyz(points)
-                else:
-                    if ndim == 2:
-                        cloud = get_panda_cloud_xy(simple_clouds)
-                    elif ndim == 3:
-                        cloud = get_panda_cloud_xyz(simple_clouds)
-                    else:
-                        cloud = get_panda_cloud_xyz(simple_clouds)
-            else:
-                if ndim == 2:
-                    cloud = get_panda_cloud_xy(simple_clouds)
-                elif ndim == 3:
-                    cloud = get_panda_cloud_xyz(simple_clouds)
+                    cloud = get_panda_cloud_xyz(points)
                 else:
                     cloud = get_panda_cloud_xyz(simple_clouds)
 
-            return label, centroid, cloud, simple_clouds
+            else:  # 2D case
+                cloud = get_panda_cloud_xyz(simple_clouds)
+
+    else:
+        cloud = get_panda_cloud_xyz(simple_clouds) 
+
+    return label, centroid, cloud, simple_clouds
+
 
 
 def get_panda_cloud_xy(points):

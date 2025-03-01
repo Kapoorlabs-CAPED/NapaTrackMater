@@ -112,8 +112,10 @@ class TrackMate:
             self.channel_seg_image = channel_seg_image
         if seg_image is not None:
             self.seg_image = seg_image.astype(np.uint16)
+            
         else:
             self.seg_image = seg_image
+
         self.AttributeBoxname = AttributeBoxname
         self.TrackAttributeBoxname = TrackAttributeBoxname
         self.TrackidBox = TrackidBox
@@ -301,7 +303,6 @@ class TrackMate:
             self.master_xml_path = Path(".")
 
         if self.master_xml_path.is_dir() and self.xml_path is not None:
-            print("Reading XML")
             self.xml_content = et.fromstring(
                 open(self.xml_path).read().encode(), xml_parser
             )
@@ -323,7 +324,6 @@ class TrackMate:
             self._get_xml_data()
         if not isinstance(self.master_xml_path, str):
             if self.master_xml_path.is_file():
-                print("Reading Master XML")
 
                 self.xml_content = et.fromstring(
                     open(self.master_xml_path).read().encode(), xml_parser
@@ -408,25 +408,21 @@ class TrackMate:
             self.AttributeBoxname,
             self.detectorchannel,
         )
-        print("obtained spot attributes")
         self.TrackAttributeids, self.AllTrackValues = get_track_dataset(
             self.track_dataset,
             self.track_analysis_spot_keys,
             self.track_analysis_track_keys,
             self.TrackAttributeBoxname,
         )
-        print("obtained track attributes")
         self.AllEdgesValues = get_edges_dataset(
             self.edges_dataset,
             self.edges_dataset_index,
             self.track_analysis_spot_keys,
             self.track_analysis_edges_keys,
         )
-        print("obtained edge attributes")
 
     def _get_cell_sizes(self):
 
-        print("Getting largest cell size")
         if self.seg_image is not None:
             self.timed_cell_size = get_largest_size(compute_cell_size(self.seg_image))
         elif self.channel_seg_image is not None:
@@ -439,7 +435,6 @@ class TrackMate:
 
     def _get_boundary_points(self):
 
-        print("Computing boundary points")
         if self.mask is not None:
 
             if self.channel_seg_image is not None:
@@ -773,7 +768,7 @@ class TrackMate:
 
         else:
             # 2D+t case
-            y_test, x_test = test_location
+            z_test, y_test, x_test = test_location
             min_y = max(0, int(y_test - self.cell_veto_box))
             max_y = min(current_frame_image.shape[0] - 1, int(y_test + self.cell_veto_box))
             min_x = max(0, int(x_test - self.cell_veto_box))
@@ -1658,7 +1653,6 @@ class TrackMate:
         self.tstart = int(float(self.basicsettings.get("tstart")))
         self.tend = int(float(self.basicsettings.get("tend")))
 
-        print("Iterating over spots in frame")
         self.count = 0
         futures = []
 
@@ -1717,7 +1711,6 @@ class TrackMate:
             )
             self.graph_tracks[daughter_track_id] = parent_track_id
         self._get_cell_fate_tracks()
-        print("getting attributes")
         if (
             self.spot_csv_path is not None
             and self.track_csv_path is not None
@@ -1741,13 +1734,11 @@ class TrackMate:
             if self.channel_seg_image is None:
                 self._final_tracks(track_id)
         if self.channel_seg_image is None:
-            print("computing Phenotypes")
             self._compute_phenotypes()
             self._temporal_plots_trackmate()
 
     def _create_second_channel_xml(self):
 
-        print("Transferring XML")
         channel_filtered_tracks = []
         file_name = self.settings.get("filename")
         if "nuclei" in file_name:
@@ -1876,7 +1867,6 @@ class TrackMate:
             int(float(self.settings.get("height"))),
             int(float(self.settings.get("width"))),
         )
-        print(f"XML file made using image of {self.imagesize}")
         self.xcalibration = float(self.settings.get("pixelwidth"))
         self.ycalibration = float(self.settings.get("pixelheight"))
         self.zcalibration = float(self.settings.get("voxeldepth"))
@@ -1897,7 +1887,6 @@ class TrackMate:
             self._get_cell_sizes()
             self._get_boundary_points()
 
-        print("Iterating over spots in frame")
 
         self.count = 0
         futures = []
@@ -1968,11 +1957,9 @@ class TrackMate:
         if (
             self.autoencoder_model or self.enhance_trackmate_xml
         ) and self.seg_image is not None:
-            print("Getting clouds")
 
             self._assign_cluster_class()
 
-            print("Creating master xml")
             self._create_master_xml()
         self.count = 0
         for index, track_id in enumerate(self.filtered_track_ids):
@@ -1989,13 +1976,11 @@ class TrackMate:
             if self.channel_seg_image is None:
                 self._final_tracks(track_id)
         if self.channel_seg_image is None:
-            print("computing Phenotypes")
             self._compute_phenotypes()
             self._temporal_plots_trackmate()
 
     def _correct_track_status(self):
         if self.oneat_csv_file is not None:
-            print("Improving mitosis track classification using Oneat")
             self.count = 0
 
             detections = pd.read_csv(self.oneat_csv_file, delimiter=",")
@@ -3804,7 +3789,6 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
 
     # TZYX shaped object
     if ndim == 4:
-        print("Making mask in 4D")
         boundary = np.zeros(
             [mask.shape[0], mask.shape[1], mask.shape[2], mask.shape[3]], dtype=np.uint8
         )
@@ -3823,7 +3807,6 @@ def boundary_points(mask, xcalibration, ycalibration, zcalibration):
 
             tree = spatial.cKDTree(real_indices)
             timed_mask[str(i)] = [tree, indices, regioncentroid]
-    print("Computed the boundary points")
 
     return timed_mask, boundary
 
