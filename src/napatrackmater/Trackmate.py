@@ -1565,9 +1565,10 @@ class TrackMate:
             distance_cell_mask, maskcentroid = self._get_boundary_dist(
                 frame, testlocation
             )
-
-            local_cell_density = self._get_label_density(frame, testlocation)
-
+            if self.seg_image is not None or self.channel_seg_image is not None:
+               local_cell_density = self._get_label_density(frame, testlocation)
+            else:
+                local_cell_density = 1
             self.unique_spot_properties[cell_id] = {
                 self.cellid_key: int(cell_id),
                 self.frameid_key: int(float(Spotobject.get(self.frameid_key))),
@@ -2683,7 +2684,11 @@ class TrackMate:
         )
 
         distance_cell_mask, maskcentroid = self._get_boundary_dist(frame, location)
-        local_density = self._get_label_density(frame, location)
+        
+        if self.seg_image is not None or self.channel_seg_image is not None:
+               local_density = self._get_label_density(frame, location)
+        else:
+               local_cell_density = 1
         if dist <= 2 * veto_radius:
 
             if track_id not in self.matched_second_channel_tracks:
