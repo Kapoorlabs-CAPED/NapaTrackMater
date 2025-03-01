@@ -737,24 +737,51 @@ class TrackMate:
 
         self._iterate_dividing(root_root, root_leaf, root_splits)
 
+    
     def _get_label_density(self, frame, test_location):
+        """
+        Compute the label density in a local neighborhood for both 2D+t and 3D+t images.
+        
+        Args:
+            frame (int): The time frame index.
+            test_location (tuple): The (z, y, x) coordinates for 3D+t or (y, x) for 2D+t.
 
+        Returns:
+            int: The local cell density (number of unique labels in the region).
+        """
+        
+        # Select the correct frame
         if self.channel_seg_image is None:
             current_frame_image = self.seg_image[int(float(frame)), :]
-        if self.channel_seg_image is not None:
+        else:
             current_frame_image = self.channel_seg_image[int(float(frame)), :]
-        z_test, y_test, x_test = test_location
 
-        min_z = max(0, int(z_test - self.cell_veto_box))
-        max_z = min(current_frame_image.shape[0] - 1, int(z_test + self.cell_veto_box))
-        min_y = max(0, int(y_test - self.cell_veto_box))
-        max_y = min(current_frame_image.shape[1] - 1, int(y_test + self.cell_veto_box))
-        min_x = max(0, int(x_test - self.cell_veto_box))
-        max_x = min(current_frame_image.shape[2] - 1, int(x_test + self.cell_veto_box))
+        # Check if the image is 2D+t or 3D+t
+        is_3d = current_frame_image.ndim == 3  # True if (z, y, x), False if (y, x)
 
-        subvolume = current_frame_image[
-            min_z : max_z + 1, min_y : max_y + 1, min_x : max_x + 1
-        ]
+        if is_3d:
+            # 3D+t case
+            z_test, y_test, x_test = test_location
+            min_z = max(0, int(z_test - self.cell_veto_box))
+            max_z = min(current_frame_image.shape[0] - 1, int(z_test + self.cell_veto_box))
+            min_y = max(0, int(y_test - self.cell_veto_box))
+            max_y = min(current_frame_image.shape[1] - 1, int(y_test + self.cell_veto_box))
+            min_x = max(0, int(x_test - self.cell_veto_box))
+            max_x = min(current_frame_image.shape[2] - 1, int(x_test + self.cell_veto_box))
+            
+            subvolume = current_frame_image[min_z:max_z+1, min_y:max_y+1, min_x:max_x+1]
+
+        else:
+            # 2D+t case
+            y_test, x_test = test_location
+            min_y = max(0, int(y_test - self.cell_veto_box))
+            max_y = min(current_frame_image.shape[0] - 1, int(y_test + self.cell_veto_box))
+            min_x = max(0, int(x_test - self.cell_veto_box))
+            max_x = min(current_frame_image.shape[1] - 1, int(x_test + self.cell_veto_box))
+
+            subvolume = current_frame_image[min_y:max_y+1, min_x:max_x+1]
+
+        # Compute unique labels
         unique_labels = np.unique(subvolume)
         local_cell_density = len(unique_labels)
 
