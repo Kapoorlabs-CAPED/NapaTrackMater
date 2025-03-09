@@ -11,7 +11,7 @@ class CloudAutoEncoder(CloudAutoEncoder):
     def __init__(
         self,
         num_features,
-        k=20,
+        k=10,
         encoder_type="dgcnn",
         decoder_type="foldingnet",
         shape="plane",
