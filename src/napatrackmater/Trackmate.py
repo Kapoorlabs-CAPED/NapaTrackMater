@@ -834,6 +834,8 @@ class TrackMate:
             source_leaf = self.edge_source_lookup[leaf]
             current_cell_ids.append(leaf)
             self._dict_update(leaf, track_id, source_leaf, None)
+            self._msd_update(root_root[0], leaf)
+
             self.unique_spot_properties[leaf].update(
                 {self.dividing_key: dividing_trajectory}
             )
@@ -857,6 +859,7 @@ class TrackMate:
         for source_id in all_source_ids:
             target_ids = self.edge_target_lookup[source_id]
             current_cell_ids.append(source_id)
+            self._msd_update(root_root[0], source_id)
             # Root
             self.unique_spot_properties[source_id].update(
                 {self.dividing_key: dividing_trajectory}
@@ -936,6 +939,7 @@ class TrackMate:
             self.root_spots[int(current_root)] = self.unique_spot_properties[
                 int(current_root)
             ]
+            self._msd_update(root_root[0], current_root)
 
         self.all_current_cell_ids[int(track_id)] = current_cell_ids
         for i in range(len(current_cell_ids)):
