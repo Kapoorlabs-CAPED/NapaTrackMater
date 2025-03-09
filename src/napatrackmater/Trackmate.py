@@ -2472,7 +2472,6 @@ class TrackMate:
                 expanded_time[i] = i
             for current_unique_id in unique_ids_set:
 
-                expanded_intensity = np.zeros(self.tend - self.tstart + 1)
 
                 current_time = []
                 current_z = []
@@ -2511,7 +2510,6 @@ class TrackMate:
                         current_z.append(Z[j])
                         current_y.append(Y[j])
                         current_x.append(X[j])
-                        expanded_intensity[int(time[j])] = intensity[j]
                         current_intensity.append(intensity[j])
                         current_radius.append(radius[j])
                         current_speed.append(speed[j])
@@ -2623,14 +2621,14 @@ class TrackMate:
 
                 if point_sample > 0:
                     xf_sample = fftfreq(point_sample, self.tcalibration)
-                    fftstrip_sample = fft(expanded_intensity)
+                    fftstrip_sample = fft(current_intensity)
                     ffttotal_sample = np.abs(fftstrip_sample)
                     xf_sample = xf_sample[0 : len(xf_sample) // 2]
                     ffttotal_sample = ffttotal_sample[0 : len(ffttotal_sample) // 2]
 
                 unique_fft_properties_tracklet[current_unique_id] = (
                     expanded_time,
-                    expanded_intensity,
+                    current_intensity,
                     xf_sample,
                     ffttotal_sample,
                 )
