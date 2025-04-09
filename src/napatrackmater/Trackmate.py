@@ -46,7 +46,7 @@ class TrackMate:
         mask: np.ndarray = None,
         fourier=True,
         autoencoder_model=None,
-        enhance_trackmate_xml: bool = True,
+        enhance_trackmate_xml: bool = False,
         num_points=2048,
         batch_size=1,
         compute_with_autoencoder=False,
@@ -61,6 +61,7 @@ class TrackMate:
         basal_label: int = 1,
         goblet_label: int = 3,
         radial_label: int = 2,
+        enhanced_computation: bool = True
     ):
 
         self.xml_path = xml_path
@@ -87,6 +88,7 @@ class TrackMate:
         self.basal_label = basal_label
         self.goblet_label = goblet_label
         self.radial_label = radial_label
+        self.enhanced_computation = enhanced_computation
         if image is not None:
             self.image = image.astype(np.uint8)
         else:
@@ -1930,7 +1932,7 @@ class TrackMate:
             self.detectorchannel = 1
         self.tstart = int(float(self.basicsettings.get("tstart")))
         self.tend = int(float(self.basicsettings.get("tend")))
-        if self.channel_seg_image is None:
+        if self.channel_seg_image is None and self.enhanced_computation:
             self._get_cell_sizes()
             self._get_boundary_points()
 
@@ -1958,7 +1960,7 @@ class TrackMate:
                 if self.progress_bar is not None:
                     self.progress_bar.value = self.count
                 r.result()
-        if self.channel_seg_image is None:
+        if self.channel_seg_image is None and self.enhanced_computation:
             self._correct_track_status()
         print(f"Iterating over tracks {len(self.filtered_track_ids)}")
         self.count = 0
