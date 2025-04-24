@@ -41,6 +41,10 @@ from .Trackvector import (
     inception_dual_model_prediction
 )
 
+from .drift import (
+    affine_transform,  apply_alpha_drift, apply_xy_drift, apply_z_drift, crop_data, get_rotation, get_xy_drift, get_z_drift
+)
+
 from .CloudAutoEncoder import CloudAutoEncoder
 import json
 from csbdeep.utils.tf import keras_import
@@ -128,7 +132,16 @@ __all__ = (
     "create_h5",
     "normalize_image_in_chunks",
     "vision_inception_model_prediction",
-    "inception_dual_model_prediction"
+    "inception_dual_model_prediction",
+    "affine_transform",
+    "apply_alpha_drift", 
+    "apply_xy_drift", 
+    "apply_z_drift", 
+    "crop_data", 
+    "get_rotation", 
+    "get_xy_drift", 
+    "get_z_drift"
+
 )
 
 clear_models_and_aliases(CloudAutoEncoder)
