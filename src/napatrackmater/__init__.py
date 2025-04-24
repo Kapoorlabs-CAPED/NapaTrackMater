@@ -42,7 +42,8 @@ from .Trackvector import (
 )
 
 from .drift import (
-    affine_transform,  apply_alpha_drift, apply_xy_drift, apply_z_drift, crop_data, get_rotation, get_xy_drift, get_z_drift
+    affine_transform,  apply_alpha_drift, apply_xy_drift, apply_z_drift, crop_data, get_rotation, get_xy_drift, get_z_drift,
+    apply_alpha_drift_numpy, apply_xy_drift_numpy, apply_z_drift_numpy, crop_data_numpy, get_rotation_numpy, get_xy_drift_numpy, get_z_drift_numpy
 )
 
 from .CloudAutoEncoder import CloudAutoEncoder
@@ -140,7 +141,15 @@ __all__ = (
     "crop_data", 
     "get_rotation", 
     "get_xy_drift", 
-    "get_z_drift"
+    "get_z_drift",
+    "apply_alpha_drift_numpy", 
+    "apply_xy_drift_numpy", 
+    "apply_z_drift_numpy", 
+    "crop_data_numpy", 
+    "get_rotation_numpy", 
+    "get_xy_drift_numpy", 
+    "get_z_drift_numpy"
+
 
 )
 
