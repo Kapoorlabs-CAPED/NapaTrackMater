@@ -1,7 +1,7 @@
 from .pretrained import register_model, register_aliases, clear_models_and_aliases
 from .clustering import Clustering
 from .Trackmate import TrackMate, get_feature_dict, transfer_fate_location
-
+from .Trackcomparator import TrackComparator
 from .Trackvector import (
     TrackVector,
     convert_tracks_to_arrays,
@@ -148,7 +148,8 @@ __all__ = (
     "crop_data_numpy", 
     "get_rotation_numpy", 
     "get_xy_drift_numpy", 
-    "get_z_drift_numpy"
+    "get_z_drift_numpy",
+    "TrackComparator"
 
 
 )
