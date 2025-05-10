@@ -6,12 +6,13 @@ from scipy.optimize import linear_sum_assignment
 from typing import Union
 from .Trackmate import TrackMate
 import concurrent.futures
+from tqdm import tqdm
 
 class TrackComparator:
     """
     Simplified comparator: performs a linear assignment between GT and predicted tracks,
     returns the assignments and count of matches within a distance threshold.
-    Uses a ThreadPoolExecutor to parallelize cost matrix computation.
+    Uses a ThreadPoolExecutor with progress bar to parallelize cost matrix computation.
     """
     def __init__(self,
                  gt: Union[str, 'TrackMate'],
@@ -30,7 +31,7 @@ class TrackComparator:
     def evaluate(self, threshold: float) -> dict:
         """
         Perform optimal assignment between GT and predicted tracks, using
-        concurrent threads to build the cost matrix.
+        concurrent threads and a progress bar to build the cost matrix.
 
         Returns:
           - assignments: DataFrame with ['gt_track','pred_track','distance','matched']
@@ -59,17 +60,20 @@ class TrackComparator:
                         row[j] = max(d_gt.mean(), d_pred.mean())
             return i, row
 
-        # Build cost matrix in parallel
+        # Build cost matrix in parallel with progress bar
         cost = np.full((num_gt, num_pred), np.inf)
         with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
-            for i, row in executor.map(compute_row, enumerate(gt_items)):
+            futures = [executor.submit(compute_row, item) for item in enumerate(gt_items)]
+            for f in tqdm(concurrent.futures.as_completed(futures), total=num_gt,
+                          desc="Computing track distances"):
+                i, row = f.result()
                 cost[i, :] = row
 
-        # Solve assignment
+        # Solve assignment\        
         gt_idx, pred_idx = linear_sum_assignment(cost)
         records = []
         for i, j in zip(gt_idx, pred_idx):
-            gt_id, _ = gt_items[i]
+            gt_id, _   = gt_items[i]
             pred_id, _ = pred_items[j]
             dist = float(cost[i, j])
             matched = dist <= threshold
