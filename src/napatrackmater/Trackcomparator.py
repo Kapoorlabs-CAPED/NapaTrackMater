@@ -5,90 +5,68 @@ from scipy.optimize import linear_sum_assignment
 from typing import Union
 from .Trackmate import TrackMate
 
-# Assuming TrackMate class is available in the current module or imported appropriately
-# from trackmate_module import TrackMate
-
 class TrackComparator:
     """
-    Compare ground truth and predicted TrackMate trajectories by computing
-    3D track-to-track distances and optimal assignment.
-
-    Uses symmetric average minimal distance as the pairwise metric, then
-    solves a linear assignment to match predicted tracks to ground truth.
+    Simplified comparator: performs a linear assignment between GT and predicted tracks,
+    returns only the assignments and count of matches within a distance threshold.
     """
     def __init__(self,
                  gt: Union[str, 'TrackMate'],
                  pred: Union[str, 'TrackMate']):
-        # Load GT and prediction (paths or existing TrackMate instances)
-        self.gt = TrackMate(xml_path=gt, enhanced_computation=False) if isinstance(gt, str) else gt
+        # Load TrackMate instances
+        self.gt   = TrackMate(xml_path=gt,   enhanced_computation=False) if isinstance(gt, str)   else gt
         self.pred = TrackMate(xml_path=pred, enhanced_computation=False) if isinstance(pred, str) else pred
-
-        # Extract track dataframes
-        self.gt_df = self.gt.get_track_dataframe()
-        self.pred_df = self.pred.get_track_dataframe()
+        # Prepare track point clouds
+        self.gt_tracks   = self._track_cloud(self.gt.get_track_dataframe())
+        self.pred_tracks = self._track_cloud(self.pred.get_track_dataframe())
 
     def _track_cloud(self, df: pd.DataFrame) -> dict:
-        """Group df by unique_id and return dict of track_id -> Nx3 array."""
-        groups = df.groupby('unique_id')
-        return {tid: grp[['z','y','x']].values for tid, grp in groups}
+        """Group spots by unique_id and return dict of track_id -> Nx3 array."""
+        return {tid: grp[['z','y','x']].values for tid, grp in df.groupby('unique_id')}
 
-    def compute_pairwise_distances(self) -> pd.DataFrame:
+    def evaluate(self, threshold: float) -> dict:
         """
-        Compute symmetric average minimal distances for all GT-pred track pairs.
-        Returns a DataFrame with columns ['gt_track','pred_track','distance'].
-        """
-        gt_tracks = self._track_cloud(self.gt_df)
-        pred_tracks = self._track_cloud(self.pred_df)
-        records = []
-        for gt_id, gt_coords in gt_tracks.items():
-            tree_gt = cKDTree(gt_coords) if gt_coords.size else None
-            for pred_id, pred_coords in pred_tracks.items():
-                tree_pred = cKDTree(pred_coords) if pred_coords.size else None
-                if gt_coords.size and pred_coords.size:
-                    # directed distances
-                    d_gt = tree_pred.query(gt_coords)[0]
-                    d_pred = tree_gt.query(pred_coords)[0]
-                    avg_gt = np.mean(d_gt)
-                    avg_pred = np.mean(d_pred)
-                    dist = max(avg_gt, avg_pred)
-                else:
-                    dist = np.inf
-                records.append({'gt_track': gt_id,
-                                'pred_track': pred_id,
-                                'distance': float(dist)})
-        return pd.DataFrame(records)
+        Perform optimal assignment between GT and predicted tracks, then
+        determine which GT tracks are correctly found (distance <= threshold).
 
-    def match_tracks(self) -> pd.DataFrame:
+        Returns:
+          - assignments: DataFrame with ['gt_track','pred_track','distance','matched']
+          - num_hits: int, count of GT tracks with matched == True
+          - num_gt: total number of GT tracks
         """
-        Solve optimal assignment between GT and predicted tracks minimizing total distance.
-        Returns DataFrame with columns ['gt_track','pred_track','distance'] for matched pairs.
-        """
-        df = self.compute_pairwise_distances()
-        # pivot to matrix
-        pivot = df.pivot(index='gt_track', columns='pred_track', values='distance').fillna(np.inf)
-        cost = pivot.values
+        # Build cost matrix
+        gt_ids   = list(self.gt_tracks.keys())
+        pred_ids = list(self.pred_tracks.keys())
+        cost = np.zeros((len(gt_ids), len(pred_ids)), dtype=float)
+        for i, gt_id in enumerate(gt_ids):
+            gt_coords = self.gt_tracks[gt_id]
+            tree_gt = cKDTree(gt_coords)
+            for j, pred_id in enumerate(pred_ids):
+                pred_coords = self.pred_tracks[pred_id]
+                tree_pred = cKDTree(pred_coords)
+                # symmetric avg minimal distance
+                d_gt   = tree_pred.query(gt_coords)[0]
+                d_pred = tree_gt.query(pred_coords)[0]
+                cost[i, j] = max(d_gt.mean(), d_pred.mean())
+
+        # Optimal assignment
         gt_idx, pred_idx = linear_sum_assignment(cost)
-        matches = []
-        gt_list = pivot.index.tolist()
-        pred_list = pivot.columns.tolist()
+        records = []
         for i, j in zip(gt_idx, pred_idx):
-            gt_id = gt_list[i]
-            pred_id = pred_list[j]
-            dist = cost[i, j]
-            matches.append({'gt_track': gt_id,
+            gt_id = gt_ids[i]
+            pred_id = pred_ids[j]
+            dist = float(cost[i, j])
+            matched = dist <= threshold
+            records.append({'gt_track': gt_id,
                             'pred_track': pred_id,
-                            'distance': float(dist)})
-        return pd.DataFrame(matches)
+                            'distance': dist,
+                            'matched': matched})
+        assignments = pd.DataFrame(records)
 
-    def evaluate(self) -> dict:
-        """
-        Full evaluation:
-          - 'all_distances': DataFrame of all pairwise distances
-          - 'assignment': DataFrame of optimal GT-pred assignments
-        """
-        all_dist = self.compute_pairwise_distances()
-        assignment = self.match_tracks()
+        num_hits = int(assignments['matched'].sum())
+        num_gt = len(gt_ids)
         return {
-            'all_distances': all_dist,
-            'assignment': assignment
+            'assignments': assignments,
+            'num_hits': num_hits,
+            'num_gt': num_gt
         }
