@@ -24,7 +24,7 @@ class TrackComparator:
     def __init__(self,
                  gt: Union[str, 'TrackMate'],
                  pred: Union[str, 'TrackMate'],
-                 downsample: int = 1):
+                 downsampleT: int = 1):
         # Load TrackMate instances
         self.gt = TrackMate(xml_path=gt, enhanced_computation=False) if isinstance(gt, str) else gt
         self.pred = TrackMate(xml_path=pred, enhanced_computation=False) if isinstance(pred, str) else pred
@@ -35,9 +35,9 @@ class TrackComparator:
         raw_gt = self._track_cloud(self.gt_df)
         raw_pred = self._track_cloud(self.pred_df)
         # Downsample factor (1=no downsampling)
-        self.downsample = max(1, downsample)
+        self.downsampleT = max(1, downsampleT)
         # Precompute track items
-        self.gt_items = [(tid, coords[::self.downsample]) for tid, coords in raw_gt.items()]
+        self.gt_items = [(tid, coords) for tid, coords in raw_gt.items()]
         self.pred_items = list(raw_pred.items())
 
     def _track_cloud(self, df: pd.DataFrame) -> Dict[int, np.ndarray]:
@@ -97,7 +97,7 @@ class TrackComparator:
                   for tid,_ in self.gt_items]
         # Pred lengths up-sampled back to GT grid
         pred_len = [((self.pred_df[self.pred_df['unique_id']==tid]['t'].max() -
-                      self.pred_df[self.pred_df['unique_id']==tid]['t'].min()) * self.downsample)
+                      self.pred_df[self.pred_df['unique_id']==tid]['t'].min()) * self.downsampleT)
                     for tid,_ in self.pred_items]
         gt_arr = np.array(gt_len, int); pred_arr = np.array(pred_len, int)
         if gt_arr.size==0: return np.nan
@@ -116,7 +116,7 @@ class TrackComparator:
             spans.setdefault('gt',{})[tid] = (int(sub['t'].min()), int(sub['t'].max()))
         for tid,_ in self.pred_items:
             sub = self.pred_df[self.pred_df['unique_id']==tid]
-            b = int(sub['t'].min())*self.downsample; e = int(sub['t'].max())*self.downsample
+            b = int(sub['t'].min())*self.downsampleT; e = int(sub['t'].max())*self.downsampleT
             spans.setdefault('pred',{})[tid] = (b,e)
         # count T_rc
         T_rc=0
