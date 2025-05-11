@@ -6,10 +6,12 @@ computing assignment-only metrics plus CCA and CT, and summary plots.
 import os
 import numpy as np
 import pandas as pd
+from typing import List, Tuple
 from scipy.spatial import cKDTree
 from scipy.optimize import linear_sum_assignment
 from typing import Union, Dict
 from .Trackmate import TrackMate
+
 import concurrent.futures
 from tqdm import tqdm
 
@@ -44,7 +46,7 @@ class TrackComparator:
         """Group spots by unique_id and return dict of track_id -> Nx3 array."""
         return {tid: grp[['z','y','x']].values for tid, grp in df.groupby('unique_id')}
 
-    def evaluate(self, threshold: float) -> Dict[str, object]:
+    def evaluate(self, threshold: float, compute_bci: bool = False) -> Dict[str, object]:
         """
         Perform optimal assignment between GT and predicted tracks.
         Returns dict with:
@@ -86,8 +88,11 @@ class TrackComparator:
         # metrics
         cca = self.cca_metric()
         ct  = self.ct_metric(assignments)
+        bci = self.bci_metric(assignments) if compute_bci else None
+
         return {'assignments':assignments,'num_hits':num_hits,
-                'num_gt':num_gt,'num_pred':num_pred,'cca':cca,'ct':ct}
+                'num_gt':num_gt,'num_pred':num_pred,'cca':cca,'ct':ct,
+            'bci': bci}
 
     def cca_metric(self) -> float:
         """Cell Cycle Accuracy: CDF distance of track-length histograms."""
@@ -124,3 +129,82 @@ class TrackComparator:
             gt_id,pr_id = r['gt_track'], r['pred_track']
             if spans['gt'][gt_id]==spans['pred'][pr_id]: T_rc+=1
         return float(2*T_rc/(T_r+T_c)) if (T_r+T_c)>0 else np.nan
+    
+    def _get_mitosis_events(self, tm: TrackMate) -> List[Tuple[int,int]]:
+        """
+        Walk every dividing track in tm and return a list of
+        (track_id, split_frame) for *every* split event.
+        """
+        events = []
+        for trk in tm.DividingTrackIds:
+            if trk is None or trk == tm.TrackidBox:
+                continue
+            for spot in tm.all_current_cell_ids[int(trk)]:
+                children = tm.edge_target_lookup.get(spot, [])
+                # split if >1 children
+                if isinstance(children, list) and len(children) > 1:
+                    t_split = tm.unique_spot_properties[spot][tm.frameid_key]
+                    events.append((int(trk), int(t_split)))
+                    # no break → capture multiple splits per track
+        return events
+
+    def bci_metric(self,
+                   assignments: pd.DataFrame,
+                   tol: int = 1
+    ) -> float:
+        """
+        Branching Correctness Index (F1) of mitotic events.
+        Matches every GT (track,time) split to its assigned pred track within ±tol frames.
+        """
+        gt_events   = self._get_mitosis_events(self.gt)
+        pred_events = self._get_mitosis_events(self.pred)
+
+        # map GT → assigned pred
+        assign_map = {
+            int(r.gt_track): int(r.pred_track)
+            for r in assignments.itertuples(index=False)
+            if r.matched
+        }
+
+        tp = fp = fn = 0
+
+        # true / false negatives
+        for gt_tid, t_gt in gt_events:
+            pr_tid = assign_map.get(gt_tid)
+            if pr_tid is None:
+                fn += 1
+            else:
+                # did that pred track also split near the same time?
+                if any(pr == pr_tid and abs(t_pr - t_gt) <= tol
+                       for pr, t_pr in pred_events):
+                    tp += 1
+                else:
+                    fn += 1
+
+        # false positives: pred splits that didn’t match any GT
+        matched_preds = set(assign_map.values())
+        for pr_tid, t_pr in pred_events:
+            # if this pred track wasn’t assigned at all → FP
+            if pr_tid not in matched_preds:
+                fp += 1
+            else:
+                # if its matched GT track never split at this time → FP
+                # find all GT tracks that map to this pred
+                gt_tids = [gt for gt, pr in assign_map.items() if pr == pr_tid]
+                # for any such GT, is there a GT split within tol of t_pr?
+                matched_any = False
+                for candidate_gt in gt_tids:
+                    for gt2, t_gt2 in gt_events:
+                        if gt2 == candidate_gt and abs(t_pr - t_gt2) <= tol:
+                            matched_any = True
+                            break
+                    if matched_any:
+                        break
+                if not matched_any:
+                    fp += 1
+
+        # finally F1
+        precision = tp / max(tp + fp, 1)
+        recall    = tp / max(tp + fn, 1)
+        return 2 * (precision * recall) / max(precision + recall, 1e-4)
+
