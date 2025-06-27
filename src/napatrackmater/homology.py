@@ -3,9 +3,56 @@ from ripser import ripser
 from persim import plot_diagrams
 from tqdm import tqdm 
 import pandas as pd
-from gtda.homology import VietorisRipsPersistence
-from gtda.diagrams import PersistenceEntropy
 from scipy.spatial.distance import pdist, squareform
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+def plot_persistence_time_series(
+    diagrams_by_time,
+    dim=1,
+    save_path=None,
+    title=None
+):
+    """
+    Plot (birth, death) pairs across time, for features in H_dim.
+
+    Parameters
+    ----------
+    diagrams_by_time : dict[int, list[np.ndarray]]
+        Maps each t to its list of persistence diagrams.
+    dim : int
+        Homology dimension to show (0 = components, 1 = loops, 2 = voids).
+    save_path : str or None
+        If set, saves plot to this file.
+    """
+    all_births, all_deaths, all_times = [], [], []
+
+    for t, dgms in diagrams_by_time.items():
+        diag = dgms[dim]
+        if diag.size == 0:
+            continue
+        for bd in diag:
+            birth, death = bd
+            all_births.append(birth)
+            all_deaths.append(death)
+            all_times.append(t)
+
+    plt.figure(figsize=(6, 4))
+    plt.scatter(all_times, all_births, s=10, label="birth", alpha=0.5)
+    plt.scatter(all_times, all_deaths, s=10, label="death", alpha=0.5)
+    plt.xlabel("Time")
+    plt.ylabel("Scale (birth/death)")
+    plt.title(title or f"Persistence (H{dim}) over time")
+    plt.legend()
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path, dpi=200)
+        plt.close()
+    else:
+        plt.show()
+
 
 def vietoris_rips_at_t(
     df: pd.DataFrame,
@@ -89,90 +136,3 @@ def diagrams_over_time(df, time_col='t', **vr_kwargs):
     return diags
 
 
-
-def vr_entropy_all_frames(
-    df: pd.DataFrame,
-    spatial_cols=('z', 'y', 'x'),
-    metric='euclidean',
-    homology_dims=(0, 1, 2),
-    **vr_kwargs
-):
-    """
-    Compute Vietoris Rips persistence *once* for every movie frame
-    and return both the raw diagrams and a compact entropy feature.
-
-    Parameters
-    ----------
-    df : DataFrame
-        Must contain a 't' column and the spatial columns.
-    spatial_cols : tuple[str]
-        Column names in the order used to build the point cloud.
-    metric : str
-        Any metric accepted by gtda (default 'euclidean').
-    homology_dims : tuple[int]
-        Which homology dimensions to keep.
-    vr_kwargs : dict
-        Extra keywords forwarded to VietorisRipsPersistence, e.g.
-        `max_edge_length`, `n_jobs`, etc.
-
-    Returns
-    -------
-    t_sorted : (n_times,) ndarray
-        Sorted, unique time stamps.
-    diagrams : (n_times, n_pairs, 3) ndarray
-        Persistence diagrams in birth death dim format.
-    entropy : (n_times, len(homology_dims)) ndarray
-        Persistence-entropy features (one vector per frame).
-    """
-    # --- build the 3-D array of point clouds -----------------------------
-    t_sorted = np.sort(df['t'].unique())
-    point_clouds = np.stack([
-        df.loc[df['t'] == t, spatial_cols].to_numpy(float)
-        for t in t_sorted
-    ])
-
-    # --- gtda transformers ------------------------------------------------
-    vr = VietorisRipsPersistence(
-        metric=metric,
-        homology_dimensions=list(homology_dims),
-        **vr_kwargs
-    )
-    pe = PersistenceEntropy()
-
-    diagrams = vr.fit_transform(point_clouds)     # shape (n_times, n_pairs, 3)
-    entropy  = pe.fit_transform(diagrams)         # shape (n_times, |dims|)
-
-    return t_sorted, diagrams, entropy    
-
-
-def vr_entropy_generator(
-    df: pd.DataFrame,
-    spatial_cols=('z', 'y', 'x'),
-    metric='euclidean',
-    homology_dims=(0, 1, 2),
-    **vr_kwargs
-):
-    """
-    Yield a `(t, diagrams, entropy_vec)` triple for *each* frame.
-    Useful when the whole movie doesn’t fit in RAM.
-
-    Examples
-    --------
-    betti_0 = []
-    for t, diag, ent in vr_entropy_generator(tracks_dataframe):
-        betti_0.append((t, (diag[0][:,1] > diag[0][:,0]).sum()))   # β₀ count
-    """
-    vr = VietorisRipsPersistence(
-        metric=metric,
-        homology_dimensions=list(homology_dims),
-        **vr_kwargs
-    )
-    pe = PersistenceEntropy()
-
-    for t in np.sort(df['t'].unique()):
-        pts = df.loc[df['t'] == t, spatial_cols].to_numpy(float)
-        if pts.size == 0:
-            continue
-        diag      = vr.fit_transform(pts[None, :, :])[0]  # add fake batch axis
-        entropy_v = pe.fit_transform(diag[None, :, :])[0]
-        yield t, diag, entropy_v    
