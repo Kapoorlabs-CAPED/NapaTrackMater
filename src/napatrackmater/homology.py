@@ -10,66 +10,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 def plot_persistence_time_series(
-    diagrams_by_time,
-    dim=1,
-    save_path=None,
-    title=None,
-    sort_by_persistence=True,
-):
-    """
-    Visualise a barcode over time: one bar per feature, showing its birth and death scale.
-
-    Parameters
-    ----------
-    diagrams_by_time : dict[int, list[np.ndarray]]
-        Map of time -> list of diagrams (one per dimension).
-    dim : int
-        Homology dimension (e.g. 1 for loops).
-    sort_by_persistence : bool
-        If True, sort bars by persistence (death - birth).
-    max_bars : int
-        Max number of bars to show (to avoid overload).
-    """
-    all_bars = []
-
-    for t, dgms in diagrams_by_time.items():
-        if len(dgms) <= dim:
-            continue
-        for birth, death in dgms[dim]:
-            all_bars.append((t, birth, death))
-
-    if not all_bars:
-        print("No features found.")
-        return
-
-    all_bars = np.array(all_bars)
-    persistence = all_bars[:, 2] - all_bars[:, 1]
-
-    # optionally sort by persistence
-    if sort_by_persistence:
-        sorted_idx = np.argsort(-persistence)
-        all_bars = all_bars[sorted_idx]
-
-
-    # plot each bar as a horizontal line
-    plt.figure(figsize=(10, 6))
-    for i, (t, b, d) in enumerate(all_bars):
-        plt.hlines(y=i, xmin=b, xmax=d, color='royalblue', linewidth=1.5)
-        plt.plot([b, d], [i, i], 'o', color='black', markersize=2)
-
-    plt.xlabel("Scale")
-    plt.ylabel("Topological feature (sorted)")
-    plt.title(title or f"Barcode plot over time (H{dim})")
-    plt.tight_layout()
-
-    if save_path:
-        plt.savefig(save_path, dpi=200)
-        plt.close()
-    else:
-        plt.show()
-
-
-def save_barcode_per_time(
+    
     diagrams_by_time,
     dims=(0, 1),
     save_dir="barcodes_per_frame",
