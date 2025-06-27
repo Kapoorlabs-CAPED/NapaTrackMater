@@ -1,5 +1,5 @@
 import numpy as np
-import os
+import seaborn as sns
 from pathlib import Path
 from ripser import ripser
 from persim import plot_diagrams
@@ -17,35 +17,25 @@ def save_barcodes_and_stats(
     dims=(0, 1),
     save_dir="barcodes_per_frame",
     max_bars=None,
-    save_hist=True,
+    plot_joint_hist=True,
     csv_loop_stats=True,
 ):
     """
     For every time-point save:
       • barcode plot PNG (H_dim for dim in dims)
-      • optional histogram of H1 persistence (loop length)
-      • optional CSV with birth, death, persistence (H1)
-
-    Parameters
-    ----------
-    diagrams_by_time : dict[int, list[np.ndarray]]
-        Output of `diagrams_over_time`.
-    dims : tuple[int]
-        Which homology dimensions to visualise as barcodes.
-    save_dir : str
-        Root folder to hold outputs.
-    max_bars : int or None
-        Trim each barcode to this many most-persistent features.
+      • optional: combined histogram/KDE of H1 persistence across time
+      • optional: CSV per timepoint with birth/death/persistence (H1)
     """
     save_dir = Path(save_dir)
     png_dir = save_dir / "png"
-    hist_dir = save_dir / "hist"
     csv_dir = save_dir / "csv"
+    hist_path = save_dir / "combined_histogram_H1_persistence.png"
+
     png_dir.mkdir(parents=True, exist_ok=True)
-    if save_hist:
-        hist_dir.mkdir(exist_ok=True)
     if csv_loop_stats:
         csv_dir.mkdir(exist_ok=True)
+
+    all_persistence = []
 
     for t, dgms in diagrams_by_time.items():
         # ---------- BARCODE PLOT --------------------------------------
@@ -75,27 +65,43 @@ def save_barcodes_and_stats(
         fig.savefig(png_dir / f"barcode_t{int(t):04d}.png", dpi=200)
         plt.close(fig)
 
-        # ---------- HISTOGRAM of loop persistence --------------------
-        if save_hist and len(dgms) > 1 and dgms[1].size:
-            lengths = dgms[1][:, 1] - dgms[1][:, 0]
-            plt.figure(figsize=(4, 3))
-            plt.hist(lengths, bins=30, color="steelblue")
-            plt.title(f"H1 persistence lengths at t={t}")
-            plt.xlabel("Persistence (death − birth)")
-            plt.ylabel("# loops")
-            plt.tight_layout()
-            plt.savefig(hist_dir / f"hist_t{int(t):04d}.png", dpi=200)
-            plt.close()
+        # ---------- COLLECT H1 persistences ---------------------------
+        if plot_joint_hist and len(dgms) > 1 and dgms[1].size:
+            persistence = dgms[1][:, 1] - dgms[1][:, 0]
+            all_persistence.append(
+                pd.DataFrame(
+                    {"persistence": persistence, "time": t}
+                )
+            )
 
         # ---------- CSV export for H1 --------------------------------
         if csv_loop_stats and len(dgms) > 1 and dgms[1].size:
-            df_out = pd.DataFrame(
-                dgms[1], columns=["birth", "death"]
-            )
+            df_out = pd.DataFrame(dgms[1], columns=["birth", "death"])
             df_out["persistence"] = df_out["death"] - df_out["birth"]
-            df_out.to_csv(
-                csv_dir / f"loops_t{int(t):04d}.csv", index=False
-            )
+            df_out.to_csv(csv_dir / f"loops_t{int(t):04d}.csv", index=False)
+
+    # ---------- PLOT OVERLAID HISTOGRAM (SEABORN) ---------------------
+    if plot_joint_hist and all_persistence:
+        full_df = pd.concat(all_persistence, ignore_index=True)
+
+        plt.figure(figsize=(8, 5))
+        sns.histplot(
+            data=full_df,
+            x="persistence",
+            hue="time",
+            element="step",
+            stat="density",
+            common_bins=True,
+            bins=40,
+            palette="viridis",
+            alpha=0.35,
+        )
+        plt.title("H1 persistence distributions over time")
+        plt.xlabel("Persistence (death - birth)")
+        plt.ylabel("Density")
+        plt.tight_layout()
+        plt.savefig(hist_path, dpi=300)
+        plt.close()
 
 
 def vietoris_rips_at_t(
