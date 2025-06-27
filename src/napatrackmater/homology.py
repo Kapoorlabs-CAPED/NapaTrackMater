@@ -83,24 +83,36 @@ def save_barcodes_and_stats(
     # ---------- PLOT OVERLAID HISTOGRAM (SEABORN) ---------------------
     if plot_joint_hist and all_persistence:
         full_df = pd.concat(all_persistence, ignore_index=True)
-        unique_times = sorted(full_df["time"].unique())
+
+        # ----- assign a bin id to every time value ----------------
+        full_df["bin"] = (full_df["time"] // 50).astype(int)     # 0,1,2,…
+
+        # palette with as many distinct colours as bins
+        n_bins = full_df["bin"].nunique()
+        palette = sns.color_palette("tab10", n_bins)  # tab10 repeats nicely
 
         plt.figure(figsize=(10, 6))
-        for t in unique_times:
-            subset = full_df[full_df["time"] == t]
-            label = f"t={t}" if t % 100 == 0 else None  # label only every 100th frame
-            sns.kdeplot(
-                subset["persistence"],
-                label=label,
-                alpha=0.4,
-                linewidth=1.3
-            )
 
-        plt.title("H1 persistence KDEs across time")
+        # iterate over bins so we plot each KDE once per time *inside* the bin
+        for bin_id, colour in zip(sorted(full_df["bin"].unique()), palette):
+            times_in_bin = full_df.loc[full_df["bin"] == bin_id, "time"].unique()
+            for t in times_in_bin:
+                subset = full_df[(full_df["time"] == t)]
+                # label only the *first* time we draw this bin for the legend
+                label = f"{bin_id*50}-{bin_id*50+49}" if t == times_in_bin[0] else None
+                sns.kdeplot(
+                    subset["persistence"],
+                    color=colour,
+                    label=label,
+                    linewidth=1.4,
+                    alpha=0.40,
+                )
+
+        plt.title("H1 persistence KDEs (grouped in 50-frame bins)")
         plt.xlabel("Persistence (death - birth)")
         plt.ylabel("Density")
+        plt.legend(title="Time bin (t)")
         plt.tight_layout()
-        plt.legend(title="Time (t)", fontsize=8, title_fontsize=9)
         plt.savefig(hist_path, dpi=300)
         plt.close()
 
