@@ -12,39 +12,53 @@ def plot_persistence_time_series(
     diagrams_by_time,
     dim=1,
     save_path=None,
-    title=None
+    title=None,
+    sort_by_persistence=True,
 ):
     """
-    Plot (birth, death) pairs across time, for features in H_dim.
+    Visualise a barcode over time: one bar per feature, showing its birth and death scale.
 
     Parameters
     ----------
     diagrams_by_time : dict[int, list[np.ndarray]]
-        Maps each t to its list of persistence diagrams.
+        Map of time -> list of diagrams (one per dimension).
     dim : int
-        Homology dimension to show (0 = components, 1 = loops, 2 = voids).
-    save_path : str or None
-        If set, saves plot to this file.
+        Homology dimension (e.g. 1 for loops).
+    sort_by_persistence : bool
+        If True, sort bars by persistence (death - birth).
+    max_bars : int
+        Max number of bars to show (to avoid overload).
     """
-    all_births, all_deaths, all_times = [], [], []
+    all_bars = []
 
     for t, dgms in diagrams_by_time.items():
-        diag = dgms[dim]
-        if diag.size == 0:
+        if len(dgms) <= dim:
             continue
-        for bd in diag:
-            birth, death = bd
-            all_births.append(birth)
-            all_deaths.append(death)
-            all_times.append(t)
+        for birth, death in dgms[dim]:
+            all_bars.append((t, birth, death))
 
-    plt.figure(figsize=(6, 4))
-    plt.scatter(all_times, all_births, s=10, label="birth", alpha=0.5)
-    plt.scatter(all_times, all_deaths, s=10, label="death", alpha=0.5)
-    plt.xlabel("Time")
-    plt.ylabel("Scale (birth/death)")
-    plt.title(title or f"Persistence (H{dim}) over time")
-    plt.legend()
+    if not all_bars:
+        print("No features found.")
+        return
+
+    all_bars = np.array(all_bars)
+    persistence = all_bars[:, 2] - all_bars[:, 1]
+
+    # optionally sort by persistence
+    if sort_by_persistence:
+        sorted_idx = np.argsort(-persistence)
+        all_bars = all_bars[sorted_idx]
+
+
+    # plot each bar as a horizontal line
+    plt.figure(figsize=(10, 6))
+    for i, (t, b, d) in enumerate(all_bars):
+        plt.hlines(y=i, xmin=b, xmax=d, color='royalblue', linewidth=1.5)
+        plt.plot([b, d], [i, i], 'o', color='black', markersize=2)
+
+    plt.xlabel("Scale")
+    plt.ylabel("Topological feature (sorted)")
+    plt.title(title or f"Barcode plot over time (H{dim})")
     plt.tight_layout()
 
     if save_path:
