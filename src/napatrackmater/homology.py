@@ -1,4 +1,5 @@
 import numpy as np
+import os
 from ripser import ripser
 from persim import plot_diagrams
 from tqdm import tqdm 
@@ -66,6 +67,64 @@ def plot_persistence_time_series(
         plt.close()
     else:
         plt.show()
+
+
+def save_barcode_per_time(
+    diagrams_by_time,
+    dims=(0, 1),
+    save_dir="barcodes_per_frame",
+    max_bars=None,
+):
+    """
+    Generate one barcode plot per timepoint and save as PNG.
+
+    Parameters
+    ----------
+    diagrams_by_time : dict[int, list[np.ndarray]]
+        t → diagrams list per homology dimension
+    dims : tuple[int]
+        Which homology dimensions to plot
+    save_dir : str
+        Folder to save PNGs
+    max_bars : int or None
+        Max number of features per plot (to reduce clutter)
+    """
+    os.makedirs(save_dir, exist_ok=True)
+
+    for t, dgms in diagrams_by_time.items():
+        fig, axs = plt.subplots(len(dims), 1, figsize=(8, 2.5 * len(dims)), squeeze=False)
+
+        for i, dim in enumerate(dims):
+            ax = axs[i, 0]
+            if dim >= len(dgms):
+                ax.axis('off')
+                continue
+
+            diag = dgms[dim]
+            if diag.size == 0:
+                ax.set_title(f"H{dim} (empty)")
+                ax.axis("off")
+                continue
+
+            # optionally trim number of bars
+            if max_bars is not None and len(diag) > max_bars:
+                pers = diag[:, 1] - diag[:, 0]
+                top_idx = np.argsort(-pers)[:max_bars]
+                diag = diag[top_idx]
+
+            for j, (b, d) in enumerate(diag):
+                ax.hlines(y=j, xmin=b, xmax=d, color="tab:blue")
+                ax.plot([b, d], [j, j], 'o', color='black', markersize=2)
+
+            ax.set_title(f"H{dim} barcode at t={t}")
+            ax.set_xlabel("Filtration scale")
+            ax.set_ylabel("Feature index")
+            ax.grid(True)
+
+        fig.tight_layout()
+        save_path = os.path.join(save_dir, f"barcode_t{int(t):04d}.png")
+        fig.savefig(save_path, dpi=200)
+        plt.close(fig)
 
 
 def vietoris_rips_at_t(
