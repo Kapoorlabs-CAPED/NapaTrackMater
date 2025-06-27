@@ -5,46 +5,76 @@ from tqdm import tqdm
 import pandas as pd
 from gtda.homology import VietorisRipsPersistence
 from gtda.diagrams import PersistenceEntropy
+from scipy.spatial.distance import pdist, squareform
 
-def vietoris_rips_at_t(df, t,
-                       spatial_cols=('z', 'y', 'x'),
-                       max_dim=2,
-                       max_edge=None,        
-                       metric='euclidean',
-                       normalise=False,
-                       plot=True):
+def vietoris_rips_at_t(
+    df: pd.DataFrame,
+    t,
+    spatial_cols=('z', 'y', 'x'),
+    max_dim=2,
+    max_edge=None,
+    metric='euclidean',
+    normalise=False,
+    plot=False,
+    use_explicit_distance=True,
+):
     """
-    Compute VR persistent homology of points at time t.
+    Robust VR persistent homology for a single frame.
 
     Parameters
     ----------
-    df : pd.DataFrame with at least ['t', *spatial_cols]
-    t  : scalar time stamp
-    spatial_cols : iterable of coordinate columns to use
-    max_dim : largest homology dimension to compute (0 -> components, 1 -> loops, …)
-    max_edge : optional distance cut-off to save RAM/CPU
-    metric : any metric accepted by scipy.spatial
-    normalise : z-score the point cloud before TDA
-    plot : whether to draw the persistence diagram
+    df : DataFrame with 't' and coordinate columns
+    t  : time stamp
+    use_explicit_distance : if True, pre-compute a distance matrix and
+                            call ripser(..., distance_matrix=True)
 
     Returns
     -------
-    dgms : list of numpy arrays, one per dimension
+    dgms : list of arrays, diagrams[dim] = [[birth, death], …]
     """
-    pts = df.loc[df['t'] == t, spatial_cols].to_numpy(float)
-    if pts.shape[0] == 0:
-        raise ValueError(f"No points found at t = {t}")
+    # ------------------------------------------------------------------ #
+    # 1. slice and sanitise the point cloud
+    # ------------------------------------------------------------------ #
+    pts = (
+        df.loc[df['t'] == t, spatial_cols]
+        .dropna()                     # remove any row with NaN
+        .astype(float)                # force numeric, errors -> ValueError
+        .to_numpy(dtype=np.float64)   # ensure contiguous float64 array
+    )
+
+    if pts.size == 0:
+        raise ValueError(f"No valid points at t = {t}")
 
     if normalise:
-        pts = (pts - pts.mean(0)) / pts.std(0)
+        # guard against zero std which would give NaNs
+        std = pts.std(0, ddof=0)
+        std[std == 0] = 1.0
+        pts = (pts - pts.mean(0)) / std
 
-    dgms = ripser(
-        pts,
-        maxdim=max_dim,
-        thresh=max_edge,
-        metric=metric
-    )['dgms']
+    # ------------------------------------------------------------------ #
+    # 2. Ripser
+    # ------------------------------------------------------------------ #
+    if use_explicit_distance:
+        dists = squareform(pdist(pts, metric=metric)).astype(np.float64)
 
+        if np.isnan(dists).any():
+            raise ValueError(f"Distance matrix for t={t} contains NaN values")
+
+        dgms = ripser(
+            dists,
+            distance_matrix=True,
+            maxdim=max_dim,
+            thresh=max_edge if max_edge is not None else np.inf,
+        )["dgms"]
+    else:
+        dgms = ripser(
+            pts,
+            maxdim=max_dim,
+            thresh=max_edge,
+            metric=metric,
+        )["dgms"]
+
+    # optional quick look
     if plot:
         plot_diagrams(dgms, show=True, title=f"t = {t}")
 
