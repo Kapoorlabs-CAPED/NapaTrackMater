@@ -83,25 +83,27 @@ def save_barcodes_and_stats(
     # ---------- PLOT OVERLAID HISTOGRAM (SEABORN) ---------------------
     if plot_joint_hist and all_persistence:
         full_df = pd.concat(all_persistence, ignore_index=True)
+        unique_times = sorted(full_df["time"].unique())
 
-        plt.figure(figsize=(8, 5))
-        sns.histplot(
-            data=full_df,
-            x="persistence",
-            hue="time",
-            element="step",
-            stat="density",
-            common_bins=True,
-            bins=40,
-            palette="viridis",
-            alpha=0.35,
-        )
-        plt.title("H1 persistence distributions over time")
+        plt.figure(figsize=(10, 6))
+        for t in unique_times:
+            subset = full_df[full_df["time"] == t]
+            label = f"t={t}" if t % 100 == 0 else None  # label only every 100th frame
+            sns.kdeplot(
+                subset["persistence"],
+                label=label,
+                alpha=0.4,
+                linewidth=1.3
+            )
+
+        plt.title("H1 persistence KDEs across time")
         plt.xlabel("Persistence (death - birth)")
         plt.ylabel("Density")
         plt.tight_layout()
+        plt.legend(title="Time (t)", fontsize=8, title_fontsize=9)
         plt.savefig(hist_path, dpi=300)
         plt.close()
+
 
 
 def vietoris_rips_at_t(
