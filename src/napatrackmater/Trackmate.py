@@ -4152,7 +4152,22 @@ def set_scale(dimensions, x_calibration, y_calibration, z_calibration):
 
 
 def transfer_fate_location(membranesegimage, csv_file, save_file, space_veto=10):
+    """
+    Transfer fate location based on membrane segmentation image.
 
+    Parameters:
+    - membranesegimage: ndarray
+        Membrane segmentation image.
+    - csv_file: str
+        Path to the CSV file containing coordinates.
+    - save_file: str
+        Path to save the output CSV file.
+    - space_veto: int, optional
+        Space veto threshold.
+
+    Returns:
+    None
+    """
     dataframe = pd.read_csv(csv_file)
     writer = csv.writer(open(save_file, "w", newline=""))
     writer.writerow(["t", "z", "y", "x"])

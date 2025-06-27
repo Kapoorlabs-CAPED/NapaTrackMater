@@ -11,7 +11,19 @@ from .fast_radius_regression import FastRadiusRegressor
 
 
 def outdate_fit(method):
-    """Records that model fit must be recomputed"""
+    """
+    Decorator to mark that the model fit must be recomputed.
+
+    Parameters
+    ----------
+    method : Callable
+        The method to be decorated.
+
+    Returns
+    -------
+    Callable
+        The decorated method.
+    """
 
     @functools.wraps(method)
     def wrapper(self, *args, **kwargs):
@@ -22,7 +34,19 @@ def outdate_fit(method):
 
 
 def update_fit(method):
-    """Recompute fit if necessary"""
+    """
+    Decorator to recompute fit if necessary.
+
+    Parameters
+    ----------
+    method : Callable
+        The method to be decorated.
+
+    Returns
+    -------
+    Callable
+        The decorated method.
+    """
 
     @functools.wraps(method)
     def wrapper(self, *args, **kwargs):
@@ -46,7 +70,7 @@ class FateMapping:
         bind_to_existing: bool = True,
     ) -> None:
         """
-        Simulates a fate map experiment from a set of tracks by interpolating coordinates at each time step.
+        Initialize FateMapping class.
 
         Parameters
         ----------
@@ -67,6 +91,7 @@ class FateMapping:
         bind_to_existing : bool, optional
             Binds sample to existing data point at starting time, by default True
         """
+
         self._base_colnames = ["Track ID", "t", "z", "y", "x"]
         self._spatial_columns = [
             "z",
@@ -103,7 +128,20 @@ class FateMapping:
         self.bind_to_existing = bind_to_existing
 
     def _validate_data(self, value: Union[np.ndarray, pd.DataFrame]) -> pd.DataFrame:
-        """Sanity checks the data and converts to df if necessary"""
+        """
+        Validate the data and convert to dataframe if necessary.
+
+        Parameters
+        ----------
+        value : Union[np.ndarray, pd.DataFrame]
+            The data to be validated.
+
+        Returns
+        -------
+        pd.DataFrame
+            The validated data.
+        """
+
         if value.ndim != 2:
             raise ValueError(f"data must be 2-dim array, found {value.ndim}-dim")
 
@@ -119,11 +157,28 @@ class FateMapping:
 
     @property
     def data(self) -> pd.DataFrame:
+        """
+        Get the data.
+
+        Returns
+        -------
+        pd.DataFrame
+            The data.
+        """
+
         return self._data
 
     @data.setter
     def data(self, value: Optional[pd.DataFrame]) -> None:
-        """Sets tracking data"""
+        """
+        Set the tracking data.
+
+        Parameters
+        ----------
+        value : Optional[pd.DataFrame]
+            The data to be set.
+        """
+
         self._fitted = False
         self._models = {}
 
@@ -138,37 +193,91 @@ class FateMapping:
 
     @property
     def weights(self) -> str:
+        """
+        Get the weights.
+
+        Returns
+        -------
+        str
+            The weights.
+        """
+
         return self._weights
 
     @weights.setter
     def weights(self, value: str) -> None:
-        """Neighborhood weighting for interpolation (knn regression)"""
+        """
+        Set the neighborhood weighting for interpolation (knn regression).
+
+        Parameters
+        ----------
+        value : str
+            The weights to be set.
+        """
+
         self._weights = value
         for model in self._models.values():
             model.weights = value
 
     @property
     def radius(self) -> float:
+        """
+        Get the radius.
+
+        Returns
+        -------
+        float
+            The radius.
+        """
+
         return self._radius
 
     @radius.setter
     @outdate_fit
     def radius(self, value: float) -> None:
-        """Neighborhood radius for interpolation (knn regression)"""
+        """
+        Set the neighborhood radius for interpolation (knn regression).
+
+        Parameters
+        ----------
+        value : float
+            The radius to be set.
+        """
+
         self._radius = value
 
     @property
     def reverse(self) -> bool:
+        """
+        Get the reverse.
+
+        Returns
+        -------
+        bool
+            The reverse.
+        """
+
         return self._reverse
 
     @reverse.setter
     @outdate_fit
     def reverse(self, value: bool) -> None:
-        """Sets interpolation direction"""
+        """
+        Set the interpolation direction.
+
+        Parameters
+        ----------
+        value : bool
+            The reverse to be set.
+        """
+
         self._reverse = value
 
     def _fit(self) -> None:
-        """Fits a model for each time point"""
+        """
+        Fit a model for each time point.
+        """
+
         if self._data is None:
             raise ValueError("Data must be set before executing Fate Mapping")
 
@@ -179,7 +288,19 @@ class FateMapping:
         self._fitted = True
 
     def _fit_model(self, time: int) -> RadiusNeighborsRegressor:
-        """Fits the interpolation model to the given time point"""
+        """
+        Fit the interpolation model to the given time point.
+
+        Parameters
+        ----------
+        time : int
+            The time point.
+
+        Returns
+        -------
+        RadiusNeighborsRegressor
+            The fitted model.
+        """
 
         # merge consecutive time points
         df = pd.concat(
@@ -234,13 +355,36 @@ class FateMapping:
 
     @property
     def step(self) -> int:
-        """Time step"""
+        """
+        Get the time step.
+
+        Returns
+        -------
+        int
+            The time step.
+        """
+
         return -1 if self.reverse else 1
 
     def time_iter(
         self, t0: Optional[int] = None, max_length: Optional[int] = None
     ) -> Iterable[int]:
-        """Time step iterable, starting at `t0`"""
+        """
+        Get the time step iterable, starting at `t0`.
+
+        Parameters
+        ----------
+        t0 : Optional[int], optional
+            The starting time.
+        max_length : Optional[int], optional
+            The maximum length.
+
+        Returns
+        -------
+        Iterable[int]
+            The time step iterable.
+        """
+
         if t0 is not None and (t0 < self._tmin or t0 > self._tmax):
             raise ValueError(
                 f"time point out of models range {(self._tmin, self._tmax)}"
@@ -268,7 +412,20 @@ class FateMapping:
             return range(t0, tN, self.step)
 
     def _compute_heatmap(self, paths: np.ndarray) -> zarr.Array:
-        """Accumulates frequency of `path` hits"""
+        """
+        Accumulate frequency of `path` hits.
+
+        Parameters
+        ----------
+        paths : np.ndarray
+            The paths.
+
+        Returns
+        -------
+        zarr.Array
+            The heatmap.
+        """
+
         shape = np.ceil(paths[:, 1:].max(axis=0)).astype(int) + 1
         heatmap = zarr.zeros(
             shape=shape,
@@ -288,18 +445,59 @@ class FateMapping:
 
     @staticmethod
     def _valid_rows(pos: np.ndarray) -> np.ndarray:
-        """Returns mask of rows with no nan values"""
+        """
+        Get mask of rows with no nan values.
+
+        Parameters
+        ----------
+        pos : np.ndarray
+            The positions.
+
+        Returns
+        -------
+        np.ndarray
+            The mask of rows with no nan values.
+        """
+
         return np.logical_not(np.any(np.isnan(pos), axis=1))
 
     def _as_track(self, t: int, pos: np.ndarray) -> np.ndarray:
-        """Converts coordinates and time to tracks format"""
+        """
+        Convert coordinates and time to tracks format.
+
+        Parameters
+        ----------
+        t : int
+            The time.
+        pos : np.ndarray
+            The positions.
+
+        Returns
+        -------
+        np.ndarray
+            The tracks.
+        """
+
         t = np.full(pos.shape[0], t)[:, np.newaxis]
         track_ids = np.arange(1, 1 + pos.shape[0])[:, np.newaxis]
         tracks = np.concatenate((track_ids, t, pos), axis=1)
         return tracks[self._valid_rows(pos)]
 
     def _get_noise_function(self, shape: Tuple[int]) -> Callable:
-        """Noise or dummy function given sigma"""
+        """
+        Get noise or dummy function given sigma.
+
+        Parameters
+        ----------
+        shape : Tuple[int]
+            The shape.
+
+        Returns
+        -------
+        Callable
+            The noise function.
+        """
+
         if self.sigma == 0.0:
             zeros = np.zeros(shape, dtype=np.float32)
 
@@ -315,7 +513,20 @@ class FateMapping:
         return _fun
 
     def _knn_sampling(self, coords: np.ndarray) -> np.ndarray:
-        """Selects nearest neighbors on reference data"""
+        """
+        Select nearest neighbors on reference data.
+
+        Parameters
+        ----------
+        coords : np.ndarray
+            The coordinates.
+
+        Returns
+        -------
+        np.ndarray
+            The nearest neighbors.
+        """
+
         samples = []
         for t in np.unique(coords[:, 0]):
             current = coords[coords[:, 0] == t]
@@ -327,7 +538,20 @@ class FateMapping:
         return np.concatenate(samples, axis=0, dtype=float)
 
     def _sample_sources(self, coords: np.ndarray) -> np.ndarray:
-        """Samples `n_samples` per coordinate"""
+        """
+        Sample `n_samples` per coordinate.
+
+        Parameters
+        ----------
+        coords : np.ndarray
+            The coordinates.
+
+        Returns
+        -------
+        np.ndarray
+            The sampled sources.
+        """
+
         coords = np.atleast_2d(coords)
         if self.bind_to_existing:
             coords = self._knn_sampling(coords)
@@ -336,7 +560,20 @@ class FateMapping:
         return coords
 
     def _preprocess_source(self, source: np.ndarray) -> np.ndarray:
-        """Validates and sample source if necessary"""
+        """
+        Validate and sample source if necessary.
+
+        Parameters
+        ----------
+        source : np.ndarray
+            The source.
+
+        Returns
+        -------
+        np.ndarray
+            The preprocessed source.
+        """
+
         source = np.atleast_2d(source)
 
         if source.ndim > 2:
@@ -355,7 +592,8 @@ class FateMapping:
 
     @update_fit
     def __call__(self, source: np.ndarray) -> Union[zarr.Array, np.ndarray]:
-        """Computes interpolation given the `source` coordinates
+        """
+        Compute interpolation given the `source` coordinates.
 
         Parameters
         ----------
@@ -364,9 +602,10 @@ class FateMapping:
 
         Returns
         -------
-        np.ndarray
+        Union[zarr.Array, np.ndarray]
             (N, D + 1) first column is the TrackID of each source
         """
+
         source = self._preprocess_source(source)
         t0 = source[0, 0]
 
