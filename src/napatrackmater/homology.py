@@ -1,5 +1,6 @@
 import numpy as np
 import os
+from pathlib import Path
 from ripser import ripser
 from persim import plot_diagrams
 from tqdm import tqdm 
@@ -9,63 +10,92 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-def plot_persistence_time_series(
-    
-    diagrams_by_time,
+
+
+def save_barcodes_and_stats(
+    diagrams_by_time: dict,
     dims=(0, 1),
     save_dir="barcodes_per_frame",
     max_bars=None,
+    save_hist=True,
+    csv_loop_stats=True,
 ):
     """
-    Generate one barcode plot per timepoint and save as PNG.
+    For every time-point save:
+      • barcode plot PNG (H_dim for dim in dims)
+      • optional histogram of H1 persistence (loop length)
+      • optional CSV with birth, death, persistence (H1)
 
     Parameters
     ----------
     diagrams_by_time : dict[int, list[np.ndarray]]
-        t → diagrams list per homology dimension
+        Output of `diagrams_over_time`.
     dims : tuple[int]
-        Which homology dimensions to plot
+        Which homology dimensions to visualise as barcodes.
     save_dir : str
-        Folder to save PNGs
+        Root folder to hold outputs.
     max_bars : int or None
-        Max number of features per plot (to reduce clutter)
+        Trim each barcode to this many most-persistent features.
     """
-    os.makedirs(save_dir, exist_ok=True)
+    save_dir = Path(save_dir)
+    png_dir = save_dir / "png"
+    hist_dir = save_dir / "hist"
+    csv_dir = save_dir / "csv"
+    png_dir.mkdir(parents=True, exist_ok=True)
+    if save_hist:
+        hist_dir.mkdir(exist_ok=True)
+    if csv_loop_stats:
+        csv_dir.mkdir(exist_ok=True)
 
     for t, dgms in diagrams_by_time.items():
-        fig, axs = plt.subplots(len(dims), 1, figsize=(8, 2.5 * len(dims)), squeeze=False)
-
+        # ---------- BARCODE PLOT --------------------------------------
+        fig, axs = plt.subplots(
+            len(dims), 1, figsize=(8, 2.5 * len(dims)), squeeze=False
+        )
         for i, dim in enumerate(dims):
             ax = axs[i, 0]
-            if dim >= len(dgms):
-                ax.axis('off')
+            if dim >= len(dgms) or dgms[dim].size == 0:
+                ax.set_axis_off()
                 continue
 
             diag = dgms[dim]
-            if diag.size == 0:
-                ax.set_title(f"H{dim} (empty)")
-                ax.axis("off")
-                continue
-
-            # optionally trim number of bars
             if max_bars is not None and len(diag) > max_bars:
                 pers = diag[:, 1] - diag[:, 0]
-                top_idx = np.argsort(-pers)[:max_bars]
-                diag = diag[top_idx]
+                idx = np.argsort(-pers)[:max_bars]
+                diag = diag[idx]
 
             for j, (b, d) in enumerate(diag):
-                ax.hlines(y=j, xmin=b, xmax=d, color="tab:blue")
-                ax.plot([b, d], [j, j], 'o', color='black', markersize=2)
-
+                ax.hlines(j, b, d, color="tab:blue")
+                ax.plot([b, d], [j, j], "k.", ms=2)
             ax.set_title(f"H{dim} barcode at t={t}")
             ax.set_xlabel("Filtration scale")
             ax.set_ylabel("Feature index")
-            ax.grid(True)
-
+            ax.grid(True, alpha=0.3)
         fig.tight_layout()
-        save_path = os.path.join(save_dir, f"barcode_t{int(t):04d}.png")
-        fig.savefig(save_path, dpi=200)
+        fig.savefig(png_dir / f"barcode_t{int(t):04d}.png", dpi=200)
         plt.close(fig)
+
+        # ---------- HISTOGRAM of loop persistence --------------------
+        if save_hist and len(dgms) > 1 and dgms[1].size:
+            lengths = dgms[1][:, 1] - dgms[1][:, 0]
+            plt.figure(figsize=(4, 3))
+            plt.hist(lengths, bins=30, color="steelblue")
+            plt.title(f"H1 persistence lengths at t={t}")
+            plt.xlabel("Persistence (death − birth)")
+            plt.ylabel("# loops")
+            plt.tight_layout()
+            plt.savefig(hist_dir / f"hist_t{int(t):04d}.png", dpi=200)
+            plt.close()
+
+        # ---------- CSV export for H1 --------------------------------
+        if csv_loop_stats and len(dgms) > 1 and dgms[1].size:
+            df_out = pd.DataFrame(
+                dgms[1], columns=["birth", "death"]
+            )
+            df_out["persistence"] = df_out["death"] - df_out["birth"]
+            df_out.to_csv(
+                csv_dir / f"loops_t{int(t):04d}.csv", index=False
+            )
 
 
 def vietoris_rips_at_t(

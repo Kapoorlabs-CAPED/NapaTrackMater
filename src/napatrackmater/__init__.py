@@ -45,7 +45,7 @@ from .drift import (
     affine_transform,  apply_alpha_drift, apply_xy_drift, apply_z_drift, crop_data, get_rotation, get_xy_drift, get_z_drift,
     apply_alpha_drift_numpy, apply_xy_drift_numpy, apply_z_drift_numpy, crop_data_numpy, get_rotation_numpy, get_xy_drift_numpy, get_z_drift_numpy
 )
-from .homology import vietoris_rips_at_t, diagrams_over_time, plot_persistence_time_series
+from .homology import vietoris_rips_at_t, diagrams_over_time, save_barcodes_and_stats
 
 from .CloudAutoEncoder import CloudAutoEncoder
 import json
@@ -151,7 +151,7 @@ __all__ = (
     "get_xy_drift_numpy", 
     "get_z_drift_numpy",
     "TrackComparator",
-    "vietoris_rips_at_t",  "diagrams_over_time", "plot_persistence_time_series"
+    "vietoris_rips_at_t",  "diagrams_over_time", "save_barcodes_and_stats"
 
 
 )
