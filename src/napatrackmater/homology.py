@@ -85,20 +85,18 @@ def save_barcodes_and_stats(
         full_df = pd.concat(all_persistence, ignore_index=True)
 
         # ----- assign a bin id to every time value ----------------
-        full_df["bin"] = (full_df["time"] // 50).astype(int)     # 0,1,2,…
+        full_df["bin"] = (full_df["time"] // 50).astype(int)    
 
         # palette with as many distinct colours as bins
         n_bins = full_df["bin"].nunique()
-        palette = sns.color_palette("tab10", n_bins)  # tab10 repeats nicely
+        palette = sns.color_palette("tab10", n_bins)  
 
         plt.figure(figsize=(10, 6))
 
-        # iterate over bins so we plot each KDE once per time *inside* the bin
         for bin_id, colour in zip(sorted(full_df["bin"].unique()), palette):
             times_in_bin = full_df.loc[full_df["bin"] == bin_id, "time"].unique()
             for t in times_in_bin:
                 subset = full_df[(full_df["time"] == t)]
-                # label only the *first* time we draw this bin for the legend
                 label = f"{bin_id*50}-{bin_id*50+49}" if t == times_in_bin[0] else None
                 sns.kdeplot(
                     subset["persistence"],
