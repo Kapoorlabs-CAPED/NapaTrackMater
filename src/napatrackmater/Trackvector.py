@@ -2916,6 +2916,8 @@ def train_gbr_neural_net(
         mitosis_inception.setup_densenet_model()
     if model_type == "attention":
         mitosis_inception.setup_hybrid_attention_model()
+    if model_type == 'qkv':
+            mitosis_inception.setup_inception_qkv_model()
 
     mitosis_inception.setup_logger()
     mitosis_inception.setup_checkpoint()
