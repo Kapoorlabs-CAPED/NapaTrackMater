@@ -1227,61 +1227,6 @@ def TrackVolumeMaker(
                 )
 
 
-def create_h5(
-    save_dir,
-    train_size=0.95,
-    save_name="cellfate_vision_training_data_gbr",
-):
-    """
-    Create HDF5 file with training and validation data for morphodynamic model in TZYX format.
-
-    Args:
-        save_dir (str): Directory containing image and label files.
-        train_size (float): Proportion of data to use for training.
-        save_name (str): Name of the output HDF5 file (without extension).
-    """
-    data = []
-    labels = []
-
-    # Gather all TIFF files and their corresponding labels
-    all_files = os.listdir(save_dir)
-    tif_files = sorted([f for f in all_files if f.endswith(".tif")])
-
-    # Load images and labels in T, Z, Y, X format
-    for tif_file in tif_files:
-        image_path = os.path.join(save_dir, tif_file)
-        image = imread(image_path)
-
-        # Ensure the image has T, Z, Y, X format, where T is the leading dimension
-        if image.ndim != 4:
-            raise ValueError(
-                f"Image {tif_file} does not have four dimensions, expected T, Z, Y, X."
-            )
-
-        data.append(image)
-
-        # Load corresponding label CSV
-        csv_path = os.path.join(save_dir, os.path.splitext(tif_file)[0] + ".csv")
-        with open(csv_path) as csvfile:
-            reader = csv.reader(csvfile, delimiter=",")
-            label = np.array(list(reader)[0]).astype(np.float32)
-        labels.append(label)
-
-    data = np.array(data)  # Shape: (N, T, Z, Y, X)
-    labels = np.array(labels)  # Shape: (N, label_dim)
-
-    train_data, val_data, train_labels, val_labels = train_test_split(
-        data, labels, train_size=train_size, shuffle=True, random_state=42
-    )
-
-    h5_save_path = os.path.join(save_dir, f"{save_name}.h5")
-    with h5py.File(h5_save_path, "w") as hf:
-        hf.create_dataset("train_arrays", data=train_data)
-        hf.create_dataset("train_labels", data=train_labels)
-        hf.create_dataset("val_arrays", data=val_data)
-        hf.create_dataset("val_labels", data=val_labels)
-
-    print(f"HDF5 training data saved to {h5_save_path} in T, Z, Y, X format.")
 
 
 def create_analysis_tracklets(
@@ -2870,7 +2815,9 @@ def train_gbr_neural_net(
     max_shift=1.05,
     max_scale=1.05,
     max_mask_ratio=0.1,
-    augment = False
+    augment = False,
+    attn_heads = 8,
+    seq_len = 25
 ):
 
     if isinstance(block_config, int):
@@ -2894,6 +2841,8 @@ def train_gbr_neural_net(
         learning_rate=learning_rate,
         n_pos=n_pos,
         attention_dim=attention_dim,
+        attn_heads = attn_heads,
+        seq_len = seq_len
     )
     
     if augment:
@@ -2946,6 +2895,8 @@ def train_mitosis_neural_net(
     scheduler_choice="plateau",
     attention_dim: int = 64,
     n_pos: list = (8,),
+    attn_heads = 8,   
+    seq_len = 25
 ):
 
     if isinstance(block_config, int):
@@ -2970,6 +2921,8 @@ def train_mitosis_neural_net(
         learning_rate=learning_rate,
         n_pos=n_pos,
         attention_dim=attention_dim,
+        attn_heads = attn_heads,
+        seq_len = seq_len
     )
 
     mitosis_inception.setup_timeseries_transforms()
@@ -2980,6 +2933,8 @@ def train_mitosis_neural_net(
         mitosis_inception.setup_densenet_model()
     if model_type == "attention":
         mitosis_inception.setup_hybrid_attention_model()
+    if model_type == 'qkv':
+        mitosis_inception.setup_inception_qkv_model()    
 
     mitosis_inception.setup_logger()
     mitosis_inception.setup_checkpoint()
@@ -2988,65 +2943,6 @@ def train_mitosis_neural_net(
     mitosis_inception.train()
 
 
-def train_gbr_vision_neural_net(
-    save_path,
-    h5_file,
-    input_shape,
-    box_vector=7,
-    start_kernel=7,
-    mid_kernel=3,
-    startfilter=64,
-    growth_rate=32,
-    depth={"depth_0": 12, "depth_1": 24, "depth_2": 16},
-    num_classes=3,
-    batch_size=64,
-    num_workers=0,
-    learning_rate=0.001,
-    epochs=100,
-    accelerator="cuda",
-    devices=1,
-    loss_function="oneat",
-    experiment_name="mitosis",
-    scheduler_choice="plateau",
-    oneat_accuracy=True,
-    crop_size=None,
-    pool_first=True,
-):
-
-    mitosis_inception = MitosisInception(
-        h5_file=h5_file,
-        num_classes=num_classes,
-        num_workers=num_workers,
-        epochs=epochs,
-        log_path=save_path,
-        batch_size=batch_size,
-        accelerator=accelerator,
-        devices=devices,
-        experiment_name=experiment_name,
-        scheduler_choice=scheduler_choice,
-        loss_function=loss_function,
-        learning_rate=learning_rate,
-    )
-
-    mitosis_inception.setup_gbr_vision_h5_datasets(crop_size=crop_size)
-
-    mitosis_inception.setup_densenet_vision_model(
-        input_shape,
-        num_classes,
-        box_vector,
-        start_kernel,
-        mid_kernel,
-        startfilter,
-        depth,
-        growth_rate,
-        pool_first=pool_first,
-    )
-
-    mitosis_inception.setup_logger()
-    mitosis_inception.setup_checkpoint()
-    mitosis_inception.setup_adam()
-    mitosis_inception.setup_lightning_model(oneat_accuracy=oneat_accuracy)
-    mitosis_inception.train()
 
 
 def plot_metrics_from_npz(npz_file):
@@ -4529,109 +4425,7 @@ def weighted_prediction(predictions, weights):
     return most_common_prediction
 
 
-def vision_inception_model_prediction(
-    dataframe,
-    trackmate_id,
-    raw_image,
-    class_map,
-    model,
-    device="cpu",
-    crop_size=(25, 8, 128, 128),
-):
-    """
-    Generate predictions for an inception-style vision model based on patches around each point in a tracklet.
 
-    Parameters:
-        dataframe (pd.DataFrame): The dataframe containing track information.
-        trackmate_id (int): The TrackMate track ID for which to generate predictions.
-        tracklet_length (int): The number of time points in each tracklet.
-        raw_image (np.array): The raw image from which patches are extracted.
-        class_map (dict): Mapping of class indices to labels.
-        model (torch.nn.Module): The model to use for predictions.
-        device (str): Device for running predictions, 'cpu' or 'cuda'.
-        crop_size (tuple): Size of the crop around each point (imagesizex, imagesizey, imagesizez).
-
-    Returns:
-        predictions (list): Predicted class labels for each tracklet.
-        weights (list): Prediction confidence or logits for each tracklet.
-    """
-    model = model.to(device)
-    model.eval()
-    sub_trackmate_dataframe = dataframe[dataframe["TrackMate Track ID"] == trackmate_id]
-
-    # Extract the dimensions of the crop
-    imagesizet, sizez, sizex, sizey = crop_size
-    tracklet_predictions = []
-    tracklet_weights = []
-
-    for tracklet_id in sub_trackmate_dataframe["Track ID"].unique():
-        tracklet_sub_dataframe = sub_trackmate_dataframe[
-            sub_trackmate_dataframe["Track ID"] == tracklet_id
-        ]
-
-        sub_trackmate_dataframe = tracklet_sub_dataframe.sort_values(by="t")
-        total_duration = sub_trackmate_dataframe["Track Duration"].max()
-        tracklet_blocks = []
-        for i in range(0, len(sub_trackmate_dataframe), imagesizet):
-            tracklet_block = sub_trackmate_dataframe.iloc[i : i + imagesizet][
-                ["t", "z", "y", "x"]
-            ].values
-            if len(tracklet_block) == imagesizet:
-                tracklet_blocks.append(tracklet_block)
-
-        for tracklet_block in tracklet_blocks:
-            stitched_volume = []
-            for (t, z, y, x) in tracklet_block:
-                small_image = raw_image[int(t)]
-
-                if (
-                    x > sizex / 2
-                    and z > sizez / 2
-                    and y > sizey / 2
-                    and z + int(sizez / 2) < raw_image.shape[1]
-                    and y + int(sizey / 2) < raw_image.shape[2]
-                    and x + int(sizex / 2) < raw_image.shape[3]
-                    and t < raw_image.shape[0]
-                ):
-                    crop_xminus = x - int(sizex / 2)
-                    crop_xplus = x + int(sizex / 2)
-                    crop_yminus = y - int(sizey / 2)
-                    crop_yplus = y + int(sizey / 2)
-                    crop_zminus = z - int(sizez / 2)
-                    crop_zplus = z + int(sizez / 2)
-                    region = (
-                        slice(int(crop_zminus), int(crop_zplus)),
-                        slice(int(crop_yminus), int(crop_yplus)),
-                        slice(int(crop_xminus), int(crop_xplus)),
-                    )
-
-                    crop_image = small_image[region]
-                    stitched_volume.append(crop_image)
-            stitched_volume = np.stack(stitched_volume, axis=0)
-            if stitched_volume.shape[0] == imagesizet:
-                with torch.no_grad():
-                    prediction_vector = model(
-                        torch.unsqueeze(
-                            torch.tensor(stitched_volume, dtype=torch.float32), dim=0
-                        )
-                    )
-
-                class_logits = prediction_vector[0, : len(class_map)]
-
-                most_frequent_prediction = get_most_frequent_prediction(class_logits)
-                if most_frequent_prediction is not None:
-                    most_predicted_class = class_map[int(most_frequent_prediction)]
-                    tracklet_predictions.append(most_predicted_class)
-                    tracklet_weights.append(total_duration)
-
-    if tracklet_predictions:
-        final_weighted_prediction = weighted_prediction(
-            tracklet_predictions, tracklet_weights
-        )
-        return final_weighted_prediction
-
-    else:
-        return "UnClassified"
 
 
 def inception_dual_model_prediction(
