@@ -35,7 +35,7 @@ from .Trackvector import (
     inception_model_prediction,
     save_cell_type_predictions,
     filter_and_get_tracklets,
-    create_h5,
+    
     normalize_image_in_chunks,
     inception_dual_model_prediction
 )
