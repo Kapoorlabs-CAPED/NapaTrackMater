@@ -1688,7 +1688,8 @@ class TrackMate:
         self.xcalibration = float(self.settings.get("pixelwidth"))
         self.ycalibration = float(self.settings.get("pixelheight"))
         self.zcalibration = float(self.settings.get("voxeldepth"))
-        self.tcalibration = int(float(self.settings.get("timeinterval")))
+        self.tcalibration = float(self.settings.get("timeinterval"))
+        if self.tcalibration == 0: self.tcalibration = 1
         self.detectorsettings = self.xml_content.find("Settings").find(
             "DetectorSettings"
         )
@@ -1919,7 +1920,7 @@ class TrackMate:
         self.xcalibration = float(self.settings.get("pixelwidth"))
         self.ycalibration = float(self.settings.get("pixelheight"))
         self.zcalibration = float(self.settings.get("voxeldepth"))
-        self.tcalibration = int(float(self.settings.get("timeinterval")))
+        self.tcalibration = float(self.settings.get("timeinterval"))
         self.detectorsettings = self.xml_content.find("Settings").find(
             "DetectorSettings"
         )
