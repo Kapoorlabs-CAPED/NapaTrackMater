@@ -7,7 +7,7 @@ class Ergodicity:
     def __init__(
          self,    
          cell_type_dataframe: pd.DataFrame,
-         features = [
+         features: list = [
             "Radius",
             "Eccentricity_Comp_First",
             "Eccentricity_Comp_Second",
