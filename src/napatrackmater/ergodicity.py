@@ -120,7 +120,7 @@ class Ergodicity:
                 temporal_vec = temp_array.mean(axis=0)
 
                
-                se = spatial_vec - temporal_vec
+                se = np.abs(spatial_vec - temporal_vec)
 
                
                 row = {'end_time': end_time}
