@@ -1,13 +1,13 @@
 import pandas as pd
 import numpy as np
-from .Trackvector import BROWNIAN_FEATURES
+from .Trackvector import SHAPE_FEATURES
 
 class Ergodicity:
 
     def __init__(
          self,    
          cell_type_dataframe: pd.DataFrame,
-         features = BROWNIAN_FEATURES, 
+         features = SHAPE_FEATURES, 
          time_delta: int = 25,
          cell_type_str = 'Cell_Type',
          class_map_gbr = {
@@ -114,7 +114,7 @@ class Ergodicity:
                 temporal_vec = temp_array.mean(axis=0)
 
                
-                se = np.abs(spatial_vec - temporal_vec)
+                se = spatial_vec - temporal_vec
 
                
                 row = {'end_time': end_time}
