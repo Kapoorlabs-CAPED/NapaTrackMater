@@ -105,7 +105,7 @@ class Ergodicity:
                     end_time not in self.temporal_average_dict[cell_type]):
                     continue
 
-                # build vectors in feature order
+                
                 spatial_vec = np.array([
                     self.spatial_average_dict[cell_type][end_time][feat]
                     for feat in self.features
@@ -113,10 +113,10 @@ class Ergodicity:
                 temp_array   = self.temporal_average_dict[cell_type][end_time]
                 temporal_vec = temp_array.mean(axis=0)
 
-                # per-feature squared error
-                se = (spatial_vec - temporal_vec)**2
+               
+                se = np.abs(spatial_vec - temporal_vec)
 
-                # assemble one row per interval
+               
                 row = {'end_time': end_time}
                 for idx, feat in enumerate(self.features):
                     row[feat] = se[idx]
