@@ -88,16 +88,6 @@ class Ergodicity:
                    self.spatial_average_dict[cell_type][time_point] = ensemble_average
 
     def ergodicity_test(self):
-        """
-        For each cell_type and each valid interval end_time,
-        compute per-feature squared error between:
-        - spatial average at end_time
-        - temporal average (across tracks) at end_time
-        Returns:
-            dict[cell_type] → pd.DataFrame with columns:
-                ['end_time'] + self.features
-        """
-        # rebuild your averages
         self._get_statial_average()
         self._get_temporal_average()
 
@@ -106,28 +96,29 @@ class Ergodicity:
             rows = []
             for start in np.sort(self.unique_time_points):
                 end_time = start + self.time_delta
-
+                # skip if we don’t have both averages
                 if (end_time not in self.spatial_average_dict[cell_type] or
                     end_time not in self.temporal_average_dict[cell_type]):
                     continue
 
-                
+                # (1) ensemble average at t+Δt
                 spatial_vec = np.array([
                     self.spatial_average_dict[cell_type][end_time][feat]
                     for feat in self.features
                 ])
-                temp_array   = self.temporal_average_dict[cell_type][end_time]
-                temporal_vec = temp_array.mean(axis=0)
+                # (2) each track's time-average over [start,end_time)
+                temp_array = self.temporal_average_dict[cell_type][end_time]  
+                # shape = (n_tracks, n_features)
 
-               
-                se = np.abs(spatial_vec - temporal_vec)
+                # (3) subtract: ensemble minus temporal
+                for idx_track, track_vec in enumerate(temp_array):
+                    diff = spatial_vec - track_vec   # <-- here’s Δ_i,k(t)
 
-               
-                row = {'end_time': end_time}
-                for idx, feat in enumerate(self.features):
-                    row[feat] = se[idx]
-                rows.append(row)
+                    row = {'end_time': end_time, 'track_idx': idx_track}
+                    for i, feat in enumerate(self.features):
+                        row[feat] = diff[i]
+                    rows.append(row)
 
             results[cell_type] = pd.DataFrame(rows)
 
-        return results              
+        return results           
