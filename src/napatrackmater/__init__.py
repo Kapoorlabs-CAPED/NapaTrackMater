@@ -2,6 +2,7 @@ from .pretrained import register_model, register_aliases, clear_models_and_alias
 from .clustering import Clustering
 from .Trackmate import TrackMate, get_feature_dict, transfer_fate_location
 from .Trackcomparator import TrackComparator
+from .ergodicity import Ergodicity
 from .Trackvector import (
     TrackVector,
     convert_tracks_to_arrays,
@@ -35,7 +36,7 @@ from .Trackvector import (
     inception_model_prediction,
     save_cell_type_predictions,
     filter_and_get_tracklets,
-    
+  
     normalize_image_in_chunks,
     inception_dual_model_prediction
 )
@@ -149,7 +150,7 @@ __all__ = (
     "get_xy_drift_numpy", 
     "get_z_drift_numpy",
     "TrackComparator",
-    "vietoris_rips_at_t",  "diagrams_over_time", "save_barcodes_and_stats"
+    "vietoris_rips_at_t",  "diagrams_over_time", "save_barcodes_and_stats", "Ergodicity"
 
 
 )

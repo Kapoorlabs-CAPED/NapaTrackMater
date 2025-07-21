@@ -1,12 +1,13 @@
 import pandas as pd
 import numpy as np
-from .Trackvector import SHAPE_DYNAMIC_FEATURES
+from .Trackvector import BROWNIAN_FEATURES
 
 class Ergodicity:
 
     def __init__(
          self,    
          cell_type_dataframe: pd.DataFrame,
+         features = BROWNIAN_FEATURES, 
          time_delta: int = 25,
          cell_type_str = 'Cell_Type',
          class_map_gbr = {
@@ -17,6 +18,7 @@ class Ergodicity:
     ):
         
         self.cell_type_dataframe = cell_type_dataframe 
+        self.features = features
         self.time_delta = time_delta 
         self.cell_type_str = cell_type_str
         self.class_map_gbr = class_map_gbr
@@ -48,7 +50,7 @@ class Ergodicity:
                    for trackmate_id in cell_type_data['TrackMate Track ID'].unique():
                         current_trackmate_id_data = cell_type_data[cell_type_data['TrackMate Track ID'] == trackmate_id]
                         for track_id in current_trackmate_id_data['Track ID'].unique():
-                            track_features = current_trackmate_id_data[current_trackmate_id_data['Track ID'] == track_id][SHAPE_DYNAMIC_FEATURES].to_numpy()
+                            track_features = current_trackmate_id_data[current_trackmate_id_data['Track ID'] == track_id][self.features].to_numpy()
                             track_averages.append(track_features.mean(axis=0))    
                    if track_averages:
                        self.temporal_average_dict[cell_type][end_time] = np.vstack(track_averages)
@@ -70,12 +72,12 @@ class Ergodicity:
                        self.spatial_average_dict[cell_type][time_point] = {}
                    
                    mean_vals = np.mean(
-                        cell_type_data[SHAPE_DYNAMIC_FEATURES].values,
+                        cell_type_data[self.features].values,
                         axis=0
                     )
                    ensemble_average = {
                         feat: mean_vals[i]
-                        for i, feat in enumerate(SHAPE_DYNAMIC_FEATURES)
+                        for i, feat in enumerate(self.features)
                     }
                    self.spatial_average_dict[cell_type][time_point] = ensemble_average
 
@@ -104,7 +106,7 @@ class Ergodicity:
 
                 spatial_vec = np.array([
                     self.spatial_average_dict[cell_type][end_time][feat]
-                    for feat in SHAPE_DYNAMIC_FEATURES
+                    for feat in self.features
                 ])
                 temp_array = self.temporal_average_dict[cell_type][end_time]
                 temporal_vec = temp_array.mean(axis=0)
