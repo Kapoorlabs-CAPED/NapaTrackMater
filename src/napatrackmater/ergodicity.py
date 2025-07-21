@@ -84,14 +84,14 @@ class Ergodicity:
     def ergodicity_test(self):
         """
         For each cell_type and each valid interval end_time,
-        compare:
-          - spatial_vec:  ensemble/spatial average at end_time
-          - temporal_vec: average (across tracks) of each track’s time-average
+        compute per-feature squared error between:
+        - spatial average at end_time
+        - temporal average (across tracks) at end_time
         Returns:
-          dict[cell_type] → pd.DataFrame with columns:
-            ['end_time','mse','corr']
+            dict[cell_type] → pd.DataFrame with columns:
+                ['end_time'] + self.features
         """
-
+        # rebuild your averages
         self._get_statial_average()
         self._get_temporal_average()
 
@@ -100,26 +100,28 @@ class Ergodicity:
             rows = []
             for start in np.sort(self.unique_time_points):
                 end_time = start + self.time_delta
-                if (end_time not in self.spatial_average_dict[cell_type] 
-                    or end_time not in self.temporal_average_dict[cell_type]):
+
+                if (end_time not in self.spatial_average_dict[cell_type] or
+                    end_time not in self.temporal_average_dict[cell_type]):
                     continue
 
+                # build vectors in feature order
                 spatial_vec = np.array([
                     self.spatial_average_dict[cell_type][end_time][feat]
                     for feat in self.features
                 ])
-                temp_array = self.temporal_average_dict[cell_type][end_time]
+                temp_array   = self.temporal_average_dict[cell_type][end_time]
                 temporal_vec = temp_array.mean(axis=0)
 
-                mse  = np.mean((spatial_vec - temporal_vec)**2)
-                corr = np.corrcoef(spatial_vec, temporal_vec)[0,1]
+                # per-feature squared error
+                se = (spatial_vec - temporal_vec)**2
 
-                rows.append({
-                    'end_time': end_time,
-                    'mse':       mse,
-                    'corr':      corr
-                })
+                # assemble one row per interval
+                row = {'end_time': end_time}
+                for idx, feat in enumerate(self.features):
+                    row[feat] = se[idx]
+                rows.append(row)
 
             results[cell_type] = pd.DataFrame(rows)
 
-        return results               
+        return results              
