@@ -1,13 +1,19 @@
 import pandas as pd
 import numpy as np
-from .Trackvector import SHAPE_FEATURES
+
 
 class Ergodicity:
 
     def __init__(
          self,    
          cell_type_dataframe: pd.DataFrame,
-         features = SHAPE_FEATURES, 
+         features = [
+            "Radius",
+            "Eccentricity_Comp_First",
+            "Eccentricity_Comp_Second",
+            "Eccentricity_Comp_Third",
+            "Surface_Area",
+        ], 
          time_delta: int = 25,
          cell_type_str = 'Cell_Type',
          class_map_gbr = {
