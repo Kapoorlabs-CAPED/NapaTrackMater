@@ -45,7 +45,7 @@ class Ergodicity:
             
             start_time = time_point 
             end_time = start_time + self.time_delta
-            interval_data = self.cell_type_dataframe[(self.cell_type_dataframe['t'] >= start_time) & (self.cell_type_dataframe['t'] < end_time)]
+            interval_data = self.cell_type_dataframe[(self.cell_type_dataframe['t'] >= start_time) & (self.cell_type_dataframe['t'] <= end_time)]
             time_data = self.cell_type_dataframe[self.cell_type_dataframe['t'] == end_time]
             for cell_type in self.class_map_gbr.values():
                
