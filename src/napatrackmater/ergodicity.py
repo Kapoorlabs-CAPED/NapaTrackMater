@@ -55,16 +55,14 @@ class Ergodicity:
                if not end_time_cell_type_data.empty:
                     if time_point not in self.spatial_average_dict[cell_type]:
                             self.spatial_average_dict[cell_type][time_point] = {}
-                        
-                    mean_vals = np.mean(
-                                end_time_cell_type_data[self.features].values,
-                                axis=0
-                            )
-                    ensemble_average = {
-                                feat: mean_vals[i]
-                                for i, feat in enumerate(self.features)
-                            }
-                    self.spatial_average_dict[cell_type][time_point] = ensemble_average
+                    ensemble_averages = []  
+                    for trackmate_id in end_time_cell_type_data['TrackMate Track ID'].unique():
+                        current_trackmate_id_data = end_time_cell_type_data[end_time_cell_type_data['TrackMate Track ID'] == trackmate_id]
+                        for track_id in current_trackmate_id_data['Track ID'].unique():
+                            track_features = current_trackmate_id_data[current_trackmate_id_data['Track ID'] == track_id][self.features].to_numpy()
+                            ensemble_averages.append(track_features.mean(axis=0))    
+                    if ensemble_averages:
+                       self.spatial_average_dict[cell_type][end_time] = np.mean(ensemble_averages, axis=0)
 
                if not cell_type_data.empty:
                    if end_time not in self.temporal_average_dict[cell_type]:
