@@ -104,7 +104,7 @@ class Ergodicity:
                     continue
 
                 # ensemble average vector
-                spatial_vec =self.temporal_average_dict[cell_type][end_time]
+                spatial_vec =self.spatial_average_dict[cell_type][end_time]
                 # per-track time-averages
                 temp_array = self.temporal_average_dict[cell_type][end_time]
                 # compute signed diffs: shape (n_tracks, n_features)
