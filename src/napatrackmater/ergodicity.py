@@ -114,11 +114,10 @@ class Ergodicity:
                 row = {'end_time': end_time}
                 mean_over_tracks = np.mean(diffs, axis = 0)
                 std_over_tracks = np.std(diffs, axis = 0)
-                print(mean_over_tracks.shape)
                 for i, feat in enumerate(self.features):
                    
-                    row[f"{feat}_mean"] = mean_over_tracks
-                    row[f"{feat}_std"]  = std_over_tracks
+                    row[f"{feat}_mean"] = mean_over_tracks[i]
+                    row[f"{feat}_std"]  = std_over_tracks[i]
                 rows.append(row)
 
             results[cell_type] = pd.DataFrame(rows)
