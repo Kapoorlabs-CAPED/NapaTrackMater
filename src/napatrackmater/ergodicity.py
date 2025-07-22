@@ -30,9 +30,11 @@ class Ergodicity:
         self.class_map_gbr = class_map_gbr
         self.unique_time_points = self.cell_type_dataframe['t'].unique()
         
-    def _get_temporal_average(self):
+    def _get_spatial_temporal_average(self):
         
         self.temporal_average_dict = {cell_type: {} for cell_type in self.class_map_gbr.values()}
+        self.spatial_average_dict = {cell_type: {} for cell_type in self.class_map_gbr.values()}
+
         unique_t = np.sort(self.unique_time_points)
         max_t = unique_t.max() - self.time_delta 
 
@@ -44,10 +46,26 @@ class Ergodicity:
             start_time = time_point 
             end_time = start_time + self.time_delta
             interval_data = self.cell_type_dataframe[(self.cell_type_dataframe['t'] >= start_time) & (self.cell_type_dataframe['t'] < end_time)]
+            time_data = self.cell_type_dataframe[self.cell_type_dataframe['t'] == end_time]
             for cell_type in self.class_map_gbr.values():
                
                cell_type_data = interval_data[interval_data[self.cell_type_str] == cell_type]
-               
+               end_time_cell_type_data = time_data[time_data[self.cell_type_str] == cell_type]
+
+               if not end_time_cell_type_data.empty:
+                    if time_point not in self.spatial_average_dict[cell_type]:
+                            self.spatial_average_dict[cell_type][time_point] = {}
+                        
+                    mean_vals = np.mean(
+                                end_time_cell_type_data[self.features].values,
+                                axis=0
+                            )
+                    ensemble_average = {
+                                feat: mean_vals[i]
+                                for i, feat in enumerate(self.features)
+                            }
+                    self.spatial_average_dict[cell_type][time_point] = ensemble_average
+
                if not cell_type_data.empty:
                    if end_time not in self.temporal_average_dict[cell_type]:
                        self.temporal_average_dict[cell_type][end_time] = {}
@@ -61,31 +79,7 @@ class Ergodicity:
                    if track_averages:
                        self.temporal_average_dict[cell_type][end_time] = np.vstack(track_averages)
 
-    def _get_statial_average(self):
 
-        self.spatial_average_dict = {cell_type: {} for cell_type in self.class_map_gbr.values()}
-
-        for time_point in self.unique_time_points:
-           
-           time_data = self.cell_type_dataframe[self.cell_type_dataframe['t'] == time_point]
-           
-           for cell_type in self.class_map_gbr.values():
-               
-               cell_type_data = time_data[time_data[self.cell_type_str] == cell_type]
-
-               if not cell_type_data.empty:
-                   if time_point not in self.spatial_average_dict[cell_type]:
-                       self.spatial_average_dict[cell_type][time_point] = {}
-                   
-                   mean_vals = np.mean(
-                        cell_type_data[self.features].values,
-                        axis=0
-                    )
-                   ensemble_average = {
-                        feat: mean_vals[i]
-                        for i, feat in enumerate(self.features)
-                    }
-                   self.spatial_average_dict[cell_type][time_point] = ensemble_average
 
     def ergodicity_test(self):
         """
@@ -99,8 +93,7 @@ class Ergodicity:
             ['end_time'] + [f"{feat}_mean", f"{feat}_std" for feat in self.features]
         """
         # rebuild your averages
-        self._get_statial_average()
-        self._get_temporal_average()
+        self._get_spatial_temporal_average()
 
         results = {}
         for cell_type in self.class_map_gbr.values():
