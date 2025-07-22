@@ -104,10 +104,7 @@ class Ergodicity:
                     continue
 
                 # ensemble average vector
-                spatial_vec = np.array([
-                    self.spatial_average_dict[cell_type][end_time][feat]
-                    for feat in self.features
-                ])
+                spatial_vec =self.temporal_average_dict[cell_type][end_time]
                 # per-track time-averages
                 temp_array = self.temporal_average_dict[cell_type][end_time]
                 # compute signed diffs: shape (n_tracks, n_features)
@@ -117,6 +114,7 @@ class Ergodicity:
                 row = {'end_time': end_time}
                 mean_over_tracks = np.mean(diffs, axis = 0)
                 std_over_tracks = np.std(diffs, axis = 0)
+                print(mean_over_tracks.shape)
                 for i, feat in enumerate(self.features):
                    
                     row[f"{feat}_mean"] = mean_over_tracks
