@@ -111,14 +111,16 @@ class Ergodicity:
                 # per-track time-averages
                 temp_array = self.temporal_average_dict[cell_type][end_time]
                 # compute signed diffs: shape (n_tracks, n_features)
-                diffs = spatial_vec - temp_array
+                diffs = np.abs(spatial_vec - temp_array)
 
                 # for each feature compute mean & std over tracks
                 row = {'end_time': end_time}
+                mean_over_tracks = np.mean(diffs, axis = 0)
+                std_over_tracks = np.std(diffs, axis = 0)
                 for i, feat in enumerate(self.features):
-                    col = diffs[:, i]
-                    row[f"{feat}_mean"] = col.mean()
-                    row[f"{feat}_std"]  = col.std(ddof=0)
+                   
+                    row[f"{feat}_mean"] = mean_over_tracks
+                    row[f"{feat}_std"]  = std_over_tracks
                 rows.append(row)
 
             results[cell_type] = pd.DataFrame(rows)
