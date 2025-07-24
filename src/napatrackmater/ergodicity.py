@@ -75,7 +75,7 @@ class Ergodicity:
                             track_features = current_trackmate_id_data[current_trackmate_id_data['Track ID'] == track_id][self.features].to_numpy()
                             track_averages.append(track_features.mean(axis=0))    
                    if track_averages:
-                       self.temporal_average_dict[cell_type][end_time] = np.vstack(track_averages)
+                       self.temporal_average_dict[cell_type][end_time] = np.mean(np.vstack(track_averages), axis=0)
 
 
 
@@ -112,12 +112,10 @@ class Ergodicity:
 
                 # for each feature compute mean & std over tracks
                 row = {'end_time': end_time}
-                mean_over_tracks = np.mean(diffs, axis = 0)
-                std_over_tracks = np.std(diffs, axis = 0)
+                
                 for i, feat in enumerate(self.features):
                    
-                    row[f"{feat}_mean"] = mean_over_tracks[i]
-                    row[f"{feat}_std"]  = std_over_tracks[i]
+                    row[f"{feat}"] = diffs[i]
                 rows.append(row)
 
             results[cell_type] = pd.DataFrame(rows)
