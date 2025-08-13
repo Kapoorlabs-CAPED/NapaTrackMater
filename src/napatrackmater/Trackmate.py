@@ -2996,7 +2996,7 @@ class TrackMate:
         ]
 
         msd = np.dot(vec_root, vec_root)
-        recoil = vec_root
+        recoil = np.sqrt(msd)
 
         self.unique_spot_properties[int(cell_id)].update({self.msd_key: msd})
         self.unique_spot_properties[int(cell_id)].update({self.recoil_key: recoil})
