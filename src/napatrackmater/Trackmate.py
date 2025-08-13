@@ -211,6 +211,7 @@ class TrackMate:
         self.beforeid_key = "before_id"
         self.rootid_key = "root_id"
         self.msd_key = "msd"
+        self.recoil_key = "recoil"
         self.dividing_key = "dividing_normal"
         self.fate_key = "fate"
         self.number_dividing_key = "number_dividing"
@@ -1175,7 +1176,7 @@ class TrackMate:
             "motion_angle_z", "motion_angle_y", "motion_angle_x", "acceleration", 
             "distance_cell_mask", "local_cell_density", "radial_angle_z", "radial_angle_y", 
             "radial_angle_x", "cell_axis_z", "cell_axis_y", "cell_axis_x", "track_displacement", 
-            "total_track_distance", "max_track_distance", "track_duration", "msd"
+            "total_track_distance", "max_track_distance", "track_duration", "msd", "recoil"
         ]
         
         for track_id in self.unique_tracks:
@@ -1262,6 +1263,11 @@ class TrackMate:
         msd = 0
         if self.msd_key in all_dict_values.keys():
             msd = float(all_dict_values[self.msd_key])
+
+        recoil = 0
+        if self.recoil_key in all_dict_values.keys():
+            recoil = float(all_dict_values[self.recoil_key])
+
         acceleration = float(all_dict_values[self.acceleration_key])
         motion_angle_z = float(all_dict_values[self.motion_angle_z_key])
         motion_angle_y = float(all_dict_values[self.motion_angle_y_key])
@@ -1368,6 +1374,7 @@ class TrackMate:
                 max_track_distance,
                 track_duration,
                 msd,
+                recoil
             ]
 
             if compute_with_latent_features:
@@ -1427,6 +1434,7 @@ class TrackMate:
                 max_track_distance,
                 track_duration,
                 msd,
+                recoil
             ]
             if compute_with_latent_features:
                 current_value_list.extend(latent_shape_features)
@@ -2455,8 +2463,10 @@ class TrackMate:
 
             msd = tracklet_properties[:, 26]
 
-            if tracklet_properties.shape[1] > 26:
-                latent_shape_features = tracklet_properties[:, 27:]
+            recoil = tracklet_properties[:, 27]
+
+            if tracklet_properties.shape[1] > 27:
+                latent_shape_features = tracklet_properties[:, 28:]
             else:
                 latent_shape_features = []
 
@@ -2506,6 +2516,7 @@ class TrackMate:
                 current_max_track_distance = []
                 current_track_duration = []
                 current_msd = []
+                current_recoil = []
 
                 for j in range(time.shape[0]):
                     if current_unique_id == unique_ids[j]:
@@ -2551,6 +2562,7 @@ class TrackMate:
                         current_max_track_distance.append(max_track_distance[j])
                         current_track_duration.append(track_duration[j])
                         current_msd.append(msd[j])
+                        current_recoil.append(recoil[j])
 
                 current_time = np.asarray(current_time, dtype=np.float32)
                 current_intensity = np.asarray(current_intensity, dtype=np.float32)
@@ -2621,7 +2633,7 @@ class TrackMate:
                     current_track_duration, dtype=np.float32
                 )
                 current_msd = np.asarray(current_msd, dtype=np.float32)
-
+                current_recoil = np.asarray(current_recoil, dtype=np.float32)
                 if point_sample > 0:
                     xf_sample = fftfreq(point_sample, self.tcalibration)
                     fftstrip_sample = fft(current_intensity)
@@ -2668,6 +2680,7 @@ class TrackMate:
                     current_max_track_distance,
                     current_track_duration,
                     current_msd,
+                    current_recoil
                 )
                 self.unique_fft_properties[track_id].update(
                     {
@@ -2983,8 +2996,10 @@ class TrackMate:
         ]
 
         msd = np.dot(vec_root, vec_root)
+        recoil = vec_root
 
         self.unique_spot_properties[int(cell_id)].update({self.msd_key: msd})
+        self.unique_spot_properties[int(cell_id)].update({self.recoil_key: recoil})
 
     def _temporal_plots_trackmate(self):
 
@@ -4140,6 +4155,7 @@ def get_feature_dict(unique_tracks_properties):
         ],
         "track_duration": np.asarray(unique_tracks_properties, dtype="float16")[:, 25],
         "msd": np.asarray(unique_tracks_properties, dtype="float16")[:, 26],
+        "recoil": np.asarray(unique_tracks_properties, dtype="float16")[:, 27],
     }
 
     return features
