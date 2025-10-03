@@ -4375,16 +4375,12 @@ def update_cluster_plot(time, df, time_delta=0):
 
 def sample_subarrays(data, tracklet_length, total_duration):
 
-    max_start_index = total_duration - tracklet_length
-    start_indices = random.sample(range(max_start_index), max_start_index)
-
     subarrays = []
-    for start_index in start_indices:
+
+    for start_index in range(total_duration - tracklet_length + 1):
         end_index = start_index + tracklet_length
-        if end_index <= total_duration:
-            sub_data = data[start_index:end_index, :]
-            if sub_data.shape[0] == tracklet_length:
-                subarrays.append(sub_data)
+        sub_data = data[start_index:end_index, :]
+        subarrays.append(sub_data)
 
     return subarrays
 
@@ -4407,11 +4403,9 @@ def get_most_frequent_prediction(predictions):
 
     prediction_counts = Counter(predictions)
     
-    print(predictions)
 
     most_common_prediction, count = prediction_counts.most_common(1)[0]
     
-    print(most_common_prediction, count)
 
     return most_common_prediction
       
@@ -4459,7 +4453,7 @@ def inception_model_prediction(
 
         total_duration = tracklet_sub_dataframe["Track Duration"].max()
 
-        print(len(sub_dataframe_morpho), total_duration)
+        print(trackmate_id, len(sub_dataframe_morpho), total_duration)
 
         sub_arrays_shape = sample_subarrays(
             sub_dataframe_shape, tracklet_length, total_duration
@@ -4472,7 +4466,6 @@ def inception_model_prediction(
             sub_dataframe_morpho, tracklet_length, total_duration
         )
         
-        print(len(sub_arrays_morpho))
         shape_predictions = []
         if shape_model is not None:
             for sub_array in sub_arrays_shape:
