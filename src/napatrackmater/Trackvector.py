@@ -4453,8 +4453,8 @@ def inception_model_prediction(
         sub_dataframe_morpho = tracklet_sub_dataframe[SHAPE_DYNAMIC_FEATURES].values
 
         total_duration = tracklet_sub_dataframe["Track Duration"].max()
-        print(trackmate_id, total_duration)
-        if total_duration < tracklet_length:
+        print(trackmate_id, len(sub_dataframe_morpho))
+        if len(sub_dataframe_morpho) < tracklet_length:
             print(f'Tracklet for Track id {trackmate_id} too short for prediction')
             continue
         sub_arrays_shape = sample_subarrays(
