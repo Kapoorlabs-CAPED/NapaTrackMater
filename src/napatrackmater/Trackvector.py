@@ -4453,7 +4453,7 @@ def inception_model_prediction(
 
         total_duration = tracklet_sub_dataframe["Track Duration"].max()
 
-        print(trackmate_id, len(sub_dataframe_morpho), total_duration)
+       
 
         sub_arrays_shape = sample_subarrays(
             sub_dataframe_shape, tracklet_length, total_duration
