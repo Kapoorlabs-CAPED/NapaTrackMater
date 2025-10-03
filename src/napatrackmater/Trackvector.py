@@ -4437,6 +4437,7 @@ def inception_model_prediction(
     shape_model=None,
     morphodynamic_model=None,
     device="cpu",
+    verbose = True
 ):
 
     sub_trackmate_dataframe = dataframe[dataframe["TrackMate Track ID"] == trackmate_id]
@@ -4453,8 +4454,7 @@ def inception_model_prediction(
         sub_dataframe_morpho = tracklet_sub_dataframe[SHAPE_DYNAMIC_FEATURES].values
 
         total_duration = tracklet_sub_dataframe["Track Duration"].max()
-        print(trackmate_id, len(sub_dataframe_morpho))
-        if len(sub_dataframe_morpho) < tracklet_length:
+        if len(sub_dataframe_morpho) < tracklet_length and verbose:
             print(f'Tracklet for Track id {trackmate_id} too short for prediction')
             continue
         sub_arrays_shape = sample_subarrays(
