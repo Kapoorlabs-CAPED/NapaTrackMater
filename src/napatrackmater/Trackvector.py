@@ -4408,6 +4408,7 @@ def get_most_frequent_prediction(predictions):
   
     most_common_prediction, count = prediction_counts.most_common(1)[0]
 
+    return most_common_prediction
       
 
 
