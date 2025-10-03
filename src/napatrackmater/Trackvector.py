@@ -4405,12 +4405,10 @@ def make_prediction(input_data, model, device):
 def get_most_frequent_prediction(predictions):
 
     prediction_counts = Counter(predictions)
-    try:
-        most_common_prediction, count = prediction_counts.most_common(1)[0]
+  
+    most_common_prediction, count = prediction_counts.most_common(1)[0]
 
-        return most_common_prediction
-    except IndexError:
-        return None
+      
 
 
 def weighted_prediction(predictions, weights):
@@ -4503,13 +4501,10 @@ def inception_dual_model_prediction(
             tracklet_predictions.append(most_predicted_class)
             tracklet_weights.append(total_duration)
 
-    if tracklet_predictions:
-        final_weighted_prediction = weighted_prediction(
-            tracklet_predictions, tracklet_weights
-        )
-        return final_weighted_prediction
-    else:
-        return "UnClassified"
+    final_weighted_prediction = weighted_prediction(
+        tracklet_predictions, tracklet_weights
+    )
+    return final_weighted_prediction
 
 
 def inception_model_prediction(
@@ -4579,13 +4574,10 @@ def inception_model_prediction(
             tracklet_predictions.append(most_predicted_class)
             tracklet_weights.append(total_duration)
 
-    if tracklet_predictions:
-        final_weighted_prediction = weighted_prediction(
-            tracklet_predictions, tracklet_weights
-        )
-        return final_weighted_prediction
-    else:
-        return "UnClassified"
+    final_weighted_prediction = weighted_prediction(
+        tracklet_predictions, tracklet_weights
+    )
+    return final_weighted_prediction
 
 
 def save_cell_type_predictions(
