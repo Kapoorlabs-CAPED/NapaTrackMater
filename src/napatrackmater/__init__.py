@@ -38,7 +38,6 @@ from .Trackvector import (
     filter_and_get_tracklets,
   
     normalize_image_in_chunks,
-    inception_dual_model_prediction
 )
 
 from .drift import (
@@ -133,7 +132,6 @@ __all__ = (
     "filter_and_get_tracklets",
     "create_h5",
     "normalize_image_in_chunks",
-    "inception_dual_model_prediction",
     "affine_transform",
     "apply_alpha_drift", 
     "apply_xy_drift", 
