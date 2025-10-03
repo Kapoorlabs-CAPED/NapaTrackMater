@@ -4437,7 +4437,7 @@ def inception_model_prediction(
     shape_model=None,
     morphodynamic_model=None,
     device="cpu",
-    verbose = True
+    verbose = False
 ):
 
     sub_trackmate_dataframe = dataframe[dataframe["TrackMate Track ID"] == trackmate_id]
