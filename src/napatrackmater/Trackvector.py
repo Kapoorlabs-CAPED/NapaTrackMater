@@ -4399,6 +4399,8 @@ def make_prediction(input_data, model, device):
         model_predictions = model(input_tensor)
         probabilities = torch.softmax(model_predictions[0], dim=0)
         _, predicted_class = torch.max(probabilities, 0)
+
+    print('prediction:', predicted_class.item())    
     return predicted_class.item()
 
 
@@ -4411,7 +4413,7 @@ def get_most_frequent_prediction(predictions):
     most_common_prediction, count = prediction_counts.most_common(1)[0]
     
     print(most_common_prediction, count)
-    
+
     return most_common_prediction
       
 
