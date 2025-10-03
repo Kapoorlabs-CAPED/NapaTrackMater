@@ -4459,6 +4459,8 @@ def inception_model_prediction(
 
         total_duration = tracklet_sub_dataframe["Track Duration"].max()
 
+        print(len(sub_dataframe_morpho), total_duration)
+
         sub_arrays_shape = sample_subarrays(
             sub_dataframe_shape, tracklet_length, total_duration
         )
@@ -4469,7 +4471,8 @@ def inception_model_prediction(
         sub_arrays_morpho = sample_subarrays(
             sub_dataframe_morpho, tracklet_length, total_duration
         )
-
+        
+        print(len(sub_arrays_morpho))
         shape_predictions = []
         if shape_model is not None:
             for sub_array in sub_arrays_shape:
