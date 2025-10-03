@@ -4405,9 +4405,13 @@ def make_prediction(input_data, model, device):
 def get_most_frequent_prediction(predictions):
 
     prediction_counts = Counter(predictions)
-  
-    most_common_prediction, count = prediction_counts.most_common(1)[0]
+    
+    print(predictions)
 
+    most_common_prediction, count = prediction_counts.most_common(1)[0]
+    
+    print(most_common_prediction, count)
+    
     return most_common_prediction
       
 
