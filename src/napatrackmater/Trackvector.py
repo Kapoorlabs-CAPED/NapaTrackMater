@@ -4375,12 +4375,16 @@ def update_cluster_plot(time, df, time_delta=0):
 
 def sample_subarrays(data, tracklet_length, total_duration):
 
-    subarrays = []
+    max_start_index = total_duration - tracklet_length
+    start_indices = random.sample(range(max_start_index), max_start_index)
 
-    for start_index in range(total_duration - tracklet_length + 1):
+    subarrays = []
+    for start_index in start_indices:
         end_index = start_index + tracklet_length
-        sub_data = data[start_index:end_index, :]
-        subarrays.append(sub_data)
+        if end_index <= total_duration:
+            sub_data = data[start_index:end_index, :]
+            if sub_data.shape[0] == tracklet_length:
+                subarrays.append(sub_data)
 
     return subarrays
 
@@ -4395,20 +4399,18 @@ def make_prediction(input_data, model, device):
         model_predictions = model(input_tensor)
         probabilities = torch.softmax(model_predictions[0], dim=0)
         _, predicted_class = torch.max(probabilities, 0)
-
     return predicted_class.item()
 
 
 def get_most_frequent_prediction(predictions):
 
     prediction_counts = Counter(predictions)
-    
+    try:
+        most_common_prediction, count = prediction_counts.most_common(1)[0]
 
-    most_common_prediction, count = prediction_counts.most_common(1)[0]
-    
-
-    return most_common_prediction
-      
+        return most_common_prediction
+    except IndexError:
+        return None
 
 
 def weighted_prediction(predictions, weights):
@@ -4421,7 +4423,6 @@ def weighted_prediction(predictions, weights):
 
     most_common_prediction, _ = weighted_counts.most_common(1)[0]
     return most_common_prediction
-
 
 
 
@@ -4452,9 +4453,9 @@ def inception_model_prediction(
         sub_dataframe_morpho = tracklet_sub_dataframe[SHAPE_DYNAMIC_FEATURES].values
 
         total_duration = tracklet_sub_dataframe["Track Duration"].max()
-
-       
-
+        if total_duration < tracklet_length:
+            print(f'Tracklet for Track id {trackmate_id} too short for prediction')
+            continue
         sub_arrays_shape = sample_subarrays(
             sub_dataframe_shape, tracklet_length, total_duration
         )
@@ -4465,7 +4466,7 @@ def inception_model_prediction(
         sub_arrays_morpho = sample_subarrays(
             sub_dataframe_morpho, tracklet_length, total_duration
         )
-        
+
         shape_predictions = []
         if shape_model is not None:
             for sub_array in sub_arrays_shape:
@@ -4496,10 +4497,13 @@ def inception_model_prediction(
             tracklet_predictions.append(most_predicted_class)
             tracklet_weights.append(total_duration)
 
-    final_weighted_prediction = weighted_prediction(
-        tracklet_predictions, tracklet_weights
-    )
-    return final_weighted_prediction
+    if tracklet_predictions:
+        final_weighted_prediction = weighted_prediction(
+            tracklet_predictions, tracklet_weights
+        )
+        return final_weighted_prediction
+    else:
+        return "UnClassified"
 
 
 def save_cell_type_predictions(
