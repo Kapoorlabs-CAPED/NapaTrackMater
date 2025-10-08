@@ -1,3 +1,8 @@
+try:
+    from ._version import version as __version__
+except ImportError:
+    __version__ = "unknown"
+
 from .pretrained import register_model, register_aliases, clear_models_and_aliases
 from .clustering import Clustering
 from .Trackmate import TrackMate, get_feature_dict, transfer_fate_location
