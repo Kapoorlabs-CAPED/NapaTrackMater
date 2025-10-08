@@ -2470,7 +2470,7 @@ class TrackMate:
             else:
                 latent_shape_features = []
 
-            print(len(latent_shape_features), len(tracklet_properties))    
+            print(tracklet_properties.shape, type(latent_shape_features))    
 
             unique_fft_properties_tracklet = {}
             unique_cluster_properties_tracklet = {}
