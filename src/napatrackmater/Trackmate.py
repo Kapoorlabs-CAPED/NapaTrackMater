@@ -2547,7 +2547,7 @@ class TrackMate:
                         )
 
                         current_surface_area.append(surface_area[j])
-                        if latent_shape_features != []:
+                        if latent_shape_features:
                             current_latent_shape_features.append(
                                 latent_shape_features[j]
                             )
