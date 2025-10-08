@@ -2465,12 +2465,12 @@ class TrackMate:
 
             recoil = tracklet_properties[:, 27]
 
-            if tracklet_properties.shape[1] > 27:
+            if tracklet_properties.shape[1] > 28:
                 latent_shape_features = tracklet_properties[:, 28:]
             else:
-                latent_shape_features = []
+                latent_shape_features = np.empty((tracklet_properties.shape[0], 0))
 
-            print(tracklet_properties.shape, type(latent_shape_features))    
+             
 
             unique_fft_properties_tracklet = {}
             unique_cluster_properties_tracklet = {}
